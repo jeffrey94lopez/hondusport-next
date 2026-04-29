@@ -222,7 +222,7 @@
 
                 <button id="m-add-btn" class="btn-add-main" style="width:100%; padding: 15px; font-size: 0.9rem; margin-top: 1rem; border-radius: 6px;">AGREGAR AL CARRITO</button>
                 
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px;">
+                <div class="share-btn-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px;">
                     <button class="share-btn" onclick="shareProductWhatsApp()">
                         <i class="fa-brands fa-whatsapp"></i> WHATSAPP
                     </button>
@@ -432,6 +432,22 @@
             <span>Favoritos</span>
         </button>
     </nav>
+
+    <!-- Mobile Nav Drawer -->
+    <div id="mobile-nav-drawer" class="mobile-nav-drawer">
+        <div class="mobile-nav-drawer-header">
+            <img id="mobile-nav-logo" src="https://i.ibb.co/PsKHSWWc/Screenshot-2026-03-06-142146.png" alt="Hondu Sport" style="height: 40px; object-fit: contain;">
+            <button onclick="closeMobileNav()" class="mobile-nav-close" aria-label="Cerrar menú">✕</button>
+        </div>
+        <ul id="mobile-nav-links" class="mobile-nav-links"></ul>
+        <div id="mobile-nav-socials" class="mobile-nav-socials"></div>
+    </div>
+
+    <!-- Product Sticky Add-to-Cart Bar (Mobile Only) -->
+    <div id="product-sticky-bar" class="product-sticky-bar">
+        <span id="sticky-product-name" class="sticky-product-name"></span>
+        <button class="btn-add-main sticky-add-btn" onclick="stickyAddToCart()">+ CARRITO</button>
+    </div>
 
     <script src="app.js?v=2"></script>
 </body>
