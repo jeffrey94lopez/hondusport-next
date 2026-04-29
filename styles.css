@@ -763,4 +763,66 @@
     margin-top: auto;
     border-top: 1px solid var(--border);
     flex-wrap: wrap;
+}
+
+/* ===== PRODUCT STICKY BAR (Mobile) ===== */
+.product-sticky-bar {
+    display: none;
+}
+@media (max-width: 768px) {
+    .product-sticky-bar {
+        position: fixed;
+        bottom: calc(60px + env(safe-area-inset-bottom));
+        left: 0;
+        width: 100%;
+        background: var(--card);
+        border-top: 1px solid var(--border);
+        padding: 10px 1rem;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        z-index: 999;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+    }
+    .product-sticky-bar.visible {
+        display: flex;
+    }
+    .sticky-product-name {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1rem;
+        letter-spacing: 1px;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .sticky-add-btn {
+        width: auto !important;
+        margin-top: 0 !important;
+        padding: 10px 20px !important;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border-radius: 4px !important;
+    }
+}
+
+/* ===== SHARE BUTTONS MOBILE ===== */
+@media (max-width: 768px) {
+    .share-btn-container {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 8px !important;
+        grid-template-columns: unset !important;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+    }
+    .share-btn-container::-webkit-scrollbar { display: none; }
+    .share-btn-container .share-btn {
+        flex-shrink: 0;
+        padding: 8px 12px;
+        font-size: 0.7rem;
+        border-bottom-width: 1.5px;
+    }
 }
