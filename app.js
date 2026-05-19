@@ -2,11 +2,8 @@
         let WHATSAPP_NUMBER = "50499999999";
         let FREE_SHIPPING_THRESHOLD = 999;
         let FREE_SHIPPING_MSG = ""; 
-        let COSTO_ENVIO = 0;
-        let PICKUP_DESCUENTO = 0;
-        let PICKUP_DIRECCION = "";
-        let PICKUP_ACTIVO = false;
-        let DELIVERY_METHOD = 'delivery';
+        let ENVIOS = [];
+        let SELECTED_ENVIO = null;
         let STOCK_LIMITE = 5;
         let products = [];
         let currentProducts = [];
@@ -55,14 +52,16 @@
 
                 if (data.config.whatsapp_number) WHATSAPP_NUMBER = String(data.config.whatsapp_number);
                 if (data.config.free_shipping_meta) FREE_SHIPPING_THRESHOLD = parseFloat(data.config.free_shipping_meta);
-                if (data.config.costo_envio) COSTO_ENVIO = parseFloat(data.config.costo_envio);
-                if (data.config.pickup_descuento) PICKUP_DESCUENTO = parseFloat(data.config.pickup_descuento);
-                if (data.config.pickup_direccion) PICKUP_DIRECCION = data.config.pickup_direccion;
-                
-                FREE_SHIPPING_MSG = (data.config.free_shipping_msg && data.config.free_shipping_msg.trim() !== "") ? data.config.free_shipping_msg : "✨ ¡TIENES ENVÍO GRATIS!";
-                
-                PICKUP_ACTIVO = String(data.config.pickup_activo || "").trim().toUpperCase() === "TRUE";
-                if (PICKUP_ACTIVO) document.getElementById('btn-pickup').style.display = 'inline-flex';
+                ENVIOS = data.envios || [];
+                SELECTED_ENVIO = ENVIOS[0] || null;
+                window.FREE_SHIPPING_ACTIVO = String(data.config.free_shipping_activo || 'TRUE').toUpperCase() === 'TRUE';
+                window.CUPONES_POPUP_ACTIVO = String(data.config.cupones_popup_activo || 'TRUE').toUpperCase() === 'TRUE';
+                FREE_SHIPPING_MSG = (data.config.free_shipping_msg && data.config.free_shipping_msg.trim() !== "")
+                  ? data.config.free_shipping_msg : "✨ ¡TIENES ENVÍO GRATIS!";
+                if (!window.FREE_SHIPPING_ACTIVO) {
+                  const fsSection = document.getElementById('free-shipping-section');
+                  if (fsSection) fsSection.style.display = 'none';
+                }
 
                 if (data.config.stock_bajo_limite) STOCK_LIMITE = parseInt(data.config.stock_bajo_limite);
 
@@ -176,6 +175,41 @@
                 });
                 setupCatFilters();
 
+                // Populate mobile nav drawer with categories
+                const mobileNavLinks = document.getElementById('mobile-nav-links');
+                if (mobileNavLinks) {
+                    mobileNavLinks.innerHTML = '';
+                    const mTodosLi = document.createElement('li');
+                    const mTodosBtn = document.createElement('button');
+                    mTodosBtn.innerText = 'TODOS LOS PRODUCTOS';
+                    mTodosBtn.onclick = () => {
+                        renderProducts(products);
+                        document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
+                        closeMobileNav();
+                    };
+                    mTodosLi.appendChild(mTodosBtn);
+                    mobileNavLinks.appendChild(mTodosLi);
+
+                    categoriasUnicas.forEach(cat => {
+                        const li = document.createElement('li');
+                        const btn = document.createElement('button');
+                        btn.innerText = cat.toUpperCase();
+                        btn.onclick = () => {
+                            filterFromFooter(cat);
+                            document.getElementById('tienda').scrollIntoView({ behavior: 'smooth' });
+                            closeMobileNav();
+                        };
+                        li.appendChild(btn);
+                        mobileNavLinks.appendChild(li);
+                    });
+                }
+
+                // Sync logo in mobile drawer if custom logo configured
+                const mobileNavLogo = document.getElementById('mobile-nav-logo');
+                if (mobileNavLogo && data.config.logo_url && data.config.logo_url.trim() !== '') {
+                    mobileNavLogo.src = data.config.logo_url;
+                }
+
                 const navMenu = document.getElementById('nav-menu');
                 navMenu.innerHTML = '';
                 const todosLi = document.createElement('li');
@@ -226,7 +260,7 @@
                     const catFilterObj = catFiltros.find(f => f.valor === cat);
                     const catImg = (catFilterObj && catFilterObj.imagen && catFilterObj.imagen.trim() !== "")
                                    ? catFilterObj.imagen
-                                   : (products.find(p => p.cat === cat && p.img)?.img || '');
+                                   : (products.find(p => p.cat === cat && p.imgs?.[0])?.imgs?.[0] || '');
 
                     const card = document.createElement('div');
                     card.className = 'category-card';
@@ -508,7 +542,7 @@
             const cardHTML = (p, rank = null) => {
                 const safeName = escapeHTML(p.name);
                 const safeBadge = escapeHTML(p.badge || '');
-                const safeImg = escapeHTML(p.img || '');
+                const safeImg = escapeHTML(p.imgs?.[0] || '');
 
                 const originalPriceHtml = (p.precio_original && p.precio_original > p.price) ? `<span class="card-original-price">${formatPrice(p.precio_original)}</span>` : '';
                 const stockHtml = (p.stock && p.stock > 0 && p.stock <= STOCK_LIMITE) ? `<span class="card-stock-warning">ÚLTIMAS ${p.stock} UNIDADES</span>` : '';
@@ -566,6 +600,7 @@
                             <button class="btn-add-main" style="width: 50%; margin-top: 0; border-radius: 0;" onclick="openProductPage(${p.id})">VER</button>
                             <button class="btn-add-main" style="width: 50%; margin-top: 0; background: var(--primary); color: white; border-radius: 0;" onclick="quickAdd(${p.id})">+ CARRITO</button>
                         </div>
+                        <button class="card-mobile-add-btn" onclick="quickAdd(${p.id})">+ CARRITO</button>
                     </div>
                 </article>`;
             };
@@ -644,7 +679,7 @@
 
             const cardHTML = (p) => `
                 <article class="product-card fade-in-up" style="flex: 0 0 calc(25% - 12px); min-width: 130px; max-width: 220px; white-space: normal;">
-                    <div class="product-img-container" onclick="openProductPage(${p.id})"><img src="${p.img}" alt="${p.name}" loading="lazy"></div>
+                    <div class="product-img-container" onclick="openProductPage(${p.id})"><img src="${p.imgs?.[0] || ''}" alt="${p.name}" loading="lazy"></div>
                     <div class="product-info">
                         <div class="product-text-content">
                             <h3>${p.name}</h3>
@@ -715,7 +750,7 @@
             } else {
                 container.innerHTML = cart.map((item, idx) => {
                     const safeName = escapeHTML(item.name);
-                    const safeImg = escapeHTML(item.img);
+                    const safeImg = escapeHTML(item.imgs?.[0] || item.img || '');
                     const safeCustom = escapeHTML(item.custom);
                     const safeSize = escapeHTML(item.size);
                     return `
@@ -976,8 +1011,8 @@
             localStorage.setItem('hs_recent_views', JSON.stringify(recentViews));
             renderRecentViews();
 
-            document.getElementById('modal-img-main').src = p.img;
-            document.getElementById('modal-thumbs').innerHTML = (p.imgs || [p.img, p.img2, p.img3].filter(Boolean)).map((url, i) => `<img src="${url}" class="thumb-img ${i===0?'active':''}" onclick="changeGallery(this, '${url}')">`).join('');
+            document.getElementById('modal-img-main').src = p.imgs?.[0] || '';
+            document.getElementById('modal-thumbs').innerHTML = (p.imgs || []).filter(Boolean).map((url, i) => `<img src="${url}" class="thumb-img ${i===0?'active':''}" onclick="changeGallery(this, '${url}')">`).join('');
             
             initZoomEffect(); // Inicializar el efecto de Zoom
 
@@ -1018,7 +1053,7 @@
 
             document.getElementById('m-custom').value = "";
             document.getElementById('m-add-btn').onclick = () => { addToCart(p.id, selectedModalTalla, document.getElementById('m-custom').value || "Sin personalización"); showToast("✅ PRODUCTO AGREGADO"); };
-            document.getElementById('related-products').innerHTML = products.filter(x => x.cat === p.cat && x.id !== p.id).slice(0, 2).map(r => `<div class="related-item" onclick="openProductPage(${r.id})"><img src="${r.img}" alt="R"><div><p class="related-item-title">${r.name}</p><p class="related-item-price">${formatPrice(r.price)}</p></div></div>`).join('');
+            document.getElementById('related-products').innerHTML = products.filter(x => x.cat === p.cat && x.id !== p.id).slice(0, 2).map(r => `<div class="related-item" onclick="openProductPage(${r.id})"><img src="${r.imgs?.[0] || ''}" alt="R"><div><p class="related-item-title">${r.name}</p><p class="related-item-price">${formatPrice(r.price)}</p></div></div>`).join('');
             
             document.title = `${p.name} | Hondu Sport`;
         }
@@ -1165,12 +1200,12 @@
             const wished = products.filter(p => hsWishlist.includes(p.id) || hsWishlist.includes(String(p.id)) || hsWishlist.includes(Number(p.id)));
             
             container.innerHTML = wished.map(p => {
-                const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && f.activo && (f.categoria || f.parent || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
+                const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && f.activo && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
                 const tallaDefault = tallasDisponibles[0] || "";
                 
                 return `
                 <div class="cart-item">
-                    <img src="${p.img}" alt="${p.name}" class="cart-item-img" onclick="toggleWishlistDrawer(); openProductPage(${p.id})">
+                    <img src="${p.imgs?.[0] || ''}" alt="${p.name}" class="cart-item-img" onclick="toggleWishlistDrawer(); openProductPage(${p.id})">
                     <div class="cart-item-info">
                         <div class="cart-item-title" onclick="toggleWishlistDrawer(); openProductPage(${p.id})">${p.name}</div>
                         <div class="cart-item-price">${formatPrice(p.price)}</div>
@@ -1230,16 +1265,34 @@
                 if (document.getElementById('sidebar').classList.contains('active') && !e.target.closest('#sidebar') && !e.target.closest('#mobile-filter-btn')) document.getElementById('sidebar').classList.remove('active');
             });
             document.getElementById('price-range').addEventListener('input', (e) => { document.getElementById('price-val').innerText = formatPrice(parseInt(e.target.value)); applyFilters(); });
-            hbBtn.onclick = () => { hbBtn.classList.toggle('active'); document.getElementById('nav-menu').classList.toggle('active'); };
+            hbBtn.onclick = () => {
+                if (window.innerWidth <= 768) {
+                    hbBtn.classList.toggle('active');
+                    const drawer = document.getElementById('mobile-nav-drawer');
+                    const overlay = document.getElementById('cart-overlay');
+                    if (drawer.classList.contains('open')) {
+                        closeMobileNav();
+                    } else {
+                        drawer.classList.add('open');
+                        overlay.classList.add('active');
+                    }
+                } else {
+                    hbBtn.classList.toggle('active');
+                    document.getElementById('nav-menu').classList.toggle('active');
+                }
+            };
             document.getElementById('mobile-filter-btn').onclick = () => document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('cart-overlay').onclick = () => { 
+            document.getElementById('cart-overlay').onclick = () => {
                 if (document.getElementById('cart-drawer').classList.contains('open')) toggleCart();
                 if (document.getElementById('wishlist-drawer').classList.contains('open')) toggleWishlistDrawer();
+                if (document.getElementById('mobile-nav-drawer').classList.contains('open')) closeMobileNav();
             };
             document.getElementById('exit-overlay').onclick = closeExitPopup;
-            window.onscroll = () => { 
-                document.getElementById('btn-top').style.display = window.scrollY > 400 ? 'flex' : 'none'; 
+            window.onscroll = () => {
+                document.getElementById('btn-top').style.display = window.scrollY > 400 ? 'flex' : 'none';
                 if (window.scrollY > 50) nav.classList.add('scrolled'); else nav.classList.remove('scrolled');
+                const hint = document.querySelector('.scroll-hint');
+                if (hint) hint.classList.toggle('hidden', window.scrollY > 100);
             };
         }
 
@@ -1251,11 +1304,35 @@
             if (forceOpen) { d.classList.add('open'); o.classList.add('active'); }
             else { if (d.classList.contains('open')) { d.classList.remove('open'); o.classList.remove('active'); } else { d.classList.add('open'); o.classList.add('active'); } }
         }
+        function closeMobileNav() {
+            document.getElementById('mobile-nav-drawer').classList.remove('open');
+            document.getElementById('hamburger-btn').classList.remove('active');
+            document.getElementById('cart-overlay').classList.remove('active');
+        }
+
+        function stickyAddToCart() {
+            if (!currentModalProduct) return;
+            const talla = selectedModalTalla;
+            const customInput = document.getElementById('m-custom');
+            const custom = customInput ? customInput.value || 'Sin personalización' : 'Sin personalización';
+            addToCart(currentModalProduct.id, talla, custom);
+            showToast('✅ PRODUCTO AGREGADO');
+        }
+
         function closeExitPopup() { document.getElementById('exit-popup').classList.remove('active'); document.getElementById('exit-overlay').classList.remove('active'); }
         function showToast(t) { const el = document.getElementById('toast'); el.innerText=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'), 2500); }
         function addToCart(id, size, custom) { const p = products.find(x=>x.id===id); const ex = cart.find(i=>i.id===id && i.size===size && i.custom===custom); if(ex) ex.qty++; else cart.push({...p, qty:1, size, custom}); saveAndUpdate(); animateCartBadge(); }
         function animateCartBadge() { const b = document.getElementById('cart-badge'); b.classList.remove('bounce'); void b.offsetWidth; b.classList.add('bounce'); }
-        function initHero() { 
+        function initHero() {
+            // Scroll hint
+            const heroEl = document.querySelector('.hero');
+            if (heroEl && !heroEl.querySelector('.scroll-hint')) {
+                const hint = document.createElement('div');
+                hint.className = 'scroll-hint';
+                hint.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
+                heroEl.appendChild(hint);
+            }
+
             let c = 0; const hero = document.querySelector('.hero'); const s = document.querySelectorAll('.slide'); 
             if(s.length > 1) { 
                 const indicatorsDiv = document.createElement('div'); indicatorsDiv.className = 'slide-indicators';
@@ -1315,7 +1392,7 @@
             
             resultsContainer.innerHTML = filtered.slice(0, 8).map(p => `
                 <div class="search-result-item" onclick="closeMegaSearch(); document.getElementById('tienda').scrollIntoView({behavior:'smooth'}); setTimeout(() => openProductPage(${p.id}), 300)">
-                    <img src="${p.img}" class="search-result-img" alt="${p.name}">
+                    <img src="${p.imgs?.[0] || ''}" class="search-result-img" alt="${p.name}">
                     <div class="search-result-title">${p.name}</div>
                     <div class="search-result-price">${formatPrice(p.price)}</div>
                 </div>
