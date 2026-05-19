@@ -1,0 +1,463 @@
+{
+  "name": "Admin API - HS",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hondusport-admin",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.sheet }}",
+                    "rightValue": "Productos",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Productos"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.sheet }}",
+                    "rightValue": "Filtros",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Filtros"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.sheet }}",
+                    "rightValue": "Envios",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Envios"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.sheet }}",
+                    "rightValue": "Cupones",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cupones"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.sheet }}",
+                    "rightValue": "Banners",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Banners"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.sheet }}",
+                    "rightValue": "Configuracion",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Configuracion"
+            }
+          ]
+        },
+        "output": "all",
+        "options": {}
+      },
+      "id": "switch-sheet",
+      "name": "Switch por Sheet",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "={{ $json.body.action === 'create' ? 'append' : $json.body.action === 'delete' ? 'delete' : 'update' }}",
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Productos",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.body.data.id || $json.body.id }}",
+            "nombre": "={{ $json.body.data.nombre }}",
+            "precio": "={{ $json.body.data.precio }}",
+            "precio_original": "={{ $json.body.data.precio_original }}",
+            "stock": "={{ $json.body.data.stock }}",
+            "cat": "={{ $json.body.data.cat }}",
+            "genero": "={{ $json.body.data.genero }}",
+            "badge": "={{ $json.body.data.badge }}",
+            "descripcion": "={{ $json.body.data.descripcion }}",
+            "personalizable": "={{ $json.body.data.personalizable }}",
+            "oferta_fin": "={{ $json.body.data.oferta_fin }}",
+            "rating": "={{ $json.body.data.rating }}",
+            "imagenes": "={{ $json.body.data.imagenes }}",
+            "activo": "={{ $json.body.data.activo }}"
+          },
+          "schema": []
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.body.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gs-productos",
+      "name": "GS Productos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [700, 100],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "={{ $json.body.action === 'create' ? 'append' : $json.body.action === 'delete' ? 'delete' : 'update' }}",
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Filtros",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tipo": "={{ $json.body.data.tipo }}",
+            "valor": "={{ $json.body.data.valor }}",
+            "categorias": "={{ $json.body.data.categorias }}",
+            "imagen": "={{ $json.body.data.imagen }}",
+            "orden": "={{ $json.body.data.orden }}",
+            "activo": "={{ $json.body.data.activo }}"
+          },
+          "schema": []
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.body.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gs-filtros",
+      "name": "GS Filtros",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [700, 220],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "={{ $json.body.action === 'create' ? 'append' : $json.body.action === 'delete' ? 'delete' : 'update' }}",
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Envios",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.body.data.id || $json.body.id }}",
+            "nombre": "={{ $json.body.data.nombre }}",
+            "descripcion": "={{ $json.body.data.descripcion }}",
+            "tipo": "={{ $json.body.data.tipo }}",
+            "costo": "={{ $json.body.data.costo }}",
+            "descuento": "={{ $json.body.data.descuento }}",
+            "activo": "={{ $json.body.data.activo }}"
+          },
+          "schema": []
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.body.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gs-envios",
+      "name": "GS Envios",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [700, 340],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "={{ $json.body.action === 'create' ? 'append' : $json.body.action === 'delete' ? 'delete' : 'update' }}",
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Cupones",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "codigo": "={{ $json.body.data.codigo || $json.body.id }}",
+            "descuento": "={{ $json.body.data.descuento }}",
+            "tipo": "={{ $json.body.data.tipo }}",
+            "activo": "={{ $json.body.data.activo }}"
+          },
+          "schema": []
+        },
+        "where": {
+          "values": [
+            {
+              "column": "codigo",
+              "value": "={{ $json.body.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gs-cupones",
+      "name": "GS Cupones",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [700, 460],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "={{ $json.body.action === 'create' ? 'append' : $json.body.action === 'delete' ? 'delete' : 'update' }}",
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Banners",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "titulo": "={{ $json.body.data.titulo }}",
+            "subtitulo": "={{ $json.body.data.subtitulo }}",
+            "btn_texto": "={{ $json.body.data.btn_texto }}",
+            "btn_link": "={{ $json.body.data.btn_link }}",
+            "imagen": "={{ $json.body.data.imagen }}"
+          },
+          "schema": []
+        },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.body.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gs-banners",
+      "name": "GS Banners",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [700, 580],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Configuracion",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "key": "={{ $json.body.id }}",
+            "value": "={{ $json.body.data.value }}"
+          },
+          "schema": []
+        },
+        "where": {
+          "values": [
+            {
+              "column": "key",
+              "value": "={{ $json.body.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gs-config",
+      "name": "GS Configuracion",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [700, 700],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, sheet: $('Webhook Trigger').first().json.body.sheet, action: $('Webhook Trigger').first().json.body.action } }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      },
+      "id": "send-response",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [940, 400]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Switch por Sheet", "type": "main", "index": 0 }]]
+    },
+    "Switch por Sheet": {
+      "main": [
+        [{ "node": "GS Productos",     "type": "main", "index": 0 }],
+        [{ "node": "GS Filtros",        "type": "main", "index": 0 }],
+        [{ "node": "GS Envios",         "type": "main", "index": 0 }],
+        [{ "node": "GS Cupones",        "type": "main", "index": 0 }],
+        [{ "node": "GS Banners",        "type": "main", "index": 0 }],
+        [{ "node": "GS Configuracion",  "type": "main", "index": 0 }]
+      ]
+    },
+    "GS Productos":    { "main": [[{ "node": "Send Response", "type": "main", "index": 0 }]] },
+    "GS Filtros":      { "main": [[{ "node": "Send Response", "type": "main", "index": 0 }]] },
+    "GS Envios":       { "main": [[{ "node": "Send Response", "type": "main", "index": 0 }]] },
+    "GS Cupones":      { "main": [[{ "node": "Send Response", "type": "main", "index": 0 }]] },
+    "GS Banners":      { "main": [[{ "node": "Send Response", "type": "main", "index": 0 }]] },
+    "GS Configuracion":{ "main": [[{ "node": "Send Response", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-05-19T00:00:00.000Z",
+  "versionId": "1"
+}
