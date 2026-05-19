@@ -167,8 +167,10 @@
             <h2>MI CARRITO</h2>
             <div class="cart-close" onclick="toggleCart()">✕</div>
         </div>
-        <div class="shipping-meter"><div id="shipping-bar" class="shipping-bar"></div></div>
-        <p id="shipping-msg"></p>
+        <div id="free-shipping-section">
+            <div class="shipping-meter"><div id="shipping-bar" class="shipping-bar"></div></div>
+            <p id="shipping-msg"></p>
+        </div>
         <div id="cart-items" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px;"></div>
 
         <div style="padding-top:1.5rem; border-top:1px solid var(--border);">
@@ -308,14 +310,7 @@
                 </button>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
-                <button id="btn-delivery" class="delivery-option-btn active" onclick="selectDelivery('delivery')">
-                    <i class="fa-solid fa-truck"></i> ENVÍO A DOMICILIO
-                </button>
-                <button id="btn-pickup" class="delivery-option-btn" style="display:none;" onclick="selectDelivery('pickup')">
-                    <i class="fa-solid fa-store"></i> RETIRAR EN TIENDA
-                </button>
-            </div>
+            <div id="shipping-options-container" style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;"></div>
 
             <div id="checkout-total-preview" style="padding: 1rem; background: rgba(201, 168, 76, 0.05); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">

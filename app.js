@@ -59,6 +59,18 @@
                 if (data.config.free_shipping_meta) FREE_SHIPPING_THRESHOLD = parseFloat(data.config.free_shipping_meta);
                 ENVIOS = data.envios || [];
                 SELECTED_ENVIO = ENVIOS[0] || null;
+                // Renderizar botones de envío en el checkout modal
+                const shippingContainer = document.getElementById('shipping-options-container');
+                if (shippingContainer && ENVIOS.length > 0) {
+                  const icons = { delivery: 'fa-truck', pickup: 'fa-store' };
+                  shippingContainer.innerHTML = ENVIOS.map((e, i) => `
+                    <button class="delivery-option-btn ${i === 0 ? 'active' : ''}"
+                      onclick="selectShipping(${e.id})"
+                      data-envio-id="${e.id}">
+                      <i class="fa-solid ${icons[e.tipo] || 'fa-box'}"></i> ${escapeHTML(e.nombre)}
+                    </button>`).join('');
+                  SELECTED_ENVIO = ENVIOS[0];
+                }
                 window.FREE_SHIPPING_ACTIVO = String(data.config.free_shipping_activo || 'TRUE').toUpperCase() === 'TRUE';
                 window.CUPONES_POPUP_ACTIVO = String(data.config.cupones_popup_activo || 'TRUE').toUpperCase() === 'TRUE';
                 FREE_SHIPPING_MSG = (data.config.free_shipping_msg && data.config.free_shipping_msg.trim() !== "")
@@ -847,60 +859,52 @@
             
         }
 
-        function selectDelivery(method) {
-            const nameField = document.getElementById('c-name');
-            const phoneField = document.getElementById('c-phone');
-            const emailField = document.getElementById('c-email');
-            
-            if (nameField) {
-                const source = DELIVERY_METHOD === 'delivery' ? formDataDelivery : formDataPickup;
-                source.name = nameField.value; source.phone = phoneField.value; source.email = emailField.value;
-                if (DELIVERY_METHOD === 'delivery') {
-                    formDataDelivery.city = document.getElementById('c-city').value;
-                    formDataDelivery.address = document.getElementById('c-address').value;
-                }
-                const dest = method === 'delivery' ? formDataDelivery : formDataPickup;
-                if (!dest.name && source.name) dest.name = source.name;
-                if (!dest.phone && source.phone) dest.phone = source.phone;
-                if (!dest.email && source.email) dest.email = source.email;
-            }
+        function selectShipping(envioId) {
+          const nameField = document.getElementById('c-name');
+          if (nameField) {
+            const saved = {
+              name: nameField.value,
+              phone: document.getElementById('c-phone')?.value || '',
+              email: document.getElementById('c-email')?.value || '',
+              city: document.getElementById('c-city')?.value || '',
+              address: document.getElementById('c-address')?.value || ''
+            };
+            localStorage.setItem('hs_checkout_delivery', JSON.stringify(saved));
+          }
 
-            DELIVERY_METHOD = method;
-            document.querySelectorAll('.delivery-option-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + method).classList.add('active');
-            
-            // Cargar de LocalStorage si existe
-            const savedDelivery = JSON.parse(localStorage.getItem('hs_checkout_delivery')) || { name: '', phone: '', email: '', city: '', address: '' };
-            const current = method === 'delivery' ? savedDelivery : savedDelivery;
-            
-            const infoDiv = document.getElementById('delivery-info');
-            if (method === 'pickup') {
-                infoDiv.innerHTML = `
-                    <div style="padding: 1rem; border: 1.5px dashed var(--primary); background: rgba(201, 168, 76, 0.05); margin-bottom: 1.5rem;">
-                        <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 5px;"><i class="fa-solid fa-location-dot"></i> PUNTO DE RETIRO:</p>
-                        <p style="font-size: 0.85rem; opacity: 0.8;">${PICKUP_DIRECCION}</p>
-                        <span style="display: block; margin-top: 10px; color: #27AE60; font-weight: 700; font-size: 0.75rem;">🎁 DESCUENTO EXTRA POR RETIRO: ${PICKUP_DESCUENTO}%</span>
-                    </div>
-                    <form id="checkout-form" onsubmit="processCheckout(event)">
-                        <input type="text" id="c-name" class="auto-save" placeholder="NOMBRE COMPLETO" required value="${current.name}">
-                        <input type="tel" id="c-phone" class="auto-save" placeholder="TELÉFONO" required value="${current.phone}">
-                        <input type="email" id="c-email" class="auto-save" placeholder="CORREO ELECTRÓNICO" required value="${current.email}">
-                        <button type="submit" class="btn-add-main" style="width:100%; margin-bottom:10px;">COMPRAR</button>
-                    </form>`;
-            } else {
-                infoDiv.innerHTML = `
-                    <form id="checkout-form" onsubmit="processCheckout(event)">
-                        <input type="text" id="c-name" class="auto-save" placeholder="NOMBRE COMPLETO" required value="${current.name}">
-                        <input type="tel" id="c-phone" class="auto-save" placeholder="TELÉFONO" required value="${current.phone}">
-                        <input type="email" id="c-email" class="auto-save" placeholder="CORREO ELECTRÓNICO" required value="${current.email}">
-                        <input type="text" id="c-city" class="auto-save" placeholder="CIUDAD / DEPARTAMENTO" required value="${current.city || ''}">
-                        <textarea id="c-address" class="auto-save" placeholder="DIRECCIÓN EXACTA" rows="3" required>${current.address || ''}</textarea>
-                        <button type="submit" class="btn-add-main" style="width:100%; margin-bottom:10px;">COMPRAR</button>
-                    </form>`;
-            }
+          SELECTED_ENVIO = ENVIOS.find(e => e.id === envioId) || ENVIOS[0] || null;
 
-            initAutoSave();
-            updateCheckoutPreview();
+          document.querySelectorAll('.delivery-option-btn').forEach(b => b.classList.remove('active'));
+          const activeBtn = document.querySelector(`[data-envio-id="${envioId}"]`);
+          if (activeBtn) activeBtn.classList.add('active');
+
+          const saved = JSON.parse(localStorage.getItem('hs_checkout_delivery')) || {};
+          const infoDiv = document.getElementById('delivery-info');
+          if (!infoDiv || !SELECTED_ENVIO) return;
+
+          const addressFields = SELECTED_ENVIO.tipo === 'delivery' ? `
+            <input type="text" id="c-city" class="auto-save" placeholder="CIUDAD / DEPARTAMENTO" required value="${escapeHTML(saved.city || '')}">
+            <textarea id="c-address" class="auto-save" placeholder="DIRECCIÓN EXACTA" rows="3" required>${escapeHTML(saved.address || '')}</textarea>` : '';
+
+          const pickupInfo = SELECTED_ENVIO.tipo === 'pickup' && SELECTED_ENVIO.descripcion ? `
+            <div style="padding:1rem; border:1.5px dashed var(--primary); background:rgba(201,168,76,0.05); margin-bottom:1.5rem;">
+              <p style="font-weight:700; font-size:0.9rem; margin-bottom:5px;"><i class="fa-solid fa-location-dot"></i> PUNTO DE RETIRO:</p>
+              <p style="font-size:0.85rem; opacity:0.8;">${escapeHTML(SELECTED_ENVIO.descripcion)}</p>
+              ${SELECTED_ENVIO.descuento > 0 ? `<span style="display:block;margin-top:10px;color:#27AE60;font-weight:700;font-size:0.75rem;">🎁 DESCUENTO EXTRA: ${SELECTED_ENVIO.descuento}%</span>` : ''}
+            </div>` : '';
+
+          infoDiv.innerHTML = `
+            ${pickupInfo}
+            <form id="checkout-form" onsubmit="processCheckout(event)">
+              <input type="text" id="c-name" class="auto-save" placeholder="NOMBRE COMPLETO" required value="${escapeHTML(saved.name || '')}">
+              <input type="tel" id="c-phone" class="auto-save" placeholder="TELÉFONO" required value="${escapeHTML(saved.phone || '')}">
+              <input type="email" id="c-email" class="auto-save" placeholder="CORREO ELECTRÓNICO" required value="${escapeHTML(saved.email || '')}">
+              ${addressFields}
+              <button type="submit" class="btn-add-main" style="width:100%; margin-bottom:10px;">COMPRAR</button>
+            </form>`;
+
+          initAutoSave();
+          updateCheckoutPreview();
         }
 
         function initAutoSave() {
@@ -919,19 +923,25 @@
         }
 
         function updateCheckoutPreview() {
-            const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-            const couponDisc = activeDiscount > 0 ? subtotal * (activeDiscount / 100) : 0;
-            const pickupDisc = DELIVERY_METHOD === 'pickup' ? subtotal * (PICKUP_DESCUENTO / 100) : 0;
-            const totalDiscount = couponDisc + pickupDisc;
-            const shippingFee = (DELIVERY_METHOD === 'delivery' && subtotal < FREE_SHIPPING_THRESHOLD) ? COSTO_ENVIO : 0;
-            document.getElementById('preview-subtotal').innerText = formatPrice(subtotal);
-            const dr = document.getElementById('preview-descuento-row');
-            if (totalDiscount > 0) { dr.style.display = 'flex'; document.getElementById('preview-descuento').innerText = `-${formatPrice(totalDiscount)}`; }
-            else dr.style.display = 'none';
-            const sr = document.getElementById('preview-envio-row');
-            if (DELIVERY_METHOD === 'delivery') { sr.style.display = 'flex'; document.getElementById('preview-envio').innerText = shippingFee > 0 ? formatPrice(shippingFee) : 'GRATIS'; }
-            else sr.style.display = 'none';
-            document.getElementById('preview-total').innerText = formatPrice(subtotal - totalDiscount + shippingFee);
+          const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+          const couponDisc = activeDiscount > 0 ? subtotal * (activeDiscount / 100) : 0;
+          const envioDisc = SELECTED_ENVIO ? subtotal * ((SELECTED_ENVIO.descuento || 0) / 100) : 0;
+          const totalDiscount = couponDisc + envioDisc;
+          const freeShippingMeta = parseFloat(FREE_SHIPPING_THRESHOLD) || 999;
+          const shippingFee = (SELECTED_ENVIO && SELECTED_ENVIO.tipo === 'delivery' &&
+            (window.FREE_SHIPPING_ACTIVO === false || subtotal < freeShippingMeta))
+            ? (SELECTED_ENVIO.costo || 0) : 0;
+
+          document.getElementById('preview-subtotal').innerText = formatPrice(subtotal);
+          const dr = document.getElementById('preview-descuento-row');
+          if (totalDiscount > 0) { dr.style.display = 'flex'; document.getElementById('preview-descuento').innerText = `-${formatPrice(totalDiscount)}`; }
+          else dr.style.display = 'none';
+          const sr = document.getElementById('preview-envio-row');
+          if (SELECTED_ENVIO && SELECTED_ENVIO.tipo === 'delivery') {
+            sr.style.display = 'flex';
+            document.getElementById('preview-envio').innerText = shippingFee > 0 ? formatPrice(shippingFee) : 'GRATIS';
+          } else sr.style.display = 'none';
+          document.getElementById('preview-total').innerText = formatPrice(subtotal - totalDiscount + shippingFee);
         }
 
         function applyCouponFromCart() {
@@ -975,17 +985,28 @@
         function execRecent(val) { document.getElementById('main-search').value = val; document.getElementById('recent-searches').style.display = 'none'; applyFilters(); }
         
         function getOrderText() {
-            const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-            let discountAmount = activeDiscount > 0 ? subtotal * (activeDiscount / 100) : 0;
-            if (DELIVERY_METHOD === 'pickup') discountAmount += (subtotal * (PICKUP_DESCUENTO/100));
-            const shippingFee = (DELIVERY_METHOD === 'delivery' && subtotal < FREE_SHIPPING_THRESHOLD) ? COSTO_ENVIO : 0;
-            let msg = `DATOS CLIENTE\nMétodo: ${DELIVERY_METHOD === 'delivery' ? 'ENVÍO A DOMICILIO' : 'RETIRO EN TIENDA'}\nNombre: ${document.getElementById('c-name').value}\nTel: ${document.getElementById('c-phone').value}\nEmail: ${document.getElementById('c-email').value}\n`;
-            if (DELIVERY_METHOD === 'delivery') msg += `Ciudad: ${document.getElementById('c-city').value}\nDirección: ${document.getElementById('c-address').value}\n`;
-            else msg += `Punto retiro: ${PICKUP_DIRECCION}\n`;
-            msg += `\nPEDIDO\n`;
-            cart.forEach(i => msg += `- ${i.name} (${i.size}) [${i.custom}] x${i.qty} - L.${i.price * i.qty}\n`);
-            msg += `\nSubtotal: ${formatPrice(subtotal)}\nEnvío: ${shippingFee > 0 ? formatPrice(shippingFee) : 'Gratis'}\nDescuento total: -${formatPrice(discountAmount)}\nTOTAL FINAL: ${formatPrice(subtotal - discountAmount + shippingFee)}`;
-            return encodeURIComponent(msg);
+          const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+          let discountAmount = activeDiscount > 0 ? subtotal * (activeDiscount / 100) : 0;
+          if (SELECTED_ENVIO && SELECTED_ENVIO.descuento > 0) discountAmount += subtotal * (SELECTED_ENVIO.descuento / 100);
+          const freeShippingMeta = parseFloat(FREE_SHIPPING_THRESHOLD) || 999;
+          const shippingFee = (SELECTED_ENVIO && SELECTED_ENVIO.tipo === 'delivery' &&
+            (window.FREE_SHIPPING_ACTIVO === false || subtotal < freeShippingMeta))
+            ? (SELECTED_ENVIO.costo || 0) : 0;
+
+          let msg = `DATOS CLIENTE\nMétodo: ${SELECTED_ENVIO ? escapeHTML(SELECTED_ENVIO.nombre) : 'ENVÍO'}\n`;
+          msg += `Nombre: ${document.getElementById('c-name').value}\n`;
+          msg += `Tel: ${document.getElementById('c-phone').value}\n`;
+          msg += `Email: ${document.getElementById('c-email').value}\n`;
+          if (SELECTED_ENVIO && SELECTED_ENVIO.tipo === 'delivery') {
+            msg += `Ciudad: ${document.getElementById('c-city')?.value || ''}\n`;
+            msg += `Dirección: ${document.getElementById('c-address')?.value || ''}\n`;
+          } else if (SELECTED_ENVIO && SELECTED_ENVIO.descripcion) {
+            msg += `Punto retiro: ${SELECTED_ENVIO.descripcion}\n`;
+          }
+          msg += `\nPEDIDO\n`;
+          cart.forEach(i => msg += `- ${i.name} (${i.size}) [${i.custom}] x${i.qty} - L.${i.price * i.qty}\n`);
+          msg += `\nSubtotal: ${formatPrice(subtotal)}\nEnvío: ${shippingFee > 0 ? formatPrice(shippingFee) : 'Gratis'}\nDescuento total: -${formatPrice(discountAmount)}\nTOTAL FINAL: ${formatPrice(subtotal - discountAmount + shippingFee)}`;
+          return encodeURIComponent(msg);
         }
 
         function openProductPage(id) {
@@ -1257,7 +1278,14 @@
         function goToHome() { 
             window.location.href = window.location.pathname; 
         }
-        function openCheckoutModal() { if(cart.length > 0) { document.getElementById('checkout-modal').style.display = 'flex'; if (document.getElementById('delivery-info').innerHTML.trim() === "") selectDelivery(DELIVERY_METHOD); else updateCheckoutPreview(); } }
+        function openCheckoutModal() {
+          if (cart.length > 0) {
+            document.getElementById('checkout-modal').style.display = 'flex';
+            const infoDiv = document.getElementById('delivery-info');
+            if (!infoDiv.innerHTML.trim() && SELECTED_ENVIO) selectShipping(SELECTED_ENVIO.id);
+            else updateCheckoutPreview();
+          }
+        }
         function closeCheckoutModal() { document.getElementById('checkout-modal').style.display = 'none'; }
         function processCheckout(e) { e.preventDefault(); window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${getOrderText()}`, '_blank'); }
         
