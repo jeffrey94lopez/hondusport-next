@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banners</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#111;color:#eee;font-family:Inter,sans-serif;padding:1.5rem}
+  h2{color:#C9A84C;letter-spacing:2px;margin-bottom:1.5rem;font-size:1.1rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem}
+  .card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;overflow:hidden}
+  .preview{width:100%;height:150px;object-fit:cover;display:block;background:#222}
+  .body{padding:1rem}
+  input,textarea{background:#141414;border:1px solid #333;color:#eee;padding:.5rem .75rem;border-radius:6px;font-size:.85rem;width:100%;margin-bottom:.5rem}
+  label{font-size:.7rem;color:#aaa;margin-bottom:.2rem;display:block}
+  .btn{padding:.5rem 1rem;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:.8rem}
+  .btn-primary{background:#C9A84C;color:#000}.btn-danger{background:#c0392b;color:#fff}.btn-block{width:100%}
+  .upload{border:2px dashed #333;border-radius:6px;padding:.8rem;text-align:center;cursor:pointer;font-size:.8rem;color:#aaa;margin-bottom:.5rem}
+  .upload:hover{border-color:#C9A84C}
+  .new-card{border:2px dashed #333;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:280px;border-radius:10px}
+  .new-card:hover{border-color:#C9A84C}
+  .toast{position:fixed;bottom:2rem;right:2rem;background:#C9A84C;color:#000;padding:.75rem 1.5rem;border-radius:8px;font-weight:700;font-size:.85rem;z-index:999;display:none}
+</style>
+</head>
+<body>
+<h2>🖼️ BANNERS DEL HERO</h2>
+<div class="grid" id="grid"></div>
+<div class="toast" id="toast"></div>
+<script>
+const GET_URL='https://webhook.mplasesores.com/webhook/hondusport-products';
+const POST_URL='https://webhook.mplasesores.com/webhook/hondusport-admin';
+let banners=[];
+
+async function load(){
+  const r=await fetch(GET_URL);const j=await r.json();
+  banners=j.data.banners||[];render();
+}
+
+function render(){
+  const g=document.getElementById('grid');
+  g.innerHTML=banners.map((b,i)=>`
+    <div class="card">
+      <img class="preview" id="prev${i}" src="${esc(b.imagen||'')}" onerror="this.src=''">
+      <div class="body">
+        <label>TÍTULO</label><input id="bt${i}" value="${esc(b.titulo||'')}">
+        <label>SUBTÍTULO</label><input id="bs${i}" value="${esc(b.subtitulo||'')}">
+        <label>TEXTO BOTÓN</label><input id="bb${i}" value="${esc(b.btn_texto||'Ver más')}">
+        <label>LINK BOTÓN</label><input id="bl${i}" value="${esc(b.btn_link||'#tienda')}">
+        <label>IMAGEN URL</label><input id="bi${i}" value="${esc(b.imagen||'')}" oninput="document.getElementById('prev${i}').src=this.value">
+        <div class="upload" onclick="document.getElementById('bf${i}').click()">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Subir imagen
+          <input type="file" id="bf${i}" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="upBanner(this.files[0],${i})">
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-primary btn-block" onclick="saveBanner(${i})"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+          <button class="btn btn-danger" onclick="delBanner(${i})"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+    </div>`).join('')+`
+  <div class="new-card" onclick="addBanner()">
+    <div style="text-align:center;opacity:.5"><i class="fa-solid fa-plus" style="font-size:2rem;display:block;margin-bottom:.5rem"></i>Nuevo Banner</div>
+  </div>`;
+}
+
+async function upBanner(file,i){
+  const fd=new FormData();fd.append('imagen',file);fd.append('tipo','banners');fd.append('id',i);
+  const r=await fetch('upload.php',{method:'POST',body:fd});const j=await r.json();
+  if(j.success){document.getElementById(`bi${i}`).value=j.url;document.getElementById(`prev${i}`).src=j.url;toast('✅ Imagen subida');}
+  else toast('❌ '+j.error);
+}
+
+async function saveBanner(i){
+  const data={titulo:document.getElementById(`bt${i}`).value,subtitulo:document.getElementById(`bs${i}`).value,btn_texto:document.getElementById(`bb${i}`).value,btn_link:document.getElementById(`bl${i}`).value,imagen:document.getElementById(`bi${i}`).value};
+  const r=await n8n({sheet:'Banners',action:'update',id:i+1,data});
+  if(r.success)toast('✅ Guardado');else toast('❌ Error');
+}
+
+async function delBanner(i){
+  if(!confirm('¿Eliminar banner?'))return;
+  const r=await n8n({sheet:'Banners',action:'delete',id:i+1});
+  if(r.success){toast('✅ Eliminado');load();}
+}
+
+async function addBanner(){
+  const r=await n8n({sheet:'Banners',action:'create',data:{titulo:'Nuevo Banner',subtitulo:'',btn_texto:'Ver más',btn_link:'#tienda',imagen:''}});
+  if(r.success){toast('✅ Creado');load();}
+}
+
+async function n8n(body){const r=await fetch(POST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json();}
+function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+load();
+</script>
+</body>
+</html>

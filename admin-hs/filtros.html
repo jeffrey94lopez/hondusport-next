@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Filtros</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#111;color:#eee;font-family:Inter,sans-serif;padding:1.5rem}
+  h2{color:#C9A84C;letter-spacing:2px;margin-bottom:1.5rem;font-size:1.1rem}
+  .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+  .tab{padding:.5rem 1.2rem;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#aaa;cursor:pointer;font-size:.85rem;font-weight:600;border:none}
+  .tab.active{background:#C9A84C;color:#000}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:1.5rem}
+  th{background:#1a1a1a;padding:.75rem 1rem;text-align:left;font-size:.75rem;letter-spacing:1px;color:#aaa;border-bottom:1px solid #2a2a2a}
+  td{padding:.75rem 1rem;border-bottom:1px solid #1e1e1e;vertical-align:middle}
+  input,select{background:#1a1a1a;border:1px solid #333;color:#eee;padding:.5rem .75rem;border-radius:6px;font-size:.85rem}
+  .btn{padding:.5rem 1rem;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:.8rem}
+  .btn-primary{background:#C9A84C;color:#000}.btn-danger{background:#c0392b;color:#fff}.btn-sm{padding:.35rem .7rem;font-size:.75rem}
+  .add-row{display:grid;gap:.75rem;padding:1rem;background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a;align-items:flex-end}
+  label{font-size:.7rem;color:#aaa;margin-bottom:.2rem;display:block}
+  .tog{display:inline-block;width:36px;height:20px;background:#333;border-radius:10px;cursor:pointer;position:relative;transition:.2s}
+  .tog.on{background:#C9A84C}.tog::after{content:'';width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}.tog.on::after{left:18px}
+  .toast{position:fixed;bottom:2rem;right:2rem;background:#C9A84C;color:#000;padding:.75rem 1.5rem;border-radius:8px;font-weight:700;font-size:.85rem;z-index:999;display:none}
+</style>
+</head>
+<body>
+<h2>🏷️ CATEGORÍAS & TALLAS</h2>
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="show('cat',this)">Categorías</button>
+  <button class="tab" onclick="show('subcat',this)">Subcategorías</button>
+  <button class="tab" onclick="show('talla',this)">Tallas</button>
+  <button class="tab" onclick="show('genero',this)">Géneros</button>
+</div>
+<div id="content"></div>
+<div class="toast" id="toast"></div>
+<script>
+const GET_URL='https://webhook.mplasesores.com/webhook/hondusport-products';
+const POST_URL='https://webhook.mplasesores.com/webhook/hondusport-admin';
+let filtros=[],curTab='cat';
+
+async function load(){
+  const r=await fetch(GET_URL);const j=await r.json();
+  filtros=j.data.filtros||[];show(curTab);
+}
+
+function show(tipo,el){
+  curTab=tipo;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const data=filtros.filter(f=>f.tipo===tipo);
+  const needsCat=tipo==='subcat'||tipo==='talla';
+  const needsImg=tipo==='cat';
+  let html=`<table><thead><tr><th>VALOR</th>${needsCat?'<th>CATEGORÍAS</th>':''}${needsImg?'<th>IMAGEN URL</th>':''}<th>ORDEN</th><th>ESTADO</th><th></th></tr></thead><tbody>`;
+  data.forEach((f,i)=>{
+    html+=`<tr>
+      <td><input id="v${i}" value="${esc(f.valor)}" style="width:120px"></td>
+      ${needsCat?`<td><input id="c${i}" value="${esc(f.categorias||'')}" placeholder="Cat1,Cat2" style="width:180px"></td>`:''}
+      ${needsImg?`<td><input id="img${i}" value="${esc(f.imagen||'')}" placeholder="https://..." style="width:180px"></td>`:''}
+      <td><input id="o${i}" type="number" value="${f.orden||0}" style="width:55px"></td>
+      <td><div class="tog ${f.activo?'on':''}" id="tog${i}" onclick="this.classList.toggle('on')"></div></td>
+      <td style="display:flex;gap:.4rem">
+        <button class="btn btn-primary btn-sm" onclick="saveRow(${i})"><i class="fa-solid fa-floppy-disk"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="delRow(${i})"><i class="fa-solid fa-trash"></i></button>
+      </td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  const cols=1+(needsCat?1:0)+(needsImg?1:0)+3;
+  html+=`<div class="add-row" style="grid-template-columns:repeat(${cols},1fr) auto">
+    <div><label>VALOR *</label><input id="nv" placeholder="XL, Running..."></div>
+    ${needsCat?'<div><label>CATEGORÍAS</label><input id="nc" placeholder="Cat1,Cat2"></div>':''}
+    ${needsImg?'<div><label>IMAGEN</label><input id="ni" placeholder="https://..."></div>':''}
+    <div><label>ORDEN</label><input id="no" type="number" value="0"></div>
+    <div></div>
+    <div style="display:flex;align-items:flex-end"><button class="btn btn-primary" onclick="addRow()" style="width:100%;white-space:nowrap"><i class="fa-solid fa-plus"></i> Agregar</button></div>
+  </div>`;
+  document.getElementById('content').innerHTML=html;
+}
+
+async function saveRow(i){
+  const tipo=curTab,data=filtros.filter(f=>f.tipo===tipo),f=data[i];
+  const needsCat=tipo==='subcat'||tipo==='talla';
+  const body={tipo,valor:document.getElementById(`v${i}`).value,
+    categorias:needsCat?(document.getElementById(`c${i}`)?.value||''):'',
+    imagen:tipo==='cat'?(document.getElementById(`img${i}`)?.value||''):'',
+    orden:parseInt(document.getElementById(`o${i}`).value)||0,
+    activo:document.getElementById(`tog${i}`).classList.contains('on')?'TRUE':'FALSE'};
+  const r=await n8n({sheet:'Filtros',action:'update',id:f.id||i,data:body});
+  if(r.success){toast('✅ Guardado');load();}else toast('❌ Error');
+}
+
+async function delRow(i){
+  if(!confirm('¿Eliminar?'))return;
+  const data=filtros.filter(f=>f.tipo===curTab),f=data[i];
+  const r=await n8n({sheet:'Filtros',action:'delete',id:f.id||i});
+  if(r.success){toast('✅ Eliminado');load();}
+}
+
+async function addRow(){
+  const valor=document.getElementById('nv').value.trim();
+  if(!valor){toast('❌ Valor obligatorio');return;}
+  const needsCat=curTab==='subcat'||curTab==='talla';
+  const body={tipo:curTab,valor,
+    categorias:needsCat?(document.getElementById('nc')?.value||''):'',
+    imagen:curTab==='cat'?(document.getElementById('ni')?.value||''):'',
+    orden:parseInt(document.getElementById('no').value)||0,activo:'TRUE'};
+  const r=await n8n({sheet:'Filtros',action:'create',data:body});
+  if(r.success){toast('✅ Agregado');load();}else toast('❌ Error');
+}
+
+async function n8n(body){const r=await fetch(POST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json();}
+function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+load();
+</script>
+</body>
+</html>
