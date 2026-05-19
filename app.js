@@ -830,8 +830,8 @@
             const msg = document.getElementById('shipping-msg');
             if (finalTotal >= FREE_SHIPPING_THRESHOLD) {
                 msg.innerHTML = FREE_SHIPPING_MSG || "✨ ¡TIENES ENVÍO GRATIS!"; msg.style.color = "var(--primary)";
-            } else if (COSTO_ENVIO > 0) {
-                msg.innerHTML = `ENVÍO A DOMICILIO: <b>${formatPrice(COSTO_ENVIO)}</b>`;
+            } else if (SELECTED_ENVIO && SELECTED_ENVIO.tipo === 'delivery' && SELECTED_ENVIO.costo > 0) {
+                msg.innerHTML = `ENVÍO A DOMICILIO: <b>${formatPrice(SELECTED_ENVIO.costo)}</b>`;
                 msg.style.color = "var(--text)";
             }
 
