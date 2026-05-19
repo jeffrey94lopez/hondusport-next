@@ -104,10 +104,15 @@
                 window.CUPONES = data.cupones;
                 window.ALL_FILTROS = data.filtros || [];
 
-                const genderFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'gender' && (f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE'));
-                const catFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'cat' && (f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE'));
-                const tallaFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'talla' && (f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE'));
-                const subcatFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'subcat' && (f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE'));
+                const isActivo = f => f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE';
+                const genderFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'genero' && isActivo(f))
+                  .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+                const catFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'cat' && isActivo(f))
+                  .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+                const tallaFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'talla' && isActivo(f))
+                  .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+                const subcatFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'subcat' && isActivo(f))
+                  .sort((a, b) => (a.orden || 0) - (b.orden || 0));
 
                 const sidebarDiv = document.getElementById('sidebar-filters');
                 sidebarDiv.innerHTML = `
@@ -116,7 +121,7 @@
                     <div class="filter-group">
                         <h4>TALLA</h4>
                         <div class="talla-btn-group">
-                            ${tallaFiltros.map(f => `<button class="talla-btn" data-talla="${f.valor}" data-categoria="${f.categoria || ''}" onclick="toggleTalla(this)">${f.valor}</button>`).join('')}
+                            ${tallaFiltros.map(f => `<button class="talla-btn" data-talla="${f.valor}" data-categoria="${f.categorias || ''}" onclick="toggleTalla(this)">${f.valor}</button>`).join('')}
                         </div>
                     </div>`;
 
@@ -125,7 +130,7 @@
                         <div class="filter-group">
                             <h4>SUBCATEGORÍA</h4>
                             <div class="talla-btn-group">
-                                ${subcatFiltros.map(f => `<button class="talla-btn" data-subcat="${f.valor}" data-parent="${f.parent || ''}" onclick="toggleSubcat(this)">${f.valor}</button>`).join('')}
+                                ${subcatFiltros.map(f => `<button class="talla-btn" data-subcat="${f.valor}" data-parent="${f.categorias || ''}" onclick="toggleSubcat(this)">${f.valor}</button>`).join('')}
                             </div>
                         </div>`;
                 }
@@ -137,7 +142,7 @@
                 catInner.innerHTML = `<button class="cat-filter-btn active" data-cat="">TODOS</button>`;
                 categoriasUnicas.forEach(cat => {
                     const subcatsForCat = subcatFiltros.filter(s => {
-                        const parentCat = (s.parent || s.categoria || '').toLowerCase();
+                        const parentCat = (s.categorias || '').toLowerCase();
                         return parentCat.includes(cat.toLowerCase());
                     });
 
@@ -450,7 +455,7 @@
                 let matchesTalla = true;
                 if (activeTallas.length > 0) {
                     const validSizeFilters = window.ALL_FILTROS.filter(f => activeTallas.includes(f.valor) && f.tipo === 'talla');
-                    matchesTalla = validSizeFilters.some(f => (f.categoria || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase()));
+                    matchesTalla = validSizeFilters.some(f => (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase()));
                 }
                 let matchesSubcat = true;
                 if (activeSubcats.length > 0) matchesSubcat = p.subcat && activeSubcats.includes(p.subcat);
@@ -713,7 +718,7 @@
         function quickAdd(id) {
             const p = products.find(x => x.id === id);
             if (!p) return;
-            const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && f.activo && (f.categoria || f.parent || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
+            const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && f.activo && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
             addToCart(p.id, tallasDisponibles[0] || "", "Sin personalización");
             showToast("✅ AGREGADO AL CARRITO");
         }
@@ -1016,7 +1021,7 @@
             
             initZoomEffect(); // Inicializar el efecto de Zoom
 
-            const tallas = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && (f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE') && (f.categoria || f.parent || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
+            const tallas = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && (f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE') && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
             const final = tallas.length > 0 ? tallas : (p.cat === "Zapatillas" ? ["37", "38", "39", "40", "41", "42", "43", "44"] : ["S", "M", "L", "XL"]);
             document.getElementById('m-size-container').innerHTML = final.map((t, i) => `<button class="talla-btn ${i===0?'active':''}" data-talla="${t}" onclick="setModalTalla(this)">${t}</button>`).join('');
             selectedModalTalla = final[0];
