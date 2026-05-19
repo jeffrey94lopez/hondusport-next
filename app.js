@@ -755,7 +755,7 @@
             const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
             const finalTotal = activeDiscount > 0 ? subtotal * (1 - (activeDiscount / 100)) : subtotal;
 
-            if (finalTotal >= FREE_SHIPPING_THRESHOLD && !freeShippingReached) {
+            if (window.FREE_SHIPPING_ACTIVO !== false && finalTotal >= FREE_SHIPPING_THRESHOLD && !freeShippingReached) {
                 freeShippingReached = true;
                 const celebration = document.getElementById('free-shipping-toast');
                 celebration.classList.add('active');
@@ -828,7 +828,7 @@
             const promoValSpan = document.getElementById('promo-val');
             if (promoValSpan) promoValSpan.innerText = formatPrice(FREE_SHIPPING_THRESHOLD);
             const msg = document.getElementById('shipping-msg');
-            if (finalTotal >= FREE_SHIPPING_THRESHOLD) {
+            if (window.FREE_SHIPPING_ACTIVO !== false && finalTotal >= FREE_SHIPPING_THRESHOLD) {
                 msg.innerHTML = FREE_SHIPPING_MSG || "✨ ¡TIENES ENVÍO GRATIS!"; msg.style.color = "var(--primary)";
             } else if (SELECTED_ENVIO && SELECTED_ENVIO.tipo === 'delivery' && SELECTED_ENVIO.costo > 0) {
                 msg.innerHTML = `ENVÍO A DOMICILIO: <b>${formatPrice(SELECTED_ENVIO.costo)}</b>`;
@@ -1384,7 +1384,17 @@
             document.body.setAttribute('data-theme', newTheme);
             document.getElementById('theme-toggle-icon').className = newTheme === 'light' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
         }
-        function checkExitIntent() { let t = false; document.addEventListener('mouseleave', (e) => { if(e.clientY < 0 && !t && window.innerWidth > 768) { document.getElementById('exit-popup').classList.add('active'); document.getElementById('exit-overlay').classList.add('active'); t=true; }}); }
+        function checkExitIntent() {
+          if (window.CUPONES_POPUP_ACTIVO === false) return;
+          let t = false;
+          document.addEventListener('mouseleave', (e) => {
+            if (e.clientY < 0 && !t && window.innerWidth > 768) {
+              document.getElementById('exit-popup').classList.add('active');
+              document.getElementById('exit-overlay').classList.add('active');
+              t = true;
+            }
+          });
+        }
         function changeQty(idx, d) { cart[idx].qty += d; if(cart[idx].qty<=0) cart.splice(idx,1); saveAndUpdate(); }
         function copyToClipboard() { const text = decodeURIComponent(getOrderText()); navigator.clipboard.writeText(text).then(() => showToast("📋 PEDIDO COPIADO")); }
 
