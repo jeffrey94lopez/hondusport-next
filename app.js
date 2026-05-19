@@ -30,6 +30,11 @@
             );
         }
 
+        // --- HELPERS ---
+        function isActivo(f) {
+            return f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE';
+        }
+
         // Paginación y Vistos Recientemente
         let recentViews = JSON.parse(localStorage.getItem('hs_recent_views')) || [];
         let hsWishlist = JSON.parse(localStorage.getItem('hs_wishlist')) || [];
@@ -104,7 +109,6 @@
                 window.CUPONES = data.cupones;
                 window.ALL_FILTROS = data.filtros || [];
 
-                const isActivo = f => f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE';
                 const genderFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'genero' && isActivo(f))
                   .sort((a, b) => (a.orden || 0) - (b.orden || 0));
                 const catFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'cat' && isActivo(f))
@@ -116,7 +120,7 @@
 
                 const sidebarDiv = document.getElementById('sidebar-filters');
                 sidebarDiv.innerHTML = `
-                    <div class="filter-group"><h4>GÉNERO</h4>${genderFiltros.map(f => `<label><input type="checkbox" class="filter-check" data-type="gender" value="${f.valor}"> ${f.valor}</label>`).join('')}</div>
+                    <div class="filter-group"><h4>GÉNERO</h4>${genderFiltros.map(f => `<label><input type="checkbox" class="filter-check" data-type="genero" value="${f.valor}"> ${f.valor}</label>`).join('')}</div>
                     <div class="filter-group"><h4>CATEGORÍA</h4>${catFiltros.map(f => `<label><input type="checkbox" class="filter-check" data-type="cat" value="${f.valor}"> ${f.valor}</label>`).join('')}</div>
                     <div class="filter-group">
                         <h4>TALLA</h4>
@@ -448,7 +452,7 @@
             // Filtrado base
             let filtered = products.filter(p => {
                 const matchesPrice = p.price <= maxPrice;
-                const genderFilters = activeChecks.filter(c => c.dataset.type === 'gender').map(c => c.value);
+                const genderFilters = activeChecks.filter(c => c.dataset.type === 'genero').map(c => c.value);
                 const catFilters = activeChecks.filter(c => c.dataset.type === 'cat').map(c => c.value);
                 const matchesGender = (genderFilters.length === 0 || genderFilters.includes(p.gender));
                 const matchesCat = (catFilters.length === 0 || catFilters.includes(p.cat));
@@ -718,7 +722,7 @@
         function quickAdd(id) {
             const p = products.find(x => x.id === id);
             if (!p) return;
-            const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && f.activo && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
+            const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && isActivo(f) && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
             addToCart(p.id, tallasDisponibles[0] || "", "Sin personalización");
             showToast("✅ AGREGADO AL CARRITO");
         }
@@ -1205,7 +1209,7 @@
             const wished = products.filter(p => hsWishlist.includes(p.id) || hsWishlist.includes(String(p.id)) || hsWishlist.includes(Number(p.id)));
             
             container.innerHTML = wished.map(p => {
-                const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && f.activo && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
+                const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && isActivo(f) && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
                 const tallaDefault = tallasDisponibles[0] || "";
                 
                 return `
