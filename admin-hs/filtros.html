@@ -4,6 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Filtros</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="admin.css">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#111;color:#eee;font-family:Inter,sans-serif;padding:1.5rem}
@@ -25,6 +26,7 @@
 </style>
 </head>
 <body>
+<div id="admin-loader"><div class="hs-spinner"></div><span>Cargando</span></div>
 <h2>🏷️ CATEGORÍAS & TALLAS</h2>
 <div class="tabs" id="tabs">
   <button class="tab active" onclick="show('cat',this)">Categorías</button>
@@ -39,11 +41,16 @@ const GET_URL='https://webhook.mplasesores.com/webhook/hondusport-products';
 const POST_URL='n8n-proxy.php';
 let filtros=[],curTab='cat';
 
+function showLoader(){document.getElementById('admin-loader')?.classList.add('active');}
+function hideLoader(){document.getElementById('admin-loader')?.classList.remove('active');}
 async function load(){
-  const r=await fetch(GET_URL + '?t=' + Date.now());const j=await r.json();
-  filtros=j.data.filtros||[];
-  window.HS_CATS=filtros.filter(f=>f.tipo==='cat').map(f=>f.valor);
-  show(curTab);
+  showLoader();
+  try {
+    const r=await fetch(GET_URL + '?t=' + Date.now());const j=await r.json();
+    filtros=j.data.filtros||[];
+    window.HS_CATS=filtros.filter(f=>f.tipo==='cat').map(f=>f.valor);
+    show(curTab);
+  } finally { hideLoader(); }
 }
 
 function catSelector(id, selected=''){

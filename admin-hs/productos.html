@@ -4,6 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Productos</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="admin.css">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#111;color:#eee;font-family:Inter,sans-serif;padding:1.5rem}
@@ -36,6 +37,7 @@
 </style>
 </head>
 <body>
+<div id="admin-loader"><div class="hs-spinner"></div><span>Cargando</span></div>
 <h2>📦 PRODUCTOS</h2>
 <div class="toolbar">
   <input type="text" id="q" placeholder="Buscar..." oninput="render()" style="max-width:260px">
@@ -87,7 +89,10 @@ const GET_URL = 'https://webhook.mplasesores.com/webhook/hondusport-products';
 const POST_URL = 'n8n-proxy.php';
 let all = [], curId = null, curImgs = [];
 
+function showLoader(){document.getElementById('admin-loader')?.classList.add('active');}
+function hideLoader(){document.getElementById('admin-loader')?.classList.remove('active');}
 async function load() {
+  showLoader();
   try {
     const r = await fetch(GET_URL + '?t=' + Date.now()); const j = await r.json();
     all = j.data.products || [];
@@ -103,6 +108,7 @@ async function load() {
       window.HS_CATS.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
     render();
   } catch(e){ toast('❌ Error cargando productos'); }
+  finally { hideLoader(); }
 }
 
 function render() {
@@ -183,7 +189,10 @@ async function save(){
     imagenes:curImgs.join(',')};
   const action=curId?'update':'create';
   const payload=curId?{sheet:'Productos',action,id:curId,data}:{sheet:'Productos',action,data};
+  const btn=document.querySelector('.modal-footer .btn-primary');
+  if(btn) btn.classList.add('btn-loading');
   const r=await n8n(payload);
+  if(btn) btn.classList.remove('btn-loading');
   if(r.success){toast('✅ Guardado');closeModal();load();}else toast('❌ Error al guardar');
 }
 
@@ -196,7 +205,7 @@ async function del(id){
 async function n8n(body){const r=await fetch(POST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json();}
 function closeModal(){document.getElementById('modal').classList.remove('open');curId=null;curImgs=[];}
 function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.className='toast'+(m.startsWith('✅')?' success':m.startsWith('❌')?' error':'');t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 load();
 </script>
 </body>

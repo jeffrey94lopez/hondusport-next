@@ -45,6 +45,7 @@
         let formDataPickup = { name: '', phone: '', email: '' };
 
         async function loadData() {
+            const loader = document.getElementById('page-loader');
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const productoParam = urlParams.get('producto');
@@ -365,10 +366,12 @@
                     if (products.find(p => p.id === id)) requestAnimationFrame(() => openProductPage(id));
                 }
 
-                initHero(); 
+                initHero();
                 updateCartUI();
+                if (loader) loader.classList.add('hidden');
             } catch (error) {
                 console.error('Error:', error);
+                if (loader) loader.classList.add('hidden');
                 document.getElementById('products-container').innerHTML = `<div style="text-align:center; padding:3rem; grid-column:1/-1;"><p style="opacity:0.6;">Error al cargar datos.</p></div>`;
             }
         }
@@ -613,8 +616,10 @@
                         <div class="product-text-content" onclick="openProductPage(${p.id})" style="cursor:pointer;">
                             <div class="stars">${'★'.repeat(p.rating || 5)}${'☆'.repeat(5-(p.rating || 5))}</div>
                             ${visitsHtml}
-                            <h3>${safeName}</h3>
-                            <p class="price">${originalPriceHtml}${formatPrice(p.price)}</p>
+                            <div class="card-name-price">
+                                <h3>${safeName}</h3>
+                                <p class="price">${originalPriceHtml}${formatPrice(p.price)}</p>
+                            </div>
                             ${stockHtml}
                         </div>
                         <div class="card-btn-row">
@@ -776,24 +781,24 @@
                     const safeSize = escapeHTML(item.size);
                     return `
                     <div class="cart-item">
-                        <img src="${safeImg}" alt="${safeName}" style="width:70px; height:70px; object-fit:cover; border-radius:4px;">
-                        <div style="flex-grow:1">
-                            <h4 class="cart-item-title">${safeName}</h4>
-                            <button class="cart-item-view-btn" onclick="viewCartItem(${idx})">VER</button>
-                            <p class="cart-item-size">TALLA: ${safeSize}</p>
-                            <div class="custom-edit-container">
-                                <span class="input-icon-label">✏️</span>
-                                <input type="text" class="custom-edit-input" data-index="${idx}" value="${safeCustom === 'Sin personalización' ? '' : safeCustom}" placeholder="PERSONALIZACIÓN">
-                                <span class="input-help-text">PRESIONA ENTER PARA GUARDAR</span>
+                        <img src="${safeImg}" alt="${safeName}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; flex-shrink:0;">
+                        <div style="flex-grow:1; min-width:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:4px;">
+                                <h4 class="cart-item-title" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">${safeName}</h4>
+                                <button onclick="removeFromCart(${idx})" class="cart-item-delete" style="flex-shrink:0;">🗑️</button>
                             </div>
-                            <div class="cart-item-controls">
+                            <p class="cart-item-size" style="margin:2px 0;">TALLA: ${safeSize}</p>
+                            <div class="custom-edit-container" style="margin:3px 0;">
+                                <span class="input-icon-label">✏️</span>
+                                <input type="text" class="custom-edit-input" data-index="${idx}" value="${safeCustom === 'Sin personalización' ? '' : safeCustom}" placeholder="Personalización">
+                            </div>
+                            <div class="cart-item-controls" style="margin-top:4px;">
                                 <div class="qty-controls">
                                     <button onclick="changeQty(${idx}, -1)" class="qty-btn">-</button>
                                     <span>${item.qty}</span>
                                     <button onclick="changeQty(${idx}, 1)" class="qty-btn">+</button>
                                 </div>
                                 <span class="cart-item-price">${formatPrice(item.price * item.qty)}</span>
-                                <button onclick="removeFromCart(${idx})" class="cart-item-delete">🗑️</button>
                             </div>
                         </div>
                     </div>`

@@ -4,6 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cupones</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="admin.css">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#111;color:#eee;font-family:Inter,sans-serif;padding:1.5rem}
@@ -25,6 +26,7 @@
 </style>
 </head>
 <body>
+<div id="admin-loader"><div class="hs-spinner"></div><span>Cargando</span></div>
 <h2>🎟️ CUPONES DE DESCUENTO</h2>
 <div class="tog-row">
   <div class="tog on" id="pp-tog" onclick="togglePopup(this)"></div>
@@ -44,12 +46,17 @@ const GET_URL='https://webhook.mplasesores.com/webhook/hondusport-products';
 const POST_URL='n8n-proxy.php';
 let cupones=[];
 
+function showLoader(){document.getElementById('admin-loader')?.classList.add('active');}
+function hideLoader(){document.getElementById('admin-loader')?.classList.remove('active');}
 async function load(){
-  const r=await fetch(GET_URL + '?t=' + Date.now());const j=await r.json();
-  cupones=j.data.cupones||[];
-  const pa=j.data.config?.cupones_popup_activo!=='FALSE';
-  if(!pa)document.getElementById('pp-tog').classList.remove('on');
-  render();
+  showLoader();
+  try {
+    const r=await fetch(GET_URL + '?t=' + Date.now());const j=await r.json();
+    cupones=j.data.cupones||[];
+    const pa=j.data.config?.cupones_popup_activo!=='FALSE';
+    if(!pa)document.getElementById('pp-tog').classList.remove('on');
+    render();
+  } finally { hideLoader(); }
 }
 
 function render(){
