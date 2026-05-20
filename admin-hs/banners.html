@@ -33,7 +33,7 @@ const POST_URL='n8n-proxy.php';
 let banners=[];
 
 async function load(){
-  const r=await fetch(GET_URL);const j=await r.json();
+  const r=await fetch(GET_URL + '?t=' + Date.now());const j=await r.json();
   banners=j.data.banners||[];render();
 }
 

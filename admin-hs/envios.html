@@ -46,7 +46,7 @@ const POST_URL='n8n-proxy.php';
 let envios=[];
 
 async function load(){
-  const r=await fetch(GET_URL);const j=await r.json();
+  const r=await fetch(GET_URL + '?t=' + Date.now());const j=await r.json();
   envios=j.data.envios||[];
   const fsActivo=j.data.config?.free_shipping_activo!=='FALSE';
   if(!fsActivo)document.getElementById('fs-tog').classList.remove('on');

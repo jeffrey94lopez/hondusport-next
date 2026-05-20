@@ -45,7 +45,7 @@ const POST_URL='n8n-proxy.php';
 let cupones=[];
 
 async function load(){
-  const r=await fetch(GET_URL);const j=await r.json();
+  const r=await fetch(GET_URL + '?t=' + Date.now());const j=await r.json();
   cupones=j.data.cupones||[];
   const pa=j.data.config?.cupones_popup_activo!=='FALSE';
   if(!pa)document.getElementById('pp-tog').classList.remove('on');

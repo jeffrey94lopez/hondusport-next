@@ -89,7 +89,7 @@ let all = [], curId = null, curImgs = [];
 
 async function load() {
   try {
-    const r = await fetch(GET_URL); const j = await r.json();
+    const r = await fetch(GET_URL + '?t=' + Date.now()); const j = await r.json();
     all = j.data.products || [];
     const cats = [...new Set(all.map(p=>p.cat).filter(Boolean))];
     const s = document.getElementById('fcat');
