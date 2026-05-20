@@ -1,0 +1,268 @@
+{
+  "name": "Products API - HS",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "hondusport-products",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "08424bc3-a193-4657-8575-a4ef6341609c",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [1648, 1840],
+      "webhookId": "75aa52eb-d608-485a-a1e9-e4acc1536d4d"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Productos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "cf882d54-6882-404f-8208-0167e9a5b40d",
+      "name": "Get Products",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1872, 1840],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 372209775,
+          "mode": "list",
+          "cachedResultName": "Configuracion",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit#gid=372209775"
+        },
+        "options": {}
+      },
+      "id": "a7d73a15-77c0-4b74-85fd-64f4b331d37d",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2096, 1840],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1340633077,
+          "mode": "list",
+          "cachedResultName": "Banners",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit#gid=1340633077"
+        },
+        "options": {}
+      },
+      "id": "d567bf11-a7a1-464b-be2e-a4e0d39863d4",
+      "name": "Get Banners",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2320, 1840],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 50099684,
+          "mode": "list",
+          "cachedResultName": "Cupones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit#gid=50099684"
+        },
+        "options": {}
+      },
+      "id": "aed1ab9f-fc38-4c48-b625-4221b43b0315",
+      "name": "Get Cupones",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2544, 1840],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 135085947,
+          "mode": "list",
+          "cachedResultName": "Filtros",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit#gid=135085947"
+        },
+        "options": {}
+      },
+      "id": "c80ebae3-dbe1-4ee1-adc6-cbe8aca6fe63",
+      "name": "Get Filtros",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2768, 1840],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs",
+          "mode": "list",
+          "cachedResultName": "Web-HS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Ldbs8vvPKtQNbrJO9DnZL_A6D0AAGukndheUmXmnRs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Envios",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "b1e2f3a4-c5d6-7890-abcd-ef1234567890",
+      "name": "Get Envios",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2880, 1840],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I5EU1LUw6Fk5lUXM",
+          "name": "Google Sheets SoporteTecnico"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let productsRaw = [];\nlet configRaw = [];\nlet bannersRaw = [];\nlet cuponesRaw = [];\nlet filtrosRaw = [];\nlet enviosRaw = [];\n\ntry { productsRaw = $('Get Products').all(); } catch(e) {}\ntry { configRaw = $('Get Config').all(); } catch(e) {}\ntry { bannersRaw = $('Get Banners').all(); } catch(e) {}\ntry { cuponesRaw = $('Get Cupones').all(); } catch(e) {}\ntry { filtrosRaw = $('Get Filtros').all(); } catch(e) {}\ntry { enviosRaw = $('Get Envios').all(); } catch(e) {}\n\n// --- Productos ---\nconst products = productsRaw\n  .map(item => {\n    const p = item.json;\n    const imagenesRaw = String(p.imagenes || '');\n    const imgs = imagenesRaw.split(',').map(u => u.trim()).filter(Boolean);\n    return {\n      id: parseInt(p.id) || 0,\n      name: String(p.nombre || p.name || ''),\n      price: parseFloat(p.precio || p.price) || 0,\n      precio_original: parseFloat(p.precio_original) || 0,\n      stock: parseInt(p.stock) || 0,\n      cat: String(p.cat || ''),\n      gender: String(p.genero || p.gender || ''),\n      rating: parseInt(p.rating) || 5,\n      badge: String(p.badge || ''),\n      desc: String(p.descripcion || p.desc || ''),\n      personalizable: String(p.personalizable || '').toUpperCase() === 'TRUE',\n      oferta_fin: String(p.oferta_fin || ''),\n      imagenes: imagenesRaw,\n      imgs: imgs,\n      activo: String(p.activo || 'TRUE').toUpperCase() === 'TRUE'\n    };\n  })\n  .filter(p => p.activo && p.id > 0);\n\n// --- Config ---\nconst config = {};\nconfigRaw.forEach(item => {\n  const c = item.json;\n  if (c.key) {\n    let val = c.value;\n    if (typeof val === 'number') val = val.toLocaleString('fullwide', {useGrouping: false});\n    config[String(c.key)] = String(val || '');\n  }\n});\n\n// --- Banners ---\nconst banners = bannersRaw.map(item => {\n  const b = item.json;\n  return {\n    titulo: String(b.titulo || ''),\n    subtitulo: String(b.subtitulo || ''),\n    btn_texto: String(b.btn_texto || 'Ver más'),\n    btn_link: String(b.btn_link || '#tienda'),\n    imagen: String(b.imagen || '')\n  };\n});\n\n// --- Cupones ---\nconst cupones = cuponesRaw\n  .filter(item => {\n    const a = item.json.activo;\n    return a === 'TRUE' || a === true || a === 'true';\n  })\n  .map(item => ({\n    codigo: String(item.json.codigo || '').toUpperCase().trim(),\n    descuento: parseInt(item.json.descuento) || 0,\n    tipo: String(item.json.tipo || 'porcentaje')\n  }));\n\n// --- Filtros ---\nconst filtros = filtrosRaw\n  .filter(item => {\n    const a = item.json.activo;\n    return a === 'TRUE' || a === true || a === 'true';\n  })\n  .map(item => ({\n    tipo: String(item.json.tipo || '').toLowerCase().trim(),\n    valor: String(item.json.valor || '').trim(),\n    categorias: String(item.json.categorias || item.json.categoria || item.json.parent || '').trim(),\n    imagen: String(item.json.imagen || '').trim(),\n    orden: parseInt(item.json.orden) || 0,\n    activo: true\n  }))\n  .sort((a, b) => a.orden - b.orden);\n\n// --- Envios ---\nconst envios = enviosRaw\n  .filter(item => {\n    const a = item.json.activo;\n    return a === 'TRUE' || a === true || a === 'true';\n  })\n  .map(item => ({\n    id: parseInt(item.json.id) || 0,\n    nombre: String(item.json.nombre || ''),\n    descripcion: String(item.json.descripcion || ''),\n    tipo: String(item.json.tipo || 'delivery').toLowerCase(),\n    costo: parseFloat(item.json.costo) || 0,\n    descuento: parseFloat(item.json.descuento) || 0\n  }));\n\nreturn [{\n  json: {\n    success: true,\n    timestamp: new Date().toISOString(),\n    data: { products, config, banners, cupones, filtros, envios }\n  }\n}];"
+      },
+      "id": "3faee14b-d6c6-4796-8ca4-89351ca86b43",
+      "name": "Transform Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3080, 1840]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Content-Type", "value": "application/json" },
+              { "name": "Cache-Control", "value": "public, max-age=60" }
+            ]
+          }
+        }
+      },
+      "id": "ddb78ee7-be88-4ab4-b4a7-ca18c3049653",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [3300, 1840]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Get Products",   "type": "main", "index": 0 }]]
+    },
+    "Get Products": {
+      "main": [[{ "node": "Get Config",     "type": "main", "index": 0 }]]
+    },
+    "Get Config": {
+      "main": [[{ "node": "Get Banners",    "type": "main", "index": 0 }]]
+    },
+    "Get Banners": {
+      "main": [[{ "node": "Get Cupones",    "type": "main", "index": 0 }]]
+    },
+    "Get Cupones": {
+      "main": [[{ "node": "Get Filtros",    "type": "main", "index": 0 }]]
+    },
+    "Get Filtros": {
+      "main": [[{ "node": "Get Envios",     "type": "main", "index": 0 }]]
+    },
+    "Get Envios": {
+      "main": [[{ "node": "Transform Data", "type": "main", "index": 0 }]]
+    },
+    "Transform Data": {
+      "main": [[{ "node": "Send Response",  "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "61881196-cff7-41eb-8b10-8971e395c38d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0c9b096957d95825be21c8ee5e6700639ea4b8e0714a9a7f48ba49751ad7e673"
+  },
+  "id": "24CKoDcisHN3gPHxZVAUj",
+  "tags": []
+}
