@@ -118,7 +118,7 @@
                         <div class="slide-content"><h1>${b.titulo}</h1><p>${b.subtitulo}</p><a href="${b.btn_link}" class="hero-btn-outline">${b.btn_texto}</a></div>
                     </div>`).join('');
 
-                window.CUPONES = data.cupones;
+                window.CUPONES = (data.cupones || []).filter(c => c.activo !== false);
                 window.ALL_FILTROS = data.filtros || [];
 
                 const genderFiltros = window.ALL_FILTROS.filter(f => f.tipo === 'genero' && isActivo(f))
