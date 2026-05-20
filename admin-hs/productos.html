@@ -129,8 +129,15 @@ async function openModal(id=null) {
   document.getElementById('f-pers').value=p.personalizable?'TRUE':'FALSE';
   document.getElementById('f-ofin').value=p.oferta_fin||'';
   document.getElementById('f-activo').value=p.activo===false?'FALSE':'TRUE';
-  if(id){try{const r=await fetch(`list-imgs.php?tipo=productos&id=${id}`);const j=await r.json();curImgs=(j.imgs||[]).map(i=>i.url);}catch(e){curImgs=p.imgs||[];}}
-  else{curImgs=[];}
+  if(id){
+    try{
+      const r=await fetch(`list-imgs.php?tipo=productos&id=${id}`);
+      const j=await r.json();
+      const serverImgs=(j.imgs||[]).map(i=>i.url);
+      // Si el servidor tiene imágenes úsalas, si no usa las del sheet
+      curImgs = serverImgs.length > 0 ? serverImgs : (p.imgs || []);
+    }catch(e){ curImgs=p.imgs||[]; }
+  } else { curImgs=[]; }
   renderImgs();
   document.getElementById('modal').classList.add('open');
 }
