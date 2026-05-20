@@ -824,6 +824,8 @@
             }
             totalVal.innerText = formatPrice(finalTotal);
             document.getElementById('cart-badge').innerText = cart.reduce((acc, i) => acc + i.qty, 0);
+            const fsSection = document.getElementById('free-shipping-section');
+            if (fsSection) fsSection.style.display = window.FREE_SHIPPING_ACTIVO === false ? 'none' : '';
             document.getElementById('shipping-bar').style.width = `${Math.min((finalTotal/FREE_SHIPPING_THRESHOLD)*100, 100)}%`;
             const promoValSpan = document.getElementById('promo-val');
             if (promoValSpan) promoValSpan.innerText = formatPrice(FREE_SHIPPING_THRESHOLD);
@@ -1385,9 +1387,9 @@
             document.getElementById('theme-toggle-icon').className = newTheme === 'light' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
         }
         function checkExitIntent() {
-          if (window.CUPONES_POPUP_ACTIVO === false) return;
           let t = false;
           document.addEventListener('mouseleave', (e) => {
+            if (window.CUPONES_POPUP_ACTIVO === false) return;
             if (e.clientY < 0 && !t && window.innerWidth > 768) {
               document.getElementById('exit-popup').classList.add('active');
               document.getElementById('exit-overlay').classList.add('active');
