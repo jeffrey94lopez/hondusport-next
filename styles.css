@@ -2000,10 +2000,12 @@ label:has(.filter-check:checked)::before {
 }
 
 .cart-item-title {
-    font-size: 0.85rem;
-    font-family: 'Bebas Neue';
-    letter-spacing: 1px;
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.2px;
     margin-bottom: 2px;
+    line-height: 1.3;
 }
 
 .cart-item-view-btn {
