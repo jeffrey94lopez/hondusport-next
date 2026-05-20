@@ -1,134 +1,60 @@
-document.addEventListener('DOMContentLoaded', function(){
-  const page = location.pathname.split('/').pop().replace('.html','').replace('.php','') || 'productos';
-  const nav = [
-    { id:'productos',  icon:'fa-box',    label:'Productos' },
-    { id:'filtros',    icon:'fa-tags',   label:'Categorías & Tallas' },
-    { id:'envios',     icon:'fa-truck',  label:'Envíos' },
-    { id:'cupones',    icon:'fa-ticket', label:'Cupones' },
-    { id:'banners',    icon:'fa-image',  label:'Banners' }
+document.addEventListener('DOMContentLoaded', function () {
+  var pages = [
+    { id: 'productos', icon: '📦', label: 'Productos' },
+    { id: 'filtros',   icon: '🏷️', label: 'Categorías' },
+    { id: 'envios',    icon: '🚚', label: 'Envíos' },
+    { id: 'cupones',   icon: '🎟️', label: 'Cupones' },
+    { id: 'banners',   icon: '🖼️', label: 'Banners' }
   ];
 
-  // Sidebar element
-  const sidebar = document.createElement('aside');
-  sidebar.id = 'hs-sidebar';
-  sidebar.innerHTML = `
-    <div class="hs-brand">
-      <span class="hs-brand-name">HONDUSPORT</span>
-      <span class="hs-brand-sub">ADMIN</span>
-    </div>
-    <nav class="hs-nav">
-      ${nav.map(n=>`
-        <a href="${n.id}.html" class="hs-nav-item${page===n.id?' active':''}">
-          <i class="fa-solid ${n.icon}"></i>
-          <span>${n.label}</span>
-        </a>`).join('')}
-    </nav>
-    <div class="hs-nav-footer">
-      <a href="logout.php" class="hs-nav-item">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        <span>Salir</span>
-      </a>
-    </div>`;
+  var current = location.pathname.split('/').pop().replace('.html', '').replace('.php', '') || 'productos';
 
-  // Wrap existing body content in a main area
-  const wrap = document.createElement('div');
-  wrap.id = 'hs-shell';
+  var nav = document.createElement('nav');
+  nav.id = 'hs-topnav';
+  nav.innerHTML =
+    '<a href="productos.html" class="hs-brand">HONDUSPORT <span>ADMIN</span></a>' +
+    '<div class="hs-links">' +
+    pages.map(function (p) {
+      return '<a href="' + p.id + '.html" class="hs-link' + (current === p.id ? ' active' : '') + '">' +
+        '<span class="hs-icon">' + p.icon + '</span>' +
+        '<span class="hs-label">' + p.label + '</span>' +
+        '</a>';
+    }).join('') +
+    '</div>' +
+    '<a href="logout.php" class="hs-logout" title="Salir">⏻</a>';
 
-  const main = document.createElement('main');
-  main.id = 'hs-main';
+  document.body.insertBefore(nav, document.body.firstChild);
 
-  // Move all existing body children into main
-  while (document.body.firstChild) {
-    main.appendChild(document.body.firstChild);
-  }
+  /* Styles */
+  var css = document.createElement('style');
+  css.textContent = [
+    '#hs-topnav{display:flex;align-items:center;gap:0;background:#141414;border-bottom:1px solid #252525;',
+    'padding:0 1.25rem;height:52px;position:sticky;top:0;z-index:900;',
+    'font-family:Inter,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4);}',
 
-  wrap.appendChild(sidebar);
-  wrap.appendChild(main);
-  document.body.appendChild(wrap);
+    '.hs-brand{color:#C9A84C;font-size:.85rem;font-weight:700;letter-spacing:2.5px;text-decoration:none;',
+    'white-space:nowrap;margin-right:1.5rem;}',
+    '.hs-brand span{font-size:.65rem;opacity:.45;letter-spacing:2px;margin-left:4px;vertical-align:middle;}',
 
-  // Inject shell styles
-  const style = document.createElement('style');
-  style.textContent = `
-    body { padding: 0 !important; margin: 0; background: #0d0d0d; }
-    #hs-shell { display: flex; min-height: 100vh; }
+    '.hs-links{display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;}',
+    '.hs-link{display:flex;align-items:center;gap:6px;padding:.4rem .85rem;color:rgba(255,255,255,.5);',
+    'text-decoration:none;font-size:.78rem;font-weight:600;border-radius:5px;',
+    'white-space:nowrap;transition:color .15s,background .15s;}',
+    '.hs-link:hover{color:#C9A84C;background:rgba(201,168,76,.08);}',
+    '.hs-link.active{color:#C9A84C;background:rgba(201,168,76,.12);}',
+    '.hs-icon{font-size:.85rem;}',
 
-    #hs-sidebar {
-      width: 220px;
-      min-width: 220px;
-      background: #141414;
-      border-right: 1px solid #252525;
-      display: flex;
-      flex-direction: column;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-    .hs-brand {
-      padding: 1.4rem 1.5rem 1.2rem;
-      border-bottom: 1px solid #252525;
-    }
-    .hs-brand-name {
-      display: block;
-      color: #C9A84C;
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: 3px;
-    }
-    .hs-brand-sub {
-      display: block;
-      font-size: .65rem;
-      letter-spacing: 2px;
-      color: rgba(255,255,255,.3);
-      margin-top: 3px;
-    }
-    .hs-nav { flex: 1; padding: .75rem 0; }
-    .hs-nav-item {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      padding: .72rem 1.5rem;
-      color: rgba(255,255,255,.5);
-      text-decoration: none;
-      font-size: .85rem;
-      font-weight: 600;
-      letter-spacing: .3px;
-      transition: color .15s, background .15s;
-      border: none;
-      border-left: 2px solid transparent;
-      background: none;
-      width: 100%;
-      cursor: pointer;
-      box-sizing: border-box;
-      font-family: inherit;
-    }
-    .hs-nav-item i { width: 17px; text-align: center; font-size: .9rem; flex-shrink: 0; }
-    .hs-nav-item:hover { color: #C9A84C; background: rgba(201,168,76,.07); }
-    .hs-nav-item.active {
-      color: #C9A84C;
-      background: rgba(201,168,76,.1);
-      border-left-color: #C9A84C;
-    }
-    .hs-nav-footer {
-      padding: .75rem 0;
-      border-top: 1px solid #252525;
-    }
-    #hs-main {
-      flex: 1;
-      min-width: 0;
-      padding: 1.5rem;
-      overflow-y: auto;
-    }
+    '.hs-logout{margin-left:auto;color:rgba(255,255,255,.35);text-decoration:none;',
+    'font-size:1.1rem;padding:.3rem .5rem;border-radius:4px;transition:.15s;flex-shrink:0;}',
+    '.hs-logout:hover{color:#c0392b;}',
 
-    /* Mobile: collapse sidebar to icons only */
-    @media (max-width: 768px) {
-      #hs-sidebar { width: 54px; min-width: 54px; }
-      .hs-brand-name, .hs-brand-sub, .hs-nav-item span { display: none; }
-      .hs-nav-item { justify-content: center; padding: .85rem; }
-      .hs-brand { padding: 1rem .5rem; }
-      #hs-main { padding: 1rem; }
-    }
-  `;
-  document.head.appendChild(style);
+    'body{padding-top:0!important;}',
+
+    '@media(max-width:600px){',
+    '.hs-brand{margin-right:.5rem;}',
+    '.hs-label{display:none;}',
+    '.hs-link{padding:.4rem .6rem;}',
+    '}'
+  ].join('');
+  document.head.appendChild(css);
 });
