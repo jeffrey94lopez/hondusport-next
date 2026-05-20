@@ -96,9 +96,17 @@ async function togglePopup(el){
   toast(`✅ Popup ${v==='TRUE'?'activado':'desactivado'}`);
 }
 
-async function n8n(body){const r=await fetch(POST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json();}
+async function n8n(body){
+  try{
+    const r=await fetch(POST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok){let e='';try{e=await r.text();}catch(x){}return{success:false,error:'Error '+r.status+' del servidor. '+e.slice(0,120)};}
+    let j;try{j=await r.json();}catch(e){return{success:false,error:'Respuesta invalida. Verifica que n8n este activo.'};}
+    if(j.success===false)return{success:false,error:j.error||j.message||'n8n reporto un error.'};
+    return{success:true,...j};
+  }catch(e){return{success:false,error:'Sin conexion: '+e.message};}
+}
 function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+function toast(m,type){const t=document.getElementById('toast');t.textContent=m;const isErr=type==='error'||m.startsWith('❌');t.className='toast'+(isErr?' error':m.startsWith('✅')?' success':'');t.style.maxWidth='360px';t.style.display='block';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.display='none',isErr?6000:3000);}
 load();
 </script>
 </body>

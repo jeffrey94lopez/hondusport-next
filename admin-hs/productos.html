@@ -60,9 +60,19 @@
     <div><label>BADGE</label><select id="f-badge"><option value="">Sin badge</option><option>Oferta</option><option>Nuevo</option><option>Más Vendido</option></select></div>
     <div><label>RATING (1-5)</label><input id="f-rating" type="number" min="1" max="5" value="5"></div>
     <div class="full"><label>DESCRIPCIÓN</label><textarea id="f-desc" rows="3"></textarea></div>
-    <div><label>PERSONALIZABLE</label><select id="f-pers"><option value="FALSE">No</option><option value="TRUE">Sí</option></select></div>
+    <div><label>PERSONALIZABLE</label>
+      <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
+        <div class="tog" id="f-pers-tog" onclick="this.classList.toggle('on')"></div>
+        <span style="font-size:.8rem;opacity:.6">Permite agregar nombre/número</span>
+      </div>
+    </div>
     <div><label>OFERTA FIN</label><input id="f-ofin" type="datetime-local"></div>
-    <div><label>ACTIVO</label><select id="f-activo"><option value="TRUE">Sí</option><option value="FALSE">No</option></select></div>
+    <div><label>ACTIVO <span style="font-weight:400;opacity:.5">(visible en tienda)</span></label>
+      <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
+        <div class="tog on" id="f-activo-tog" onclick="this.classList.toggle('on')"></div>
+        <span id="f-activo-label" style="font-size:.8rem;opacity:.6">Producto visible</span>
+      </div>
+    </div>
     <div class="full"><label>TALLAS ESPECÍFICAS <span style="font-weight:400;opacity:.5">(vacío = usa tallas de la categoría)</span></label><input id="f-tallas" placeholder="Ej: S,XL o 38,40,42"></div>
     <div class="full">
       <label>IMÁGENES</label>
@@ -140,9 +150,11 @@ async function openModal(id=null) {
   document.getElementById('f-badge').value=p.badge||'';
   document.getElementById('f-rating').value=p.rating||5;
   document.getElementById('f-desc').value=p.desc||'';
-  document.getElementById('f-pers').value=p.personalizable?'TRUE':'FALSE';
+  const togPers = document.getElementById('f-pers-tog');
+  p.personalizable ? togPers.classList.add('on') : togPers.classList.remove('on');
   document.getElementById('f-ofin').value=p.oferta_fin||'';
-  document.getElementById('f-activo').value=p.activo===false?'FALSE':'TRUE';
+  const togActivo = document.getElementById('f-activo-tog');
+  p.activo===false ? togActivo.classList.remove('on') : togActivo.classList.add('on');
   document.getElementById('f-tallas').value=p.tallas_custom||'';
   if(id){
     try{
@@ -174,41 +186,89 @@ async function uploadFiles(files){
 function copyUrls(){navigator.clipboard.writeText(curImgs.join(','));toast('✅ URLs copiadas');}
 
 async function saveImgs(){
-  if(!curId){toast('Guarda el producto primero');return;}
+  if(!curId){toast('❌ Guarda el producto primero para poder asignarle imágenes','error');return;}
   const r=await n8n({sheet:'Productos',action:'update',id:curId,data:{imagenes:curImgs.join(',')}});
-  if(r.success)toast('✅ Imágenes guardadas en sheet'); else toast('❌ Error');
+  if(r.success) toast('✅ Imágenes guardadas en el sheet');
+  else toast('❌ No se pudieron guardar las imágenes: '+r.error,'error');
 }
 
 async function save(){
   const nombre=document.getElementById('f-nombre').value.trim();
   const precio=document.getElementById('f-precio').value;
-  if(!nombre||!precio){toast('❌ Nombre y precio son obligatorios');return;}
-  const data={nombre,cat:document.getElementById('f-cat').value,precio,precio_original:document.getElementById('f-po').value,
-    stock:document.getElementById('f-stock').value,genero:document.getElementById('f-gen').value,
-    badge:document.getElementById('f-badge').value,rating:document.getElementById('f-rating').value,
-    descripcion:document.getElementById('f-desc').value,personalizable:document.getElementById('f-pers').value,
-    oferta_fin:document.getElementById('f-ofin').value,activo:document.getElementById('f-activo').value,
-    tallas:document.getElementById('f-tallas').value,
-    imagenes:curImgs.join(',')};
+  const cat=document.getElementById('f-cat').value;
+  if(!nombre) return toast('❌ El nombre del producto es obligatorio','error');
+  if(!precio || isNaN(parseFloat(precio))) return toast('❌ El precio debe ser un número válido','error');
+  if(!cat) return toast('❌ Selecciona una categoría','error');
+  const data={
+    nombre, cat, precio,
+    precio_original: document.getElementById('f-po').value||'',
+    stock: document.getElementById('f-stock').value||'',
+    genero: document.getElementById('f-gen').value||'',
+    badge: document.getElementById('f-badge').value||'',
+    rating: document.getElementById('f-rating').value||5,
+    descripcion: document.getElementById('f-desc').value||'',
+    personalizable: document.getElementById('f-pers-tog').classList.contains('on')?'TRUE':'FALSE',
+    oferta_fin: document.getElementById('f-ofin').value||'',
+    activo: document.getElementById('f-activo-tog').classList.contains('on')?'TRUE':'FALSE',
+    tallas: document.getElementById('f-tallas').value||'',
+    imagenes: curImgs.join(',')
+  };
   const action=curId?'update':'create';
   const payload=curId?{sheet:'Productos',action,id:curId,data}:{sheet:'Productos',action,data};
   const btn=document.querySelector('.modal-footer .btn-primary');
   if(btn) btn.classList.add('btn-loading');
   const r=await n8n(payload);
   if(btn) btn.classList.remove('btn-loading');
-  if(r.success){toast('✅ Guardado');closeModal();load();}else toast('❌ Error al guardar');
+  if(r.success){
+    toast('✅ Producto '+(curId?'actualizado':'creado')+' correctamente');
+    closeModal(); load();
+  } else {
+    toast('❌ No se pudo guardar: '+r.error,'error');
+  }
 }
 
 async function del(id){
-  if(!confirm('¿Eliminar este producto?'))return;
+  if(!confirm('¿Marcar este producto como inactivo? (desaparece de la tienda pero queda en el sheet)'))return;
   const r=await n8n({sheet:'Productos',action:'delete',id});
-  if(r.success){toast('✅ Eliminado');load();}
+  if(r.success) toast('✅ Producto desactivado');
+  else toast('❌ No se pudo desactivar: '+r.error,'error');
 }
 
-async function n8n(body){const r=await fetch(POST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json();}
+async function n8n(body){
+  try {
+    const r=await fetch(POST_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    if(!r.ok){
+      let errText='';
+      try{ errText=await r.text(); }catch(e){}
+      return {success:false, error:`El servidor respondió con error ${r.status} (${r.statusText}). ${errText.slice(0,150)}`};
+    }
+    let j;
+    try{ j=await r.json(); }
+    catch(e){ return {success:false, error:'La respuesta del servidor no es JSON válido. Revisa que el workflow de n8n esté activo.'}; }
+    if(j.success===false) return {success:false, error:j.error||j.message||'n8n procesó la solicitud pero reportó un error interno.'};
+    return {success:true,...j};
+  } catch(e){
+    if(e.message.includes('Failed to fetch')||e.message.includes('NetworkError'))
+      return {success:false, error:'Sin conexión al servidor. Verifica que n8n esté corriendo y que n8n-proxy.php esté en el servidor.'};
+    return {success:false, error:'Error inesperado: '+e.message};
+  }
+}
 function closeModal(){document.getElementById('modal').classList.remove('open');curId=null;curImgs=[];}
 function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.className='toast'+(m.startsWith('✅')?' success':m.startsWith('❌')?' error':'');t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+function toast(m, type){
+  const t=document.getElementById('toast');
+  t.textContent=m;
+  const isErr=type==='error'||m.startsWith('❌');
+  t.className='toast'+(isErr?' error':m.startsWith('✅')?' success':'');
+  t.style.maxWidth='360px';
+  t.style.display='block';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.style.display='none', isErr?6000:3000);
+}
 load();
 </script>
 </body>
