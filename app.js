@@ -960,10 +960,8 @@
                         <div class="product-text-content" onclick="openProductPage(${p.id})" style="cursor:pointer;">
                             <div class="stars">${'★'.repeat(p.rating || 5)}${'☆'.repeat(5-(p.rating || 5))}</div>
                             ${visitsHtml}
-                            <div class="card-name-price">
-                                <h3>${safeName}</h3>
-                                <p class="price">${originalPriceHtml}${formatPrice(p.price)}</p>
-                            </div>
+                            <h3>${safeName}</h3>
+                            <p class="price">${originalPriceHtml}${formatPrice(p.price)}</p>
                             ${stockHtml}
                         </div>
                         <div class="card-btn-row">

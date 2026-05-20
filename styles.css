@@ -832,27 +832,6 @@ input[type="range"] {
     border-bottom: 1px solid var(--border);
 }
 
-/* Nombre + precio en la misma línea en el card */
-.card-name-price {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 6px;
-    margin-bottom: 0;
-}
-.card-name-price h3 {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin: 0;
-}
-.card-name-price .price {
-    white-space: nowrap;
-    flex-shrink: 0;
-    font-size: 0.85rem;
-}
 
 /* Loader de la tienda */
 #page-loader {
