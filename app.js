@@ -368,10 +368,10 @@
 
                 initHero();
                 updateCartUI();
-                if (loader) loader.classList.add('hidden');
+                if (loader) loader.style.display = 'none';
             } catch (error) {
                 console.error('Error:', error);
-                if (loader) loader.classList.add('hidden');
+                if (loader) loader.style.display = 'none';
                 document.getElementById('products-container').innerHTML = `<div style="text-align:center; padding:3rem; grid-column:1/-1;"><p style="opacity:0.6;">Error al cargar datos.</p></div>`;
             }
         }
