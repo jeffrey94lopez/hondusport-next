@@ -63,6 +63,7 @@
     <div><label>PERSONALIZABLE</label><select id="f-pers"><option value="FALSE">No</option><option value="TRUE">Sí</option></select></div>
     <div><label>OFERTA FIN</label><input id="f-ofin" type="datetime-local"></div>
     <div><label>ACTIVO</label><select id="f-activo"><option value="TRUE">Sí</option><option value="FALSE">No</option></select></div>
+    <div class="full"><label>TALLAS ESPECÍFICAS <span style="font-weight:400;opacity:.5">(vacío = usa tallas de la categoría)</span></label><input id="f-tallas" placeholder="Ej: S,XL o 38,40,42"></div>
     <div class="full">
       <label>IMÁGENES</label>
       <div class="imgs-grid" id="imgs-grid"></div>
@@ -142,6 +143,7 @@ async function openModal(id=null) {
   document.getElementById('f-pers').value=p.personalizable?'TRUE':'FALSE';
   document.getElementById('f-ofin').value=p.oferta_fin||'';
   document.getElementById('f-activo').value=p.activo===false?'FALSE':'TRUE';
+  document.getElementById('f-tallas').value=p.tallas_custom||'';
   if(id){
     try{
       const r=await fetch(`list-imgs.php?tipo=productos&id=${id}`);
@@ -186,6 +188,7 @@ async function save(){
     badge:document.getElementById('f-badge').value,rating:document.getElementById('f-rating').value,
     descripcion:document.getElementById('f-desc').value,personalizable:document.getElementById('f-pers').value,
     oferta_fin:document.getElementById('f-ofin').value,activo:document.getElementById('f-activo').value,
+    tallas:document.getElementById('f-tallas').value,
     imagenes:curImgs.join(',')};
   const action=curId?'update':'create';
   const payload=curId?{sheet:'Productos',action,id:curId,data}:{sheet:'Productos',action,data};

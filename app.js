@@ -331,6 +331,18 @@
 </div>`;
         }
 
+// Helper: tallas disponibles para un producto
+        // Usa tallas_custom del producto si están definidas, si no las de la categoría
+        function getTallas(p) {
+            if (p.tallas_custom && p.tallas_custom.trim()) {
+                return p.tallas_custom.split(',').map(t => t.trim()).filter(Boolean);
+            }
+            return (window.ALL_FILTROS || [])
+                .filter(f => f.tipo === 'talla' && isActivo(f) &&
+                    (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes((p.cat || '').toLowerCase()))
+                .map(f => f.valor);
+        }
+
 // GLOBALS
         let WHATSAPP_NUMBER = "50499999999";
         let FREE_SHIPPING_THRESHOLD = 999;
@@ -1101,7 +1113,7 @@
         function quickAdd(id) {
             const p = products.find(x => x.id === id);
             if (!p) return;
-            const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && isActivo(f) && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
+            const tallasDisponibles = getTallas(p);
             addToCart(p.id, tallasDisponibles[0] || "", "Sin personalización");
             showToast("✅ AGREGADO AL CARRITO");
         }
@@ -1415,8 +1427,7 @@
             
             initZoomEffect(); // Inicializar el efecto de Zoom
 
-            const tallas = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && (f.activo === true || String(f.activo).trim().toUpperCase() === 'TRUE') && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
-            const final = tallas.length > 0 ? tallas : (p.cat === "Zapatillas" ? ["37", "38", "39", "40", "41", "42", "43", "44"] : ["S", "M", "L", "XL"]);
+            const final = getTallas(p);
             document.getElementById('m-size-container').innerHTML = final.map((t, i) => `<button class="talla-btn ${i===0?'active':''}" data-talla="${t}" onclick="setModalTalla(this)">${t}</button>`).join('');
             selectedModalTalla = final[0];
             document.getElementById('m-title').innerText = p.name;
@@ -1599,7 +1610,7 @@
             const wished = products.filter(p => hsWishlist.includes(p.id) || hsWishlist.includes(String(p.id)) || hsWishlist.includes(Number(p.id)));
             
             container.innerHTML = wished.map(p => {
-                const tallasDisponibles = (window.ALL_FILTROS || []).filter(f => f.tipo === 'talla' && isActivo(f) && (f.categorias || '').split(',').map(c => c.trim().toLowerCase()).includes(p.cat.toLowerCase())).map(f => f.valor);
+                const tallasDisponibles = getTallas(p);
                 const tallaDefault = tallasDisponibles[0] || "";
                 
                 return `
