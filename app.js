@@ -680,8 +680,28 @@
                 entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
             }, { threshold: 0.1 });
             document.querySelectorAll('.product-card').forEach(card => observer.observe(card));
-            
+
+            startOfferTimers();
             renderRecentViews();
+        }
+
+        function startOfferTimers() {
+            document.querySelectorAll('.offer-timer[data-time]:not([data-started])').forEach(el => {
+                el.dataset.started = '1';
+                let secs = parseInt(el.dataset.time) || 0;
+                if (secs <= 0) { el.style.display = 'none'; return; }
+                const pad = n => String(n).padStart(2, '0');
+                const tick = () => {
+                    if (secs <= 0) { el.style.display = 'none'; return; }
+                    const h = Math.floor(secs / 3600);
+                    const m = Math.floor((secs % 3600) / 60);
+                    const s = secs % 60;
+                    el.textContent = `⏳ ${pad(h)}:${pad(m)}:${pad(s)}`;
+                    secs--;
+                };
+                tick();
+                setInterval(tick, 1000);
+            });
         }
 
         function loadMoreProducts() {
