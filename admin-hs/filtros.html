@@ -41,7 +41,22 @@ let filtros=[],curTab='cat';
 
 async function load(){
   const r=await fetch(GET_URL + '?t=' + Date.now());const j=await r.json();
-  filtros=j.data.filtros||[];show(curTab);
+  filtros=j.data.filtros||[];
+  window.HS_CATS=filtros.filter(f=>f.tipo==='cat').map(f=>f.valor);
+  show(curTab);
+}
+
+function catSelector(id, selected=''){
+  const cats=window.HS_CATS||[];
+  const sel=selected.split(',').map(c=>c.trim()).filter(Boolean);
+  const opts=cats.map(c=>`<option value="${esc(c)}"${sel.includes(c)?' selected':''}>${esc(c)}</option>`).join('');
+  return `<select id="${id}" multiple style="width:180px;min-height:72px;background:#1a1a1a;border:1px solid #333;color:#eee;border-radius:6px;padding:.3rem;font-size:.85rem">${opts}</select>`;
+}
+
+function getCatValue(id){
+  const el=document.getElementById(id);
+  if(!el)return '';
+  return Array.from(el.selectedOptions).map(o=>o.value).join(',');
 }
 
 function show(tipo,el){
@@ -55,7 +70,7 @@ function show(tipo,el){
   data.forEach((f,i)=>{
     html+=`<tr>
       <td><input id="v${i}" value="${esc(f.valor)}" style="width:120px"></td>
-      ${needsCat?`<td><input id="c${i}" value="${esc(f.categorias||'')}" placeholder="Cat1,Cat2" style="width:180px"></td>`:''}
+      ${needsCat?`<td>${catSelector(`c${i}`, f.categorias||'')}</td>`:''}
       ${needsImg?`<td><input id="img${i}" value="${esc(f.imagen||'')}" placeholder="https://..." style="width:180px"></td>`:''}
       <td><input id="o${i}" type="number" value="${f.orden||0}" style="width:55px"></td>
       <td><div class="tog ${f.activo?'on':''}" id="tog${i}" onclick="this.classList.toggle('on')"></div></td>
@@ -68,7 +83,7 @@ function show(tipo,el){
   const cols=1+(needsCat?1:0)+(needsImg?1:0)+3;
   html+=`<div class="add-row" style="grid-template-columns:repeat(${cols},1fr) auto">
     <div><label>VALOR *</label><input id="nv" placeholder="XL, Running..."></div>
-    ${needsCat?'<div><label>CATEGORÍAS</label><input id="nc" placeholder="Cat1,Cat2"></div>':''}
+    ${needsCat?`<div><label>CATEGORÍAS</label>${catSelector('nc','')}</div>`:''}
     ${needsImg?'<div><label>IMAGEN</label><input id="ni" placeholder="https://..."></div>':''}
     <div><label>ORDEN</label><input id="no" type="number" value="0"></div>
     <div></div>
@@ -81,7 +96,7 @@ async function saveRow(i){
   const tipo=curTab,data=filtros.filter(f=>f.tipo===tipo),f=data[i];
   const needsCat=tipo==='subcat'||tipo==='talla';
   const body={tipo,valor:document.getElementById(`v${i}`).value,
-    categorias:needsCat?(document.getElementById(`c${i}`)?.value||''):'',
+    categorias:needsCat?getCatValue(`c${i}`):'',
     imagen:tipo==='cat'?(document.getElementById(`img${i}`)?.value||''):'',
     orden:parseInt(document.getElementById(`o${i}`).value)||0,
     activo:document.getElementById(`tog${i}`).classList.contains('on')?'TRUE':'FALSE'};
@@ -101,7 +116,7 @@ async function addRow(){
   if(!valor){toast('❌ Valor obligatorio');return;}
   const needsCat=curTab==='subcat'||curTab==='talla';
   const body={tipo:curTab,valor,
-    categorias:needsCat?(document.getElementById('nc')?.value||''):'',
+    categorias:needsCat?getCatValue('nc'):'',
     imagen:curTab==='cat'?(document.getElementById('ni')?.value||''):'',
     orden:parseInt(document.getElementById('no').value)||0,activo:'TRUE'};
   const r=await n8n({sheet:'Filtros',action:'create',data:body});

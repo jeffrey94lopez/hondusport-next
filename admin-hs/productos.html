@@ -50,7 +50,7 @@
   <h3 id="modal-title">NUEVO PRODUCTO</h3>
   <div class="grid2">
     <div><label>NOMBRE *</label><input id="f-nombre"></div>
-    <div><label>CATEGORÍA *</label><input id="f-cat"></div>
+    <div><label>CATEGORÍA *</label><select id="f-cat"><option value="">Selecciona categoría...</option></select></div>
     <div><label>PRECIO *</label><input id="f-precio" type="number" step="0.01"></div>
     <div><label>PRECIO ORIGINAL</label><input id="f-po" type="number" step="0.01"></div>
     <div><label>STOCK (vacío=ilimitado)</label><input id="f-stock" type="number"></div>
@@ -91,9 +91,16 @@ async function load() {
   try {
     const r = await fetch(GET_URL + '?t=' + Date.now()); const j = await r.json();
     all = j.data.products || [];
-    const cats = [...new Set(all.map(p=>p.cat).filter(Boolean))];
+    // Categorías desde filtros (fuente de verdad)
+    const allFiltros = j.data.filtros || [];
+    window.HS_CATS = allFiltros.filter(f=>f.tipo==='cat').map(f=>f.valor);
+    // Poblar select del filtro de tabla
     const s = document.getElementById('fcat');
-    cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;s.appendChild(o);});
+    window.HS_CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;s.appendChild(o);});
+    // Poblar select de categoría del modal
+    const fCatSel = document.getElementById('f-cat');
+    if(fCatSel) fCatSel.innerHTML = '<option value="">Selecciona categoría...</option>' +
+      window.HS_CATS.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
     render();
   } catch(e){ toast('❌ Error cargando productos'); }
 }
