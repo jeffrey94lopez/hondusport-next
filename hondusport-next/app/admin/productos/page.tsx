@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import ProductosClient from './ProductosClient'
 
 export default async function ProductosPage() {
   const supabase = await createClient()
@@ -17,9 +18,9 @@ export default async function ProductosPage() {
   ])
 
   return (
-    <div style={{ padding: '1.5rem', color: '#e0e0e0' }}>
-      <h1>Productos ({productos?.length ?? 0})</h1>
-      <p style={{ color: 'rgba(255,255,255,0.45)' }}>UI se crea en Task 11</p>
-    </div>
+    <ProductosClient
+      productos={productos ?? []}
+      categorias={categorias ?? []}
+    />
   )
 }
