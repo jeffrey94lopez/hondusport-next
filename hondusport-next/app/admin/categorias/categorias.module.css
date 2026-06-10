@@ -1,0 +1,40 @@
+.page { padding: 1.5rem; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+.title { font-size: 1.25rem; font-weight: 800; }
+
+.tabs { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.tab {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 7px;
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.tab:hover { color: var(--text); }
+.tabActive { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+.tableWrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.855rem; }
+.table th { text-align: left; padding: 0.7rem 1rem; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+.table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table tr:last-child td { border-bottom: none; }
+
+.rowActions { display: flex; gap: 0.4rem; }
+.btnEdit, .btnDelete { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: 6px; padding: 0.3rem 0.65rem; font-size: 0.75rem; cursor: pointer; color: var(--text-muted); transition: all 0.12s; }
+.btnEdit:hover { border-color: var(--accent); color: var(--accent); }
+.btnDelete:hover { border-color: var(--danger); color: var(--danger); }
+.btnPrimary { background: var(--accent); color: #000; border: none; border-radius: 7px; padding: 0.55rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btnCancel { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: 7px; padding: 0.55rem 1rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; }
+
+.empty { padding: 3rem; text-align: center; color: var(--text-muted); }
+
+.form { display: flex; flex-direction: column; gap: 0.9rem; }
+.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.formLabel { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+.formError { font-size: 0.8rem; color: var(--danger); }
+.formFooter { display: flex; gap: 0.6rem; justify-content: flex-end; padding-top: 0.5rem; border-top: 1px solid var(--border); }
