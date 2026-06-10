@@ -14,6 +14,7 @@ import styles from './productos.module.css'
 interface Props {
   productos: Producto[]
   categorias: { id: string; valor: string }[]
+  subcategorias: Pick<Categoria, 'id' | 'valor' | 'categorias_padre'>[]
 }
 
 const EMPTY_FORM: ProductoForm = {
@@ -22,6 +23,7 @@ const EMPTY_FORM: ProductoForm = {
   precio: 0,
   precio_original: null,
   categoria_id: null,
+  subcategoria_id: null,
   stock: null,
   genero: '',
   badge: '',
@@ -33,7 +35,7 @@ const EMPTY_FORM: ProductoForm = {
   activo: true,
 }
 
-export default function ProductosClient({ productos, categorias }: Props) {
+export default function ProductosClient({ productos, categorias, subcategorias }: Props) {
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState<'create' | 'edit' | null>(null)
   const [editing, setEditing] = useState<Producto | null>(null)
@@ -85,6 +87,7 @@ export default function ProductosClient({ productos, categorias }: Props) {
       precio: p.precio,
       precio_original: p.precio_original,
       categoria_id: p.categoria_id,
+      subcategoria_id: p.subcategoria_id,
       stock: p.stock,
       genero: p.genero ?? '',
       badge: p.badge ?? '',
@@ -137,6 +140,26 @@ export default function ProductosClient({ productos, categorias }: Props) {
   const f = (field: keyof ProductoForm) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => setForm(prev => ({ ...prev, [field]: e.target.value }))
+
+  const subcategoriasDisponibles = useMemo(() => {
+    const categoriaValor = categorias.find(c => c.id === form.categoria_id)?.valor
+    if (!categoriaValor) return []
+    return subcategorias.filter(s => s.categorias_padre?.includes(categoriaValor))
+  }, [categorias, subcategorias, form.categoria_id])
+
+  function handleCategoriaChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const categoria_id = e.target.value || null
+    const categoriaValor = categorias.find(c => c.id === categoria_id)?.valor
+    setForm(prev => ({
+      ...prev,
+      categoria_id,
+      subcategoria_id: subcategorias.some(
+        s => s.id === prev.subcategoria_id && s.categorias_padre?.includes(categoriaValor ?? '')
+      )
+        ? prev.subcategoria_id
+        : null,
+    }))
+  }
 
   return (
     <div className={styles.page}>
@@ -269,13 +292,28 @@ export default function ProductosClient({ productos, categorias }: Props) {
             <div className={styles.formRow}>
               <label className={styles.formLabel}>
                 Categoría
-                <select value={form.categoria_id ?? ''} onChange={e => setForm(p => ({ ...p, categoria_id: e.target.value || null }))}>
+                <select value={form.categoria_id ?? ''} onChange={handleCategoriaChange}>
                   <option value="">— Sin categoría —</option>
                   {categorias.map(c => (
                     <option key={c.id} value={c.id}>{c.valor}</option>
                   ))}
                 </select>
               </label>
+              <label className={styles.formLabel}>
+                Subcategoría
+                <select
+                  value={form.subcategoria_id ?? ''}
+                  onChange={e => setForm(p => ({ ...p, subcategoria_id: e.target.value || null }))}
+                  disabled={subcategoriasDisponibles.length === 0}
+                >
+                  <option value="">— Sin subcategoría —</option>
+                  {subcategoriasDisponibles.map(s => (
+                    <option key={s.id} value={s.id}>{s.valor}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className={styles.formRow}>
               <label className={styles.formLabel}>
                 Stock (vacío = ilimitado)
                 <input

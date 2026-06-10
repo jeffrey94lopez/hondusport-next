@@ -15,6 +15,7 @@ export interface Producto {
   precio: number
   precio_original: number | null
   categoria_id: string | null
+  subcategoria_id: string | null
   stock: number | null
   genero: string | null
   badge: string | null
@@ -30,6 +31,7 @@ export interface Producto {
   created_at: string
   updated_at: string
   categorias?: { valor: string } | null
+  subcategorias?: { valor: string } | null
 }
 
 export interface ProductoForm {
@@ -38,6 +40,7 @@ export interface ProductoForm {
   precio: number
   precio_original: number | null
   categoria_id: string | null
+  subcategoria_id: string | null
   stock: number | null
   genero: string
   badge: string
