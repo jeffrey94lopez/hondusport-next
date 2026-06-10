@@ -1,9 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Detectar sesión activa de Supabase por cookie
   const hasSession = request.cookies.getAll().some(
     c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
   )
