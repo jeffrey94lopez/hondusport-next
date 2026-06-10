@@ -40,6 +40,25 @@ export default function ProductosClient({ productos, categorias }: Props) {
   const [form, setForm] = useState<ProductoForm>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [importing, setImporting] = useState(false)
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImporting(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    try {
+      const res = await fetch('/api/import', { method: 'POST', body: formData })
+      const json = await res.json()
+      if (json.error) { alert('Error: ' + json.error); return }
+      alert(`✓ Importados ${json.imported} productos`)
+      window.location.reload()
+    } finally {
+      setImporting(false)
+      e.target.value = ''
+    }
+  }
 
   const filtered = useMemo(() => {
     if (!search.trim()) return productos
@@ -134,6 +153,16 @@ export default function ProductosClient({ productos, categorias }: Props) {
             onChange={e => setSearch(e.target.value)}
             className={styles.search}
           />
+          <label className={`${styles.btnSecondary} ${importing ? styles.importing : ''}`}>
+            {importing ? 'Importando…' : '↑ Importar XLSX'}
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleImport}
+              style={{ display: 'none' }}
+              disabled={importing}
+            />
+          </label>
           <button className={styles.btnPrimary} onClick={openCreate}>
             + Nuevo producto
           </button>

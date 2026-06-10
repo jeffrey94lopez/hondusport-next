@@ -50,6 +50,21 @@
 .btnPrimary:hover:not(:disabled) { opacity: 0.88; }
 .btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.btnSecondary {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: 7px;
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+.btnSecondary:hover { border-color: var(--accent); color: var(--accent); }
+.importing { opacity: 0.6; cursor: not-allowed; }
+
 .tableWrap {
   background: var(--bg-card);
   border: 1px solid var(--border);
