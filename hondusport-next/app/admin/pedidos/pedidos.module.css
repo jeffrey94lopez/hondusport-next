@@ -1,0 +1,106 @@
+.page { padding: 1.5rem; }
+.topbar { margin-bottom: 1rem; }
+.title { font-size: 1.25rem; font-weight: 800; }
+.subtitle { font-size: 0.8rem; color: var(--text-muted); }
+
+.filtros {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.filtroBtn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.filtroBtn:hover { color: var(--text); }
+.filtroActive { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+.list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  gap: 1rem;
+}
+.cardHeader:hover { background: rgba(255,255,255,0.02); }
+
+.cardLeft, .cardRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.numero { font-weight: 800; color: var(--accent); font-size: 0.88rem; }
+.cliente { font-weight: 600; font-size: 0.9rem; }
+.ciudad { font-size: 0.8rem; color: var(--text-muted); }
+.total { font-weight: 700; font-size: 0.9rem; }
+
+.estadoSelect {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: auto;
+}
+
+.waBtn {
+  background: #25d366;
+  color: #000;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: opacity 0.15s;
+}
+.waBtn:hover { opacity: 0.85; }
+
+.chevron { font-size: 0.7rem; color: var(--text-muted); }
+
+.cardBody {
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+}
+.itemNombre { font-weight: 600; flex: 1; }
+.itemDet { color: var(--text-muted); }
+.itemPrecio { font-weight: 700; white-space: nowrap; }
+
+.notas {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+}
+
+.empty { padding: 3rem; text-align: center; color: var(--text-muted); }
