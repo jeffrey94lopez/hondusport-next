@@ -1,0 +1,211 @@
+.page {
+  padding: 1.5rem;
+  min-height: 100vh;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 1.25rem;
+}
+
+/* ── Stats grid ────────────────────────────────── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+@media (max-width: 860px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.statCard {
+  background: #141414;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.statValue {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.statValueAlert {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1.1;
+}
+
+/* ── Section ───────────────────────────────────── */
+.section {
+  margin-top: 2rem;
+}
+
+.sectionTitle {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.3px;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+/* ── Alert table (stock bajo) ──────────────────── */
+.alertTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.845rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+}
+
+.alertTable th {
+  text-align: left;
+  padding: 0.6rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  background: var(--bg-card);
+}
+
+.alertTable td {
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.alertTable tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.stockCritical {
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.stockWarn {
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+/* ── Recent table (últimos pedidos) ────────────── */
+.recentTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.845rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+}
+
+.recentTable th {
+  text-align: left;
+  padding: 0.6rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  background: var(--bg-card);
+}
+
+.recentTable td {
+  padding: 0.65rem 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.recentTable tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.pedidoNum {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.totalCell {
+  font-weight: 700;
+}
+
+.fechaCell {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Estado badge ──────────────────────────────── */
+.estadoBadge {
+  display: inline-block;
+  padding: 0.22rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: capitalize;
+}
+
+.estado_recibido   { background: rgba(245, 158, 11, 0.15);  color: #f59e0b; }
+.estado_preparando { background: rgba(59, 130, 246, 0.15);  color: #3b82f6; }
+.estado_enviado    { background: rgba(139, 92, 246, 0.15);  color: #8b5cf6; }
+.estado_entregado  { background: rgba(34, 197, 94, 0.15);   color: #22c55e; }
+.estado_cancelado  { background: rgba(239, 68, 68, 0.15);   color: #ef4444; }
+
+/* ── Footer row ────────────────────────────────── */
+.tableFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.6rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+
+/* ── View all link ─────────────────────────────── */
+.viewAllLink {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.12s;
+}
+
+.viewAllLink:hover {
+  opacity: 0.8;
+}
