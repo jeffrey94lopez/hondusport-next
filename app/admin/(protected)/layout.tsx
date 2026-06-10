@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import Sidebar from '@/components/admin/Sidebar'
 import styles from './layout.module.css'
@@ -14,7 +15,7 @@ export default async function AdminLayout({
   )
 
   if (!hasSession) {
-    return <>{children}</>
+    redirect('/admin/login')
   }
 
   let pendingCount = 0
