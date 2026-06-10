@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Perfil & Branding</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="admin.css">
+<style>
+#anav{display:flex;align-items:center;gap:4px;background:#141414;border-bottom:1px solid #222;padding:0 1rem;height:50px;position:sticky;top:0;z-index:999;font-family:Inter,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.5);}
+#anav .brand{color:#C9A84C;font-weight:700;font-size:.8rem;letter-spacing:2px;text-decoration:none;padding:.4rem .6rem;white-space:nowrap;margin-right:.5rem;}
+#anav a.n{display:flex;align-items:center;gap:5px;padding:.4rem .75rem;color:rgba(255,255,255,.45);text-decoration:none;font-size:.78rem;font-weight:600;border-radius:5px;white-space:nowrap;transition:.15s;}
+#anav a.n:hover{color:#C9A84C;background:rgba(201,168,76,.1);}
+#anav a.n.on{color:#C9A84C;background:rgba(201,168,76,.13);}
+#anav .out{margin-left:auto;color:rgba(255,255,255,.3);text-decoration:none;font-size:1rem;padding:.3rem .5rem;}
+#anav .out:hover{color:#c0392b;}
+@media(max-width:580px){#anav a.n span{display:none}#anav a.n{padding:.4rem .5rem;}}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;color:#eee;font-family:Inter,sans-serif;padding:0}
+.page{max-width:860px;margin:0 auto;padding:1.5rem}
+h2{color:#C9A84C;letter-spacing:2px;margin-bottom:1.75rem;font-size:1rem;text-transform:uppercase}
+
+.section{background:#181818;border:1px solid #252525;border-radius:10px;margin-bottom:1.5rem;overflow:hidden}
+.section-head{padding:1rem 1.25rem;border-bottom:1px solid #252525;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.section-head h3{font-size:.8rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C9A84C;display:flex;align-items:center;gap:.6rem}
+.section-body{padding:1.25rem}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.field-full{grid-column:1/-1}
+label{font-size:.7rem;font-weight:600;letter-spacing:.8px;color:rgba(255,255,255,.4);text-transform:uppercase;display:block;margin-bottom:.35rem}
+input[type=text],input[type=tel],input[type=email],input[type=number],input[type=url],textarea{
+  background:#111;border:1px solid #2a2a2a;color:#eee;padding:.6rem .85rem;border-radius:6px;
+  font-size:.85rem;width:100%;transition:border-color .2s;font-family:inherit;outline:none}
+input:focus,textarea:focus{border-color:#C9A84C}
+textarea{resize:vertical;min-height:60px}
+.hint{font-size:.7rem;color:rgba(255,255,255,.28);margin-top:.3rem;line-height:1.4}
+.hint.warn{color:#E67E22}
+.hint.ok{color:#27AE60}
+
+/* Color pickers */
+.color-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.85rem}
+.color-field{display:flex;flex-direction:column;gap:.35rem}
+.color-input-wrap{display:flex;align-items:center;gap:.6rem;background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:.4rem .7rem;cursor:pointer;transition:border-color .2s}
+.color-input-wrap:hover{border-color:#C9A84C}
+input[type=color]{width:26px;height:26px;border:none;border-radius:4px;cursor:pointer;padding:0;background:none;flex-shrink:0}
+.color-hex{font-size:.8rem;font-family:monospace;color:#eee;flex:1;background:none;border:none;outline:none;width:80px}
+
+/* Logo preview */
+.logo-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.logo-preview{width:80px;height:80px;border:1px solid #2a2a2a;border-radius:8px;object-fit:contain;background:#0d0d0d;flex-shrink:0}
+.logo-inputs{flex:1;min-width:200px}
+.upload-area{border:1.5px dashed #2a2a2a;border-radius:6px;padding:.7rem 1rem;text-align:center;cursor:pointer;font-size:.78rem;color:rgba(255,255,255,.35);transition:.2s;margin-top:.5rem}
+.upload-area:hover{border-color:#C9A84C;color:#C9A84C}
+
+/* Social grid */
+.social-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+.social-field{display:flex;flex-direction:column;gap:.3rem}
+.social-icon{display:flex;align-items:center;gap:.5rem;font-size:.75rem;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:.35rem}
+
+/* Buttons */
+.btn{padding:.55rem 1.1rem;border:none;border-radius:6px;font-weight:600;font-size:.8rem;cursor:pointer;transition:.15s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.btn:hover:not(:disabled){opacity:.85}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:#C9A84C;color:#000}
+.btn-secondary{background:#222;color:#eee;border:1px solid #2a2a2a}
+.btn-loading{position:relative;color:transparent!important;pointer-events:none}
+.btn-loading::after{content:'';position:absolute;width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;top:50%;left:50%;transform:translate(-50%,-50%)}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+.save-row{display:flex;justify-content:flex-end;margin-top:1rem;padding-top:.85rem;border-top:1px solid #222}
+
+/* Toast */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1e1e1e;border:1px solid #2a2a2a;color:#eee;padding:.7rem 1.2rem;border-radius:8px;font-size:.82rem;font-weight:600;z-index:9999;display:none;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.toast.success{border-color:#27AE60;color:#27AE60}
+.toast.error{border-color:#c0392b;color:#c0392b}
+</style>
+</head>
+<body>
+
+<nav id="anav">
+<a class="brand" href="productos.html">HS ADMIN</a>
+<a class="n" href="productos.html">📦 <span>Productos</span></a>
+<a class="n" href="filtros.html">🏷️ <span>Categorías</span></a>
+<a class="n" href="envios.html">🚚 <span>Envíos</span></a>
+<a class="n" href="cupones.html">🎟️ <span>Cupones</span></a>
+<a class="n" href="banners.html">🖼️ <span>Banners</span></a>
+<a class="n on" href="config.html">⚙️ <span>Perfil</span></a>
+<a class="out" href="logout.php" title="Salir">⏻</a>
+</nav>
+
+<div id="admin-loader"><div class="hs-spinner"></div><span>Cargando</span></div>
+<div class="page">
+<h2>⚙️ Perfil &amp; Branding</h2>
+
+<!-- ── IDENTIDAD ─────────────────────── -->
+<div class="section" id="s-identidad">
+  <div class="section-head">
+    <h3>🏪 Identidad</h3>
+    <button class="btn btn-primary" onclick="saveSection('identidad')"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+  </div>
+  <div class="section-body">
+    <div class="logo-row" style="margin-bottom:1.25rem">
+      <img id="logo-preview" src="" class="logo-preview" onerror="this.src=''">
+      <div class="logo-inputs">
+        <label>Logo URL</label>
+        <input id="cfg-logo_url" type="url" placeholder="https://...">
+        <div class="upload-area" onclick="document.getElementById('logo-file').click()">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Subir logo al servidor
+          <input type="file" id="logo-file" accept="image/jpeg,image/png,image/webp,image/svg+xml" style="display:none" onchange="uploadLogo(this.files[0])">
+        </div>
+        <div class="hint">Formatos: JPG, PNG, WEBP, SVG</div>
+      </div>
+    </div>
+    <div class="field-grid">
+      <div>
+        <label>Nombre del negocio</label>
+        <input id="cfg-nombre_negocio" type="text" placeholder="Hondu Sport">
+      </div>
+      <div>
+        <label>Slogan</label>
+        <input id="cfg-slogan" type="text" placeholder="Elite Performance & Style">
+      </div>
+      <div>
+        <label>Descripción (SEO / Meta)</label>
+        <textarea id="cfg-meta_descripcion" placeholder="Descripción de tu tienda para Google y redes sociales..."></textarea>
+      </div>
+      <div>
+        <label>Color principal</label>
+        <div class="color-input-wrap" onclick="document.getElementById('cp-primario').click()">
+          <input type="color" id="cp-primario" value="#C9A84C" oninput="syncColor(this,'cfg-color_primario')">
+          <input class="color-hex" id="cfg-color_primario" value="#C9A84C" maxlength="7" oninput="syncHex(this,'cp-primario')">
+          <span style="font-size:.7rem;opacity:.4">Principal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── COLORES ────────────────────────── -->
+<div class="section" id="s-colores">
+  <div class="section-head">
+    <h3>🎨 Colores del Tema</h3>
+    <button class="btn btn-primary" onclick="saveSection('colores')"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+  </div>
+  <div class="section-body">
+    <label style="margin-bottom:.75rem;display:block">MODO CLARO</label>
+    <div class="color-row" style="margin-bottom:1.25rem">
+      <div class="color-field"><label>Fondo</label><div class="color-input-wrap" onclick="document.getElementById('cp-bg-light').click()"><input type="color" id="cp-bg-light" value="#F5F5F5" oninput="syncColor(this,'cfg-color_bg_light')"><input class="color-hex" id="cfg-color_bg_light" value="#F5F5F5" maxlength="7" oninput="syncHex(this,'cp-bg-light')"></div></div>
+      <div class="color-field"><label>Texto</label><div class="color-input-wrap" onclick="document.getElementById('cp-tx-light').click()"><input type="color" id="cp-tx-light" value="#1A1A1A" oninput="syncColor(this,'cfg-color_text_light')"><input class="color-hex" id="cfg-color_text_light" value="#1A1A1A" maxlength="7" oninput="syncHex(this,'cp-tx-light')"></div></div>
+      <div class="color-field"><label>Tarjeta</label><div class="color-input-wrap" onclick="document.getElementById('cp-card-light').click()"><input type="color" id="cp-card-light" value="#FFFFFF" oninput="syncColor(this,'cfg-color_card_light')"><input class="color-hex" id="cfg-color_card_light" value="#FFFFFF" maxlength="7" oninput="syncHex(this,'cp-card-light')"></div></div>
+      <div class="color-field"><label>Borde</label><div class="color-input-wrap" onclick="document.getElementById('cp-bd-light').click()"><input type="color" id="cp-bd-light" value="#E0E0E0" oninput="syncColor(this,'cfg-color_border_light')"><input class="color-hex" id="cfg-color_border_light" value="#E0E0E0" maxlength="7" oninput="syncHex(this,'cp-bd-light')"></div></div>
+    </div>
+    <label style="margin-bottom:.75rem;display:block">MODO OSCURO</label>
+    <div class="color-row" style="margin-bottom:1.25rem">
+      <div class="color-field"><label>Fondo</label><div class="color-input-wrap" onclick="document.getElementById('cp-bg-dark').click()"><input type="color" id="cp-bg-dark" value="#0F0F0F" oninput="syncColor(this,'cfg-color_bg_dark')"><input class="color-hex" id="cfg-color_bg_dark" value="#0F0F0F" maxlength="7" oninput="syncHex(this,'cp-bg-dark')"></div></div>
+      <div class="color-field"><label>Texto</label><div class="color-input-wrap" onclick="document.getElementById('cp-tx-dark').click()"><input type="color" id="cp-tx-dark" value="#EEEEEE" oninput="syncColor(this,'cfg-color_text_dark')"><input class="color-hex" id="cfg-color_text_dark" value="#EEEEEE" maxlength="7" oninput="syncHex(this,'cp-tx-dark')"></div></div>
+      <div class="color-field"><label>Tarjeta</label><div class="color-input-wrap" onclick="document.getElementById('cp-card-dark').click()"><input type="color" id="cp-card-dark" value="#1A1A1A" oninput="syncColor(this,'cfg-color_card_dark')"><input class="color-hex" id="cfg-color_card_dark" value="#1A1A1A" maxlength="7" oninput="syncHex(this,'cp-card-dark')"></div></div>
+      <div class="color-field"><label>Borde</label><div class="color-input-wrap" onclick="document.getElementById('cp-bd-dark').click()"><input type="color" id="cp-bd-dark" value="#2A2A2A" oninput="syncColor(this,'cfg-color_border_dark')"><input class="color-hex" id="cfg-color_border_dark" value="#2A2A2A" maxlength="7" oninput="syncHex(this,'cp-bd-dark')"></div></div>
+    </div>
+    <label style="margin-bottom:.75rem;display:block">BOTONES</label>
+    <div class="color-row" style="margin-bottom:1.25rem">
+      <div class="color-field"><label>Fondo botón</label><div class="color-input-wrap" onclick="document.getElementById('cp-btn-bg').click()"><input type="color" id="cp-btn-bg" value="#C9A84C" oninput="syncColor(this,'cfg-color_btn_bg')"><input class="color-hex" id="cfg-color_btn_bg" value="#C9A84C" maxlength="7" oninput="syncHex(this,'cp-btn-bg')"></div></div>
+      <div class="color-field"><label>Texto botón</label><div class="color-input-wrap" onclick="document.getElementById('cp-btn-tx').click()"><input type="color" id="cp-btn-tx" value="#000000" oninput="syncColor(this,'cfg-color_btn_text')"><input class="color-hex" id="cfg-color_btn_text" value="#000000" maxlength="7" oninput="syncHex(this,'cp-btn-tx')"></div></div>
+      <div class="color-field"><label>Hover botón</label><div class="color-input-wrap" onclick="document.getElementById('cp-btn-hv').click()"><input type="color" id="cp-btn-hv" value="#B8963B" oninput="syncColor(this,'cfg-color_btn_hover')"><input class="color-hex" id="cfg-color_btn_hover" value="#B8963B" maxlength="7" oninput="syncHex(this,'cp-btn-hv')"></div></div>
+    </div>
+    <label style="margin-bottom:.75rem;display:block">BADGES / ETIQUETAS</label>
+    <div class="color-row">
+      <div class="color-field"><label>Oferta</label><div class="color-input-wrap" onclick="document.getElementById('cp-badge-oferta').click()"><input type="color" id="cp-badge-oferta" value="#E74C3C" oninput="syncColor(this,'cfg-color_badge_oferta')"><input class="color-hex" id="cfg-color_badge_oferta" value="#E74C3C" maxlength="7" oninput="syncHex(this,'cp-badge-oferta')"></div></div>
+      <div class="color-field"><label>Nuevo</label><div class="color-input-wrap" onclick="document.getElementById('cp-badge-nuevo').click()"><input type="color" id="cp-badge-nuevo" value="#27AE60" oninput="syncColor(this,'cfg-color_badge_nuevo')"><input class="color-hex" id="cfg-color_badge_nuevo" value="#27AE60" maxlength="7" oninput="syncHex(this,'cp-badge-nuevo')"></div></div>
+      <div class="color-field"><label>Eco/Info</label><div class="color-input-wrap" onclick="document.getElementById('cp-badge-eco').click()"><input type="color" id="cp-badge-eco" value="#2980B9" oninput="syncColor(this,'cfg-color_badge_eco')"><input class="color-hex" id="cfg-color_badge_eco" value="#2980B9" maxlength="7" oninput="syncHex(this,'cp-badge-eco')"></div></div>
+      <div class="color-field"><label>Últimas unidades</label><div class="color-input-wrap" onclick="document.getElementById('cp-badge-limite').click()"><input type="color" id="cp-badge-limite" value="#E67E22" oninput="syncColor(this,'cfg-color_badge_limite')"><input class="color-hex" id="cfg-color_badge_limite" value="#E67E22" maxlength="7" oninput="syncHex(this,'cp-badge-limite')"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONTACTO & REDES ───────────────── -->
+<div class="section" id="s-contacto">
+  <div class="section-head">
+    <h3>📞 Contacto &amp; Redes Sociales</h3>
+    <button class="btn btn-primary" onclick="saveSection('contacto')"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+  </div>
+  <div class="section-body">
+    <div class="field-grid" style="margin-bottom:1.25rem">
+      <div>
+        <label>WhatsApp de pedidos <span style="color:#27AE60">(número puro)</span></label>
+        <input id="cfg-whatsapp_number" type="tel" placeholder="50499999999">
+        <div class="hint">Solo números, sin +, sin espacios. Ej: <b>50499999999</b></div>
+      </div>
+      <div>
+        <label>Teléfono visible en footer</label>
+        <input id="cfg-telefono_visible" type="tel" placeholder="+504 9999-9999">
+      </div>
+      <div>
+        <label>Email de contacto</label>
+        <input id="cfg-email_contacto" type="email" placeholder="info@tutienda.com">
+      </div>
+      <div>
+        <label>Horario de atención</label>
+        <input id="cfg-horario" type="text" placeholder="Lun-Sáb 9am-6pm">
+      </div>
+      <div class="field-full">
+        <label>Dirección física</label>
+        <input id="cfg-direccion" type="text" placeholder="Col. Palmira, Tegucigalpa">
+      </div>
+    </div>
+
+    <label style="margin-bottom:.75rem;display:block;font-size:.75rem;color:rgba(255,255,255,.5)">REDES SOCIALES — ingresa la URL completa (https://...)</label>
+    <div class="social-grid">
+      <div class="social-field">
+        <div class="social-icon"><i class="fa-brands fa-whatsapp" style="color:#25D366"></i> WhatsApp (botón flotante)</div>
+        <input id="cfg-whatsapp_url" type="url" placeholder="https://wa.me/50499999999">
+        <div class="hint" id="hint-wa">Se auto-completa desde el número de pedidos si está vacío.</div>
+      </div>
+      <div class="social-field">
+        <div class="social-icon"><i class="fa-brands fa-facebook-f" style="color:#1877F2"></i> Facebook</div>
+        <input id="cfg-facebook_url" type="url" placeholder="https://facebook.com/tupagina">
+      </div>
+      <div class="social-field">
+        <div class="social-icon"><i class="fa-brands fa-instagram" style="color:#E4405F"></i> Instagram</div>
+        <input id="cfg-instagram_url" type="url" placeholder="https://instagram.com/tuusuario">
+      </div>
+      <div class="social-field">
+        <div class="social-icon"><i class="fa-brands fa-tiktok"></i> TikTok</div>
+        <input id="cfg-tiktok_url" type="url" placeholder="https://tiktok.com/@tuusuario">
+      </div>
+      <div class="social-field">
+        <div class="social-icon"><i class="fa-brands fa-x-twitter"></i> Twitter / X</div>
+        <input id="cfg-twitter_url" type="url" placeholder="https://twitter.com/tuusuario">
+      </div>
+      <div class="social-field">
+        <div class="social-icon"><i class="fa-brands fa-youtube" style="color:#FF0000"></i> YouTube</div>
+        <input id="cfg-youtube_url" type="url" placeholder="https://youtube.com/@tucanal">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TIENDA ─────────────────────────── -->
+<div class="section" id="s-tienda">
+  <div class="section-head">
+    <h3>🛒 Configuración de Tienda</h3>
+    <button class="btn btn-primary" onclick="saveSection('tienda')"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+  </div>
+  <div class="section-body">
+    <div class="field-grid">
+      <div>
+        <label>Barra promocional superior</label>
+        <input id="cfg-promo_bar_texto" type="text" placeholder="🚀 Envío GRATIS en compras de L.">
+        <div class="hint">Texto de la barra dorada en la parte superior de la tienda.</div>
+      </div>
+      <div>
+        <label>Monto mínimo envío gratis (L.)</label>
+        <input id="cfg-free_shipping_meta" type="number" placeholder="999">
+      </div>
+      <div>
+        <label>Mensaje al alcanzar envío gratis</label>
+        <input id="cfg-free_shipping_msg" type="text" placeholder="✨ ¡TIENES ENVÍO GRATIS!">
+      </div>
+      <div>
+        <label>Alerta stock bajo (unidades)</label>
+        <input id="cfg-stock_bajo_limite" type="number" placeholder="5">
+        <div class="hint">Muestra "Últimas X unidades" cuando el stock sea menor a este número.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+<div class="toast" id="toast"></div>
+
+<script>
+const GET_URL = 'https://webhook.mplasesores.com/webhook/hondusport-products';
+const POST_URL = 'n8n-proxy.php';
+
+// ── Loader ──────────────────────────────────────────────────
+function showLoader(){document.getElementById('admin-loader')?.classList.add('active');}
+function hideLoader(){document.getElementById('admin-loader')?.classList.remove('active');}
+
+// ── Color picker sync ───────────────────────────────────────
+function syncColor(picker, hexId) {
+  const hex = document.getElementById(hexId);
+  if (hex) hex.value = picker.value;
+}
+function syncHex(input, pickerId) {
+  const val = input.value;
+  if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+    const p = document.getElementById(pickerId);
+    if (p) p.value = val;
+  }
+}
+
+// ── Load config ─────────────────────────────────────────────
+async function load() {
+  showLoader();
+  try {
+    const r = await fetch(GET_URL + '?t=' + Date.now());
+    const j = await r.json();
+    const c = j.data.config || {};
+
+    // Fill all cfg- fields
+    document.querySelectorAll('[id^="cfg-"]').forEach(el => {
+      const key = el.id.replace('cfg-', '');
+      if (c[key] !== undefined && c[key] !== '') {
+        el.value = c[key];
+        // Sync color pickers
+        const pickerMap = {
+          color_primario:'cp-primario', color_bg_light:'cp-bg-light',
+          color_text_light:'cp-tx-light', color_card_light:'cp-card-light',
+          color_border_light:'cp-bd-light', color_bg_dark:'cp-bg-dark',
+          color_text_dark:'cp-tx-dark', color_card_dark:'cp-card-dark',
+          color_border_dark:'cp-bd-dark', color_btn_bg:'cp-btn-bg',
+          color_btn_text:'cp-btn-tx', color_btn_hover:'cp-btn-hv',
+          color_badge_oferta:'cp-badge-oferta', color_badge_nuevo:'cp-badge-nuevo',
+          color_badge_eco:'cp-badge-eco', color_badge_limite:'cp-badge-limite'
+        };
+        if (pickerMap[key]) {
+          const p = document.getElementById(pickerMap[key]);
+          if (p && /^#[0-9A-Fa-f]{6}$/.test(c[key])) p.value = c[key];
+        }
+      }
+    });
+
+    // Logo preview
+    const logoUrl = c['logo_url'] || '';
+    if (logoUrl) document.getElementById('logo-preview').src = logoUrl;
+
+  } catch(e) {
+    toast('❌ Error cargando configuración: ' + e.message, 'error');
+  } finally {
+    hideLoader();
+  }
+}
+
+// ── Section key map ─────────────────────────────────────────
+const SECTIONS = {
+  identidad: ['nombre_negocio','slogan','logo_url','meta_descripcion','color_primario'],
+  colores: [
+    'color_bg_light','color_text_light','color_card_light','color_border_light',
+    'color_bg_dark','color_text_dark','color_card_dark','color_border_dark',
+    'color_btn_bg','color_btn_text','color_btn_hover',
+    'color_badge_oferta','color_badge_nuevo','color_badge_eco','color_badge_limite'
+  ],
+  contacto: [
+    'whatsapp_number','whatsapp_url','telefono_visible','email_contacto',
+    'horario','direccion','facebook_url','instagram_url','tiktok_url',
+    'twitter_url','youtube_url'
+  ],
+  tienda: ['promo_bar_texto','free_shipping_meta','free_shipping_msg','stock_bajo_limite']
+};
+
+// ── Validate & format URLs ──────────────────────────────────
+function formatValue(key, val) {
+  val = val.trim();
+  if (!val) return val;
+
+  // whatsapp_number: solo dígitos
+  if (key === 'whatsapp_number') {
+    return val.replace(/\D/g, '');
+  }
+
+  // whatsapp_url: si no tiene https, auto-formatear desde número
+  if (key === 'whatsapp_url') {
+    if (!val.startsWith('http')) {
+      const num = val.replace(/\D/g, '');
+      return num ? 'https://wa.me/' + num : '';
+    }
+    return val;
+  }
+
+  // URLs sociales: si falta el protocolo, agregar https
+  const urlKeys = ['facebook_url','instagram_url','tiktok_url','twitter_url','youtube_url'];
+  if (urlKeys.includes(key) && val && !val.startsWith('http')) {
+    return 'https://' + val;
+  }
+
+  return val;
+}
+
+// ── Save section ────────────────────────────────────────────
+async function saveSection(section) {
+  const keys = SECTIONS[section];
+  const btn = document.querySelector('#s-' + section + ' .btn-primary');
+  if (btn) btn.classList.add('btn-loading');
+
+  try {
+    // Auto-fill whatsapp_url from number if empty
+    if (section === 'contacto') {
+      const num = document.getElementById('cfg-whatsapp_number')?.value.replace(/\D/g,'') || '';
+      const urlEl = document.getElementById('cfg-whatsapp_url');
+      if (urlEl && (!urlEl.value || !urlEl.value.includes('wa.me')) && num) {
+        urlEl.value = 'https://wa.me/' + num;
+        document.getElementById('hint-wa').textContent = '✅ Auto-completado desde el número: ' + urlEl.value;
+        document.getElementById('hint-wa').className = 'hint ok';
+      }
+    }
+
+    const entries = keys.map(key => {
+      const el = document.getElementById('cfg-' + key);
+      const raw = el ? el.value : '';
+      const val = formatValue(key, raw);
+      if (el && val !== raw) el.value = val; // update field with formatted value
+      return { key, val };
+    });
+
+    const results = await Promise.all(
+      entries.map(({ key, val }) =>
+        n8n({ sheet: 'Configuracion', action: 'update', id: key, data: { value: val } })
+      )
+    );
+
+    const errors = results.filter(r => !r.success);
+    if (errors.length === 0) {
+      toast('✅ ' + section.charAt(0).toUpperCase() + section.slice(1) + ' guardado correctamente');
+    } else {
+      toast('❌ ' + errors.length + ' campo(s) no se guardaron: ' + errors.map(e => e.error).join(' | '), 'error');
+    }
+  } finally {
+    if (btn) btn.classList.remove('btn-loading');
+  }
+}
+
+// ── Logo upload ─────────────────────────────────────────────
+async function uploadLogo(file) {
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('imagen', file);
+  fd.append('tipo', 'config');
+  fd.append('id', 'logo');
+  try {
+    const r = await fetch('upload.php', { method: 'POST', body: fd });
+    const j = await r.json();
+    if (j.success) {
+      document.getElementById('cfg-logo_url').value = j.url;
+      document.getElementById('logo-preview').src = j.url;
+      toast('✅ Logo subido. Presiona Guardar en Identidad para aplicar.');
+    } else {
+      toast('❌ No se pudo subir el logo: ' + j.error, 'error');
+    }
+  } catch(e) {
+    toast('❌ Error al subir: ' + e.message, 'error');
+  }
+}
+
+// Logo preview on URL input
+document.getElementById('cfg-logo_url')?.addEventListener('input', function() {
+  document.getElementById('logo-preview').src = this.value;
+});
+
+// ── n8n helper ──────────────────────────────────────────────
+async function n8n(body) {
+  try {
+    const r = await fetch(POST_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!r.ok) { let e=''; try{e=await r.text();}catch(x){} return { success:false, error:'Error '+r.status+'. '+e.slice(0,100) }; }
+    let j; try { j = await r.json(); } catch(e) { return { success:false, error:'Respuesta inválida de n8n.' }; }
+    if (j.success === false) return { success:false, error: j.error || 'n8n reportó un error.' };
+    return { success:true, ...j };
+  } catch(e) {
+    return { success:false, error: 'Sin conexión: ' + e.message };
+  }
+}
+
+// ── Toast ────────────────────────────────────────────────────
+function toast(m, type) {
+  const t = document.getElementById('toast');
+  t.textContent = m;
+  const isErr = type === 'error' || m.startsWith('❌');
+  t.className = 'toast' + (isErr ? ' error' : m.startsWith('✅') ? ' success' : '');
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.style.display = 'none', isErr ? 7000 : 3500);
+}
+
+load();
+</script>
+</body>
+</html>
