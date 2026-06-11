@@ -336,7 +336,7 @@ git commit -am "feat(store): tipos, adapters Supabase→tienda y helpers de form
 - Crear: `hondusport-next/components/store/WishlistProvider.tsx`
 - Crear: `hondusport-next/components/store/ThemeRoot.tsx`
 
-- [ ] **Step 1: `ThemeRoot.tsx`** — Client Component que envuelve la tienda, gestiona `data-theme` y aplica el acento dinámico:
+- [x] **Step 1: `ThemeRoot.tsx`** — Client Component que envuelve la tienda, gestiona `data-theme` y aplica el acento dinámico: (implementado en Task 1; usa `useState` con inicializador perezoso en vez de `useEffect` para leer `localStorage`)
 
 ```tsx
 'use client'
@@ -362,11 +362,11 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 ```
 (Definir `ThemeContext` + hook `useTheme` en el mismo archivo o `lib/store/theme-context.ts`.)
 
-- [ ] **Step 2: `CartProvider.tsx`** — portar la lógica de `app.js`: `cart` desde `localStorage('hondusport_cart')`, `activeDiscount` desde `localStorage('hondusport_discount')`. Métodos: `addToCart(item)`, `removeFromCart(idx)`, `changeQty(idx, d)`, `updateCustom(idx, val)`, `applyCoupon(code)`, `clear()`. Derivados: `subtotal`, `finalTotal`, `count`. Persistir en cada cambio (portar `saveAndUpdate`, app.js:1344). Lógica de fusión de items idénticos (`id+size+custom`) de `addToCart` (app.js:1741).
+- [x] **Step 2: `CartProvider.tsx`** — portar la lógica de `app.js`: `cart` desde `localStorage('hondusport_cart')`, `activeDiscount` desde `localStorage('hondusport_discount')`. Métodos: `addToCart(item)`, `removeFromCart(idx)`, `changeQty(idx, d)`, `updateCustom(idx, val)`, `applyCoupon(code)`, `clear()`. Derivados: `subtotal`, `finalTotal`, `count`. Persistir en cada cambio (portar `saveAndUpdate`, app.js:1344). Lógica de fusión de items idénticos (`id+size+custom`) de `addToCart` (app.js:1741).
 
-- [ ] **Step 3: `WishlistProvider.tsx`** — portar `hsWishlist` desde `localStorage('hs_wishlist')`. Métodos `toggle(id)`, `has(id)`, lista de ids. (app.js:1546-1575).
+- [x] **Step 3: `WishlistProvider.tsx`** — portar `hsWishlist` desde `localStorage('hs_wishlist')`. Métodos `toggle(id)`, `has(id)`, lista de ids. (app.js:1546-1575).
 
-- [ ] **Step 4: Tests** del reducer de carrito (add/merge/remove/changeQty/subtotal/descuento). AAA.
+- [x] **Step 4: Tests** del reducer de carrito (add/merge/remove/changeQty/subtotal/descuento). AAA.
 
 - [ ] **Step 5: Commit** `feat(store): providers de carrito, wishlist y tema (localStorage)`
 
