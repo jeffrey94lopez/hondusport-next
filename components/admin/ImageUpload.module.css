@@ -1,45 +1,52 @@
-.wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
+.wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+.labelText { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
 
 .preview {
-  max-height: 200px;
+  position: relative;
   width: 100%;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid var(--border);
+  aspect-ratio: 16/7;
+  border-radius: 8px;
+  overflow: hidden;
   background: var(--bg-hover);
+  border: 1px solid var(--border-light);
 }
 
-.uploadBtn {
+.previewImg { width: 100%; height: 100%; object-fit: cover; }
+
+.removeBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.uploadBtn,
+.changeBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-hover);
-  border: 1px solid var(--border-light);
-  border-radius: 7px;
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
-  font-weight: 600;
+  border: 1px dashed var(--border-input);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.12s;
-  align-self: flex-start;
+  width: 100%;
 }
-.uploadBtn:hover:not(.loading) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
+.uploadBtn:hover, .changeBtn:hover { border-color: var(--accent); color: var(--accent); }
+.uploading { opacity: 0.6; cursor: not-allowed; }
 
-.loading {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.error {
-  font-size: 0.78rem;
-  color: var(--danger);
-  margin: 0;
-}
+.error { font-size: 0.78rem; color: var(--danger); }

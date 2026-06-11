@@ -31,6 +31,7 @@ create table if not exists productos (
   precio           numeric not null,
   precio_original  numeric,
   categoria_id     uuid references categorias(id) on delete set null,
+  subcategoria_id  uuid references categorias(id) on delete set null,
   stock            integer,
   genero           text,
   badge            text,
@@ -150,6 +151,9 @@ begin
   return new;
 end;
 $$ language plpgsql;
+
+create index if not exists productos_subcategoria_id_idx
+  on productos (subcategoria_id);
 
 create trigger productos_updated_at
   before update on productos

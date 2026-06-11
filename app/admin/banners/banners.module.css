@@ -1,0 +1,32 @@
+.page { padding: 1.5rem; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.title { font-size: 1.25rem; font-weight: 800; }
+.btnPrimary { background: var(--accent); color: #000; border: none; border-radius: 7px; padding: 0.55rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.btnPrimary:disabled { opacity: 0.5; }
+.btnCancel { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: 7px; padding: 0.55rem 1rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; }
+.btnEdit, .btnDelete { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: 6px; padding: 0.3rem 0.65rem; font-size: 0.75rem; cursor: pointer; color: var(--text-muted); transition: all 0.12s; }
+.btnEdit:hover { border-color: var(--accent); color: var(--accent); }
+.btnDelete:hover { border-color: var(--danger); color: var(--danger); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+.cardImg { position: relative; aspect-ratio: 16/7; background: var(--bg-hover); }
+.img { width: 100%; height: 100%; object-fit: cover; }
+.noImg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 0.8rem; }
+.cardBadge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: var(--accent); border-radius: 6px; padding: 2px 7px; font-size: 0.72rem; font-weight: 700; }
+
+.cardBody { padding: 0.9rem; }
+.cardTitle { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem; }
+.cardSub { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.6rem; }
+.cardFooter { display: flex; align-items: center; justify-content: space-between; margin-top: 0.75rem; }
+.cardActions { display: flex; gap: 0.4rem; }
+
+.empty { padding: 3rem; text-align: center; color: var(--text-muted); grid-column: 1/-1; }
+
+.form { display: flex; flex-direction: column; gap: 0.9rem; }
+.formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.formLabel { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+.formError { font-size: 0.8rem; color: var(--danger); }
+.formFooter { display: flex; gap: 0.6rem; justify-content: flex-end; padding-top: 0.5rem; border-top: 1px solid var(--border); }

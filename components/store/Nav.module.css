@@ -1,0 +1,178 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  transition: box-shadow 0.3s ease;
+}
+
+.scrolled {
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.logoImg {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logoText {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.navLinks {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  list-style: none;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navLinks::-webkit-scrollbar {
+  display: none;
+}
+
+.navCatBtn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 6px 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+}
+
+.navCatBtn:hover {
+  opacity: 1;
+  border-bottom-color: var(--primary);
+}
+
+.navCatBtnActive {
+  opacity: 1;
+  border-bottom-color: var(--text);
+}
+
+.searchContainer {
+  flex-grow: 1;
+  max-width: 300px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px 4px 8px 20px;
+  border: none;
+  border-bottom: 2px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 0;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text);
+  position: relative;
+  transition: opacity 0.2s;
+}
+
+.iconBtn:hover {
+  opacity: 0.7;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  background: #E74C3C;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-family: 'Inter', sans-serif;
+}
+
+.hamburger {
+  display: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.hamburger div {
+  width: 25px;
+  height: 3px;
+  background: var(--text);
+  margin: 5px;
+  transition: 0.3s;
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .navLinks {
+    display: none;
+  }
+
+  .searchContainer {
+    max-width: none;
+  }
+}

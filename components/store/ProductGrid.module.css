@@ -1,0 +1,219 @@
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2.5rem;
+}
+
+.section {
+  border-radius: 0;
+  padding: 2rem 0;
+  margin-bottom: 3rem;
+  border: none;
+  background: transparent;
+}
+
+.sectionOfertas {
+  border-top: 3px solid #e74c3c;
+}
+
+.sectionNuevos {
+  border-top: 3px solid #27ae60;
+}
+
+.sectionVendidos {
+  border-top: 3px solid var(--primary);
+}
+
+.sectionTodos {
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+}
+
+.sectionTitle {
+  font-size: 2rem;
+  letter-spacing: 2px;
+  padding-left: 0;
+  border-left: none;
+}
+
+.offerTagPremium {
+  background: #e74c3c;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  margin-left: 10px;
+  vertical-align: middle;
+  display: inline-block;
+  font-weight: 700;
+}
+
+.sectionCount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text);
+  opacity: 0.4;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.carouselWrapper {
+  position: relative;
+  overflow: visible;
+  min-height: 180px;
+}
+
+.carouselBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.carouselBtn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.prev {
+  left: -22px;
+}
+
+.next {
+  right: -22px;
+}
+
+.scrollGrid {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: scroll;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  align-items: stretch;
+  height: auto;
+}
+
+.scrollGrid::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollItem {
+  flex-shrink: 0;
+  width: 180px;
+  min-width: 160px;
+  max-width: 180px;
+  scroll-snap-align: start;
+}
+
+.todosGrid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+}
+
+.fadeInUp {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fadeInUp.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.skeletonCard {
+  background: transparent;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  animation: pulse 1.5s infinite;
+}
+
+.skeletonImg {
+  height: 220px;
+  background: #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.skeletonText {
+  height: 14px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  width: 90%;
+}
+
+.skeletonTextShort {
+  width: 60%;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.loadMoreContainer {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.loadMoreBtn {
+  display: inline-block;
+  padding: 10px 30px;
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--border);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: 0.3s;
+  cursor: pointer;
+  border-radius: 30px;
+}
+
+.loadMoreBtn:hover {
+  background: var(--text);
+  color: var(--card);
+  border-color: var(--text);
+}
+
+.noResults {
+  display: block;
+  text-align: center;
+  padding: 3rem;
+  opacity: 0.6;
+}

@@ -58,7 +58,6 @@
   font-size: 0.9rem;
   outline: none;
   transition: border-color 0.15s;
-  width: 100%;
 }
 
 .input:focus {

@@ -1,0 +1,384 @@
+.productPage {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 800px) {
+  .productPage {
+    grid-template-columns: 1fr 1.2fr;
+    gap: 3rem;
+  }
+}
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+}
+
+.zoomContainer {
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  position: relative;
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.zoomContainer img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.1s;
+}
+
+.thumbRow {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  overflow-x: auto;
+}
+
+.thumbImg {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+
+.thumbImgActive {
+  border-color: var(--primary);
+}
+
+.info {
+  padding: 1rem 0;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  color: var(--text);
+  opacity: 0.6;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  opacity: 1;
+}
+
+.title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+}
+
+.price {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.originalPrice {
+  font-size: 1rem;
+  opacity: 0.5;
+  text-decoration: line-through;
+  margin-right: 10px;
+}
+
+.currentPrice {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.desc {
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+  opacity: 0.8;
+  line-height: 1.6;
+  font-family: 'Inter', sans-serif;
+}
+
+.section {
+  margin: 2rem 0;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.sizeGuideBtn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tallaGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tallaBtn {
+  padding: 6px 12px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tallaBtn:hover,
+.tallaBtnActive {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.label {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.customInputBox {
+  position: relative;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  padding: 10px 14px 10px 38px;
+  transition: border-color 0.2s;
+}
+
+.customInputBox:focus-within {
+  border-color: var(--primary);
+}
+
+.customInputBox i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--primary);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.customInputBox input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.hint {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+  display: block;
+}
+
+.addBtn {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  border-radius: 6px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.addBtn:hover {
+  background: var(--btn-hover);
+  opacity: 0.9;
+}
+
+.shareGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.shareBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.shareBtn:hover {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+}
+
+.reviewsSection {
+  margin-top: 3rem;
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.reviewsSection h4 {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+}
+
+.review {
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+}
+
+.review p {
+  margin: 5px 0 0 0;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+.reviewStars {
+  color: #f1c40f;
+}
+
+.relatedSection,
+.recentSection {
+  padding-bottom: 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+}
+
+.relatedSection h4,
+.recentSection h4 {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.relatedItem {
+  display: flex;
+  gap: 8px;
+  cursor: pointer;
+  align-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.relatedItem:hover {
+  background: rgba(201, 168, 76, 0.08);
+}
+
+.relatedItem img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.relatedTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: 'Bebas Neue', sans-serif;
+  margin: 0;
+}
+
+.relatedPrice {
+  font-size: 0.75rem;
+  color: var(--primary);
+  margin: 0;
+}
+
+.recentScroll {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.recentItem {
+  flex: 0 0 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.recentItem img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 799px) {
+  .zoomContainer {
+    border-radius: 0;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+}
