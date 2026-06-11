@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Hondusport Admin',
-  description: 'Panel de administración Hondusport',
+  title: 'Hondusport',
+  description: 'Tienda deportiva en Honduras',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

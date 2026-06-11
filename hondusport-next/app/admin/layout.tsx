@@ -1,6 +1,12 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import Sidebar from '@/components/admin/Sidebar'
 import styles from './layout.module.css'
+
+export const metadata: Metadata = {
+  title: 'Hondusport Admin',
+  description: 'Panel de administración Hondusport',
+}
 
 export default async function AdminLayout({
   children,

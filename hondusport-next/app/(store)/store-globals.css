@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
+
+.storeRoot {
+  --primary: #C9A84C;
+  --bg-light: #F5F5F3;
+  --text-light: #0A0A0A;
+  --card-light: #FFFFFF;
+  --border-light: #E8E8E6;
+  --bg-dark: #0A0A0A;
+  --text-dark: #F5F5F5;
+  --card-dark: #141414;
+  --border-dark: #2A2A2A;
+  --bg: var(--bg-light);
+  --text: var(--text-light);
+  --card: var(--card-light);
+  --border: var(--border-light);
+  --btn-bg: #0A0A0A;
+  --btn-text: #FFFFFF;
+  --btn-hover: #333333;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --max-width: 1400px;
+  --qty-btn-bg: var(--primary);
+  --qty-btn-text: #FFFFFF;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+.storeRoot[data-theme="dark"] {
+  --bg: var(--bg-dark);
+  --text: var(--text-dark);
+  --card: var(--card-dark);
+  --border: var(--border-dark);
+  --btn-bg: #FFFFFF;
+  --btn-text: #0A0A0A;
+  --btn-hover: #E8E8E6;
+}
+
+.storeRoot h1,
+.storeRoot h2,
+.storeRoot h3,
+.storeRoot h4 {
+  font-family: 'Bebas Neue', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.storeRoot * {
+  box-sizing: border-box;
+}
+
+.storeRoot a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.storeRoot button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.storeRoot input,
+.storeRoot textarea,
+.storeRoot select {
+  font-family: inherit;
+}

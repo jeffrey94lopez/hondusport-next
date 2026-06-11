@@ -120,14 +120,14 @@ El viejo `app.js` consume un webhook n8n con una forma de producto **distinta** 
 - Modificar: `hondusport-next/app/layout.tsx`
 - Instalar: `fuse.js`
 
-- [ ] **Step 1: Instalar Fuse.js**
+- [x] **Step 1: Instalar Fuse.js**
 
 ```bash
 cd hondusport-next
 npm install fuse.js
 ```
 
-- [ ] **Step 2: Resolver el conflicto de `<html>` raíz**
+- [x] **Step 2: Resolver el conflicto de `<html>` raíz**
 
 El `app/layout.tsx` actual emite `<html lang="es"><body>`. Un route group `(store)` con su propio `<html>` causaría doble `<html>`. Estrategia: convertir el root layout en un pass-through mínimo y mover `<html>/<body>` a cada grupo. Editar `hondusport-next/app/layout.tsx`:
 
@@ -161,7 +161,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-- [ ] **Step 3: Crear `store-globals.css`** con las variables y reset de la tienda (portadas de `styles.css` líneas 1-66). Aplicar al contenedor `.storeRoot` (no a `:root`) para no chocar con las variables del admin:
+- [x] **Step 3: Crear `store-globals.css`** con las variables y reset de la tienda (portadas de `styles.css` líneas 1-66). Aplicar al contenedor `.storeRoot` (no a `:root`) para no chocar con las variables del admin:
 
 ```css
 /* Fuentes — Inter ya viene en globals.css; añadir Bebas Neue + Font Awesome */
@@ -190,7 +190,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-- [ ] **Step 4: Crear `(store)/layout.tsx`** — Server Component que lee config para colorear el acento dinámicamente y monta el contenedor con tema:
+- [x] **Step 4: Crear `(store)/layout.tsx`** — Server Component que lee config para colorear el acento dinámicamente y monta el contenedor con tema:
 
 ```tsx
 import './store-globals.css'
@@ -227,7 +227,7 @@ git commit -m "feat(store): route group (store), variables CSS y layout base"
 - Crear: `hondusport-next/lib/store/tests/adapters.test.ts`
 - Crear: `hondusport-next/lib/store/tests/format.test.ts`
 
-- [ ] **Step 1: `types/store.ts`** — formas que consumen los componentes (puente entre Supabase y el viejo `app.js`):
+- [x] **Step 1: `types/store.ts`** — formas que consumen los componentes (puente entre Supabase y el viejo `app.js`):
 
 ```ts
 import type { Producto, Categoria, Banner, Cupon, Envio, ConfigMap } from '@/types'
@@ -262,7 +262,7 @@ export interface CartItem {
 export type { Categoria, Banner, Cupon, Envio, ConfigMap }
 ```
 
-- [ ] **Step 2: `lib/store/adapters.ts`** — funciones puras (testables):
+- [x] **Step 2: `lib/store/adapters.ts`** — funciones puras (testables):
 
 ```ts
 import type { Producto, ConfigEntry, ConfigMap } from '@/types'
@@ -292,7 +292,7 @@ export function toStoreProducto(p: Producto): StoreProducto {
 }
 ```
 
-- [ ] **Step 3: `lib/store/format.ts`** — portar `formatPrice` (app.js:816), `getBadgeColor`, cálculo de descuento:
+- [x] **Step 3: `lib/store/format.ts`** — portar `formatPrice` (app.js:816), `getBadgeColor`, cálculo de descuento:
 
 ```ts
 export function formatPrice(amount: number): string {
@@ -307,7 +307,7 @@ export function getBadgeColor(badge: string): string {
 }
 ```
 
-- [ ] **Step 4: `lib/store/getTallas.ts`** — portar `getTallas` (app.js:336) usando `categorias` de `tipo='talla'`:
+- [x] **Step 4: `lib/store/getTallas.ts`** — portar `getTallas` (app.js:336) usando `categorias` de `tipo='talla'`:
 
 ```ts
 import type { StoreProducto, Categoria } from '@/types/store'
@@ -319,7 +319,7 @@ export function getTallas(p: StoreProducto, tallaFiltros: Categoria[]): string[]
 }
 ```
 
-- [ ] **Step 5: Tests (TDD — escribir antes que el código final)** Cubrir: `toConfigMap` vacío/duplicados, `toStoreProducto` con join nulo y `imagenes` nulas, `formatPrice` con 0 y decimales, `getBadgeColor` fallback. Mín. 80% de estos módulos.
+- [x] **Step 5: Tests (TDD — escribir antes que el código final)** Cubrir: `toConfigMap` vacío/duplicados, `toStoreProducto` con join nulo y `imagenes` nulas, `formatPrice` con 0 y decimales, `getBadgeColor` fallback. Mín. 80% de estos módulos.
 
 - [ ] **Step 6: Commit**
 

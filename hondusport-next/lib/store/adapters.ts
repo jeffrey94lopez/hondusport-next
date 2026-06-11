@@ -1,0 +1,25 @@
+import type { Producto, ConfigEntry, ConfigMap } from '@/types'
+import type { StoreProducto } from '@/types/store'
+
+export function toConfigMap(rows: ConfigEntry[]): ConfigMap {
+  return Object.fromEntries(rows.map(r => [r.key, r.value ?? '']))
+}
+
+export function toStoreProducto(p: Producto): StoreProducto {
+  return {
+    id: p.id,
+    nombre: p.nombre,
+    descripcion: p.descripcion ?? '',
+    precio: Number(p.precio),
+    precioOriginal: p.precio_original != null ? Number(p.precio_original) : null,
+    cat: p.categorias?.valor ?? '',
+    subcat: p.subcategorias?.valor ?? null,
+    genero: p.genero,
+    badge: p.badge,
+    tallas: p.tallas ?? [],
+    imagenes: (p.imagenes ?? []).filter(Boolean),
+    stock: p.stock,
+    rating: p.rating ?? 5,
+    ofertaFin: p.oferta_fin,
+  }
+}
