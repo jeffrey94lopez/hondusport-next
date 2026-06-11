@@ -461,13 +461,15 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 
 **Files:** `components/store/WishlistDrawer.tsx`, `components/store/MegaSearch.tsx`, `components/store/ExitPopup.tsx` (+ css c/u).
 
-- [ ] **Step 1: WishlistDrawer** — portar `renderWishlistDrawer` (app.js:1603): items con +CARRITO y ELIMINAR. **CSS:** comparte `#wishlist-drawer` (en `styles.css` **801-883**).
+- [x] **Step 1: WishlistDrawer** — portar `renderWishlistDrawer` (app.js:1603): items con +CARRITO y ELIMINAR. **CSS:** comparte `#wishlist-drawer` (en `styles.css` **801-883**).
 
-- [ ] **Step 2: MegaSearch** — overlay con Fuse.js, portar `executeMegaSearch` (app.js:1795), tags populares. **CSS:** `styles.css` **2259-2415**.
+- [x] **Step 2: MegaSearch** — overlay con Fuse.js, portar `executeMegaSearch` (app.js:1795), tags populares. **CSS:** `styles.css` **2259-2415**.
 
-- [ ] **Step 3: ExitPopup** — exit-intent (`mouseleave`, `clientY<0`, desktop) gated por `cupones_popup_activo`, valida cupón (app.js:1335, 1767). **CSS:** `styles.css` **1305-1342** + `.exit-overlay` **1029-1044**.
+- [x] **Step 3: ExitPopup** — exit-intent (`mouseleave`, `clientY<0`, desktop) gated por `cupones_popup_activo`, valida cupón (app.js:1335, 1767). **CSS:** `styles.css` **1305-1342** + `.exit-overlay` **1029-1044**.
 
-- [ ] **Step 4: Commit** `feat(store): WishlistDrawer, MegaSearch (Fuse.js) y ExitPopup`
+- [x] **Step 4: Commit** `feat(store): WishlistDrawer, MegaSearch (Fuse.js) y ExitPopup`
+
+> Nota: los tres componentes son self-contained (`isOpen`/`onClose`, igual que `CartDrawer`/`FilterSidebar`); wiring completo con `Nav`/`BottomNav`/`StoreClient` diferido a Task 14. `WishlistDrawer` recibe `productos`/`tallaFiltros` y consume `useWishlist()` + `useCart().addToCart` (talla por defecto vía `getTallas`, sin toast — no existe infraestructura de toasts global aún). `MegaSearch` añade nueva función pura `searchProductos` en `lib/store/search.ts` (Fuse.js sobre `nombre`/`cat`/`subcat`/`descripcion`, threshold 0.4, límite 8 resultados; TDD, 6 tests); tags populares se derivan de `categorias` tipo `cat` (en vez del `#popular-tags` vacío del legado). `ExitPopup` usa `useCart().applyCoupon`, gateado por prop `activo` (mapea a `cupones_popup_activo`), y un `useRef` para no re-disparar el exit-intent (mismo patrón que `wasFreeShippingReached` en `CartDrawer`). Verificado con smoke test temporal en dev server: renderiza `MIS FAVORITOS`/`NO TIENES FAVORITOS`, `BÚSQUEDAS POPULARES`, y el popup `¡ESPERA!`/`CANJEAR`.
 
 ---
 
