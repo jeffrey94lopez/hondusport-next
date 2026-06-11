@@ -414,11 +414,13 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 
 **Files:** `components/store/ProductCard.tsx` (+ css).
 
-- [ ] **Step 1:** Portar `cardHTML` (app.js:922-986) a JSX. Props: `producto: StoreProducto`, `rank?`, callbacks `onQuickAdd`, `onOpen`, integración con `WishlistProvider`. Subcomponentes: badge con `getBadgeColor`, precio tachado (`precioOriginal`), stock warning (`stock <= 5`), timer de oferta (portar `startOfferTimers` app.js:1042 a un `useEffect` con `setInterval` y cleanup), botón wishlist, botones VER/+CARRITO. Usar `next/image` con `width`/`height` explícitos (regla de performance web). **CSS:** `styles.css` **514-627** (`.product-card`, `.product-img-container`, `.product-info`, `.card-btn-row`, `.price`, `.stars`, `.btn-add-main`) + badges/timer/wishlist **1496-1510, 1918-1962, 2088-2156** + `.card-mobile-add-btn` **2752**.
+- [x] **Step 1:** Portar `cardHTML` (app.js:922-986) a JSX. Props: `producto: StoreProducto`, `rank?`, callbacks `onQuickAdd`, `onOpen`, integración con `WishlistProvider`. Subcomponentes: badge con `getBadgeColor`, precio tachado (`precioOriginal`), stock warning (`stock <= 5`), timer de oferta (portar `startOfferTimers` app.js:1042 a un `useEffect` con `setInterval` y cleanup), botón wishlist, botones VER/+CARRITO. **CSS:** `styles.css` **514-627** (`.product-card`, `.product-img-container`, `.product-info`, `.card-btn-row`, `.price`, `.stars`, `.btn-add-main`) + badges/timer/wishlist **1496-1510, 1918-1962, 2088-2156** + `.card-mobile-add-btn` **2752**.
+  - Nota: se usó `<img>` con `eslint-disable @next/next/no-img-element` (mismo patrón que CategoryGallery), no `next/image`, ya que `next.config.ts` aún no tiene `remotePatterns` configurado para los dominios de imágenes de Supabase storage. Se revisará en Task 15.
+  - Nota: `STOCK_LIMITE` se dejó como constante local (5), igual al default de `app.js`; la configuración dinámica `stock_bajo_limite` no se conecta en este task.
 
-- [ ] **Step 2: Test** del cálculo de segundos del timer (`ofertaFin` futuro/pasado) extraído a `lib/store/offerTimer.ts`.
+- [x] **Step 2: Test** del cálculo de segundos del timer (`ofertaFin` futuro/pasado) extraído a `lib/store/offerTimer.ts`.
 
-- [ ] **Step 3: Commit** `feat(store): ProductCard con badge, timer de oferta y wishlist`
+- [x] **Step 3: Commit** `feat(store): ProductCard con badge, timer de oferta y wishlist`
 
 ### Task 8: FilterSidebar + lógica de filtrado/orden
 
