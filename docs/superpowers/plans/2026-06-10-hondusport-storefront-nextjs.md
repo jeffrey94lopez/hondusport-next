@@ -426,13 +426,14 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 
 **Files:** `components/store/FilterSidebar.tsx` (+ css), `lib/store/filters.ts`, `lib/store/tests/filters.test.ts`.
 
-- [ ] **Step 1: `lib/store/filters.ts`** — funciones puras portadas de `applyFilters` (app.js:818-868): `filterProductos({ productos, maxPrice, generos, cats, tallas, subcats, search, tallaFiltros })` y `sortProductos(list, sortBy)`. La búsqueda usa Fuse.js (`keys: ['nombre','cat','descripcion']`, `threshold: 0.4`). El filtro `subcats` compara contra `producto.subcat` (ya resuelto vía `subcategoria_id`, ver nota de datos).
+- [x] **Step 1: `lib/store/filters.ts`** — funciones puras portadas de `applyFilters` (app.js:818-868): `filterProductos({ productos, maxPrice, generos, cats, tallas, subcats, search, tallaFiltros })` y `sortProductos(list, sortBy)`. La búsqueda usa Fuse.js (`keys: ['nombre','cat','descripcion']`, `threshold: 0.4`). El filtro `subcats` compara contra `producto.subcat` (ya resuelto vía `subcategoria_id`, ver nota de datos).
 
-- [ ] **Step 2: FilterSidebar** — checkboxes género/cat, botones talla/subcat, slider de precio, botón limpiar. Props desde `categorias` por tipo. **CSS:** `styles.css` **423-507** (`.sidebar`, `.filter-group`, `.talla-btn*`) + labels/checkbox **1406-1452** + responsive sidebar **1742-1758**.
+- [x] **Step 2: FilterSidebar** — checkboxes género/cat, botones talla/subcat, slider de precio, botón limpiar. Props desde `categorias` por tipo. **CSS:** `styles.css` **423-507** (`.sidebar`, `.filter-group`, `.talla-btn*`) + labels/checkbox **1406-1452** + responsive sidebar **1742-1758**.
+  - Nota: componente autocontenido (estado interno de checkboxes/tallas/subcats/precio) que emite `FilterState` vía `onChange?` en un `useEffect`, siguiendo el patrón de Task 6. `isOpen`/`onClose?` controlan el estado mobile (`.sidebarActive`); el botón hamburguesa que lo abre se conectará en Task 14 (`StoreClient.tsx`).
 
-- [ ] **Step 3: Tests** de `filterProductos` (precio, género, cat, combinaciones, búsqueda fuzzy) y `sortProductos` (4 modos). 80%+.
+- [x] **Step 3: Tests** de `filterProductos` (precio, género, cat, combinaciones, búsqueda fuzzy) y `sortProductos` (4 modos). 80%+.
 
-- [ ] **Step 4: Commit** `feat(store): FilterSidebar y lógica de filtrado/orden (test, Fuse.js)`
+- [x] **Step 4: Commit** `feat(store): FilterSidebar y lógica de filtrado/orden (test, Fuse.js)`
 
 ### Task 9: ProductGrid + paginación + carruseles de secciones
 

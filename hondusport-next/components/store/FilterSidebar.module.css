@@ -1,0 +1,166 @@
+.sidebar {
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  position: sticky;
+  top: 120px;
+  height: fit-content;
+  max-width: 220px;
+}
+
+.closeBtn {
+  width: 100%;
+  text-align: right;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  display: none;
+}
+
+.filterGroup {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.filterGroup:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.filterGroup h4 {
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  margin-bottom: 1.2rem;
+}
+
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.checkLabel:hover {
+  background: rgba(201, 168, 76, 0.1);
+}
+
+.filterCheck {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.checkLabel::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: 0.2s;
+}
+
+.checkLabel:has(.filterCheck:checked)::before {
+  background: var(--primary);
+  border-color: var(--primary);
+  content: '\2713';
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.tallaBtnGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tallaBtn {
+  padding: 6px 12px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+}
+
+.tallaBtn:hover,
+.tallaBtnActive {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.priceRange {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.clearBtn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: 0.2s;
+  border-radius: 6px;
+}
+
+.clearBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 80%;
+    height: 100vh;
+    background: var(--card);
+    z-index: 2001;
+    padding: 2rem;
+    overflow-y: auto;
+    transition: left 0.3s ease;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .sidebarActive {
+    left: 0;
+  }
+
+  .closeBtn {
+    display: block;
+  }
+}
