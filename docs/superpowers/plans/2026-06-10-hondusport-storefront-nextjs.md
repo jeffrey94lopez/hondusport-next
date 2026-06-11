@@ -376,15 +376,15 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 
 ### Task 4: Nav + ThemeToggle + MobileNav + bottom-nav
 
-**Files:** `components/store/Nav.tsx` (+ `.module.css`), `components/store/ThemeToggle.tsx`, `components/store/MobileNav.tsx` (+ `.module.css`).
+**Files:** `components/store/Nav.tsx` (+ `.module.css`), `components/store/ThemeToggle.tsx`, `components/store/MobileNav.tsx` (+ `.module.css`), `components/store/BottomNav.tsx`, `components/store/StoreHeader.tsx`.
 
-- [ ] **Step 1: Nav** — portar el `<nav id="main-nav">` (app.js:15-42). Props: `logoUrl`, `categorias[]`, callbacks para abrir MegaSearch/Cart/Wishlist. Badges de carrito/wishlist desde los providers. Estado `scrolled` con `useEffect` + scroll listener (portar app.js:1710). **CSS:** `styles.css` líneas **78-196** (`nav`, `.nav-cat-btn`, `.search-container`, `.nav-actions`, `.icon-btn`, `#cart-badge`) → `Nav.module.css`. La hamburguesa: líneas **1379-1404**.
+- [x] **Step 1: Nav** — portar el `<nav id="main-nav">` (app.js:15-42). Props: `logoUrl`, `categorias[]`, callbacks para abrir MegaSearch/Cart/Wishlist. Badges de carrito/wishlist desde los providers. Estado `scrolled` con `useEffect` + scroll listener (portar app.js:1710). **CSS:** `styles.css` líneas **78-196** (`nav`, `.nav-cat-btn`, `.search-container`, `.nav-actions`, `.icon-btn`, `#cart-badge`) → `Nav.module.css`. La hamburguesa: líneas **1379-1404**. (Simplificado: la hamburguesa siempre abre `MobileNav`; el dropdown de escritorio del legado se omite — `.navLinks` se oculta en móvil vía `@media`)
 
-- [ ] **Step 2: ThemeToggle** — botón que llama `useTheme().toggle()`, icono sol/luna (app.js:1762).
+- [x] **Step 2: ThemeToggle** — botón que llama `useTheme().toggle()`, icono sol/luna (app.js:1762).
 
-- [ ] **Step 3: MobileNav + bottom-nav** — drawer móvil (`styles.css` **2488-2570**) y bottom-nav (`styles.css` **2417-2472**). Items: Inicio, Buscar, Carrito, Favoritos (app.js:312-326).
+- [x] **Step 3: MobileNav + bottom-nav** — drawer móvil (`styles.css` **2488-2570**) y bottom-nav (`styles.css` **2417-2472**). Items: Inicio, Buscar, Carrito, Favoritos (app.js:312-326). (`BottomNav.tsx` separado del drawer; `StoreHeader.tsx` añadido como componente de composición que orquesta `Nav` + `MobileNav` + `BottomNav` y el estado `mobileNavOpen`/`activeCat`)
 
-- [ ] **Step 4: Commit** `feat(store): Nav, ThemeToggle, MobileNav y bottom-nav`
+- [x] **Step 4: Commit** `feat(store): Nav, ThemeToggle, MobileNav y bottom-nav`
 
 ### Task 5: HeroCarousel + Footer
 
