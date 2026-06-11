@@ -390,11 +390,11 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 
 **Files:** `components/store/HeroCarousel.tsx` (+ css), `components/store/Footer.tsx` (+ css).
 
-- [ ] **Step 1: HeroCarousel** — props `banners: Banner[]`. Portar `initHero` (app.js:1743): autoplay 5s, indicadores, scroll-hint. Cada slide usa `b.imagen`, `b.titulo`, `b.subtitulo`, `b.btn_texto`, `b.btn_link`. **CSS:** `styles.css` **198-291** (`.hero`, `.slide`, `.slide-content`, `.hero-btn-outline`, `.slide-indicators`, `.indicator`) + scroll-hint **2644-2660**.
+- [x] **Step 1: HeroCarousel** — props `banners: Banner[]`. Portar `initHero` (app.js:1743): autoplay 5s, indicadores, scroll-hint. Cada slide usa `b.imagen`, `b.titulo`, `b.subtitulo`, `b.btn_texto`, `b.btn_link`. **CSS:** `styles.css` **198-291** (`.hero`, `.slide`, `.slide-content`, `.hero-btn-outline`, `.slide-indicators`, `.indicator`) + scroll-hint **2644-2660**.
 
-- [ ] **Step 2: Footer** — props `config: ConfigMap`, `categorias[]`. Portar el render del footer (app.js:660-718): columnas marca/tienda/contacto, redes sociales (mapeo `facebook`→`fa-facebook-f`, etc.), copyright con año. **CSS:** `styles.css` **885-958** + `.footer-grid` **1568-1596**.
+- [x] **Step 2: Footer** — props `config: ConfigMap`, `categorias[]`, `hasOfertas?`, `onFilterClick?`. Portar el render del footer (app.js:660-718): columnas marca/tienda/contacto, redes sociales (mapeo `facebook`→`fa-facebook-f`, etc.), copyright con año. **CSS:** `styles.css` **885-958** + `.footer-grid` **1568-1596**. (Footer es Client Component por los botones de filtro interactivos)
 
-- [ ] **Step 3: Commit** `feat(store): HeroCarousel y Footer dinámicos`
+- [x] **Step 3: Commit** `feat(store): HeroCarousel y Footer dinámicos`
 
 ### Task 6: CategoryBar + CategoryGallery
 
