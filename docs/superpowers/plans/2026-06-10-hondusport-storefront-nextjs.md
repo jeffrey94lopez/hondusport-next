@@ -439,9 +439,10 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 
 **Files:** `components/store/ProductGrid.tsx` (+ css).
 
-- [ ] **Step 1:** Portar `renderProducts` (app.js:902-1040): secciones ofertas/nuevos/más-vendidos (carruseles horizontales) cuando se muestra el catálogo completo, sección "todos" paginada (`itemsPerPage=12`, botón "MOSTRAR MÁS"). Usar estado React para `currentPage` y la lista filtrada. Botones de carrusel (portar `initCarouselBtns` app.js:1099). IntersectionObserver para fade-in (app.js:1033). **CSS:** `styles.css` **508-512, 629-797** (grids, secciones, `.carousel-wrapper`, `.carousel-btn`) + skeleton **2211-2257** + `.fade-in-up` **1598-1607** + `#load-more-btn` **2179-2195**.
+- [x] **Step 1:** Portar `renderProducts` (app.js:902-1040): secciones ofertas/nuevos/más-vendidos (carruseles horizontales) cuando se muestra el catálogo completo, sección "todos" paginada (`itemsPerPage=12`, botón "MOSTRAR MÁS"). Usar estado React para `currentPage` y la lista filtrada. Botones de carrusel (portar `initCarouselBtns` app.js:1099). IntersectionObserver para fade-in (app.js:1033). **CSS:** `styles.css` **508-512, 629-797** (grids, secciones, `.carousel-wrapper`, `.carousel-btn`) + skeleton **2211-2257** + `.fade-in-up` **1598-1607** + `#load-more-btn` **2179-2195**.
+  - Nota: `app/(store)/page.tsx` ahora consulta `productos` (join con `categorias` para `cat`/`subcat`) y pasa `storeProductos` a `ProductGrid`. Verificado en dev server: renderiza `SkeletonGrid` porque `productos_subcategoria_id_fkey` aún no existe (migración `2026-06-10-add-producto-subcategoria.sql` pendiente de aplicar) — comportamiento correcto para `totalProductos === 0`. Reset de `currentPage` al cambiar `productos` implementado con el patrón "ajustar estado durante el render" (evita `react-hooks/set-state-in-effect`).
 
-- [ ] **Step 2: Commit** `feat(store): ProductGrid con secciones, carruseles y paginación`
+- [x] **Step 2: Commit** `feat(store): ProductGrid con secciones, carruseles y paginación`
 
 ---
 
