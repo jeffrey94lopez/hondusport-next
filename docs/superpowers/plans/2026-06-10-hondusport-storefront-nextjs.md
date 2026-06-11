@@ -400,11 +400,11 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 
 **Files:** `components/store/CategoryBar.tsx` (+ css), `components/store/CategoryGallery.tsx` (+ css).
 
-- [ ] **Step 1: CategoryBar** — props `cats: Categoria[]` (tipo `cat`), `subcats: Categoria[]`, `onSelectCat`, `onSelectSubcat`. Portar el render con dropdowns de subcat (app.js:513-554). **CSS:** `styles.css` **293-396** (`.category-bar`, `.cat-dropdown*`, `.cat-filter-btn`).
+- [x] **Step 1: CategoryBar** — props `cats: Categoria[]` (tipo `cat`), `subcats: Categoria[]`, `onSelectCat`, `onSelectSubcat`. Portar el render con dropdowns de subcat (app.js:513-554). **CSS:** `styles.css` **293-396** (`.category-bar`, `.cat-dropdown*`, `.cat-filter-btn`). (Estado `activeCat` interno con `useState`; `onSelectCat`/`onSelectSubcat` opcionales para wiring externo en Task 14. Subcats emparejadas via `categorias_padre`)
 
-- [ ] **Step 2: CategoryGallery** — "Nuestras Categorías" con imagen por categoría (app.js:626-656). **CSS:** `styles.css` **1609-1664**.
+- [x] **Step 2: CategoryGallery** — "Nuestras Categorías" con imagen por categoría (app.js:626-656). **CSS:** `styles.css` **1609-1664**.
 
-- [ ] **Step 3: Commit** `feat(store): CategoryBar con dropdowns y CategoryGallery`
+- [x] **Step 3: Commit** `feat(store): CategoryBar con dropdowns y CategoryGallery`
 
 ---
 
