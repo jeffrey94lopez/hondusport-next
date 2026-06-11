@@ -40,3 +40,8 @@ export function findCoupon(cupones: Cupon[], code: string): Cupon | null {
   const normalized = code.trim().toUpperCase()
   return cupones.find(c => c.codigo === normalized) ?? null
 }
+
+export function getShippingProgress(finalTotal: number, threshold: number): number {
+  if (threshold <= 0) return 100
+  return Math.min((finalTotal / threshold) * 100, 100)
+}

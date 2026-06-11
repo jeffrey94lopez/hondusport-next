@@ -452,9 +452,10 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 
 **Files:** `components/store/CartDrawer.tsx` (+ css).
 
-- [ ] **Step 1:** Portar `updateCartUI` (app.js:1129-1241): lista de items con qty controls, edición de personalización inline, barra de envío gratis (`free_shipping_minimo`), input de cupón, total con descuento, badge de descuento, botón FINALIZAR PEDIDO (abre CheckoutModal). Consume `CartProvider`. **CSS:** `styles.css` **801-883** (`#cart-drawer`, `.cart-header`, `.cart-item`, `.cart-close`) + qty/cupón/shipping **997-1095, 1046-1068, 2032-2059** + free-shipping-toast **1683-1710** + `#cart-fab` **261-264 (HTML), 1703-1710 (CSS)**.
+- [x] **Step 1:** Portar `updateCartUI` (app.js:1129-1241): lista de items con qty controls, edición de personalización inline, barra de envío gratis (`free_shipping_minimo`), input de cupón, total con descuento, badge de descuento, botón FINALIZAR PEDIDO (abre CheckoutModal). Consume `CartProvider`. **CSS:** `styles.css` **801-883** (`#cart-drawer`, `.cart-header`, `.cart-item`, `.cart-close`) + qty/cupón/shipping **997-1095, 1046-1068, 2032-2059** + free-shipping-toast **1683-1710** + `#cart-fab` **261-264 (HTML), 1703-1710 (CSS)**.
+  - Nota: `CartDrawer` es self-contained (`isOpen`/`onClose` props, igual que `FilterSidebar`), recibe `freeShippingActivo`/`freeShippingThreshold`/`cupones`/`onCheckout?`/`onOpenProduct?` como props — wiring completo con `Nav`/`BottomNav`/`StoreClient` y `CheckoutModal` (Task 12) diferido a Task 14. Añadida función pura `getShippingProgress` en `lib/store/cart.ts` (TDD, 4 tests). El botón `#cart-fab` (app.js:261-264) y su badge se reutilizan vía `BottomNav`/`Nav` ya existentes (count del `CartContext`); no se duplica aquí. Verificado con smoke test temporal en dev server: renderiza `MI CARRITO`, barra de envío gratis, mensaje "TE FALTAN...", estado vacío y `FINALIZAR PEDIDO`.
 
-- [ ] **Step 2: Commit** `feat(store): CartDrawer con barra de envío gratis y cupón`
+- [x] **Step 2: Commit** `feat(store): CartDrawer con barra de envío gratis y cupón`
 
 ### Task 11: WishlistDrawer + MegaSearch + ExitPopup
 

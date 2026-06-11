@@ -8,6 +8,7 @@ import {
   getFinalTotal,
   getCount,
   findCoupon,
+  getShippingProgress,
 } from '../cart'
 import type { CartItem } from '@/types/store'
 import type { Cupon } from '@/types'
@@ -134,5 +135,23 @@ describe('findCoupon', () => {
 
   it('returns null when no coupon matches', () => {
     expect(findCoupon(cupones, 'INVALIDO')).toBeNull()
+  })
+})
+
+describe('getShippingProgress', () => {
+  it('returns 0 when the total is 0', () => {
+    expect(getShippingProgress(0, 1000)).toBe(0)
+  })
+
+  it('returns the percentage of progress toward the threshold', () => {
+    expect(getShippingProgress(500, 1000)).toBe(50)
+  })
+
+  it('caps the result at 100 when the total exceeds the threshold', () => {
+    expect(getShippingProgress(1500, 1000)).toBe(100)
+  })
+
+  it('returns 100 when the threshold is zero or negative', () => {
+    expect(getShippingProgress(100, 0)).toBe(100)
   })
 })
