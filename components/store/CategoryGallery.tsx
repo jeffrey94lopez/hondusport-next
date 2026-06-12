@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import styles from './CategoryGallery.module.css'
 import type { Categoria } from '@/types/store'
 
@@ -17,8 +18,7 @@ export default function CategoryGallery({ cats, onSelectCat }: CategoryGalleryPr
         {cats.map(cat => (
           <button key={cat.id} className={styles.card} onClick={() => onSelectCat?.(cat.valor)}>
             {cat.imagen && (
-              // eslint-disable-next-line @next/next/no-img-element -- imagen de categoria viene de configuracion (CMS), revisado en Task 15
-              <img src={cat.imagen} alt={cat.valor} className={styles.cardImg} width={200} height={200} />
+              <Image src={cat.imagen} alt={cat.valor} className={styles.cardImg} fill sizes="200px" />
             )}
             <div className={styles.overlay} />
             <div className={styles.cardTitle}>{cat.valor.toUpperCase()}</div>

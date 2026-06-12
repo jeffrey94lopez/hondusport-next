@@ -1,9 +1,11 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import styles from './CartDrawer.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { useCart } from '@/lib/store/cart-context'
 import { getShippingProgress } from '@/lib/store/cart'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Cupon } from '@/types'
 
 const FREE_SHIPPING_TOAST_MS = 2500
@@ -35,6 +37,8 @@ export default function CartDrawer({
   const [couponError, setCouponError] = useState('')
   const [showFreeShippingToast, setShowFreeShippingToast] = useState(false)
   const wasFreeShippingReached = useRef(false)
+
+  useEscapeKey(isOpen, onClose)
 
   const shippingProgress = getShippingProgress(finalTotal, freeShippingThreshold)
   const freeShippingReached = freeShippingActivo && finalTotal >= freeShippingThreshold
@@ -99,8 +103,7 @@ export default function CartDrawer({
           ) : (
             cart.map((item, idx) => (
               <div className={styles.item} key={`${item.id}-${item.size}-${item.custom}-${idx}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- imagen de producto en carrito viene de Supabase storage, revisado en Task 15 */}
-                <img src={item.imagen} alt={item.nombre} className={styles.itemImg} />
+                <Image src={item.imagen} alt={item.nombre} className={styles.itemImg} width={50} height={50} />
                 <div className={styles.itemInfo}>
                   <div className={styles.itemTitleRow}>
                     <h4 className={styles.itemTitle} onClick={() => onOpenProduct?.(item.id)} style={{ cursor: 'pointer' }}>

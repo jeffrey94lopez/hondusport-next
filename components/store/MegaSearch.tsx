@@ -1,8 +1,10 @@
 'use client'
 import { useState } from 'react'
+import Image from 'next/image'
 import styles from './MegaSearch.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { searchProductos } from '@/lib/store/search'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { StoreProducto, Categoria } from '@/types/store'
 
 interface MegaSearchProps {
@@ -21,6 +23,8 @@ export default function MegaSearch({ productos, categorias, isOpen, onClose, onO
     setWasOpen(isOpen)
     if (!isOpen) setQuery('')
   }
+
+  useEscapeKey(isOpen, onClose)
 
   const popularTags = categorias.filter(c => c.tipo === 'cat').map(c => c.valor)
   const results = searchProductos(productos, query)
@@ -66,8 +70,15 @@ export default function MegaSearch({ productos, categorias, isOpen, onClose, onO
             <div className={styles.results}>
               {results.map(producto => (
                 <div className={styles.resultItem} key={producto.id} onClick={() => handleSelect(producto.id)}>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- imagen de producto en resultados de búsqueda viene de Supabase storage, revisado en Task 15 */}
-                  <img src={producto.imagenes[0] ?? ''} alt={producto.nombre} className={styles.resultImg} />
+                  <div className={styles.resultImgWrap}>
+                    <Image
+                      src={producto.imagenes[0] ?? ''}
+                      alt={producto.nombre}
+                      className={styles.resultImg}
+                      fill
+                      sizes="150px"
+                    />
+                  </div>
                   <div className={styles.resultTitle}>{producto.nombre}</div>
                   <div className={styles.resultPrice}>{formatPrice(producto.precio)}</div>
                 </div>

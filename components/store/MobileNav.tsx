@@ -1,5 +1,7 @@
 'use client'
+import Image from 'next/image'
 import styles from './MobileNav.module.css'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Categoria } from '@/types/store'
 
 interface MobileNavProps {
@@ -24,14 +26,15 @@ export default function MobileNav({
     onClose()
   }
 
+  useEscapeKey(isOpen, onClose)
+
   return (
     <>
       {isOpen && <div className={styles.overlay} onClick={onClose} />}
       <div className={`${styles.drawer} ${isOpen ? styles.drawerOpen : ''}`}>
         <div className={styles.drawerHeader}>
           {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- logo URL viene de configuracion (CMS), revisado en Task 15
-            <img src={logoUrl} alt="Hondusport" className={styles.drawerLogo} width={120} height={40} />
+            <Image src={logoUrl} alt="Hondusport" className={styles.drawerLogo} width={120} height={40} />
           ) : (
             <span>HONDUSPORT</span>
           )}

@@ -1,9 +1,11 @@
 'use client'
+import Image from 'next/image'
 import styles from './WishlistDrawer.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { useWishlist } from '@/lib/store/wishlist-context'
 import { useCart } from '@/lib/store/cart-context'
 import { getTallas } from '@/lib/store/getTallas'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { StoreProducto, Categoria } from '@/types/store'
 
 interface WishlistDrawerProps {
@@ -17,6 +19,8 @@ interface WishlistDrawerProps {
 export default function WishlistDrawer({ productos, tallaFiltros, isOpen, onClose, onOpenProduct }: WishlistDrawerProps) {
   const { ids, toggle } = useWishlist()
   const { addToCart } = useCart()
+
+  useEscapeKey(isOpen, onClose)
 
   const items = productos.filter(p => ids.includes(p.id))
 
@@ -52,8 +56,7 @@ export default function WishlistDrawer({ productos, tallaFiltros, isOpen, onClos
           ) : (
             items.map(producto => (
               <div className={styles.item} key={producto.id}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- imagen de producto en favoritos viene de Supabase storage, revisado en Task 15 */}
-                <img src={producto.imagenes[0] ?? ''} alt={producto.nombre} className={styles.itemImg} />
+                <Image src={producto.imagenes[0] ?? ''} alt={producto.nombre} className={styles.itemImg} width={70} height={70} />
                 <div className={styles.itemInfo}>
                   <h4 className={styles.itemTitle} onClick={() => onOpenProduct?.(producto.id)} style={{ cursor: 'pointer' }}>
                     {producto.nombre}

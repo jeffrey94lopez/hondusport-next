@@ -132,13 +132,18 @@
   transform: translateY(-3px);
 }
 
-.resultImg {
+.resultImgWrap {
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
-  object-fit: cover;
   background: #f5f5f5;
   border: 1px solid var(--border);
   border-radius: 6px;
+  overflow: hidden;
+}
+
+.resultImg {
+  object-fit: cover;
 }
 
 .resultTitle {

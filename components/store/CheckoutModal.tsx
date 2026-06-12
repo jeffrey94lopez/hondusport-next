@@ -1,10 +1,11 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import styles from './CheckoutModal.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { useCart } from '@/lib/store/cart-context'
 import { calculateOrderTotals, getOrderText } from '@/lib/store/orderTotals'
 import { crearPedido } from '@/app/(store)/checkout/actions'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Envio, Cupon } from '@/types'
 
 const DELIVERY_KEY = 'hs_checkout_delivery'
@@ -65,16 +66,7 @@ export default function CheckoutModal({
     }
   }
 
-  useEffect(() => {
-    if (!isOpen) return
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
+  useEscapeKey(isOpen, onClose)
 
   const selectedEnvio = envios.find(e => e.id === selectedEnvioId) ?? null
 

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import styles from './FilterSidebar.module.css'
 import { formatPrice } from '@/lib/store/format'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { FilterState } from '@/lib/store/filters'
 import type { Categoria } from '@/types/store'
 
@@ -30,6 +31,8 @@ export default function FilterSidebar({ categorias, maxPriceLimit = 5000, isOpen
   useEffect(() => {
     onChange?.({ maxPrice, generos, cats, tallas, subcats })
   }, [maxPrice, generos, cats, tallas, subcats, onChange])
+
+  useEscapeKey(isOpen ?? false, () => onClose?.())
 
   const generoFiltros = categorias.filter(c => c.tipo === 'genero')
   const catFiltros = categorias.filter(c => c.tipo === 'cat')

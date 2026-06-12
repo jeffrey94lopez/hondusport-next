@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import styles from './Nav.module.css'
 import ThemeToggle from './ThemeToggle'
 import { useCart } from '@/lib/store/cart-context'
@@ -52,8 +53,7 @@ export default function Nav({
 
       <Link href="/" className={styles.logo}>
         {logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- logo URL viene de configuracion (CMS), revisado en Task 15
-          <img src={logoUrl} alt="Hondusport" className={styles.logoImg} width={140} height={45} />
+          <Image src={logoUrl} alt="Hondusport" className={styles.logoImg} width={140} height={45} priority />
         ) : (
           <span className={styles.logoText}>HONDUSPORT</span>
         )}

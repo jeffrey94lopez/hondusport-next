@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import styles from './ProductDetail.module.css'
 import SizeGuideModal from './SizeGuideModal'
 import { formatPrice } from '@/lib/store/format'
@@ -102,19 +103,25 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
       <div className={styles.gallery}>
         <div className={styles.zoomContainer} onMouseMove={handleZoomMove} onMouseLeave={handleZoomLeave}>
           {producto.imagenes[selectedImageIdx] && (
-            // eslint-disable-next-line @next/next/no-img-element -- imagen de producto viene de Supabase storage, revisado en Task 15
-            <img src={producto.imagenes[selectedImageIdx]} alt={producto.nombre} style={zoomStyle} />
+            <Image
+              src={producto.imagenes[selectedImageIdx]}
+              alt={producto.nombre}
+              fill
+              sizes="(max-width: 799px) 100vw, 500px"
+              style={zoomStyle}
+            />
           )}
         </div>
         {producto.imagenes.length > 1 && (
           <div className={styles.thumbRow}>
             {producto.imagenes.map((img, i) => (
-              // eslint-disable-next-line @next/next/no-img-element -- imagen de producto viene de Supabase storage, revisado en Task 15
-              <img
+              <Image
                 key={img}
                 src={img}
                 alt={`${producto.nombre} ${i + 1}`}
                 className={`${styles.thumbImg} ${i === selectedImageIdx ? styles.thumbImgActive : ''}`}
+                width={60}
+                height={60}
                 onClick={() => setSelectedImageIdx(i)}
               />
             ))}
@@ -210,8 +217,7 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
               {relacionados.map(rel => (
                 <Link key={rel.id} href={`/producto/${rel.id}`} className={styles.relatedItem}>
                   {rel.imagenes[0] && (
-                    // eslint-disable-next-line @next/next/no-img-element -- imagen de producto viene de Supabase storage, revisado en Task 15
-                    <img src={rel.imagenes[0]} alt={rel.nombre} />
+                    <Image src={rel.imagenes[0]} alt={rel.nombre} width={50} height={50} />
                   )}
                   <div>
                     <p className={styles.relatedTitle}>{rel.nombre}</p>
@@ -230,8 +236,9 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
               {recentProducts.map(rec => (
                 <Link key={rec.id} href={`/producto/${rec.id}`} className={styles.recentItem}>
                   {rec.imagenes[0] && (
-                    // eslint-disable-next-line @next/next/no-img-element -- imagen de producto viene de Supabase storage, revisado en Task 15
-                    <img src={rec.imagenes[0]} alt={rec.nombre} />
+                    <div className={styles.recentImgWrap}>
+                      <Image src={rec.imagenes[0]} alt={rec.nombre} className={styles.recentImg} fill sizes="130px" />
+                    </div>
                   )}
                   <p className={styles.relatedTitle}>{rec.nombre}</p>
                   <p className={styles.relatedPrice}>{formatPrice(rec.precio)}</p>

@@ -1,6 +1,6 @@
 'use client'
-import { useEffect } from 'react'
 import styles from './SizeGuideModal.module.css'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 
 interface SizeGuideModalProps {
   isOpen: boolean
@@ -8,16 +8,7 @@ interface SizeGuideModalProps {
 }
 
 export default function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps) {
-  useEffect(() => {
-    if (!isOpen) return
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
+  useEscapeKey(isOpen, onClose)
 
   return (
     <>

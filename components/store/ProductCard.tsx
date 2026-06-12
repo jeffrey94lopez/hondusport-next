@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import styles from './ProductCard.module.css'
 import { formatPrice, getBadgeColor } from '@/lib/store/format'
 import { getOfferSecondsRemaining } from '@/lib/store/offerTimer'
@@ -64,8 +65,13 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
 
       <div className={styles.imgContainer} onClick={() => onOpen?.(producto.id)}>
         {imagen && (
-          // eslint-disable-next-line @next/next/no-img-element -- imagen de producto viene de Supabase storage, revisado en Task 15
-          <img src={imagen} alt={producto.nombre} className={styles.img} loading="lazy" width={400} height={400} />
+          <Image
+            src={imagen}
+            alt={producto.nombre}
+            className={styles.img}
+            fill
+            sizes="(max-width: 768px) 50vw, 200px"
+          />
         )}
         {producto.badge === 'Oferta' && secondsRemaining > 0 && (
           <div className={styles.offerTimer}>{formatTimer(secondsRemaining)}</div>

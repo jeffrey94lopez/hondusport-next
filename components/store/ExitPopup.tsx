@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import styles from './ExitPopup.module.css'
 import { useCart } from '@/lib/store/cart-context'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Cupon } from '@/types'
 
 const EXIT_INTENT_MIN_WIDTH = 768
@@ -36,6 +37,8 @@ export default function ExitPopup({ cupones = [], activo = true, onCouponApplied
   function handleClose() {
     setIsOpen(false)
   }
+
+  useEscapeKey(isOpen, handleClose)
 
   function handleValidate() {
     const applied = applyCoupon(cupones, code)
