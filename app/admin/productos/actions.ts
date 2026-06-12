@@ -19,6 +19,7 @@ export async function createProducto(form: ProductoForm): Promise<ActionResult> 
     colores: form.colores ? form.colores.split(',').map(s => s.trim()).filter(Boolean) : null,
     marca: form.marca || null,
     sku: form.sku || null,
+    imagenes: form.imagenes.length > 0 ? form.imagenes : null,
     personalizable: form.personalizable,
     activo: form.activo,
   })
@@ -43,6 +44,7 @@ export async function updateProducto(id: string, form: ProductoForm): Promise<Ac
     colores: form.colores ? form.colores.split(',').map(s => s.trim()).filter(Boolean) : null,
     marca: form.marca || null,
     sku: form.sku || null,
+    imagenes: form.imagenes.length > 0 ? form.imagenes : null,
     personalizable: form.personalizable,
     activo: form.activo,
   }).eq('id', id)

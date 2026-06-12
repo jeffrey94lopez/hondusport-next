@@ -2,6 +2,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import Modal from '@/components/admin/Modal'
 import Toggle from '@/components/admin/Toggle'
+import ImageUpload from '@/components/admin/ImageUpload'
 import type { Producto, Categoria, ProductoForm } from '@/types'
 import {
   createProducto,
@@ -31,6 +32,7 @@ const EMPTY_FORM: ProductoForm = {
   colores: '',
   marca: '',
   sku: '',
+  imagenes: [],
   personalizable: false,
   activo: true,
 }
@@ -95,6 +97,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
       colores: p.colores?.join(', ') ?? '',
       marca: p.marca ?? '',
       sku: p.sku ?? '',
+      imagenes: p.imagenes ?? [],
       personalizable: p.personalizable,
       activo: p.activo,
     })
@@ -357,6 +360,29 @@ export default function ProductosClient({ productos, categorias, subcategorias }
               Colores (separados por coma)
               <input type="text" value={form.colores} onChange={f('colores')} placeholder="Rojo, Azul, Negro" />
             </label>
+            <div className={styles.formLabel}>
+              Imágenes
+              <div className={styles.imagesGrid}>
+                {form.imagenes.map((url, idx) => (
+                  <div key={url} className={styles.imageThumb}>
+                    <img src={url} alt={`Imagen ${idx + 1}`} />
+                    <button
+                      type="button"
+                      className={styles.imageRemove}
+                      onClick={() => setForm(p => ({ ...p, imagenes: p.imagenes.filter((_, i) => i !== idx) }))}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <ImageUpload
+                  bucket="productos"
+                  value=""
+                  label=""
+                  onChange={url => url && setForm(p => ({ ...p, imagenes: [...p.imagenes, url] }))}
+                />
+              </div>
+            </div>
             <label className={styles.formLabel}>
               Descripción
               <textarea value={form.descripcion} onChange={f('descripcion')} rows={3} />

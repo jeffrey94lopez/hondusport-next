@@ -46,3 +46,5 @@ next-env.d.ts
 admin-hs/
 app.js
 styles.css
+
+.vercel

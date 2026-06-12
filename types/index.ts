@@ -48,6 +48,7 @@ export interface ProductoForm {
   colores: string
   marca: string
   sku: string
+  imagenes: string[]
   personalizable: boolean
   activo: boolean
 }
