@@ -513,7 +513,7 @@ export default function ThemeRoot({ accent, children }: { accent?: string; child
 
 **Files:** `app/(store)/page.tsx`, `app/(store)/StoreClient.tsx`, `app/(store)/page.module.css`.
 
-- [ ] **Step 1: `page.tsx`** Server Component — fetch SSR en paralelo (igual que el admin con `Promise.all` + `await createClient()`): productos activos con join `categorias!productos_categoria_id_fkey(valor), subcategorias:categorias!productos_subcategoria_id_fkey(valor)`, categorias por tipo, banners activos ordenados, envíos activos, cupones activos, config. Adaptar con `toStoreProducto`/`toConfigMap`. `generateMetadata` desde config (`site_name`, `eslogan`, `meta_descripcion`, `og_image_url`).
+- [x] **Step 1: `page.tsx`** Server Component — fetch SSR en paralelo (igual que el admin con `Promise.all` + `await createClient()`): productos activos con join `categorias!productos_categoria_id_fkey(valor), subcategorias:categorias!productos_subcategoria_id_fkey(valor)`, categorias por tipo, banners activos ordenados, envíos activos, cupones activos, config. Adaptar con `toStoreProducto`/`toConfigMap`. `generateMetadata` desde config (`site_name`, `eslogan`, `meta_descripcion`, `og_image_url`).
 
 ```tsx
 export async function generateMetadata(): Promise<Metadata> {
@@ -529,11 +529,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 ```
 
-- [ ] **Step 2: `StoreClient.tsx`** — Client Component orquestador que recibe todos los datos SSR y monta: providers (Cart/Wishlist ya vienen del layout o se montan aquí), Nav, HeroCarousel, CategoryBar, CategoryGallery, FilterSidebar + ProductGrid, CartDrawer, WishlistDrawer, CheckoutModal, MegaSearch, ExitPopup, Footer, MobileNav. Estado compartido de filtros/drawers a este nivel (portar los `let` globales de `app.js` a `useState`). Promo bar (app.js:431) + social-proof toast opcional (app.js:1508).
+- [x] **Step 2: `StoreClient.tsx`** — Client Component orquestador que recibe todos los datos SSR y monta: providers (Cart/Wishlist ya vienen del layout o se montan aquí), Nav, HeroCarousel, CategoryBar, CategoryGallery, FilterSidebar + ProductGrid, CartDrawer, WishlistDrawer, CheckoutModal, MegaSearch, ExitPopup, Footer, MobileNav. Estado compartido de filtros/drawers a este nivel (portar los `let` globales de `app.js` a `useState`). Promo bar (app.js:431) + social-proof toast opcional (app.js:1508).
 
-- [ ] **Step 3: Verificación visual** en `npm run dev` a 320/768/1024/1440. Verificar dark/light, carrito persistente, checkout escribe en Supabase (revisar `/admin/pedidos`).
+- [x] **Step 3: Verificación visual** en `npm run dev` a 320/768/1024/1440. Verificar dark/light, carrito persistente, checkout escribe en Supabase (revisar `/admin/pedidos`).
 
-- [ ] **Step 4: Commit** `feat(store): home SSR + StoreClient (wiring completo de la tienda)`
+- [x] **Step 4: Commit** `feat(store): home SSR + StoreClient (wiring completo de la tienda)`
+
+> **Notas de implementación:** `StoreClient.tsx` recibe `productos`/`categorias`/`banners`/`envios`/`cupones`/`config` desde `page.tsx` (SSR) y centraliza el estado: `activeCat`/`activeSubcat` (navegación por categoría/subcategoría desde `StoreHeader`/`CategoryBar`/`CategoryGallery`), `filters: FilterState` (estado propio de `FilterSidebar`, emitido vía `onChange`), y los booleanos de apertura de `CartDrawer`/`WishlistDrawer`/`MegaSearch`/`CheckoutModal`/`FilterSidebar` (mobile). `effectiveCats`/`effectiveSubcats` combinan la selección de navegación (`activeCat`/`activeSubcat`, si hay una activa) con los checkboxes de `FilterSidebar` (`filters.cats`/`filters.subcats`) sin que ninguno de los dos sobrescriba al otro. `quickAdd(id)` resuelve `getTallas` y llama `useCart().addToCart` con talla/talla "Única" y "Sin personalización" por defecto; `openProduct(id)` navega a `/producto/${id}` vía `useRouter`. `freeShippingActivo`/`cuponesPopupActivo` se derivan de `config` tolerando mayúsculas/minúsculas (`isConfigActivo`, default `true` si la clave no existe); `freeShippingThreshold` valida que `config.free_shipping_minimo` sea un número finito y no vacío antes de usarlo, con fallback a `999`. La promo bar (`config.promo_bar_texto`) se renderiza como texto plano (sin `dangerouslySetInnerHTML`); el toast de "social proof" (app.js:1508) se dejó fuera de alcance (opcional según el plan). `page.module.css` define el grid `catalogLayout` (sidebar + grid, colapsa a una columna en móvil) y el botón flotante `.mobileFilterTrigger` que abre `FilterSidebar` en móvil (puerta de entrada que faltaba desde Task 8).
+>
+> Revisado por `code-reviewer`: 1 HIGH (estado de filtros de categoría/subcategoría duplicado entre `CategoryBar` y `FilterSidebar` podía sobrescribirse mutuamente) y 1 MEDIUM (`free_shipping_minimo` vacío o no numérico podía producir `0`/`NaN` y desactivar/forzar el envío gratis silenciosamente) — ambos corregidos (estado `activeSubcat` separado + `effectiveSubcats`; validación de `freeShippingThreshold` con `Number.isFinite`). Verificado: `npx tsc --noEmit` limpio, `npx eslint` sin errores, `npx vitest run` 86/86, `npm run dev` → `/` 200 sin errores en consola del servidor.
 
 ---
 
