@@ -21,5 +21,6 @@ export function toStoreProducto(p: Producto): StoreProducto {
     stock: p.stock,
     rating: p.rating ?? 5,
     ofertaFin: p.oferta_fin,
+    personalizable: p.personalizable,
   }
 }

@@ -10,6 +10,7 @@ import {
   getFinalTotal,
   getCount,
   findCoupon,
+  normalizeStoredCart,
 } from '@/lib/store/cart'
 import type { CartItem } from '@/types/store'
 import type { Cupon } from '@/types'
@@ -21,7 +22,7 @@ function readCart(): CartItem[] {
   if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem(CART_KEY)
-    return raw ? (JSON.parse(raw) as CartItem[]) : []
+    return raw ? normalizeStoredCart(JSON.parse(raw) as CartItem[]) : []
   } catch {
     return []
   }

@@ -68,6 +68,23 @@
   font-family: inherit;
 }
 
+.storeRoot input[type="text"],
+.storeRoot input[type="email"],
+.storeRoot input[type="tel"],
+.storeRoot input[type="number"],
+.storeRoot input[type="password"],
+.storeRoot input[type="search"],
+.storeRoot textarea,
+.storeRoot select {
+  background: transparent;
+  border-radius: 0;
+}
+
+.storeRoot ::placeholder {
+  color: var(--text);
+  opacity: 0.4;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .storeRoot,
   .storeRoot * {

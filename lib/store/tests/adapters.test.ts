@@ -81,6 +81,7 @@ describe('toStoreProducto', () => {
       stock: 5,
       rating: 5,
       ofertaFin: null,
+      personalizable: false,
     })
   })
 

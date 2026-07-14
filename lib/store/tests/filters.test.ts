@@ -18,6 +18,7 @@ function makeProducto(overrides: Partial<StoreProducto> = {}): StoreProducto {
     stock: null,
     rating: 5,
     ofertaFin: null,
+    personalizable: false,
     ...overrides,
   }
 }

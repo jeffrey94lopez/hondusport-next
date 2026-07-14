@@ -1,5 +1,15 @@
 import type { CartItem } from '@/types/store'
 import type { Cupon } from '@/types'
+import { SIN_PERSONALIZACION } from './orderTotals'
+
+// Carritos guardados antes del campo `personalizable`: se infiere desde `custom`
+// para no ocultar el editor de personalización de ítems que ya lo tenían.
+export function normalizeStoredCart(items: CartItem[]): CartItem[] {
+  return items.map(item => ({
+    ...item,
+    personalizable: item.personalizable ?? (item.custom !== SIN_PERSONALIZACION && item.custom !== ''),
+  }))
+}
 
 export function addToCart(cart: CartItem[], item: Omit<CartItem, 'qty'>): CartItem[] {
   const idx = cart.findIndex(

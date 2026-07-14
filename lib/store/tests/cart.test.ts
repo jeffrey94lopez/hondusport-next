@@ -9,6 +9,7 @@ import {
   getCount,
   findCoupon,
   getShippingProgress,
+  normalizeStoredCart,
 } from '../cart'
 import type { CartItem } from '@/types/store'
 import type { Cupon } from '@/types'
@@ -20,6 +21,7 @@ const ITEM_A: Omit<CartItem, 'qty'> = {
   imagen: 'a.jpg',
   size: 'M',
   custom: '',
+  personalizable: false,
 }
 
 const ITEM_B: Omit<CartItem, 'qty'> = {
@@ -29,6 +31,7 @@ const ITEM_B: Omit<CartItem, 'qty'> = {
   imagen: 'b.jpg',
   size: 'L',
   custom: '',
+  personalizable: false,
 }
 
 describe('addToCart', () => {
@@ -53,6 +56,35 @@ describe('addToCart', () => {
     const cart: CartItem[] = [{ ...ITEM_A, qty: 1 }]
     const result = addToCart(cart, { ...ITEM_A, custom: 'Texto' })
     expect(result).toEqual([{ ...ITEM_A, qty: 1 }, { ...ITEM_A, custom: 'Texto', qty: 1 }])
+  })
+})
+
+describe('normalizeStoredCart', () => {
+  it('keeps an explicit personalizable flag untouched', () => {
+    const stored: CartItem[] = [{ ...ITEM_A, personalizable: true, qty: 1 }]
+    expect(normalizeStoredCart(stored)).toEqual(stored)
+  })
+
+  it('infers personalizable=true for a legacy item that had a real custom text', () => {
+    // Carrito guardado antes del campo `personalizable` (sin la propiedad)
+    const legacy = [{ ...ITEM_A, custom: 'Pérez #10', qty: 1 }] as CartItem[]
+    delete (legacy[0] as Partial<CartItem>).personalizable
+
+    expect(normalizeStoredCart(legacy)[0].personalizable).toBe(true)
+  })
+
+  it('infers personalizable=false for a legacy item without personalization', () => {
+    const legacy = [{ ...ITEM_A, custom: 'Sin personalización', qty: 1 }] as CartItem[]
+    delete (legacy[0] as Partial<CartItem>).personalizable
+
+    expect(normalizeStoredCart(legacy)[0].personalizable).toBe(false)
+  })
+
+  it('infers personalizable=false for a legacy item with empty custom', () => {
+    const legacy = [{ ...ITEM_A, custom: '', qty: 1 }] as CartItem[]
+    delete (legacy[0] as Partial<CartItem>).personalizable
+
+    expect(normalizeStoredCart(legacy)[0].personalizable).toBe(false)
   })
 })
 

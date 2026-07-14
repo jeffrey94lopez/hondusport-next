@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateOrderTotals, cartItemsToPedidoItems, getOrderText } from '../orderTotals'
+import { calculateOrderTotals, cartItemsToPedidoItems, getOrderText, resolveTrustedCustom } from '../orderTotals'
 import type { CartItem } from '@/types/store'
 import type { Envio } from '@/types'
 
@@ -11,6 +11,7 @@ const ITEM_A: CartItem = {
   size: 'M',
   custom: 'Sin personalización',
   qty: 2,
+  personalizable: false,
 }
 
 const ITEM_B: CartItem = {
@@ -21,6 +22,7 @@ const ITEM_B: CartItem = {
   size: 'L',
   custom: 'Pérez #10',
   qty: 1,
+  personalizable: true,
 }
 
 const ENVIO_DELIVERY: Envio = {
@@ -169,6 +171,24 @@ describe('cartItemsToPedidoItems', () => {
         imagen_url: 'b.jpg',
       },
     ])
+  })
+})
+
+describe('resolveTrustedCustom', () => {
+  it('keeps the custom text for a personalizable product', () => {
+    expect(resolveTrustedCustom(true, 'Pérez #10')).toBe('Pérez #10')
+  })
+
+  it('discards the custom text for a NON personalizable product (tampered/stale client)', () => {
+    expect(resolveTrustedCustom(false, 'Pérez #10')).toBe('Sin personalización')
+  })
+
+  it('normalizes an empty custom to "Sin personalización" even when personalizable', () => {
+    expect(resolveTrustedCustom(true, '')).toBe('Sin personalización')
+  })
+
+  it('leaves an explicit "Sin personalización" unchanged', () => {
+    expect(resolveTrustedCustom(true, 'Sin personalización')).toBe('Sin personalización')
   })
 })
 

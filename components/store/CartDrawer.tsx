@@ -114,19 +114,21 @@ export default function CartDrawer({
                     </button>
                   </div>
                   <p className={styles.itemSize}>TALLA: {item.size}</p>
-                  <div className={styles.customEditContainer}>
-                    <span className={styles.inputIconLabel}>✏️</span>
-                    <input
-                      type="text"
-                      className={styles.customEditInput}
-                      defaultValue={item.custom === 'Sin personalización' ? '' : item.custom}
-                      placeholder="Personalización"
-                      onBlur={e => updateCustom(idx, e.target.value.trim() || 'Sin personalización')}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') e.currentTarget.blur()
-                      }}
-                    />
-                  </div>
+                  {item.personalizable && (
+                    <div className={styles.customEditContainer}>
+                      <span className={styles.inputIconLabel}>✏️</span>
+                      <input
+                        type="text"
+                        className={styles.customEditInput}
+                        defaultValue={item.custom === 'Sin personalización' ? '' : item.custom}
+                        placeholder="Personalización"
+                        onBlur={e => updateCustom(idx, e.target.value.trim() || 'Sin personalización')}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') e.currentTarget.blur()
+                        }}
+                      />
+                    </div>
+                  )}
                   <div className={styles.itemControls}>
                     <div className={styles.qtyControls}>
                       <button className={styles.qtyBtn} onClick={() => changeQty(idx, -1)} aria-label="Restar cantidad">

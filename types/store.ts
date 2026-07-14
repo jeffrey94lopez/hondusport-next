@@ -15,6 +15,7 @@ export interface StoreProducto {
   stock: number | null
   rating: number
   ofertaFin: string | null
+  personalizable: boolean
 }
 
 export interface CartItem {
@@ -25,6 +26,7 @@ export interface CartItem {
   size: string
   custom: string
   qty: number
+  personalizable: boolean
 }
 
 export type { Categoria, Banner, Cupon, Envio, ConfigMap }

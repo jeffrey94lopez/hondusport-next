@@ -17,6 +17,7 @@ const BASE_PRODUCTO: StoreProducto = {
   stock: 5,
   rating: 5,
   ofertaFin: null,
+  personalizable: false,
 }
 
 const TALLA_FILTROS: Categoria[] = [

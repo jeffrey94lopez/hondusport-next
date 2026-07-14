@@ -51,7 +51,15 @@ export interface PedidoItemInsert {
   imagen_url: string
 }
 
-const SIN_PERSONALIZACION = 'Sin personalización'
+export const SIN_PERSONALIZACION = 'Sin personalización'
+
+// Frontera de confianza: solo un producto personalizable conserva el `custom`
+// enviado por el cliente; cualquier otro se normaliza a "Sin personalización".
+export function resolveTrustedCustom(personalizable: boolean, custom: string): string {
+  return personalizable && custom !== SIN_PERSONALIZACION && custom !== ''
+    ? custom
+    : SIN_PERSONALIZACION
+}
 
 export function cartItemsToPedidoItems(cart: CartItem[]): PedidoItemInsert[] {
   return cart.map(item => ({

@@ -77,6 +77,7 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
       imagen: producto.imagenes[0] ?? '',
       size: selectedTalla || 'Única',
       custom: custom.trim() || 'Sin personalización',
+      personalizable: producto.personalizable,
     })
   }
 
@@ -167,22 +168,24 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
           </div>
         )}
 
-        <div className={styles.section}>
-          <label className={styles.label} htmlFor="custom-input">
-            PERSONALIZACIÓN (OPCIONAL)
-          </label>
-          <div className={styles.customInputBox}>
-            <i className="fa-solid fa-pen" />
-            <input
-              id="custom-input"
-              type="text"
-              placeholder="EJ. NOMBRE Y NÚMERO"
-              value={custom}
-              onChange={e => setCustom(e.target.value)}
-            />
+        {producto.personalizable && (
+          <div className={styles.section}>
+            <label className={styles.label} htmlFor="custom-input">
+              PERSONALIZACIÓN (OPCIONAL)
+            </label>
+            <div className={styles.customInputBox}>
+              <i className="fa-solid fa-pen" />
+              <input
+                id="custom-input"
+                type="text"
+                placeholder="EJ. NOMBRE Y NÚMERO"
+                value={custom}
+                onChange={e => setCustom(e.target.value)}
+              />
+            </div>
+            <span className={styles.hint}>Se imprimirá exactamente como lo escribas</span>
           </div>
-          <span className={styles.hint}>Se imprimirá exactamente como lo escribas</span>
-        </div>
+        )}
 
         <button className={styles.addBtn} onClick={handleAddToCart}>
           AGREGAR AL CARRITO

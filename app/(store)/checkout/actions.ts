@@ -1,7 +1,7 @@
 'use server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase-server'
-import { calculateOrderTotals, cartItemsToPedidoItems } from '@/lib/store/orderTotals'
+import { calculateOrderTotals, cartItemsToPedidoItems, resolveTrustedCustom } from '@/lib/store/orderTotals'
 import { toConfigMap } from '@/lib/store/adapters'
 import type { EnvioPricing } from '@/lib/store/orderTotals'
 import type { CartItem } from '@/types/store'
@@ -33,7 +33,6 @@ export interface CrearPedidoResult {
 }
 
 const GENERIC_ERROR = 'No se pudo crear el pedido. Intenta de nuevo.'
-const SIN_PERSONALIZACION = 'Sin personalización'
 
 export async function crearPedido(payload: CrearPedidoInput): Promise<CrearPedidoResult> {
   const parsed = crearPedidoSchema.safeParse(payload)
@@ -48,7 +47,7 @@ export async function crearPedido(payload: CrearPedidoInput): Promise<CrearPedid
   const productIds = [...new Set(cart.map(item => item.id))]
   const { data: productos, error: productosError } = await supabase
     .from('productos')
-    .select('id, nombre, precio, imagenes, activo')
+    .select('id, nombre, precio, imagenes, activo, personalizable')
     .in('id', productIds)
 
   if (productosError || !productos) {
@@ -68,8 +67,9 @@ export async function crearPedido(payload: CrearPedidoInput): Promise<CrearPedid
       precio: Number(producto.precio),
       imagen: producto.imagenes?.[0] ?? '',
       size: item.size,
-      custom: item.custom === SIN_PERSONALIZACION || item.custom === '' ? SIN_PERSONALIZACION : item.custom,
+      custom: resolveTrustedCustom(producto.personalizable, item.custom),
       qty: item.qty,
+      personalizable: producto.personalizable,
     })
   }
 

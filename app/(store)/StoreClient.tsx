@@ -77,6 +77,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
       imagen: producto.imagenes[0] ?? '',
       size: tallas[0] ?? TALLA_UNICA,
       custom: SIN_PERSONALIZACION,
+      personalizable: producto.personalizable,
     })
   }
 

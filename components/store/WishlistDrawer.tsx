@@ -33,6 +33,7 @@ export default function WishlistDrawer({ productos, tallaFiltros, isOpen, onClos
       imagen: producto.imagenes[0] ?? '',
       size: tallas[0] ?? 'Única',
       custom: 'Sin personalización',
+      personalizable: producto.personalizable,
     })
   }
 

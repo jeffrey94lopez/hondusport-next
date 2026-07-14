@@ -175,4 +175,8 @@
   .searchContainer {
     max-width: none;
   }
+
+  .navActions .iconBtn {
+    display: none;
+  }
 }
