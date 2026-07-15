@@ -1,5 +1,6 @@
 import type { FilterState } from './filters'
 import type { Categoria } from '@/types/store'
+import { slugify } from './slug'
 
 export type FilterTipo = 'cat' | 'subcat' | 'genero' | 'talla'
 
@@ -14,16 +15,6 @@ const MAP: Record<FilterTipo, { key: string; field: keyof Omit<FilterState, 'max
   subcat: { key: 'subcat', field: 'subcats', catTipo: 'subcat' },
   genero: { key: 'genero', field: 'generos', catTipo: 'genero' },
   talla: { key: 'talla', field: 'tallas', catTipo: 'talla' },
-}
-
-export function slugify(valor: string): string {
-  return valor
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 function valoresDeTipo(ctx: FilterParamsCtx, catTipo: Categoria['tipo']): string[] {
@@ -60,3 +51,6 @@ export function parseFilters(params: URLSearchParams, ctx: FilterParamsCtx): Fil
 
   return result
 }
+
+export { slugify }
+
