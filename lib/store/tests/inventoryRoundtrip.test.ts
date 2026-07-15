@@ -217,6 +217,28 @@ describe('parseInventoryUpload — SKU único', () => {
     const res = parseInventoryUpload({ actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, sku: 'SKU1' }], nuevos: [] }, ctxBase())
     expect(res.errors).toEqual([])
   })
+  it('SKU no se reserva en fila inválida: una fila inválida con SKU X1 no bloquea una fila válida posterior con el mismo SKU', () => {
+    const res = parseInventoryUpload({
+      actualizar: [],
+      nuevos: [{ nombre: '', precio: 10, sku: 'X1' }, { nombre: 'Valido', precio: 20, sku: 'X1' }],
+    }, ctxBase())
+    expect(res.errors).toHaveLength(1)
+    expect(res.errors[0].motivo).toContain('nombre')
+    expect(res.creates).toHaveLength(1)
+    expect(res.creates[0].nombre).toBe('Valido')
+    expect(res.errors.some(e => e.motivo.includes('repetido'))).toBe(false)
+  })
+})
+
+describe('parseInventoryUpload — re-validación de subcategoría al cambiar categoría', () => {
+  it('error: cambia la categoría y deja subcategoría vacía, quedando la subcat anterior huérfana', () => {
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, categoria: 'Calzado' }],
+      nuevos: [],
+    }, ctxBase())
+    expect(res.updates).toEqual([])
+    expect(res.errors.some(e => e.motivo.includes('subcategoría'))).toBe(true)
+  })
 })
 
 describe('parseInventoryUpload — atomicidad de datos', () => {

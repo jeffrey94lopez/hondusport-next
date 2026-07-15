@@ -169,6 +169,7 @@ export function parseInventoryUpload(
   // SKUs ya vistos en este archivo -> fila que lo tomó
   const skuVistos = new Map<string, number>()
   const slugs = ctx.existentes.map(p => p.slug)
+  const subPorId = new Map(ctx.subcategorias.map(s => [s.id, s]))
 
   // Resuelve categoría/subcat efectivas o empuja errores. Devuelve ids resueltos.
   function resolverCategorias(
@@ -195,11 +196,23 @@ export function parseInventoryUpload(
       } else {
         subcategoria_id = sub.id
       }
+    } else if (catCell !== undefined && subcategoria_id) {
+      // La categoría cambió pero la subcategoría se conserva: re-validar que
+      // la subcat conservada siga perteneciendo a la nueva categoría efectiva.
+      const subActual = subPorId.get(subcategoria_id)
+      const valor = subActual?.valor ?? subcategoria_id
+      if (!categoria_id) {
+        rowErrors.push(`la subcategoría "${valor}" requiere una categoría`)
+      } else if (!(subActual?.categorias_padre ?? []).includes(categoria_id)) {
+        rowErrors.push(`la subcategoría "${valor}" no pertenece a esa categoría`)
+      }
     }
     return { categoria_id, subcategoria_id }
   }
 
   // Valida y registra SKU. Devuelve el SKU final (o null). Empuja errores.
+  // Debe llamarse SOLO cuando el resto de la fila ya pasó validación, para no
+  // reservar el SKU de filas que terminarán rechazadas por otro motivo.
   function resolverSku(
     row: InventoryRow, fila: number, propioId: string | null,
     baseSku: string | null, rowErrors: string[],
@@ -260,8 +273,12 @@ export function parseInventoryUpload(
     const precio_original = parsePrecioOriginal(row.precio_original, prod.precio_original, rowErrors)
     const stock = parseStock(row.stock, prod.stock, rowErrors)
     const { categoria_id, subcategoria_id } = resolverCategorias(row, 'Actualizar', fila, prod.categoria_id, prod.subcategoria_id, rowErrors)
-    const sku = resolverSku(row, fila, id, prod.sku, rowErrors)
 
+    if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Actualizar', fila, motivo: m })); return }
+
+    // El SKU solo se valida/reserva una vez que el resto de la fila es válido,
+    // para no bloquear una fila futura por el SKU de una fila descartada.
+    const sku = resolverSku(row, fila, id, prod.sku, rowErrors)
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Actualizar', fila, motivo: m })); return }
 
     updates.push({
@@ -300,8 +317,12 @@ export function parseInventoryUpload(
     const precio_original = parsePrecioOriginal(row.precio_original, null, rowErrors)
     const stock = parseStock(row.stock, null, rowErrors)
     const { categoria_id, subcategoria_id } = resolverCategorias(row, 'Nuevos', fila, null, null, rowErrors)
-    const sku = resolverSku(row, fila, null, null, rowErrors)
 
+    if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Nuevos', fila, motivo: m })); return }
+
+    // El SKU solo se valida/reserva una vez que el resto de la fila es válido,
+    // para no bloquear una fila futura por el SKU de una fila descartada.
+    const sku = resolverSku(row, fila, null, null, rowErrors)
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Nuevos', fila, motivo: m })); return }
 
     const slug = uniqueSlug(slugify(nombre!) || 'producto', slugs)
