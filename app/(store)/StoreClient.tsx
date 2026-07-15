@@ -1,10 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StoreHeader from '@/components/store/StoreHeader'
 import HeroCarousel from '@/components/store/HeroCarousel'
 import CategoryBar from '@/components/store/CategoryBar'
-import CategoryGallery from '@/components/store/CategoryGallery'
+import ActiveFilterChips from '@/components/store/ActiveFilterChips'
 import FilterSidebar from '@/components/store/FilterSidebar'
 import ProductGrid from '@/components/store/ProductGrid'
 import CartDrawer from '@/components/store/CartDrawer'
@@ -16,8 +16,8 @@ import Footer from '@/components/store/Footer'
 import { useCart } from '@/lib/store/cart-context'
 import { filterProductos } from '@/lib/store/filters'
 import { getTallas } from '@/lib/store/getTallas'
+import { useStoreFilters } from '@/lib/store/useStoreFilters'
 import styles from './page.module.css'
-import type { FilterState } from '@/lib/store/filters'
 import type { StoreProducto, Categoria, Banner, ConfigMap, Envio, Cupon } from '@/types/store'
 
 const DEFAULT_MAX_PRICE = 5000
@@ -43,11 +43,10 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
   const router = useRouter()
   const { addToCart } = useCart()
 
-  const maxPriceLimit = Math.max(DEFAULT_MAX_PRICE, ...productos.map(p => p.precio))
+  const maxPriceLimit = useMemo(() => Math.max(DEFAULT_MAX_PRICE, ...productos.map(p => p.precio)), [productos])
+  const ctx = useMemo(() => ({ categorias, maxPriceLimit }), [categorias, maxPriceLimit])
+  const { filters, toggle, setMaxPrice, clearOne, clearTipo, clearAll, activeCount } = useStoreFilters(ctx)
 
-  const [activeCat, setActiveCat] = useState<string | null>(null)
-  const [activeSubcat, setActiveSubcat] = useState<string | null>(null)
-  const [filters, setFilters] = useState<FilterState>({ maxPrice: maxPriceLimit, generos: [], cats: [], tallas: [], subcats: [] })
   const [cartOpen, setCartOpen] = useState(false)
   const [wishlistOpen, setWishlistOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -58,12 +57,21 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
   const subcats = categorias.filter(c => c.tipo === 'subcat')
   const tallaFiltros = categorias.filter(c => c.tipo === 'talla')
 
-  const effectiveCats = activeCat ? [activeCat] : filters.cats
-  const effectiveSubcats = activeSubcat ? [activeSubcat] : filters.subcats
-  const filtered = filterProductos({ productos, ...filters, cats: effectiveCats, subcats: effectiveSubcats, search: '', tallaFiltros })
+  const filtered = filterProductos({ productos, ...filters, search: '', tallaFiltros })
 
   function openProduct(id: string) {
     router.push(`/producto/${id}`)
+  }
+
+  // StoreHeader/Footer envían valores especiales además de categorías reales:
+  // '' o null = "todos" (limpiar), 'OFERTAS' = filtro de ofertas (fuera de alcance P1).
+  function handleCatLink(valor: string | null) {
+    if (!valor) {
+      clearAll()
+      return
+    }
+    if (valor === 'OFERTAS') return // ofertas no es una categoría; se ignora en P1
+    toggle('cat', valor)
   }
 
   function quickAdd(id: string) {
@@ -93,7 +101,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
       <StoreHeader
         logoUrl={config.logo_url}
         categorias={catsNav}
-        onSelectCat={setActiveCat}
+        onSelectCat={handleCatLink}
         onOpenSearch={() => setSearchOpen(true)}
         onOpenCart={() => setCartOpen(true)}
         onOpenWishlist={() => setWishlistOpen(true)}
@@ -102,26 +110,37 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
       <CategoryBar
         cats={catsNav}
         subcats={subcats}
-        onSelectCat={setActiveCat}
-        onSelectSubcat={setActiveSubcat}
+        activeCats={filters.cats}
+        activeSubcats={filters.subcats}
+        onToggleCat={valor => toggle('cat', valor)}
+        onToggleSubcat={valor => toggle('subcat', valor)}
+        onClearCats={() => clearTipo('cat')}
       />
-      <CategoryGallery cats={catsNav} onSelectCat={setActiveCat} />
+      <ActiveFilterChips
+        filters={filters}
+        maxPriceLimit={maxPriceLimit}
+        onClearOne={clearOne}
+        onClearAll={clearAll}
+      />
       <main className={styles.main}>
         <button className={styles.mobileFilterTrigger} onClick={() => setFilterSidebarOpen(true)}>
-          🔍 FILTROS
+          🔍 FILTROS{activeCount > 0 ? ` (${activeCount})` : ''}
         </button>
         <div className={styles.catalogLayout}>
           <FilterSidebar
             categorias={categorias}
+            filters={filters}
             maxPriceLimit={maxPriceLimit}
             isOpen={filterSidebarOpen}
             onClose={() => setFilterSidebarOpen(false)}
-            onChange={setFilters}
+            onToggle={toggle}
+            onMaxPrice={setMaxPrice}
+            onClearAll={clearAll}
           />
-          <ProductGrid productos={filtered} totalProductos={productos.length} onQuickAdd={quickAdd} onOpen={openProduct} />
+          <ProductGrid productos={filtered} totalProductos={productos.length} onQuickAdd={quickAdd} onOpen={openProduct} onClearFilters={clearAll} />
         </div>
       </main>
-      <Footer config={config} categorias={catsNav} hasOfertas={hasOfertas} onFilterClick={setActiveCat} />
+      <Footer config={config} categorias={catsNav} hasOfertas={hasOfertas} onFilterClick={handleCatLink} />
       <CartDrawer
         isOpen={cartOpen}
         onClose={() => setCartOpen(false)}

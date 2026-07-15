@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap, toStoreProducto } from '@/lib/store/adapters'
@@ -35,13 +36,15 @@ export default async function StorePage() {
   const storeProductos = (productos ?? []).map(toStoreProducto)
 
   return (
-    <StoreClient
-      productos={storeProductos}
-      categorias={categorias ?? []}
-      banners={banners ?? []}
-      envios={envios ?? []}
-      cupones={cupones ?? []}
-      config={configMap}
-    />
+    <Suspense fallback={null}>
+      <StoreClient
+        productos={storeProductos}
+        categorias={categorias ?? []}
+        banners={banners ?? []}
+        envios={envios ?? []}
+        cupones={cupones ?? []}
+        config={configMap}
+      />
+    </Suspense>
   )
 }
