@@ -5,6 +5,7 @@ import type { Producto, ConfigEntry } from '@/types'
 const BASE_PRODUCTO: Producto = {
   id: 'p1',
   nombre: 'Camiseta Nike',
+  slug: 'camiseta-roja',
   descripcion: 'Camiseta deportiva',
   precio: 350,
   precio_original: null,
@@ -69,6 +70,7 @@ describe('toStoreProducto', () => {
     expect(result).toEqual({
       id: 'p1',
       nombre: 'Camiseta Nike',
+      slug: 'camiseta-roja',
       descripcion: 'Camiseta deportiva',
       precio: 350,
       precioOriginal: null,
@@ -85,6 +87,7 @@ describe('toStoreProducto', () => {
       ofertaFin: null,
       personalizable: false,
     })
+    expect(result.slug).toBe('camiseta-roja')
   })
 
   it('falls back to empty cat and null subcat when joins are missing', () => {

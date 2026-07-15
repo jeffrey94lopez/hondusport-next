@@ -5,6 +5,7 @@ import type { StoreProducto, Categoria } from '@/types/store'
 const BASE_PRODUCTO: StoreProducto = {
   id: 'p1',
   nombre: 'Camiseta',
+  slug: 'camiseta',
   descripcion: '',
   precio: 100,
   precioOriginal: null,
