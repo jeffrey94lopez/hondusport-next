@@ -1,9 +1,9 @@
 'use client'
-import { useEffect, useState } from 'react'
 import styles from './FilterSidebar.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { FilterState } from '@/lib/store/filters'
+import type { FilterTipo } from '@/lib/store/filterParams'
 import type { Categoria } from '@/types/store'
 
 const PRICE_MIN = 500
@@ -11,41 +11,31 @@ const PRICE_STEP = 100
 
 interface FilterSidebarProps {
   categorias: Categoria[]
+  filters: FilterState
   maxPriceLimit?: number
   isOpen?: boolean
   onClose?: () => void
-  onChange?: (state: FilterState) => void
+  onToggle: (tipo: FilterTipo, valor: string) => void
+  onMaxPrice: (n: number) => void
+  onClearAll: () => void
 }
 
-function toggleValue(values: string[], value: string): string[] {
-  return values.includes(value) ? values.filter(v => v !== value) : [...values, value]
-}
-
-export default function FilterSidebar({ categorias, maxPriceLimit = 5000, isOpen, onClose, onChange }: FilterSidebarProps) {
-  const [maxPrice, setMaxPrice] = useState(maxPriceLimit)
-  const [generos, setGeneros] = useState<string[]>([])
-  const [cats, setCats] = useState<string[]>([])
-  const [tallas, setTallas] = useState<string[]>([])
-  const [subcats, setSubcats] = useState<string[]>([])
-
-  useEffect(() => {
-    onChange?.({ maxPrice, generos, cats, tallas, subcats })
-  }, [maxPrice, generos, cats, tallas, subcats, onChange])
-
+export default function FilterSidebar({
+  categorias,
+  filters,
+  maxPriceLimit = 5000,
+  isOpen,
+  onClose,
+  onToggle,
+  onMaxPrice,
+  onClearAll,
+}: FilterSidebarProps) {
   useEscapeKey(isOpen ?? false, () => onClose?.())
 
   const generoFiltros = categorias.filter(c => c.tipo === 'genero')
   const catFiltros = categorias.filter(c => c.tipo === 'cat')
   const tallaFiltros = categorias.filter(c => c.tipo === 'talla')
   const subcatFiltros = categorias.filter(c => c.tipo === 'subcat')
-
-  function clearAll() {
-    setMaxPrice(maxPriceLimit)
-    setGeneros([])
-    setCats([])
-    setTallas([])
-    setSubcats([])
-  }
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarActive : ''}`}>
@@ -61,8 +51,8 @@ export default function FilterSidebar({ categorias, maxPriceLimit = 5000, isOpen
               <input
                 type="checkbox"
                 className={styles.filterCheck}
-                checked={generos.includes(f.valor)}
-                onChange={() => setGeneros(prev => toggleValue(prev, f.valor))}
+                checked={filters.generos.includes(f.valor)}
+                onChange={() => onToggle('genero', f.valor)}
               />
               {f.valor}
             </label>
@@ -78,8 +68,8 @@ export default function FilterSidebar({ categorias, maxPriceLimit = 5000, isOpen
               <input
                 type="checkbox"
                 className={styles.filterCheck}
-                checked={cats.includes(f.valor)}
-                onChange={() => setCats(prev => toggleValue(prev, f.valor))}
+                checked={filters.cats.includes(f.valor)}
+                onChange={() => onToggle('cat', f.valor)}
               />
               {f.valor}
             </label>
@@ -94,8 +84,8 @@ export default function FilterSidebar({ categorias, maxPriceLimit = 5000, isOpen
             {tallaFiltros.map(f => (
               <button
                 key={f.id}
-                className={`${styles.tallaBtn} ${tallas.includes(f.valor) ? styles.tallaBtnActive : ''}`}
-                onClick={() => setTallas(prev => toggleValue(prev, f.valor))}
+                className={`${styles.tallaBtn} ${filters.tallas.includes(f.valor) ? styles.tallaBtnActive : ''}`}
+                onClick={() => onToggle('talla', f.valor)}
               >
                 {f.valor}
               </button>
@@ -111,8 +101,8 @@ export default function FilterSidebar({ categorias, maxPriceLimit = 5000, isOpen
             {subcatFiltros.map(f => (
               <button
                 key={f.id}
-                className={`${styles.tallaBtn} ${subcats.includes(f.valor) ? styles.tallaBtnActive : ''}`}
-                onClick={() => setSubcats(prev => toggleValue(prev, f.valor))}
+                className={`${styles.tallaBtn} ${filters.subcats.includes(f.valor) ? styles.tallaBtnActive : ''}`}
+                onClick={() => onToggle('subcat', f.valor)}
               >
                 {f.valor}
               </button>
@@ -123,7 +113,7 @@ export default function FilterSidebar({ categorias, maxPriceLimit = 5000, isOpen
 
       <div className={styles.filterGroup}>
         <h4>
-          PRECIO MÁXIMO: <span>{formatPrice(maxPrice)}</span>
+          PRECIO MÁXIMO: <span>{formatPrice(filters.maxPrice)}</span>
         </h4>
         <input
           type="range"
@@ -131,12 +121,12 @@ export default function FilterSidebar({ categorias, maxPriceLimit = 5000, isOpen
           min={PRICE_MIN}
           max={maxPriceLimit}
           step={PRICE_STEP}
-          value={maxPrice}
-          onChange={e => setMaxPrice(Number(e.target.value))}
+          value={filters.maxPrice}
+          onChange={e => onMaxPrice(Number(e.target.value))}
         />
       </div>
 
-      <button className={styles.clearBtn} onClick={clearAll}>
+      <button className={styles.clearBtn} onClick={onClearAll}>
         <i className="fa-solid fa-trash-can" /> LIMPIAR FILTROS
       </button>
     </aside>
