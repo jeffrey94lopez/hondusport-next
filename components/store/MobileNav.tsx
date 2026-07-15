@@ -9,7 +9,7 @@ interface MobileNavProps {
   onClose: () => void
   logoUrl?: string
   categorias: Categoria[]
-  activeCat: string | null
+  activeCats: string[]
   onSelectCat: (cat: string | null) => void
 }
 
@@ -18,7 +18,7 @@ export default function MobileNav({
   onClose,
   logoUrl,
   categorias,
-  activeCat,
+  activeCats,
   onSelectCat,
 }: MobileNavProps) {
   function selectAndClose(cat: string | null) {
@@ -45,7 +45,7 @@ export default function MobileNav({
         <ul className={styles.links}>
           <li>
             <button
-              className={activeCat === null ? styles.linkActive : ''}
+              className={activeCats.length === 0 ? styles.linkActive : ''}
               onClick={() => selectAndClose(null)}
             >
               Todos los productos
@@ -54,7 +54,7 @@ export default function MobileNav({
           {categorias.map(cat => (
             <li key={cat.id}>
               <button
-                className={activeCat === cat.valor ? styles.linkActive : ''}
+                className={activeCats.includes(cat.valor) ? styles.linkActive : ''}
                 onClick={() => selectAndClose(cat.valor)}
               >
                 {cat.valor.toUpperCase()}

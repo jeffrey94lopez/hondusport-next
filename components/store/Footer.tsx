@@ -14,11 +14,10 @@ const REDES: Array<{ key: string; icon: string }> = [
 interface FooterProps {
   config: ConfigMap
   categorias: Categoria[]
-  hasOfertas?: boolean
   onFilterClick?: (value: string) => void
 }
 
-export default function Footer({ config, categorias, hasOfertas, onFilterClick }: FooterProps) {
+export default function Footer({ config, categorias, onFilterClick }: FooterProps) {
   const nombreNegocio = config.nombre_negocio || 'HONDU SPORT'
   const año = new Date().getFullYear()
   const redesActivas = REDES.filter(r => config[r.key]?.trim())
@@ -51,13 +50,6 @@ export default function Footer({ config, categorias, hasOfertas, onFilterClick }
                 </button>
               </li>
             ))}
-            {hasOfertas && (
-              <li>
-                <button className={styles.catFilterBtn} onClick={() => onFilterClick?.('OFERTAS')}>
-                  Ofertas
-                </button>
-              </li>
-            )}
           </ul>
         </div>
 

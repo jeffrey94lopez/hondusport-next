@@ -13,7 +13,7 @@ const SCROLL_THRESHOLD = 50
 interface NavProps {
   logoUrl?: string
   categorias: Categoria[]
-  activeCat: string | null
+  activeCats: string[]
   onSelectCat: (cat: string | null) => void
   onOpenSearch: () => void
   onOpenCart: () => void
@@ -24,7 +24,7 @@ interface NavProps {
 export default function Nav({
   logoUrl,
   categorias,
-  activeCat,
+  activeCats,
   onSelectCat,
   onOpenSearch,
   onOpenCart,
@@ -62,7 +62,7 @@ export default function Nav({
       <ul className={styles.navLinks}>
         <li>
           <button
-            className={`${styles.navCatBtn} ${activeCat === null ? styles.navCatBtnActive : ''}`}
+            className={`${styles.navCatBtn} ${activeCats.length === 0 ? styles.navCatBtnActive : ''}`}
             onClick={() => onSelectCat(null)}
           >
             TODOS
@@ -71,7 +71,7 @@ export default function Nav({
         {categorias.map(cat => (
           <li key={cat.id}>
             <button
-              className={`${styles.navCatBtn} ${activeCat === cat.valor ? styles.navCatBtnActive : ''}`}
+              className={`${styles.navCatBtn} ${activeCats.includes(cat.valor) ? styles.navCatBtnActive : ''}`}
               onClick={() => onSelectCat(cat.valor)}
             >
               {cat.valor.toUpperCase()}

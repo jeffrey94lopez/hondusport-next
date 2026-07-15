@@ -63,14 +63,13 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
     router.push(`/producto/${id}`)
   }
 
-  // StoreHeader/Footer envían valores especiales además de categorías reales:
-  // '' o null = "todos" (limpiar), 'OFERTAS' = filtro de ofertas (fuera de alcance P1).
+  // StoreHeader/Footer envían '' o null para "todos" (limpiar); cualquier otro
+  // valor es una categoría real.
   function handleCatLink(valor: string | null) {
     if (!valor) {
       clearAll()
       return
     }
-    if (valor === 'OFERTAS') return // ofertas no es una categoría; se ignora en P1
     toggle('cat', valor)
   }
 
@@ -93,7 +92,6 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
   const parsedThreshold = Number(config.free_shipping_minimo)
   const freeShippingThreshold = config.free_shipping_minimo && Number.isFinite(parsedThreshold) ? parsedThreshold : DEFAULT_FREE_SHIPPING_THRESHOLD
   const cuponesPopupActivo = isConfigActivo(config.cupones_popup_activo, true)
-  const hasOfertas = productos.some(p => p.precioOriginal !== null && p.precioOriginal > p.precio)
 
   return (
     <>
@@ -101,6 +99,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
       <StoreHeader
         logoUrl={config.logo_url}
         categorias={catsNav}
+        activeCats={filters.cats}
         onSelectCat={handleCatLink}
         onOpenSearch={() => setSearchOpen(true)}
         onOpenCart={() => setCartOpen(true)}
@@ -114,13 +113,14 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
         activeSubcats={filters.subcats}
         onToggleCat={valor => toggle('cat', valor)}
         onToggleSubcat={valor => toggle('subcat', valor)}
-        onClearCats={() => clearTipo('cat')}
+        onClearCats={() => { clearTipo('cat'); clearTipo('subcat') }}
       />
       <ActiveFilterChips
         filters={filters}
         maxPriceLimit={maxPriceLimit}
         onClearOne={clearOne}
         onClearAll={clearAll}
+        onClearPrice={() => setMaxPrice(maxPriceLimit)}
       />
       <main className={styles.main}>
         <button className={styles.mobileFilterTrigger} onClick={() => setFilterSidebarOpen(true)}>
@@ -140,7 +140,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
           <ProductGrid productos={filtered} totalProductos={productos.length} onQuickAdd={quickAdd} onOpen={openProduct} onClearFilters={clearAll} />
         </div>
       </main>
-      <Footer config={config} categorias={catsNav} hasOfertas={hasOfertas} onFilterClick={handleCatLink} />
+      <Footer config={config} categorias={catsNav} onFilterClick={handleCatLink} />
       <CartDrawer
         isOpen={cartOpen}
         onClose={() => setCartOpen(false)}

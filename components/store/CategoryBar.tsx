@@ -13,7 +13,7 @@ interface CategoryBarProps {
 }
 
 export default function CategoryBar({ cats, subcats, activeCats, activeSubcats, onToggleCat, onToggleSubcat, onClearCats }: CategoryBarProps) {
-  const noneActive = activeCats.length === 0
+  const noneActive = activeCats.length === 0 && activeSubcats.length === 0
 
   return (
     <div className={styles.bar}>

@@ -8,6 +8,7 @@ import type { Categoria } from '@/types/store'
 interface StoreHeaderProps {
   logoUrl?: string
   categorias: Categoria[]
+  activeCats?: string[]
   onSelectCat?: (cat: string | null) => void
   onOpenSearch?: () => void
   onOpenCart?: () => void
@@ -17,18 +18,13 @@ interface StoreHeaderProps {
 export default function StoreHeader({
   logoUrl,
   categorias,
+  activeCats = [],
   onSelectCat,
   onOpenSearch,
   onOpenCart,
   onOpenWishlist,
 }: StoreHeaderProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [activeCat, setActiveCat] = useState<string | null>(null)
-
-  function selectCat(cat: string | null) {
-    setActiveCat(cat)
-    onSelectCat?.(cat)
-  }
 
   const noop = () => {}
 
@@ -37,8 +33,8 @@ export default function StoreHeader({
       <Nav
         logoUrl={logoUrl}
         categorias={categorias}
-        activeCat={activeCat}
-        onSelectCat={selectCat}
+        activeCats={activeCats}
+        onSelectCat={onSelectCat ?? noop}
         onOpenSearch={onOpenSearch ?? noop}
         onOpenCart={onOpenCart ?? noop}
         onOpenWishlist={onOpenWishlist ?? noop}
@@ -49,8 +45,8 @@ export default function StoreHeader({
         onClose={() => setMobileNavOpen(false)}
         logoUrl={logoUrl}
         categorias={categorias}
-        activeCat={activeCat}
-        onSelectCat={selectCat}
+        activeCats={activeCats}
+        onSelectCat={onSelectCat ?? noop}
       />
       <BottomNav
         onOpenSearch={onOpenSearch ?? noop}

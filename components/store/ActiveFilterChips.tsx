@@ -9,6 +9,7 @@ interface ActiveFilterChipsProps {
   maxPriceLimit: number
   onClearOne: (tipo: FilterTipo, valor: string) => void
   onClearAll: () => void
+  onClearPrice: () => void
 }
 
 interface Chip {
@@ -16,7 +17,7 @@ interface Chip {
   valor: string
 }
 
-export default function ActiveFilterChips({ filters, maxPriceLimit, onClearOne, onClearAll }: ActiveFilterChipsProps) {
+export default function ActiveFilterChips({ filters, maxPriceLimit, onClearOne, onClearAll, onClearPrice }: ActiveFilterChipsProps) {
   const chips: Chip[] = [
     ...filters.cats.map(valor => ({ tipo: 'cat' as const, valor })),
     ...filters.subcats.map(valor => ({ tipo: 'subcat' as const, valor })),
@@ -32,6 +33,7 @@ export default function ActiveFilterChips({ filters, maxPriceLimit, onClearOne, 
       {chips.map(({ tipo, valor }) => (
         <button
           key={`${tipo}-${valor}`}
+          type="button"
           className={styles.chip}
           onClick={() => onClearOne(tipo, valor)}
           aria-label={`Quitar filtro ${valor}`}
@@ -40,9 +42,16 @@ export default function ActiveFilterChips({ filters, maxPriceLimit, onClearOne, 
         </button>
       ))}
       {hasPrice && (
-        <span className={styles.chip}>Hasta {formatPrice(filters.maxPrice)}</span>
+        <button
+          type="button"
+          className={styles.chip}
+          onClick={onClearPrice}
+          aria-label="Quitar filtro de precio"
+        >
+          Hasta {formatPrice(filters.maxPrice)} <span aria-hidden>✕</span>
+        </button>
       )}
-      <button className={styles.clearAll} onClick={onClearAll}>
+      <button type="button" className={styles.clearAll} onClick={onClearAll}>
         Limpiar todo
       </button>
     </div>

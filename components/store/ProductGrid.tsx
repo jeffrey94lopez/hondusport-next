@@ -119,7 +119,7 @@ export default function ProductGrid({ productos, totalProductos, onQuickAdd, onO
       <div className={styles.emptyState}>
         <p className={styles.noResults}>🚫 NO SE ENCONTRARON PRODUCTOS.</p>
         {onClearFilters && (
-          <button className={styles.emptyClearBtn} onClick={onClearFilters}>
+          <button type="button" className={styles.emptyClearBtn} onClick={onClearFilters}>
             Limpiar filtros
           </button>
         )}
