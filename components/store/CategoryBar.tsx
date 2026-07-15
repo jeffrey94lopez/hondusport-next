@@ -9,9 +9,10 @@ interface CategoryBarProps {
   activeSubcats: string[]
   onToggleCat: (valor: string) => void
   onToggleSubcat: (valor: string) => void
+  onClearCats: () => void
 }
 
-export default function CategoryBar({ cats, subcats, activeCats, activeSubcats, onToggleCat, onToggleSubcat }: CategoryBarProps) {
+export default function CategoryBar({ cats, subcats, activeCats, activeSubcats, onToggleCat, onToggleSubcat, onClearCats }: CategoryBarProps) {
   const noneActive = activeCats.length === 0
 
   return (
@@ -19,7 +20,7 @@ export default function CategoryBar({ cats, subcats, activeCats, activeSubcats, 
       <div className={styles.barInner}>
         <button
           className={`${styles.filterBtn} ${noneActive ? styles.filterBtnActive : ''}`}
-          onClick={() => activeCats.forEach(c => onToggleCat(c))}
+          onClick={onClearCats}
         >
           Todos
         </button>

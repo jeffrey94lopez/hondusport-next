@@ -16,6 +16,7 @@ export interface UseStoreFilters {
   toggle: (tipo: FilterTipo, valor: string) => void
   setMaxPrice: (n: number) => void
   clearOne: (tipo: FilterTipo, valor: string) => void
+  clearTipo: (tipo: FilterTipo) => void
   clearAll: () => void
   activeCount: number
 }
@@ -58,6 +59,11 @@ export function useStoreFilters(ctx: FilterParamsCtx): UseStoreFilters {
     [filters, write],
   )
 
+  const clearTipo = useCallback(
+    (tipo: FilterTipo) => write({ ...filters, [FIELD[tipo]]: [] }),
+    [filters, write],
+  )
+
   const setMaxPrice = useCallback((n: number) => write({ ...filters, maxPrice: n }), [filters, write])
 
   const clearAll = useCallback(() => write({ ...filters, generos: [], cats: [], tallas: [], subcats: [], maxPrice: ctx.maxPriceLimit }), [filters, write, ctx])
@@ -66,5 +72,5 @@ export function useStoreFilters(ctx: FilterParamsCtx): UseStoreFilters {
     filters.cats.length + filters.subcats.length + filters.generos.length + filters.tallas.length +
     (filters.maxPrice < ctx.maxPriceLimit ? 1 : 0)
 
-  return { filters, toggle, setMaxPrice, clearOne, clearAll, activeCount }
+  return { filters, toggle, setMaxPrice, clearOne, clearTipo, clearAll, activeCount }
 }
