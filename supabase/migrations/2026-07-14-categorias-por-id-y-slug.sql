@@ -1,7 +1,14 @@
 -- Proyecto 2a: categorias por ID + slug estable
 -- Correr UNA vez, antes de desplegar el codigo nuevo.
+-- Todo dentro de una transaccion: si algo falla, no queda estado parcial.
+
+begin;
+
+-- 0. Extension unaccent PRIMERO (la funcion slugify_es la referencia).
+create extension if not exists unaccent;
 
 -- 1. Funcion de slugify equivalente a lib/store/slug.ts
+--    'stable' (no 'immutable') porque unaccent depende de la config de texto.
 create or replace function slugify_es(txt text) returns text as $$
   select trim(both '-' from
     regexp_replace(
@@ -9,10 +16,7 @@ create or replace function slugify_es(txt text) returns text as $$
       '[^a-z0-9]+', '-', 'g'
     )
   );
-$$ language sql immutable;
-
--- Requiere la extension unaccent
-create extension if not exists unaccent;
+$$ language sql stable;
 
 -- 2. Columna slug (nullable durante el backfill)
 alter table categorias add column if not exists slug text;
@@ -42,18 +46,48 @@ end $$;
 create unique index if not exists categorias_slug_key on categorias (slug);
 alter table categorias alter column slug set not null;
 
--- 5. Convertir categorias_padre de NOMBRES a IDs (case-insensitive), descartando sin match
-update categorias c
-set categorias_padre = sub.ids
-from (
-  select c2.id,
-         array_agg(p.id::text order by p.id) as ids
-  from categorias c2
-  cross join lateral unnest(c2.categorias_padre) as nombre
-  join categorias p on lower(p.valor) = lower(nombre)
-  where c2.categorias_padre is not null
-  group by c2.id
-) sub
-where c.id = sub.id;
+-- 5. Convertir categorias_padre de NOMBRES a IDs.
+--    - Los padres son siempre tipo 'cat' (join restringido) -> evita cruces con otros tipos.
+--    - Un nombre resuelve a UN solo id (order by id, limit 1) -> nunca hace "fan-out".
+--    - Preserva IDs ya convertidos (idempotente en re-runs).
+--    - Loggea con RAISE NOTICE los nombres de padre que no matchearon (se descartan).
+do $$
+declare
+  r record;
+  nombre text;
+  padre_id text;
+  nuevos text[];
+  faltantes text[];
+begin
+  for r in select id, categorias_padre from categorias where categorias_padre is not null loop
+    nuevos := '{}';
+    faltantes := '{}';
+    foreach nombre in array r.categorias_padre loop
+      -- match por nombre contra categorias 'cat'
+      select p.id::text into padre_id
+        from categorias p
+        where p.tipo = 'cat' and lower(p.valor) = lower(nombre)
+        order by p.id
+        limit 1;
 
--- Filas cuyos nombres no matchearon quedan con su array viejo; limpiarlas manualmente si hace falta.
+      if padre_id is not null then
+        if not (padre_id = any(nuevos)) then nuevos := array_append(nuevos, padre_id); end if;
+      elsif exists (select 1 from categorias p2 where p2.id::text = nombre) then
+        -- ya era un id (re-run): conservarlo
+        if not (nombre = any(nuevos)) then nuevos := array_append(nuevos, nombre); end if;
+      else
+        faltantes := array_append(faltantes, nombre);
+      end if;
+    end loop;
+
+    if array_length(faltantes, 1) is not null then
+      raise notice 'categoria %: padres sin match, descartados: %', r.id, faltantes;
+    end if;
+
+    update categorias
+      set categorias_padre = case when array_length(nuevos, 1) is null then null else nuevos end
+      where id = r.id;
+  end loop;
+end $$;
+
+commit;
