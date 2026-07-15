@@ -9,11 +9,13 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  const [{ data: productos }, { data: categorias }, { data: subcategorias }] = await Promise.all([
+  const [{ data: productos, error: prodError }, { data: categorias }, { data: subcategorias }] = await Promise.all([
     supabase.from('productos').select('*').order('nombre').limit(5000),
     supabase.from('categorias').select('id, valor').eq('tipo', 'cat'),
     supabase.from('categorias').select('id, valor').eq('tipo', 'subcat'),
   ])
+
+  if (prodError) return NextResponse.json({ error: prodError.message }, { status: 500 })
 
   const { actualizar } = buildExportData(
     (productos ?? []) as Producto[],
