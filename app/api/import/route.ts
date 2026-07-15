@@ -4,6 +4,7 @@ import { agruparProductos } from '@/lib/xlsx-parser'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { XlsxRow } from '@/types'
+import { slugify, uniqueSlug } from '@/lib/store/slug'
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies()
@@ -37,17 +38,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No se encontraron productos activos en el archivo' }, { status: 400 })
   }
 
-  const payload = productos.map(p => ({
-    nombre: p.nombre,
-    precio: p.precio,
-    stock: p.stock,
-    tallas: p.tallas.length > 0 ? p.tallas : null,
-    colores: p.colores.length > 0 ? p.colores : null,
-    marca: p.marca || null,
-    sku: p.sku || null,
-    descripcion: p.descripcion || null,
-    activo: true,
-  }))
+  const { data: existentes } = await supabase.from('productos').select('sku, slug')
+
+  const slugPorSku = new Map<string, string>()
+  const slugsExistentes: string[] = []
+  for (const row of existentes ?? []) {
+    if (row.slug) slugsExistentes.push(row.slug)
+    if (row.sku) slugPorSku.set(row.sku, row.slug)
+  }
+
+  const slugsAsignados: string[] = []
+
+  const payload = productos.map(p => {
+    let slug: string
+    if (p.sku && slugPorSku.has(p.sku)) {
+      slug = slugPorSku.get(p.sku)!
+    } else {
+      slug = uniqueSlug(slugify(p.nombre) || 'producto', [...slugsExistentes, ...slugsAsignados])
+      slugsAsignados.push(slug)
+    }
+
+    return {
+      nombre: p.nombre,
+      precio: p.precio,
+      stock: p.stock,
+      tallas: p.tallas.length > 0 ? p.tallas : null,
+      colores: p.colores.length > 0 ? p.colores : null,
+      marca: p.marca || null,
+      sku: p.sku || null,
+      descripcion: p.descripcion || null,
+      activo: true,
+      slug,
+    }
+  })
 
   const { data, error } = await supabase
     .from('productos')

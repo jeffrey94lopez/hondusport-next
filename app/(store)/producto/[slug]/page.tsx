@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const columna = esUuid(slug) ? 'id' : 'slug'
   const [{ data: config }, { data: producto }] = await Promise.all([
     supabase.from('configuracion').select('key,value'),
-    supabase.from('productos').select('nombre, descripcion, imagenes').eq(columna, slug).maybeSingle(),
+    supabase.from('productos').select('nombre, descripcion, imagenes').eq(columna, slug).eq('activo', true).maybeSingle(),
   ])
 
   if (!producto) return {}
