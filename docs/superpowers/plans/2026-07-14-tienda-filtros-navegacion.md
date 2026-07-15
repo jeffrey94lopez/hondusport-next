@@ -866,7 +866,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
 
   const maxPriceLimit = useMemo(() => Math.max(DEFAULT_MAX_PRICE, ...productos.map(p => p.precio)), [productos])
   const ctx = useMemo(() => ({ categorias, maxPriceLimit }), [categorias, maxPriceLimit])
-  const { filters, toggle, setMaxPrice, clearOne, clearAll, activeCount } = useStoreFilters(ctx)
+  const { filters, toggle, setMaxPrice, clearOne, clearTipo, clearAll, activeCount } = useStoreFilters(ctx)
 
   const [cartOpen, setCartOpen] = useState(false)
   const [wishlistOpen, setWishlistOpen] = useState(false)
@@ -935,6 +935,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
         activeSubcats={filters.subcats}
         onToggleCat={valor => toggle('cat', valor)}
         onToggleSubcat={valor => toggle('subcat', valor)}
+        onClearCats={() => clearTipo('cat')}
       />
       <ActiveFilterChips
         filters={filters}
