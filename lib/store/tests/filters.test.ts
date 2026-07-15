@@ -107,6 +107,24 @@ describe('filterProductos', () => {
     expect(result.map(p => p.id)).toEqual(['3'])
   })
 
+  test('excludes a product whose explicit tallas do not include the selected size', () => {
+    const conTallas = [
+      makeProducto({ id: '1', cat: 'Camisetas', tallas: ['S'] }),
+      makeProducto({ id: '2', cat: 'Camisetas', tallas: ['M', 'L'] }),
+    ]
+    const result = filterProductos({
+      productos: conTallas,
+      maxPrice: 5000,
+      generos: [],
+      cats: [],
+      tallas: ['M'],
+      subcats: [],
+      search: '',
+      tallaFiltros,
+    })
+    expect(result.map(p => p.id)).toEqual(['2'])
+  })
+
   test('filters by subcat', () => {
     const result = filterProductos({
       productos,

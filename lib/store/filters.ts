@@ -1,5 +1,6 @@
 import Fuse from 'fuse.js'
 import type { StoreProducto, Categoria } from '@/types/store'
+import { getTallas } from './getTallas'
 
 export type SortBy = 'default' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'
 
@@ -27,10 +28,8 @@ export function filterProductos(params: FilterParams): StoreProducto[] {
 
     let matchesTalla = true
     if (tallas.length > 0) {
-      const validSizeFilters = tallaFiltros.filter(f => tallas.includes(f.valor))
-      matchesTalla = validSizeFilters.some(f =>
-        (f.categorias_padre ?? []).some(padre => padre.toLowerCase() === p.cat.toLowerCase())
-      )
+      const efectivas = getTallas(p, tallaFiltros)
+      matchesTalla = tallas.some(t => efectivas.includes(t))
     }
 
     let matchesSubcat = true
