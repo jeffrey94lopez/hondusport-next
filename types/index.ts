@@ -38,6 +38,7 @@ export interface Producto {
 
 export interface ProductoForm {
   nombre: string
+  slug: string
   descripcion: string
   precio: number
   precio_original: number | null

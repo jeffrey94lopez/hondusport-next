@@ -10,6 +10,7 @@ import {
   deleteProducto,
   toggleProductoActivo,
 } from './actions'
+import { slugify } from '@/lib/store/slug'
 import styles from './productos.module.css'
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
 
 const EMPTY_FORM: ProductoForm = {
   nombre: '',
+  slug: '',
   descripcion: '',
   precio: 0,
   precio_original: null,
@@ -85,6 +87,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
   function openEdit(p: Producto) {
     setForm({
       nombre: p.nombre,
+      slug: p.slug,
       descripcion: p.descripcion ?? '',
       precio: p.precio,
       precio_original: p.precio_original,
@@ -149,6 +152,16 @@ export default function ProductosClient({ productos, categorias, subcategorias }
     // categorias_padre guarda IDs de la categoria padre (no nombres).
     return subcategorias.filter(s => s.categorias_padre?.includes(form.categoria_id!))
   }, [subcategorias, form.categoria_id])
+
+  function handleNombreChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const nombre = e.target.value
+    setForm(prev => {
+      const autoPrev = slugify(prev.nombre)
+      // si el slug estaba vacio o seguia al nombre, se re-autogenera
+      const slug = !prev.slug || prev.slug === autoPrev ? slugify(nombre) : prev.slug
+      return { ...prev, nombre, slug }
+    })
+  }
 
   function handleCategoriaChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const categoria_id = e.target.value || null
@@ -261,11 +274,18 @@ export default function ProductosClient({ productos, categorias, subcategorias }
             <div className={styles.formRow}>
               <label className={styles.formLabel}>
                 Nombre *
-                <input type="text" value={form.nombre} onChange={f('nombre')} required />
+                <input type="text" value={form.nombre} onChange={handleNombreChange} required />
               </label>
               <label className={styles.formLabel}>
                 SKU / Código
                 <input type="text" value={form.sku} onChange={f('sku')} />
+              </label>
+            </div>
+            <div className={styles.formRow}>
+              <label className={styles.formLabel}>
+                Slug (URL)
+                <input type="text" value={form.slug} onChange={f('slug')} placeholder="camiseta-roja" />
+                <small>Se usa en la URL del producto: /producto/{form.slug || '…'}</small>
               </label>
             </div>
             <div className={styles.formRow}>

@@ -2,11 +2,16 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase-server'
 import type { ActionResult, ProductoForm } from '@/types'
+import { slugify, uniqueSlug } from '@/lib/store/slug'
 
 export async function createProducto(form: ProductoForm): Promise<ActionResult> {
   const supabase = await createClient()
+  const { data: rows } = await supabase.from('productos').select('slug')
+  const existentes = (rows ?? []).map(r => r.slug as string)
+  const slug = uniqueSlug(slugify(form.slug || form.nombre) || 'producto', existentes)
   const { error } = await supabase.from('productos').insert({
     nombre: form.nombre,
+    slug,
     descripcion: form.descripcion || null,
     precio: form.precio,
     precio_original: form.precio_original || null,
@@ -30,8 +35,12 @@ export async function createProducto(form: ProductoForm): Promise<ActionResult> 
 
 export async function updateProducto(id: string, form: ProductoForm): Promise<ActionResult> {
   const supabase = await createClient()
+  const { data: rows } = await supabase.from('productos').select('id, slug')
+  const existentes = (rows ?? []).filter(r => r.id !== id).map(r => r.slug as string)
+  const slug = uniqueSlug(slugify(form.slug || form.nombre) || 'producto', existentes)
   const { error } = await supabase.from('productos').update({
     nombre: form.nombre,
+    slug,
     descripcion: form.descripcion || null,
     precio: form.precio,
     precio_original: form.precio_original || null,
