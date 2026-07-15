@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import ProductoFields, { productoAForm } from '@/components/admin/ProductoFields'
 import Toggle from '@/components/admin/Toggle'
@@ -67,7 +67,13 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
 
   function siguienteConAviso() {
     if (dirty && !confirm('Tienes cambios sin guardar. ¿Avanzar sin guardar?')) return
-    irA(idx + 1)
+    if (idx + 1 >= set.length) setIdx(set.length)
+    else irA(idx + 1)
+  }
+
+  function anteriorConAviso() {
+    if (dirty && !confirm('Tienes cambios sin guardar. ¿Retroceder sin guardar?')) return
+    irA(idx - 1)
   }
 
   function guardarYSiguiente() {
@@ -127,6 +133,15 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
     )
   }
 
+  if (set.length === 0) {
+    return (
+      <div className={styles.page}>
+        <p>Ningún producto coincide con esos filtros.</p>
+        <button onClick={() => setStarted(false)}>← Cambiar filtros</button>
+      </div>
+    )
+  }
+
   if (idx >= set.length) {
     return (
       <div className={styles.page}>
@@ -135,15 +150,6 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
           <p>{guardados.size} guardados de {set.length} en el recorrido.</p>
           <Link href="/admin/productos">Volver a productos</Link>
         </div>
-      </div>
-    )
-  }
-
-  if (set.length === 0) {
-    return (
-      <div className={styles.page}>
-        <p>Ningún producto coincide con esos filtros.</p>
-        <button onClick={() => setStarted(false)}>← Cambiar filtros</button>
       </div>
     )
   }
@@ -165,8 +171,8 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
         )}
         {error && <p className={styles.error}>{error}</p>}
         <div className={styles.nav}>
-          <button onClick={() => irA(idx - 1)} disabled={idx === 0}>← Anterior</button>
-          <button onClick={siguienteConAviso}>Saltar →</button>
+          <button onClick={anteriorConAviso} disabled={idx === 0 || isPending}>← Anterior</button>
+          <button onClick={siguienteConAviso} disabled={isPending}>Saltar →</button>
           <button onClick={guardarYSiguiente} disabled={isPending}>
             {isPending ? 'Guardando…' : 'Guardar y siguiente'}
           </button>
