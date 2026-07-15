@@ -6,6 +6,7 @@ function makeProducto(overrides: Partial<StoreProducto> = {}): StoreProducto {
   return {
     id: '1',
     nombre: 'Camiseta Roja',
+    slug: 'camiseta-roja',
     descripcion: 'Una camiseta deportiva',
     precio: 500,
     precioOriginal: null,

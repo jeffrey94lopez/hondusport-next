@@ -69,7 +69,7 @@ export default function MegaSearch({ productos, categorias, isOpen, onClose, onO
           ) : (
             <div className={styles.results}>
               {results.map(producto => (
-                <div className={styles.resultItem} key={producto.id} onClick={() => handleSelect(producto.id)}>
+                <div className={styles.resultItem} key={producto.id} onClick={() => handleSelect(producto.slug)}>
                   <div className={styles.resultImgWrap}>
                     <Image
                       src={producto.imagenes[0] ?? ''}

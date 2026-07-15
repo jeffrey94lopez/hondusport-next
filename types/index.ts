@@ -12,6 +12,7 @@ export interface Categoria {
 export interface Producto {
   id: string
   nombre: string
+  slug: string
   descripcion: string | null
   precio: number
   precio_original: number | null
@@ -37,6 +38,7 @@ export interface Producto {
 
 export interface ProductoForm {
   nombre: string
+  slug: string
   descripcion: string
   precio: number
   precio_original: number | null

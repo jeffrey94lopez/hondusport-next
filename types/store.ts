@@ -3,6 +3,7 @@ import type { Categoria, Banner, Cupon, Envio, ConfigMap } from '@/types'
 export interface StoreProducto {
   id: string
   nombre: string
+  slug: string
   descripcion: string
   precio: number
   precioOriginal: number | null

@@ -9,6 +9,7 @@ export function toStoreProducto(p: Producto): StoreProducto {
   return {
     id: p.id,
     nombre: p.nombre,
+    slug: p.slug,
     descripcion: p.descripcion ?? '',
     precio: Number(p.precio),
     precioOriginal: p.precio_original != null ? Number(p.precio_original) : null,

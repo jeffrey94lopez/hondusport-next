@@ -63,7 +63,7 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
         <i className={`${isWished ? 'fa-solid' : 'fa-regular'} fa-heart`} />
       </button>
 
-      <div className={styles.imgContainer} onClick={() => onOpen?.(producto.id)}>
+      <div className={styles.imgContainer} onClick={() => onOpen?.(producto.slug)}>
         {imagen && (
           <Image
             src={imagen}
@@ -79,7 +79,7 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
       </div>
 
       <div className={styles.info}>
-        <div onClick={() => onOpen?.(producto.id)} style={{ cursor: 'pointer' }}>
+        <div onClick={() => onOpen?.(producto.slug)} style={{ cursor: 'pointer' }}>
           <div className={styles.stars}>
             {'★'.repeat(producto.rating || 5)}
             {'☆'.repeat(5 - (producto.rating || 5))}
@@ -96,7 +96,7 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
           )}
         </div>
         <div className={styles.btnRow}>
-          <button className={`${styles.btnAddMain} ${styles.btnHalf}`} onClick={() => onOpen?.(producto.id)}>
+          <button className={`${styles.btnAddMain} ${styles.btnHalf}`} onClick={() => onOpen?.(producto.slug)}>
             VER
           </button>
           <button

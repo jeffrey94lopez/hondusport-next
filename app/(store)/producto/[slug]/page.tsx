@@ -1,7 +1,8 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap, toStoreProducto } from '@/lib/store/adapters'
+import { esUuid } from '@/lib/store/productoSlug'
 import ProductPageShell from '@/components/store/ProductPageShell'
 import Footer from '@/components/store/Footer'
 import ProductDetail from '@/components/store/ProductDetail'
@@ -11,16 +12,17 @@ const PRODUCTO_SELECT =
 const RELACIONADOS_LIMIT = 2
 
 interface ProductPageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const { id } = await params
+  const { slug } = await params
   const supabase = await createClient()
 
+  const columna = esUuid(slug) ? 'id' : 'slug'
   const [{ data: config }, { data: producto }] = await Promise.all([
     supabase.from('configuracion').select('key,value'),
-    supabase.from('productos').select('nombre, descripcion, imagenes').eq('id', id).maybeSingle(),
+    supabase.from('productos').select('nombre, descripcion, imagenes').eq(columna, slug).eq('activo', true).maybeSingle(),
   ])
 
   if (!producto) return {}
@@ -41,7 +43,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = await params
+  const { slug } = await params
   const supabase = await createClient()
 
   const [{ data: config }, { data: categorias }, { data: producto }, { data: productos }, { data: envios }, { data: cupones }] =
@@ -52,16 +54,27 @@ export default async function ProductPage({ params }: ProductPageProps) {
         .select('id, tipo, valor, slug, imagen, categorias_padre, orden, activo')
         .eq('activo', true)
         .order('orden'),
-      supabase.from('productos').select(PRODUCTO_SELECT).eq('id', id).eq('activo', true).maybeSingle(),
+      supabase.from('productos').select(PRODUCTO_SELECT).eq('slug', slug).eq('activo', true).maybeSingle(),
       supabase.from('productos').select(PRODUCTO_SELECT).eq('activo', true),
       supabase.from('envios').select('id, nombre, descripcion, tipo, costo, descuento, activo').eq('activo', true),
       supabase.from('cupones').select('id, codigo, descuento, tipo, activo, created_at').eq('activo', true),
     ])
 
-  if (!producto) notFound()
+  let productoRow = producto
+  if (!productoRow && esUuid(slug)) {
+    const { data: porId } = await supabase
+      .from('productos')
+      .select('slug')
+      .eq('id', slug)
+      .eq('activo', true)
+      .maybeSingle()
+    if (porId?.slug) permanentRedirect(`/producto/${porId.slug}`)
+  }
+
+  if (!productoRow) notFound()
 
   const configMap = toConfigMap(config ?? [])
-  const storeProducto = toStoreProducto(producto)
+  const storeProducto = toStoreProducto(productoRow)
   const allProductos = (productos ?? []).map(toStoreProducto)
   const relacionados = allProductos
     .filter(p => p.cat === storeProducto.cat && p.id !== storeProducto.id)
