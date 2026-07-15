@@ -4,7 +4,7 @@ import type { FilterState } from '../filters'
 import type { Categoria } from '@/types/store'
 
 function cat(tipo: Categoria['tipo'], valor: string): Categoria {
-  return { id: valor, tipo, valor, imagen: null, categorias_padre: null, orden: 0, activo: true }
+  return { id: valor, tipo, valor, imagen: null, slug: valor.toLowerCase(), categorias_padre: null, orden: 0, activo: true }
 }
 
 const categorias: Categoria[] = [

@@ -9,7 +9,9 @@ const BASE_PRODUCTO: StoreProducto = {
   precio: 100,
   precioOriginal: null,
   cat: 'Camisetas',
+  catId: 'c-camisetas',
   subcat: null,
+  subcatId: null,
   genero: 'Hombre',
   badge: null,
   tallas: [],
@@ -21,9 +23,9 @@ const BASE_PRODUCTO: StoreProducto = {
 }
 
 const TALLA_FILTROS: Categoria[] = [
-  { id: 't1', tipo: 'talla', valor: 'S', imagen: null, categorias_padre: ['Camisetas', 'Shorts'], orden: 0, activo: true },
-  { id: 't2', tipo: 'talla', valor: 'M', imagen: null, categorias_padre: ['Camisetas'], orden: 1, activo: true },
-  { id: 't3', tipo: 'talla', valor: '38', imagen: null, categorias_padre: ['Zapatos'], orden: 2, activo: true },
+  { id: 't1', tipo: 'talla', valor: 'S', imagen: null, slug: 's', categorias_padre: ['Camisetas', 'Shorts'], orden: 0, activo: true },
+  { id: 't2', tipo: 'talla', valor: 'M', imagen: null, slug: 'm', categorias_padre: ['Camisetas'], orden: 1, activo: true },
+  { id: 't3', tipo: 'talla', valor: '38', imagen: null, slug: '38', categorias_padre: ['Zapatos'], orden: 2, activo: true },
 ]
 
 describe('getTallas', () => {
