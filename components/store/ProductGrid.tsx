@@ -12,6 +12,7 @@ interface ProductGridProps {
   totalProductos: number
   onQuickAdd?: (id: string) => void
   onOpen?: (id: string) => void
+  onClearFilters?: () => void
 }
 
 function FadeInItem({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -100,7 +101,7 @@ function SkeletonGrid() {
   )
 }
 
-export default function ProductGrid({ productos, totalProductos, onQuickAdd, onOpen }: ProductGridProps) {
+export default function ProductGrid({ productos, totalProductos, onQuickAdd, onOpen, onClearFilters }: ProductGridProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [prevProductos, setPrevProductos] = useState(productos)
 
@@ -114,7 +115,16 @@ export default function ProductGrid({ productos, totalProductos, onQuickAdd, onO
   }
 
   if (productos.length === 0) {
-    return <p className={styles.noResults}>🚫 NO SE ENCONTRARON PRODUCTOS.</p>
+    return (
+      <div className={styles.emptyState}>
+        <p className={styles.noResults}>🚫 NO SE ENCONTRARON PRODUCTOS.</p>
+        {onClearFilters && (
+          <button className={styles.emptyClearBtn} onClick={onClearFilters}>
+            Limpiar filtros
+          </button>
+        )}
+      </div>
+    )
   }
 
   const isFullCatalog = productos.length === totalProductos
