@@ -4,10 +4,6 @@ export function getTallas(producto: StoreProducto, tallaFiltros: Categoria[]): s
   if (producto.tallas.length > 0) return producto.tallas
 
   return tallaFiltros
-    .filter(filtro =>
-      (filtro.categorias_padre ?? []).some(
-        padre => padre.toLowerCase() === producto.cat.toLowerCase()
-      )
-    )
+    .filter(filtro => (filtro.categorias_padre ?? []).includes(producto.catId))
     .map(filtro => filtro.valor)
 }

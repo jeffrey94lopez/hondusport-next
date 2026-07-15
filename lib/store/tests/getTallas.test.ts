@@ -23,9 +23,9 @@ const BASE_PRODUCTO: StoreProducto = {
 }
 
 const TALLA_FILTROS: Categoria[] = [
-  { id: 't1', tipo: 'talla', valor: 'S', imagen: null, slug: 's', categorias_padre: ['Camisetas', 'Shorts'], orden: 0, activo: true },
-  { id: 't2', tipo: 'talla', valor: 'M', imagen: null, slug: 'm', categorias_padre: ['Camisetas'], orden: 1, activo: true },
-  { id: 't3', tipo: 'talla', valor: '38', imagen: null, slug: '38', categorias_padre: ['Zapatos'], orden: 2, activo: true },
+  { id: 't1', tipo: 'talla', valor: 'S', imagen: null, slug: 's', categorias_padre: ['c-camisetas', 'c-shorts'], orden: 0, activo: true },
+  { id: 't2', tipo: 'talla', valor: 'M', imagen: null, slug: 'm', categorias_padre: ['c-camisetas'], orden: 1, activo: true },
+  { id: 't3', tipo: 'talla', valor: '38', imagen: null, slug: '38', categorias_padre: ['c-zapatos'], orden: 2, activo: true },
 ]
 
 describe('getTallas', () => {
@@ -39,13 +39,13 @@ describe('getTallas', () => {
     expect(result).toEqual(['S', 'M'])
   })
 
-  it('matches category names case-insensitively', () => {
-    const result = getTallas({ ...BASE_PRODUCTO, cat: 'CAMISETAS' }, TALLA_FILTROS)
+  it('matches by category id, not name', () => {
+    const result = getTallas({ ...BASE_PRODUCTO, cat: 'Camisetas', catId: 'c-camisetas' }, TALLA_FILTROS)
     expect(result).toEqual(['S', 'M'])
   })
 
   it('returns an empty array when no talla filter matches the category', () => {
-    const result = getTallas({ ...BASE_PRODUCTO, cat: 'Accesorios' }, TALLA_FILTROS)
+    const result = getTallas({ ...BASE_PRODUCTO, catId: 'c-accesorios' }, TALLA_FILTROS)
     expect(result).toEqual([])
   })
 })

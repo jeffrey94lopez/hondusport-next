@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { slugify, parseFilters, filtersToQuery } from '../filterParams'
+import { parseFilters, filtersToQuery } from '../filterParams'
+import { slugify } from '../slug'
 import type { FilterState } from '../filters'
 import type { Categoria } from '@/types/store'
 
-function cat(tipo: Categoria['tipo'], valor: string): Categoria {
-  return { id: valor, tipo, valor, imagen: null, slug: valor.toLowerCase(), categorias_padre: null, orden: 0, activo: true }
+function cat(tipo: Categoria['tipo'], valor: string, slug?: string): Categoria {
+  return { id: valor, tipo, valor, slug: slug ?? slugify(valor), imagen: null, categorias_padre: null, orden: 0, activo: true }
 }
 
 const categorias: Categoria[] = [
@@ -57,5 +58,13 @@ describe('filtersToQuery / parseFilters round-trip', () => {
   test('ignores unknown slugs', () => {
     const parsed = parseFilters(new URLSearchParams('cat=camisetas,inexistente'), ctx)
     expect(parsed.cats).toEqual(['Camisetas'])
+  })
+
+  test('resolves by stable slug, not by name-collision', () => {
+    const cats = [cat('cat', 'Niño', 'nino'), cat('cat', 'Nino', 'nino-2')]
+    const ctx2 = { categorias: cats, maxPriceLimit: 5000 }
+    const query = filtersToQuery({ maxPrice: 5000, generos: [], cats: ['Nino'], tallas: [], subcats: [] }, ctx2)
+    expect(query).toBe('cat=nino-2')
+    expect(parseFilters(new URLSearchParams(query), ctx2).cats).toEqual(['Nino'])
   })
 })
