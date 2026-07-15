@@ -38,7 +38,7 @@ export function sinSku(p: Producto): boolean {
 function pasaStock(p: Producto, c: CriteriosInventario): boolean {
   if (!c.stockBajo && !c.sinStock) return true
   const bajo = c.stockBajo === true && p.stock != null && p.stock > 0 && p.stock < UMBRAL_STOCK_BAJO
-  const sin = c.sinStock === true && (p.stock == null || p.stock === 0)
+  const sin = c.sinStock === true && p.stock === 0
   return bajo || sin
 }
 

@@ -76,7 +76,13 @@ describe('filtrarInventario', () => {
     const nulo = make({ stock: null })
     const ok = make({ stock: 50 })
     const res = filtrarInventario([bajo, cero, nulo, ok], { stockBajo: true, sinStock: true })
-    expect(res).toEqual([bajo, cero, nulo])
+    expect(res).toEqual([bajo, cero])
+  })
+  it('sinStock no incluye stock null (ilimitado)', () => {
+    const nulo = make({ stock: null })
+    const cero = make({ stock: 0 })
+    const res = filtrarInventario([nulo, cero], { sinStock: true })
+    expect(res).toEqual([cero])
   })
   it('stockBajo respeta el umbral (0 < stock < UMBRAL)', () => {
     expect(UMBRAL_STOCK_BAJO).toBe(5)

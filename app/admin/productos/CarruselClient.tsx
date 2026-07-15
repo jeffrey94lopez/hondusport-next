@@ -40,6 +40,7 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
     const lista = filtrarInventario(productos, c)
     setSet(lista)
     setIdx(0)
+    setGuardados(new Set())
     if (lista[0]) cargar(lista[0])
     setStarted(true)
   }
@@ -78,6 +79,8 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
 
   function guardarYSiguiente() {
     if (!actual) return
+    if (!form.nombre.trim()) { setError('El nombre es requerido'); return }
+    if (form.precio <= 0) { setError('El precio debe ser mayor a 0'); return }
     startTransition(async () => {
       const res = await updateProducto(actual.id, form)
       if (res.error) { setError(res.error); return }
