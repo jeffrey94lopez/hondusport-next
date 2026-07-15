@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest'
 import {
   COLUMNAS, INSTRUCCIONES,
   parseBool, parseNum, cellText, cellBool, splitList, joinList, normNombre,
+  buildExportData,
 } from '../inventoryRoundtrip'
+import type { Producto } from '@/types'
 
 describe('helpers de celdas', () => {
   it('COLUMNAS trae id primero y las 16 columnas', () => {
@@ -50,5 +52,46 @@ describe('helpers de celdas', () => {
   })
   it('normNombre recorta y baja a minúsculas', () => {
     expect(normNombre('  Zapatos  ')).toBe('zapatos')
+  })
+})
+
+function prod(overrides: Partial<Producto> = {}): Producto {
+  return {
+    id: 'p1', nombre: 'Camiseta', slug: 'camiseta', descripcion: 'algodón',
+    precio: 250, precio_original: null, categoria_id: 'c1', subcategoria_id: null,
+    stock: 10, genero: 'Hombre', badge: null, tallas: ['S', 'M'], colores: ['Rojo'],
+    imagenes: null, marca: 'Nike', sku: 'SKU1', personalizable: false,
+    oferta_fin: null, activo: true, rating: 5, created_at: '', updated_at: '',
+    ...overrides,
+  }
+}
+
+describe('buildExportData', () => {
+  const cats = [{ id: 'c1', valor: 'Ropa' }]
+  const subs = [{ id: 's1', valor: 'Camisetas' }]
+
+  it('mapea un producto a una fila con nombres de categoría', () => {
+    const { actualizar } = buildExportData(
+      [prod({ categoria_id: 'c1', subcategoria_id: 's1' })], cats, subs,
+    )
+    expect(actualizar).toHaveLength(1)
+    const r = actualizar[0]
+    expect(r.id).toBe('p1')
+    expect(r.categoria).toBe('Ropa')
+    expect(r.subcategoria).toBe('Camisetas')
+    expect(r.tallas).toBe('S, M')
+    expect(r.colores).toBe('Rojo')
+    expect(r.personalizable).toBe('FALSO')
+    expect(r.activo).toBe('VERDADERO')
+  })
+
+  it('nulos (stock, precio_original) salen como cadena vacía', () => {
+    const { actualizar } = buildExportData(
+      [prod({ stock: null, precio_original: null, sku: null, categoria_id: null })], cats, subs,
+    )
+    expect(actualizar[0].stock).toBe('')
+    expect(actualizar[0].precio_original).toBe('')
+    expect(actualizar[0].sku).toBe('')
+    expect(actualizar[0].categoria).toBe('')
   })
 })

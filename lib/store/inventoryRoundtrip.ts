@@ -1,3 +1,5 @@
+import type { Producto } from '@/types'
+
 export const COLUMNAS = [
   'id', 'sku', 'nombre', 'marca', 'precio', 'precio_original',
   'stock', 'descripcion', 'categoria', 'subcategoria', 'genero',
@@ -73,4 +75,36 @@ export function joinList(arr: string[] | null | undefined): string {
 
 export function normNombre(s: unknown): string {
   return String(s ?? '').trim().toLowerCase()
+}
+
+export interface CategoriaRef { id: string; valor: string }
+
+export function buildExportData(
+  productos: Producto[],
+  categorias: CategoriaRef[],
+  subcategorias: CategoriaRef[],
+): { actualizar: Record<string, string | number>[] } {
+  const catById = new Map(categorias.map(c => [c.id, c.valor]))
+  const subById = new Map(subcategorias.map(c => [c.id, c.valor]))
+
+  const actualizar = productos.map(p => ({
+    id: p.id,
+    sku: p.sku ?? '',
+    nombre: p.nombre,
+    marca: p.marca ?? '',
+    precio: p.precio,
+    precio_original: p.precio_original ?? '',
+    stock: p.stock ?? '',
+    descripcion: p.descripcion ?? '',
+    categoria: p.categoria_id ? (catById.get(p.categoria_id) ?? '') : '',
+    subcategoria: p.subcategoria_id ? (subById.get(p.subcategoria_id) ?? '') : '',
+    genero: p.genero ?? '',
+    badge: p.badge ?? '',
+    tallas: joinList(p.tallas),
+    colores: joinList(p.colores),
+    personalizable: p.personalizable ? 'VERDADERO' : 'FALSO',
+    activo: p.activo ? 'VERDADERO' : 'FALSO',
+  }))
+
+  return { actualizar }
 }
