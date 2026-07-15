@@ -46,7 +46,7 @@ Tres pestañas:
 | `nombre` | ✅ obligatorio | |
 | `marca` | ✅ | |
 | `precio` | ✅ obligatorio | > 0 |
-| `precio_original` | ✅ | vacío = sin oferta |
+| `precio_original` | ✅ | vacío = no cambia; quitar oferta se hace en la UI |
 | `stock` | ✅ | vacío = no cambia; `0` = agotado; número = existencias. Ilimitado (∞) se fija desde la UI |
 | `descripcion` | ✅ | |
 | `categoria` | ✅ | por nombre (`valor`); debe existir |
