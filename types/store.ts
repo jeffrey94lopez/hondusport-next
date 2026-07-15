@@ -7,7 +7,9 @@ export interface StoreProducto {
   precio: number
   precioOriginal: number | null
   cat: string
+  catId: string
   subcat: string | null
+  subcatId: string | null
   genero: string | null
   badge: string | null
   tallas: string[]

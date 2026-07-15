@@ -28,7 +28,7 @@ export default function CategoryBar({ cats, subcats, activeCats, activeSubcats, 
         {cats.map(cat => {
           const isActive = activeCats.includes(cat.valor)
           const subcatsForCat = subcats.filter(s =>
-            (s.categorias_padre ?? []).some(parent => parent.toLowerCase() === cat.valor.toLowerCase())
+            (s.categorias_padre ?? []).includes(cat.id)
           )
 
           if (subcatsForCat.length > 0) {

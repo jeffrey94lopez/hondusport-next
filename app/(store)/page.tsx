@@ -25,7 +25,7 @@ export default async function StorePage() {
   const [{ data: config }, { data: categorias }, { data: banners }, { data: envios }, { data: cupones }, { data: productos }] =
     await Promise.all([
       supabase.from('configuracion').select('key,value'),
-      supabase.from('categorias').select('id, tipo, valor, imagen, categorias_padre, orden, activo').eq('activo', true).order('orden'),
+      supabase.from('categorias').select('id, tipo, valor, slug, imagen, categorias_padre, orden, activo').eq('activo', true).order('orden'),
       supabase.from('banners').select('id, titulo, subtitulo, btn_texto, btn_link, imagen, orden, activo').eq('activo', true).order('orden'),
       supabase.from('envios').select('id, nombre, descripcion, tipo, costo, descuento, activo').eq('activo', true),
       supabase.from('cupones').select('id, codigo, descuento, tipo, activo, created_at').eq('activo', true),

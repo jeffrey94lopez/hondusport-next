@@ -49,7 +49,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       supabase.from('configuracion').select('key,value'),
       supabase
         .from('categorias')
-        .select('id, tipo, valor, imagen, categorias_padre, orden, activo')
+        .select('id, tipo, valor, slug, imagen, categorias_padre, orden, activo')
         .eq('activo', true)
         .order('orden'),
       supabase.from('productos').select(PRODUCTO_SELECT).eq('id', id).eq('activo', true).maybeSingle(),

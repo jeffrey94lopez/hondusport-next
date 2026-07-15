@@ -1,5 +1,6 @@
 import type { FilterState } from './filters'
 import type { Categoria } from '@/types/store'
+import { slugify } from './slug'
 
 export type FilterTipo = 'cat' | 'subcat' | 'genero' | 'talla'
 
@@ -8,7 +9,6 @@ export interface FilterParamsCtx {
   maxPriceLimit: number
 }
 
-// tipo de filtro -> (clave de query, campo de FilterState, tipo de categoria)
 const MAP: Record<FilterTipo, { key: string; field: keyof Omit<FilterState, 'maxPrice'>; catTipo: Categoria['tipo'] }> = {
   cat: { key: 'cat', field: 'cats', catTipo: 'cat' },
   subcat: { key: 'subcat', field: 'subcats', catTipo: 'subcat' },
@@ -16,26 +16,24 @@ const MAP: Record<FilterTipo, { key: string; field: keyof Omit<FilterState, 'max
   talla: { key: 'talla', field: 'tallas', catTipo: 'talla' },
 }
 
-export function slugify(valor: string): string {
-  return valor
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+// valor (nombre) -> slug estable de la categoria de ese tipo
+function slugDeValor(ctx: FilterParamsCtx, catTipo: Categoria['tipo'], valor: string): string | undefined {
+  return ctx.categorias.find(c => c.tipo === catTipo && c.valor === valor)?.slug
 }
 
-function valoresDeTipo(ctx: FilterParamsCtx, catTipo: Categoria['tipo']): string[] {
-  return ctx.categorias.filter(c => c.tipo === catTipo).map(c => c.valor)
+// slug -> valor (nombre) de la categoria de ese tipo
+function valorDeSlug(ctx: FilterParamsCtx, catTipo: Categoria['tipo'], slug: string): string | undefined {
+  return ctx.categorias.find(c => c.tipo === catTipo && c.slug === slug)?.valor
 }
 
 export function filtersToQuery(filters: FilterState, ctx: FilterParamsCtx): string {
   const params = new URLSearchParams()
   for (const tipo of Object.keys(MAP) as FilterTipo[]) {
-    const { key, field } = MAP[tipo]
-    const values = filters[field]
-    if (values.length > 0) params.set(key, values.map(slugify).join(','))
+    const { key, field, catTipo } = MAP[tipo]
+    const slugs = filters[field]
+      .map(valor => slugDeValor(ctx, catTipo, valor))
+      .filter((s): s is string => s != null)
+    if (slugs.length > 0) params.set(key, slugs.join(','))
   }
   if (filters.maxPrice < ctx.maxPriceLimit) params.set('max', String(filters.maxPrice))
   return params.toString()
@@ -49,9 +47,8 @@ export function parseFilters(params: URLSearchParams, ctx: FilterParamsCtx): Fil
     const raw = params.get(key)
     if (!raw) continue
     const slugs = raw.split(',').map(s => s.trim()).filter(Boolean)
-    const valores = valoresDeTipo(ctx, catTipo)
     result[field] = slugs
-      .map(slug => valores.find(v => slugify(v) === slug))
+      .map(slug => valorDeSlug(ctx, catTipo, slug))
       .filter((v): v is string => v != null)
   }
 
@@ -60,3 +57,5 @@ export function parseFilters(params: URLSearchParams, ctx: FilterParamsCtx): Fil
 
   return result
 }
+
+export { slugify }

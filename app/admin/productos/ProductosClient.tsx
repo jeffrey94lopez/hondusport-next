@@ -145,19 +145,18 @@ export default function ProductosClient({ productos, categorias, subcategorias }
   ) => setForm(prev => ({ ...prev, [field]: e.target.value }))
 
   const subcategoriasDisponibles = useMemo(() => {
-    const categoriaValor = categorias.find(c => c.id === form.categoria_id)?.valor
-    if (!categoriaValor) return []
-    return subcategorias.filter(s => s.categorias_padre?.includes(categoriaValor))
-  }, [categorias, subcategorias, form.categoria_id])
+    if (!form.categoria_id) return []
+    // categorias_padre guarda IDs de la categoria padre (no nombres).
+    return subcategorias.filter(s => s.categorias_padre?.includes(form.categoria_id!))
+  }, [subcategorias, form.categoria_id])
 
   function handleCategoriaChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const categoria_id = e.target.value || null
-    const categoriaValor = categorias.find(c => c.id === categoria_id)?.valor
     setForm(prev => ({
       ...prev,
       categoria_id,
       subcategoria_id: subcategorias.some(
-        s => s.id === prev.subcategoria_id && s.categorias_padre?.includes(categoriaValor ?? '')
+        s => s.id === prev.subcategoria_id && s.categorias_padre?.includes(categoria_id ?? '')
       )
         ? prev.subcategoria_id
         : null,

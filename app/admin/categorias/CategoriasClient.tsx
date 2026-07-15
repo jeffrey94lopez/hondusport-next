@@ -20,8 +20,9 @@ interface Props { categorias: Categoria[] }
 const EMPTY = {
   tipo: 'cat' as TipoTab,
   valor: '',
+  slug: '',
   imagen: '',
-  categorias_padre: '',
+  categorias_padre: [] as string[],
   orden: 0,
   activo: true,
 }
@@ -47,8 +48,9 @@ export default function CategoriasClient({ categorias }: Props) {
     setForm({
       tipo: c.tipo,
       valor: c.valor,
+      slug: c.slug,
       imagen: c.imagen ?? '',
-      categorias_padre: c.categorias_padre?.join(', ') ?? '',
+      categorias_padre: c.categorias_padre ?? [],
       orden: c.orden,
       activo: c.activo,
     })
@@ -83,8 +85,9 @@ export default function CategoriasClient({ categorias }: Props) {
       const result = await updateCategoria(c.id, {
         tipo: c.tipo,
         valor: c.valor,
+        slug: c.slug,
         imagen: c.imagen ?? '',
-        categorias_padre: c.categorias_padre?.join(', ') ?? '',
+        categorias_padre: c.categorias_padre ?? [],
         orden: c.orden,
         activo: value,
       })
@@ -127,7 +130,7 @@ export default function CategoriasClient({ categorias }: Props) {
               <tr key={c.id}>
                 <td>{c.valor}</td>
                 {(tab === 'subcat' || tab === 'talla') && (
-                  <td>{c.categorias_padre?.join(', ') ?? '—'}</td>
+                  <td>{(c.categorias_padre ?? []).map(id => categorias.find(x => x.id === id)?.valor ?? id).join(', ') || '—'}</td>
                 )}
                 <td>{c.orden}</td>
                 <td>
@@ -167,16 +170,29 @@ export default function CategoriasClient({ categorias }: Props) {
                 required
               />
             </label>
+            <label className={styles.formLabel}>
+              Slug (URL)
+              <input type="text" value={form.slug}
+                onChange={e => setForm(p => ({ ...p, slug: e.target.value }))}
+                placeholder="se genera del valor si lo dejas vacio" />
+            </label>
             {(form.tipo === 'subcat' || form.tipo === 'talla') && (
-              <label className={styles.formLabel}>
-                Categorías padre (separadas por coma)
-                <input
-                  type="text"
-                  value={form.categorias_padre}
-                  onChange={e => setForm(p => ({ ...p, categorias_padre: e.target.value }))}
-                  placeholder="Camisetas, Zapatillas"
-                />
-              </label>
+              <fieldset className={styles.formLabel}>
+                <legend>Categorías padre</legend>
+                {categorias.filter(x => x.tipo === 'cat').map(padre => (
+                  <label key={padre.id} style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+                    <input type="checkbox"
+                      checked={form.categorias_padre.includes(padre.id)}
+                      onChange={e => setForm(p => ({
+                        ...p,
+                        categorias_padre: e.target.checked
+                          ? [...p.categorias_padre, padre.id]
+                          : p.categorias_padre.filter(id => id !== padre.id),
+                      }))} />
+                    {padre.valor}
+                  </label>
+                ))}
+              </fieldset>
             )}
             <div className={styles.formRow}>
               <label className={styles.formLabel}>

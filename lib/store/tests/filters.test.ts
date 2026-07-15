@@ -10,7 +10,9 @@ function makeProducto(overrides: Partial<StoreProducto> = {}): StoreProducto {
     precio: 500,
     precioOriginal: null,
     cat: 'Camisetas',
+    catId: 'c-camisetas',
     subcat: null,
+    subcatId: null,
     genero: 'Hombre',
     badge: null,
     tallas: [],
@@ -29,7 +31,8 @@ const tallaFiltros: Categoria[] = [
     tipo: 'talla',
     valor: 'M',
     imagen: null,
-    categorias_padre: ['Camisetas'],
+    slug: 'm',
+    categorias_padre: ['c-camisetas'],
     orden: 1,
     activo: true,
   },
@@ -38,7 +41,8 @@ const tallaFiltros: Categoria[] = [
     tipo: 'talla',
     valor: '42',
     imagen: null,
-    categorias_padre: ['Zapatos'],
+    slug: '42',
+    categorias_padre: ['c-zapatos'],
     orden: 2,
     activo: true,
   },
@@ -46,9 +50,9 @@ const tallaFiltros: Categoria[] = [
 
 describe('filterProductos', () => {
   const productos = [
-    makeProducto({ id: '1', nombre: 'Camiseta Roja', precio: 500, cat: 'Camisetas', genero: 'Hombre' }),
-    makeProducto({ id: '2', nombre: 'Camiseta Azul', precio: 1500, cat: 'Camisetas', genero: 'Mujer' }),
-    makeProducto({ id: '3', nombre: 'Zapatos Deportivos', precio: 2500, cat: 'Zapatos', genero: 'Hombre', subcat: 'Running' }),
+    makeProducto({ id: '1', nombre: 'Camiseta Roja', precio: 500, cat: 'Camisetas', catId: 'c-camisetas', genero: 'Hombre' }),
+    makeProducto({ id: '2', nombre: 'Camiseta Azul', precio: 1500, cat: 'Camisetas', catId: 'c-camisetas', genero: 'Mujer' }),
+    makeProducto({ id: '3', nombre: 'Zapatos Deportivos', precio: 2500, cat: 'Zapatos', catId: 'c-zapatos', genero: 'Hombre', subcat: 'Running' }),
   ]
 
   test('filters by max price', () => {

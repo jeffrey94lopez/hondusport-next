@@ -3,6 +3,7 @@ export interface Categoria {
   tipo: 'cat' | 'subcat' | 'talla' | 'genero'
   valor: string
   imagen: string | null
+  slug: string
   categorias_padre: string[] | null
   orden: number
   activo: boolean
