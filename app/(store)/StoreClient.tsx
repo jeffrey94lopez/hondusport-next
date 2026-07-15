@@ -59,8 +59,8 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
 
   const filtered = filterProductos({ productos, ...filters, search: '', tallaFiltros })
 
-  function openProduct(id: string) {
-    router.push(`/producto/${id}`)
+  function openProduct(slug: string) {
+    router.push(`/producto/${slug}`)
   }
 
   // StoreHeader/Footer envían '' o null para "todos" (limpiar); cualquier otro

@@ -42,8 +42,8 @@ export default function ProductPageShell({
   const [searchOpen, setSearchOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
 
-  function openProduct(id: string) {
-    router.push(`/producto/${id}`)
+  function openProduct(slug: string) {
+    router.push(`/producto/${slug}`)
   }
 
   function selectCat() {

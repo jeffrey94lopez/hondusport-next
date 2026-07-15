@@ -59,7 +59,7 @@ export default function WishlistDrawer({ productos, tallaFiltros, isOpen, onClos
               <div className={styles.item} key={producto.id}>
                 <Image src={producto.imagenes[0] ?? ''} alt={producto.nombre} className={styles.itemImg} width={70} height={70} />
                 <div className={styles.itemInfo}>
-                  <h4 className={styles.itemTitle} onClick={() => onOpenProduct?.(producto.id)} style={{ cursor: 'pointer' }}>
+                  <h4 className={styles.itemTitle} onClick={() => onOpenProduct?.(producto.slug)} style={{ cursor: 'pointer' }}>
                     {producto.nombre}
                   </h4>
                   <p className={styles.itemPrice}>{formatPrice(producto.precio)}</p>

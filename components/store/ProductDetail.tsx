@@ -82,7 +82,7 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
   }
 
   function getShareUrl() {
-    return `${window.location.origin}/producto/${producto.id}`
+    return `${window.location.origin}/producto/${producto.slug}`
   }
 
   function shareWhatsApp() {
@@ -218,7 +218,7 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
             <h4>TAMBIÉN TE PUEDE GUSTAR</h4>
             <div className={styles.relatedGrid}>
               {relacionados.map(rel => (
-                <Link key={rel.id} href={`/producto/${rel.id}`} className={styles.relatedItem}>
+                <Link key={rel.id} href={`/producto/${rel.slug}`} className={styles.relatedItem}>
                   {rel.imagenes[0] && (
                     <Image src={rel.imagenes[0]} alt={rel.nombre} width={50} height={50} />
                   )}
@@ -237,7 +237,7 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
             <h4>VISTOS RECIENTEMENTE</h4>
             <div className={styles.recentScroll}>
               {recentProducts.map(rec => (
-                <Link key={rec.id} href={`/producto/${rec.id}`} className={styles.recentItem}>
+                <Link key={rec.id} href={`/producto/${rec.slug}`} className={styles.recentItem}>
                   {rec.imagenes[0] && (
                     <div className={styles.recentImgWrap}>
                       <Image src={rec.imagenes[0]} alt={rec.nombre} className={styles.recentImg} fill sizes="130px" />
