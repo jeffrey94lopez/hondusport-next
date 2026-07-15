@@ -5,6 +5,7 @@ import Modal from '@/components/admin/Modal'
 import Toggle from '@/components/admin/Toggle'
 import ProductoFields, { productoAForm } from '@/components/admin/ProductoFields'
 import type { Producto, Categoria, ProductoForm } from '@/types'
+import type { ImportError } from '@/lib/store/inventoryRoundtrip'
 import {
   createProducto,
   updateProducto,
@@ -47,6 +48,11 @@ export default function ProductosClient({ productos, categorias, subcategorias }
   const [formError, setFormError] = useState('')
   const [isPending, startTransition] = useTransition()
   const [importing, setImporting] = useState(false)
+  const [resultado, setResultado] = useState<
+    | { tipo: 'ok'; actualizados: number; creados: number }
+    | { tipo: 'error'; mensaje: string; errores?: ImportError[] }
+    | null
+  >(null)
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -55,15 +61,23 @@ export default function ProductosClient({ productos, categorias, subcategorias }
     const formData = new FormData()
     formData.append('file', file)
     try {
-      const res = await fetch('/api/import', { method: 'POST', body: formData })
+      const res = await fetch('/api/inventario/import', { method: 'POST', body: formData })
       const json = await res.json()
-      if (json.error) { alert('Error: ' + json.error); return }
-      alert(`✓ Importados ${json.imported} productos`)
-      window.location.reload()
+      if (!res.ok) {
+        setResultado({ tipo: 'error', mensaje: json.error ?? 'Error al importar', errores: json.errores })
+        return
+      }
+      setResultado({ tipo: 'ok', actualizados: json.actualizados, creados: json.creados })
     } finally {
       setImporting(false)
       e.target.value = ''
     }
+  }
+
+  function cerrarResultado() {
+    const exito = resultado?.tipo === 'ok'
+    setResultado(null)
+    if (exito) window.location.reload()
   }
 
   const filtered = useMemo(() => {
@@ -140,8 +154,9 @@ export default function ProductosClient({ productos, categorias, subcategorias }
             onChange={e => setSearch(e.target.value)}
             className={styles.search}
           />
+          <a href="/api/inventario/export" className={styles.btnSecondary}>↓ Descargar inventario</a>
           <label className={`${styles.btnSecondary} ${importing ? styles.importing : ''}`}>
-            {importing ? 'Importando…' : '↑ Importar XLSX'}
+            {importing ? 'Importando…' : '↑ Importar inventario'}
             <input
               type="file"
               accept=".xlsx,.xls"
@@ -232,6 +247,32 @@ export default function ProductosClient({ productos, categorias, subcategorias }
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {resultado && (
+        <Modal
+          title={resultado.tipo === 'ok' ? 'Importación completada' : 'No se importó'}
+          onClose={cerrarResultado}
+          maxWidth="560px"
+        >
+          {resultado.tipo === 'ok' ? (
+            <p>✓ {resultado.actualizados} actualizados, {resultado.creados} creados.</p>
+          ) : (
+            <div>
+              <p>{resultado.mensaje}</p>
+              {resultado.errores && resultado.errores.length > 0 && (
+                <ul>
+                  {resultado.errores.map((er, i) => (
+                    <li key={i}>Pestaña {er.pestaña}, fila {er.fila}: {er.motivo}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          <div style={{ marginTop: 16, textAlign: 'right' }}>
+            <button className={styles.btnPrimary} onClick={cerrarResultado}>Cerrar</button>
+          </div>
         </Modal>
       )}
     </div>
