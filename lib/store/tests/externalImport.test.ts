@@ -38,6 +38,16 @@ describe('sugerirMapeo', () => {
   it('devuelve vacío cuando nada coincide', () => {
     expect(sugerirMapeo(['xyz', 'abc'])).toEqual({})
   })
+  it('no mapea fecha_venta a precio (fuzzy sin ambiguos)', () => {
+    const m = sugerirMapeo(['fecha_venta', 'nombre', 'sku'])
+    expect(m.precio).toBeUndefined()
+    expect(m.nombre).toBe('nombre')
+    expect(m.sku).toBe('sku')
+  })
+  it('mantiene fuzzy positivo: codigo_interno mapea a sku por token', () => {
+    const m = sugerirMapeo(['codigo_interno', 'nombre', 'precio'])
+    expect(m.sku).toBe('codigo_interno')
+  })
 })
 
 describe('validarMapeo', () => {

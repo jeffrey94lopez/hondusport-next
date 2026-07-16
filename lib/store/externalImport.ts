@@ -27,10 +27,14 @@ function compact(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
+function tokens(s: string): string[] {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
+}
+
 const ALIAS: Record<CampoPlataforma, string[]> = {
   sku: ['sku', 'cbarras', 'codigo', 'codigobarras', 'codigodebarras', 'upc', 'ean', 'barcode'],
   nombre: ['nombre', 'nombreproducto', 'producto', 'articulo', 'descripcioncorta'],
-  precio: ['precio', 'precioventa', 'pvp', 'venta'],
+  precio: ['precio', 'precioventa', 'pvp'],
   precio_original: ['preciooriginal', 'precioanterior', 'preciolista', 'preciotachado'],
   stock: ['stock', 'existencia', 'existencias', 'cantidad', 'inventario', 'disponible'],
   descripcion: ['descripcion', 'descripcionproducto', 'detalle', 'descripcionlarga'],
@@ -42,7 +46,7 @@ const ALIAS: Record<CampoPlataforma, string[]> = {
   talla: ['talla', 'tamano', 'size', 'medida'],
   color: ['color', 'colores'],
   personalizable: ['personalizable'],
-  activo: ['activo', 'isactive', 'estado', 'habilitado'],
+  activo: ['activo', 'isactive', 'habilitado'],
 }
 
 export function sugerirMapeo(columnas: string[]): Mapeo {
@@ -52,7 +56,7 @@ export function sugerirMapeo(columnas: string[]): Mapeo {
   for (const { campo } of CAMPOS_PLATAFORMA) {
     const alias = ALIAS[campo]
     let hit = cols.find(c => !usados.has(c.raw) && alias.includes(c.k))
-    if (!hit) hit = cols.find(c => !usados.has(c.raw) && c.k !== '' && alias.some(a => c.k.includes(a) || a.includes(c.k)))
+    if (!hit) hit = cols.find(c => !usados.has(c.raw) && tokens(c.raw).some(t => alias.includes(t)))
     if (hit) { mapeo[campo] = hit.raw; usados.add(hit.raw) }
   }
   return mapeo
