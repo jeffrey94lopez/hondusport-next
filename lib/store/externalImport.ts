@@ -91,10 +91,10 @@ export interface GrupoProducto {
   activo?: string
 }
 
-const ESCALARES: CampoPlataforma[] = [
+const ESCALARES = [
   'nombre', 'precio', 'precio_original', 'descripcion', 'categoria',
   'subcategoria', 'genero', 'badge', 'marca', 'personalizable', 'activo',
-]
+] as const
 
 export function agruparPorSku(
   rows: Record<string, unknown>[],
@@ -129,7 +129,7 @@ export function agruparPorSku(
     for (const campo of ESCALARES) {
       if (g[campo] === undefined) {
         const v = cel(row, campo)
-        if (v !== undefined) (g as Record<string, unknown>)[campo] = v
+        if (v !== undefined) g[campo] = v
       }
     }
   })
