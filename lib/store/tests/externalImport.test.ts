@@ -173,4 +173,15 @@ describe('parseExternalImport', () => {
     const r2 = parseExternalImport([grupo({ categoria: 'Ropa', subcategoria: 'Tenis' })], ctx())
     expect(r2.errors.some(e => /subcategor/.test(e.motivo))).toBe(true)
   })
+
+  it('update: cambiar la categoría dejando huérfana la subcat conservada es error', () => {
+    const c = ctx()
+    // producto existente (sku A10) con categoría c1 (Ropa) y subcategoría s2 (Playeras, hija de c1)
+    c.existentes = [prod({ id: 'p1', sku: 'A10', categoria_id: 'c1', subcategoria_id: 's2' })]
+    // el grupo cambia la categoría a Calzado (c2) y NO trae subcategoría -> la s2 conservada queda huérfana
+    const g = grupo({ sku: 'A10', nombre: 'X', precio: '10', categoria: 'Calzado' })
+    const r = parseExternalImport([g], c)
+    expect(r.updates).toEqual([])
+    expect(r.errors.some(e => /subcategor/.test(e.motivo) && /no pertenece/.test(e.motivo))).toBe(true)
+  })
 })
