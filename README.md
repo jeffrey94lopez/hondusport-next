@@ -38,12 +38,13 @@ Crea un `.env.local` en la raíz con:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://<tu-proyecto>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
-SUPABASE_SERVICE_ROLE_KEY=<service role key>   # solo servidor (import masivo)
+SUPABASE_SERVICE_ROLE_KEY=<service role key>   # reservada para scripts fuera de la app
 ```
 
 - Las dos `NEXT_PUBLIC_*` se usan en cliente y servidor (tienda + auth admin).
-- `SUPABASE_SERVICE_ROLE_KEY` es **secreta** y solo se usa en el servidor para el
-  import masivo de productos (`app/api/import`). Nunca la expongas al cliente.
+- `SUPABASE_SERVICE_ROLE_KEY` es **secreta**; ninguna ruta de la app la usa hoy
+  (queda reservada para scripts/administración fuera de la app). Nunca la
+  expongas al cliente ni a rutas sin auth.
 
 ### Base de datos
 
@@ -87,7 +88,9 @@ app/
   admin/                Panel de administración (protegido por middleware)
     productos/ categorias/ banners/ cupones/ envios/ pedidos/ configuracion/
     login/              Inicio de sesión (Supabase Auth)
-  api/import/           Import masivo de productos desde Excel (.xlsx)
+  api/inventario/
+    plantilla/importar/ Import de plantillas externas (mapeo de columnas)
+    import/              Round-trip de inventario vía Excel (.xlsx)
 components/
   store/                UI de la tienda (drawers, carrusel, cards, nav…)
   admin/                UI del panel

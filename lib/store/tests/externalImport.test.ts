@@ -184,4 +184,13 @@ describe('parseExternalImport', () => {
     expect(r.updates).toEqual([])
     expect(r.errors.some(e => /subcategor/.test(e.motivo) && /no pertenece/.test(e.motivo))).toBe(true)
   })
+
+  it('error: SKU duplicado en la base de datos', () => {
+    const c = ctx()
+    c.existentes = [prod({ id: 'p1', sku: 'DUP' }), prod({ id: 'p2', sku: 'DUP', slug: 'otro' })]
+    const r = parseExternalImport([grupo({ sku: 'DUP', nombre: 'X', precio: '10' })], c)
+    expect(r.updates).toEqual([])
+    expect(r.creates).toEqual([])
+    expect(r.errors.some(e => /duplicado en la base de datos/.test(e.motivo))).toBe(true)
+  })
 })

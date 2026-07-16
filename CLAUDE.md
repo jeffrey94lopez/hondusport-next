@@ -20,8 +20,9 @@ npx tsc --noEmit # typecheck (los Server Actions no están cubiertos por tests)
 - **Dos clientes de Supabase:** `lib/supabase-client.ts` (navegador) y
   `lib/supabase-server.ts` (servidor, con cookies). En Server Components/Actions
   usa siempre el de servidor.
-- **`SUPABASE_SERVICE_ROLE_KEY`** solo se usa en `app/api/import`. Nunca la lleves
-  a cliente ni a rutas sin auth.
+- **`SUPABASE_SERVICE_ROLE_KEY`** ya no la usa ninguna ruta de la app (el legacy
+  `app/api/import` se eliminó); queda reservada para scripts/administración fuera
+  de la app. Nunca la lleves a cliente ni a rutas sin auth.
 
 ## Convenciones clave
 

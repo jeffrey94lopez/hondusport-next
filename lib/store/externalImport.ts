@@ -180,13 +180,24 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
   const subByNombre = new Map(ctx.subcategorias.map(c => [normNombre(c.valor), c]))
   const subById = new Map(ctx.subcategorias.map(c => [c.id, c]))
   const prodPorSku = new Map<string, Producto>()
-  for (const p of ctx.existentes) if (p.sku) prodPorSku.set(p.sku.trim(), p)
+  const skusDupBD = new Set<string>()
+  for (const p of ctx.existentes) {
+    if (!p.sku) continue
+    const k = p.sku.trim()
+    if (prodPorSku.has(k)) skusDupBD.add(k)
+    else prodPorSku.set(k, p)
+  }
   const slugs = ctx.existentes.map(p => p.slug)
   let conError = 0
 
   for (const g of grupos) {
     const errs: string[] = []
     const fila = g.filas[0] ?? null
+    if (skusDupBD.has(g.sku)) {
+      conError++
+      errors.push({ sku: g.sku, fila, motivo: `el SKU "${g.sku}" está duplicado en la base de datos; corrígelo en el panel` })
+      continue
+    }
     const existente = prodPorSku.get(g.sku) ?? null
 
     const nombre = cellText(g.nombre)

@@ -14,7 +14,12 @@ export async function POST(request: NextRequest) {
   const file = formData.get('file')
   if (!file || !(file instanceof File)) return NextResponse.json({ error: 'No se recibió archivo' }, { status: 400 })
 
-  const wb = XLSX.read(Buffer.from(await file.arrayBuffer()), { type: 'buffer' })
+  let wb
+  try {
+    wb = XLSX.read(Buffer.from(await file.arrayBuffer()), { type: 'buffer' })
+  } catch {
+    return NextResponse.json({ error: 'No se pudo leer el archivo. ¿Es un .xlsx válido?' }, { status: 400 })
+  }
   const sheet = wb.Sheets[wb.SheetNames[0]]
   if (!sheet) return NextResponse.json({ error: 'El archivo no tiene hojas' }, { status: 400 })
 

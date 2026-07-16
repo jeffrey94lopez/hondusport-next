@@ -129,6 +129,22 @@ export default function ImportarPlantilla() {
                   </ul>
                 </div>
               )}
+              {preview.errores.length === 0 && preview.muestra.length > 0 && (
+                <div>
+                  <p>Muestra:</p>
+                  <table className={styles.table}>
+                    <thead><tr><th>SKU</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Tallas</th><th>Colores</th></tr></thead>
+                    <tbody>
+                      {preview.muestra.map((m, i) => (
+                        <tr key={`${m.sku}-${i}`}>
+                          <td>{m.sku}</td><td>{m.nombre}</td><td>{m.precio}</td><td>{m.stock}</td>
+                          <td>{m.tallas.join(', ')}</td><td>{m.colores.join(', ')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <div style={{ marginTop: 16, textAlign: 'right' }}>
                 <button className={styles.btnCancel} onClick={() => setPaso('mapear')} type="button">Atrás</button>
                 <button className={styles.btnPrimary} onClick={() => enviar(true)} disabled={preview.errores.length > 0 || cargando} type="button">

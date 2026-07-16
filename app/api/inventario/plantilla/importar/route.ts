@@ -22,20 +22,33 @@ export async function POST(request: NextRequest) {
   const faltan = validarMapeo(mapeo)
   if (faltan.length) return NextResponse.json({ error: 'Mapeo incompleto: ' + faltan.join(', ') }, { status: 400 })
 
-  const wb = XLSX.read(Buffer.from(await file.arrayBuffer()), { type: 'buffer' })
+  let wb
+  try {
+    wb = XLSX.read(Buffer.from(await file.arrayBuffer()), { type: 'buffer' })
+  } catch {
+    return NextResponse.json({ error: 'No se pudo leer el archivo. ¿Es un .xlsx válido?' }, { status: 400 })
+  }
   const sheet = wb.Sheets[wb.SheetNames[0]]
   if (!sheet) return NextResponse.json({ error: 'El archivo no tiene hojas' }, { status: 400 })
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
 
-  const [{ data: existentes, error: prodError }, { data: cats }, { data: subs }] = await Promise.all([
-    supabase.from('productos').select('*').order('nombre').limit(5000),
+  const [{ data: cats, error: catError }, { data: subs, error: subError }] = await Promise.all([
     supabase.from('categorias').select('id, valor').eq('tipo', 'cat'),
     supabase.from('categorias').select('id, valor, categorias_padre').eq('tipo', 'subcat'),
   ])
-  if (prodError) return NextResponse.json({ error: prodError.message }, { status: 500 })
+  if (catError || subError) return NextResponse.json({ error: (catError ?? subError)!.message }, { status: 500 })
+
+  const existentes: Producto[] = []
+  const PASO = 1000
+  for (let desde = 0; ; desde += PASO) {
+    const { data, error: prodError } = await supabase.from('productos').select('*').order('id').range(desde, desde + PASO - 1)
+    if (prodError) return NextResponse.json({ error: prodError.message }, { status: 500 })
+    existentes.push(...((data ?? []) as Producto[]))
+    if (!data || data.length < PASO) break
+  }
 
   const ctx: ParseContext = {
-    existentes: (existentes ?? []) as Producto[],
+    existentes,
     categorias: cats ?? [],
     subcategorias: subs ?? [],
   }
