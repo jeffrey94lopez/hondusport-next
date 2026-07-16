@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Modal from '@/components/admin/Modal'
 import Toggle from '@/components/admin/Toggle'
 import ProductoFields, { productoAForm } from '@/components/admin/ProductoFields'
+import ImportarPlantilla from '@/components/admin/ImportarPlantilla'
 import type { Producto, Categoria, ProductoForm } from '@/types'
 import type { ImportError } from '@/lib/store/inventoryRoundtrip'
 import {
@@ -167,6 +168,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
               disabled={importing}
             />
           </label>
+          <ImportarPlantilla />
           <Link href="/admin/productos/carrusel" className={styles.btnSecondary}>Modo carrusel</Link>
           <button className={styles.btnPrimary} onClick={openCreate}>
             + Nuevo producto

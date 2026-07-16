@@ -129,33 +129,6 @@ export interface ConfigEntry {
 
 export type ConfigMap = Record<string, string>
 
-export interface XlsxRow {
-  nombre_producto?: string
-  precio_venta?: string | number
-  existencia?: string | number
-  tamano?: string
-  color?: string
-  marca?: string
-  cbarras?: string
-  nombre_categoria?: string
-  is_active?: string
-  descripcion_producto?: string
-  [key: string]: unknown
-}
-
-export interface ProductoAgrupado {
-  nombre: string
-  precio: number
-  stock: number
-  tallas: string[]
-  colores: string[]
-  marca: string
-  sku: string
-  categoria: string
-  activo: boolean
-  descripcion: string
-}
-
 export interface ActionResult {
   error?: string
 }
