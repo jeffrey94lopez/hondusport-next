@@ -19,6 +19,7 @@ export const INSTRUCCIONES: string[] = [
   '- Celda vacía en un campo opcional = ese valor no se cambia.',
   '- stock: vacío = no cambia; 0 = agotado; un número = existencias. Ilimitado se fija en el panel.',
   '- precio_original: vacío = no cambia. Para quitar una oferta usa el panel.',
+  '- Para quitar todas las tallas o colores usa el panel: dejar la celda vacía significa "no cambia".',
   '- Para desactivar: activo = FALSO. Borrar una fila NO elimina el producto.',
   '- tallas y colores: separados por coma. Ejemplo: "S, M, L".',
   '- categoria y subcategoria: por nombre exacto. La subcategoría debe pertenecer a esa categoría.',
@@ -168,6 +169,8 @@ export function parseInventoryUpload(
   }
   // SKUs ya vistos en este archivo -> fila que lo tomó
   const skuVistos = new Map<string, number>()
+  // ids ya vistos en la pestaña Actualizar -> fila que lo tomó
+  const idVistos = new Map<string, number>()
   const slugs = ctx.existentes.map(p => p.slug)
   const subPorId = new Map(ctx.subcategorias.map(s => [s.id, s]))
 
@@ -266,6 +269,12 @@ export function parseInventoryUpload(
     if (!id) { errors.push({ pestaña: 'Actualizar', fila, motivo: 'falta el id (no borres esa columna)' }); return }
     const prod = porId.get(id)
     if (!prod) { errors.push({ pestaña: 'Actualizar', fila, motivo: `el id "${id}" no existe` }); return }
+    const filaPreviaId = idVistos.get(id)
+    if (filaPreviaId !== undefined) {
+      errors.push({ pestaña: 'Actualizar', fila, motivo: `el id "${id}" está repetido (también en la fila ${filaPreviaId})` })
+      return
+    }
+    idVistos.set(id, fila)
 
     const nombre = cellText(row.nombre)
     if (!nombre) rowErrors.push('el nombre no puede ir vacío')

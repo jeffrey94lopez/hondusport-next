@@ -230,6 +230,23 @@ describe('parseInventoryUpload — SKU único', () => {
   })
 })
 
+describe('parseInventoryUpload — id único en Actualizar', () => {
+  it('error: dos filas de Actualizar con el mismo id', () => {
+    // SKUs distintos a propósito para que la única forma de fallar sea la
+    // detección de id duplicado (no un choque incidental de SKU).
+    const res = parseInventoryUpload({
+      actualizar: [
+        { id: 'p1', nombre: 'Camiseta', precio: 250, sku: 'AAA' },
+        { id: 'p1', nombre: 'Camiseta', precio: 300, sku: 'BBB' },
+      ],
+      nuevos: [],
+    }, ctxBase())
+    expect(res.errors.some(e => e.motivo.includes('repetido'))).toBe(true)
+    expect(res.errors.some(e => e.motivo.includes('id'))).toBe(true)
+    expect(res.updates.filter(u => u.id === 'p1').length).toBeLessThanOrEqual(1)
+  })
+})
+
 describe('parseInventoryUpload — re-validación de subcategoría al cambiar categoría', () => {
   it('error: cambia la categoría y deja subcategoría vacía, quedando la subcat anterior huérfana', () => {
     const res = parseInventoryUpload({

@@ -68,6 +68,8 @@ export default function ProductosClient({ productos, categorias, subcategorias }
         return
       }
       setResultado({ tipo: 'ok', actualizados: json.actualizados, creados: json.creados })
+    } catch {
+      setResultado({ tipo: 'error', mensaje: 'No se pudo importar (error de red o del servidor).' })
     } finally {
       setImporting(false)
       e.target.value = ''

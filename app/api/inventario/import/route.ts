@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData()
   const file = formData.get('file') as File | null
-  if (!file) return NextResponse.json({ error: 'No se recibió archivo' }, { status: 400 })
+  if (!file || !(file instanceof File)) return NextResponse.json({ error: 'No se recibió archivo' }, { status: 400 })
 
   const wb = XLSX.read(Buffer.from(await file.arrayBuffer()), { type: 'buffer' })
   if (!wb.Sheets['Actualizar'] && !wb.Sheets['Nuevos']) {
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   const nuevos = leerPestaña(wb, 'Nuevos')
 
   const [{ data: existentes, error: prodError }, { data: categorias }, { data: subcategorias }] = await Promise.all([
-    supabase.from('productos').select('*').limit(5000),
+    supabase.from('productos').select('*').order('nombre').limit(5000),
     supabase.from('categorias').select('id, valor').eq('tipo', 'cat'),
     supabase.from('categorias').select('id, valor, categorias_padre').eq('tipo', 'subcat'),
   ])
