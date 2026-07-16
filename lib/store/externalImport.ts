@@ -1,4 +1,6 @@
-import { cellText, parseNum, splitList } from './inventoryRoundtrip'
+import { cellText, parseNum, parseBool, splitList, normNombre, type ProductoData, type ParseContext } from './inventoryRoundtrip'
+import { slugify, uniqueSlug } from './slug'
+import type { Producto } from '@/types'
 
 export type CampoPlataforma =
   | 'sku' | 'nombre' | 'precio' | 'precio_original' | 'stock'
@@ -135,4 +137,133 @@ export function agruparPorSku(
   })
 
   return { grupos: [...map.values()], sinSku }
+}
+
+export interface ImportExternoError { sku: string | null; fila: number | null; motivo: string }
+export interface Resumen { crear: number; actualizar: number; conError: number }
+export interface ExternalParseResult {
+  updates: (ProductoData & { id: string })[]
+  creates: ProductoData[]
+  errors: ImportExternoError[]
+  resumen: Resumen
+}
+
+function precioReq(v: string | undefined, errs: string[]): number | null {
+  const n = parseNum(v)
+  if (n === undefined) { errs.push('falta el precio'); return null }
+  if (Number.isNaN(n)) { errs.push('el precio no es un número válido'); return null }
+  if (n <= 0) { errs.push('el precio debe ser mayor a 0'); return null }
+  return n
+}
+function numOpt(v: string | undefined, base: number | null, campo: string, errs: string[]): number | null {
+  const n = parseNum(v)
+  if (n === undefined) return base
+  if (Number.isNaN(n) || n < 0) { errs.push(`el ${campo} no es un número válido`); return base }
+  return n
+}
+function stockOpt(v: string | undefined, base: number | null, errs: string[]): number | null {
+  const n = parseNum(v)
+  if (n === undefined) return base
+  if (Number.isNaN(n) || n < 0 || !Number.isInteger(n)) { errs.push('el stock debe ser un entero de 0 o más'); return base }
+  return n
+}
+function boolOpt(v: string | undefined): boolean | undefined {
+  return v === undefined ? undefined : parseBool(v)
+}
+
+export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext): ExternalParseResult {
+  const updates: (ProductoData & { id: string })[] = []
+  const creates: ProductoData[] = []
+  const errors: ImportExternoError[] = []
+
+  const catByNombre = new Map(ctx.categorias.map(c => [normNombre(c.valor), c]))
+  const subByNombre = new Map(ctx.subcategorias.map(c => [normNombre(c.valor), c]))
+  const subById = new Map(ctx.subcategorias.map(c => [c.id, c]))
+  const prodPorSku = new Map<string, Producto>()
+  for (const p of ctx.existentes) if (p.sku) prodPorSku.set(p.sku.trim(), p)
+  const slugs = ctx.existentes.map(p => p.slug)
+  let conError = 0
+
+  for (const g of grupos) {
+    const errs: string[] = []
+    const fila = g.filas[0] ?? null
+    const existente = prodPorSku.get(g.sku) ?? null
+
+    const nombre = cellText(g.nombre)
+    if (!nombre) errs.push('falta el nombre')
+    const precio = precioReq(g.precio, errs)
+    const precio_original = numOpt(g.precio_original, existente?.precio_original ?? null, 'precio_original', errs)
+    const stock = stockOpt(g.stock, existente?.stock ?? null, errs)
+
+    // categoría / subcategoría
+    let categoria_id = existente?.categoria_id ?? null
+    let subcategoria_id = existente?.subcategoria_id ?? null
+    const catCell = cellText(g.categoria)
+    if (catCell !== undefined) {
+      const cat = catByNombre.get(normNombre(catCell))
+      if (!cat) errs.push(`la categoría "${catCell}" no existe`)
+      else categoria_id = cat.id
+    }
+    const subCell = cellText(g.subcategoria)
+    if (subCell !== undefined) {
+      const sub = subByNombre.get(normNombre(subCell))
+      if (!sub) errs.push(`la subcategoría "${subCell}" no existe`)
+      else if (!categoria_id) errs.push(`la subcategoría "${subCell}" requiere una categoría`)
+      else if (!(sub.categorias_padre ?? []).includes(categoria_id)) errs.push(`la subcategoría "${subCell}" no pertenece a esa categoría`)
+      else subcategoria_id = sub.id
+    } else if (catCell !== undefined && subcategoria_id) {
+      // cambió la categoría pero se conserva la subcat: re-validar
+      const s = subById.get(subcategoria_id)
+      if (!categoria_id || !(s?.categorias_padre ?? []).includes(categoria_id)) {
+        errs.push(`la subcategoría "${s?.valor ?? subcategoria_id}" no pertenece a esa categoría`)
+      }
+    }
+
+    if (errs.length) { conError++; errs.forEach(m => errors.push({ sku: g.sku, fila, motivo: m })); continue }
+
+    if (existente) {
+      updates.push({
+        id: existente.id,
+        nombre: nombre!,
+        slug: existente.slug,
+        descripcion: cellText(g.descripcion) ?? existente.descripcion,
+        precio: precio!,
+        precio_original,
+        categoria_id,
+        subcategoria_id,
+        stock,
+        genero: cellText(g.genero) ?? existente.genero,
+        badge: cellText(g.badge) ?? existente.badge,
+        tallas: g.tallas.length ? g.tallas : existente.tallas,
+        colores: g.colores.length ? g.colores : existente.colores,
+        marca: cellText(g.marca) ?? existente.marca,
+        sku: g.sku,
+        personalizable: boolOpt(g.personalizable) ?? existente.personalizable,
+        activo: boolOpt(g.activo) ?? existente.activo,
+      })
+    } else {
+      const slug = uniqueSlug(slugify(nombre!) || 'producto', slugs)
+      slugs.push(slug)
+      creates.push({
+        nombre: nombre!,
+        slug,
+        descripcion: cellText(g.descripcion) ?? null,
+        precio: precio!,
+        precio_original,
+        categoria_id,
+        subcategoria_id,
+        stock,
+        genero: cellText(g.genero) ?? null,
+        badge: cellText(g.badge) ?? null,
+        tallas: g.tallas.length ? g.tallas : null,
+        colores: g.colores.length ? g.colores : null,
+        marca: cellText(g.marca) ?? null,
+        sku: g.sku,
+        personalizable: boolOpt(g.personalizable) ?? false,
+        activo: boolOpt(g.activo) ?? true,
+      })
+    }
+  }
+
+  return { updates, creates, errors, resumen: { crear: creates.length, actualizar: updates.length, conError } }
 }

@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
-  CAMPOS_PLATAFORMA, sugerirMapeo, validarMapeo, agruparPorSku,
-  type Mapeo,
+  CAMPOS_PLATAFORMA, sugerirMapeo, validarMapeo, agruparPorSku, parseExternalImport,
+  type Mapeo, type GrupoProducto,
 } from '../externalImport'
+import type { ParseContext } from '../inventoryRoundtrip'
+import type { Producto } from '@/types'
 
 describe('CAMPOS_PLATAFORMA', () => {
   it('sku, nombre y precio son obligatorios; el resto no', () => {
@@ -102,5 +104,73 @@ describe('agruparPorSku', () => {
     const rows = [{ cbarras: 'A1', nombre_producto: 'Y', precio_venta: 5 }]
     const { grupos } = agruparPorSku(rows, { sku: 'cbarras', nombre: 'nombre_producto', precio: 'precio_venta' })
     expect(grupos[0].stock).toBeUndefined()
+  })
+})
+
+function prod(o: Partial<Producto> = {}): Producto {
+  return {
+    id: 'p1', nombre: 'Viejo', slug: 'viejo', descripcion: 'd', precio: 100, precio_original: null,
+    categoria_id: 'c1', subcategoria_id: null, stock: 4, genero: null, badge: null,
+    tallas: ['S'], colores: ['Rojo'], imagenes: null, marca: 'M', sku: 'A10',
+    personalizable: false, oferta_fin: null, activo: true, rating: 5, created_at: '', updated_at: '', ...o,
+  }
+}
+function ctx(): ParseContext {
+  return {
+    existentes: [prod()],
+    categorias: [{ id: 'c1', valor: 'Ropa' }, { id: 'c2', valor: 'Calzado' }],
+    subcategorias: [
+      { id: 's1', valor: 'Tenis', categorias_padre: ['c2'] },
+      { id: 's2', valor: 'Playeras', categorias_padre: ['c1'] },
+    ],
+  }
+}
+function grupo(o: Partial<GrupoProducto> = {}): GrupoProducto {
+  return { sku: 'NEW1', filas: [2], tallas: [], colores: [], nombre: 'Nuevo', precio: '50', ...o }
+}
+
+describe('parseExternalImport', () => {
+  it('actualiza cuando el SKU ya existe (merge de opcionales, conserva slug)', () => {
+    const g = grupo({ sku: 'A10', nombre: 'Samba OG', precio: '2720', stock: '5', tallas: ['40', '41'] })
+    const r = parseExternalImport([g], ctx())
+    expect(r.errors).toEqual([])
+    expect(r.creates).toEqual([])
+    expect(r.updates).toHaveLength(1)
+    const u = r.updates[0]
+    expect(u.id).toBe('p1')
+    expect(u.slug).toBe('viejo')
+    expect(u.precio).toBe(2720)
+    expect(u.stock).toBe(5)
+    expect(u.tallas).toEqual(['40', '41'])
+    expect(u.colores).toEqual(['Rojo']) // no venía en el grupo → conserva
+    expect(r.resumen).toEqual({ crear: 0, actualizar: 1, conError: 0 })
+  })
+
+  it('crea cuando el SKU no existe (slug generado, defaults)', () => {
+    const r = parseExternalImport([grupo()], ctx())
+    expect(r.errors).toEqual([])
+    expect(r.creates).toHaveLength(1)
+    const c = r.creates[0]
+    expect(c.sku).toBe('NEW1')
+    expect(c.slug).toBe('nuevo')
+    expect(c.precio).toBe(50)
+    expect(c.stock).toBeNull()
+    expect(c.activo).toBe(true)
+    expect(r.resumen.crear).toBe(1)
+  })
+
+  it('error: nombre vacío o precio inválido', () => {
+    const r = parseExternalImport([grupo({ nombre: undefined, precio: '0' })], ctx())
+    expect(r.updates).toEqual([]); expect(r.creates).toEqual([])
+    expect(r.errors.some(e => /nombre/.test(e.motivo))).toBe(true)
+    expect(r.errors.some(e => /precio/.test(e.motivo))).toBe(true)
+    expect(r.resumen.conError).toBe(1)
+  })
+
+  it('error: categoría inexistente / subcat que no pertenece', () => {
+    const r1 = parseExternalImport([grupo({ categoria: 'NoExiste' })], ctx())
+    expect(r1.errors.some(e => /categor/.test(e.motivo))).toBe(true)
+    const r2 = parseExternalImport([grupo({ categoria: 'Ropa', subcategoria: 'Tenis' })], ctx())
+    expect(r2.errors.some(e => /subcategor/.test(e.motivo))).toBe(true)
   })
 })
