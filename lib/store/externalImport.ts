@@ -1,3 +1,5 @@
+import { cellText, parseNum, splitList } from './inventoryRoundtrip'
+
 export type CampoPlataforma =
   | 'sku' | 'nombre' | 'precio' | 'precio_original' | 'stock'
   | 'descripcion' | 'categoria' | 'subcategoria' | 'genero'
@@ -68,4 +70,69 @@ export function validarMapeo(mapeo: Mapeo): string[] {
     if (obligatorio && !mapeo[campo]) errs.push(`falta mapear ${label}`)
   }
   return errs
+}
+
+export interface GrupoProducto {
+  sku: string
+  filas: number[]
+  nombre?: string
+  precio?: string
+  precio_original?: string
+  stock?: string
+  descripcion?: string
+  categoria?: string
+  subcategoria?: string
+  genero?: string
+  badge?: string
+  marca?: string
+  tallas: string[]
+  colores: string[]
+  personalizable?: string
+  activo?: string
+}
+
+const ESCALARES: CampoPlataforma[] = [
+  'nombre', 'precio', 'precio_original', 'descripcion', 'categoria',
+  'subcategoria', 'genero', 'badge', 'marca', 'personalizable', 'activo',
+]
+
+export function agruparPorSku(
+  rows: Record<string, unknown>[],
+  mapeo: Mapeo,
+): { grupos: GrupoProducto[]; sinSku: number[] } {
+  const map = new Map<string, GrupoProducto>()
+  const sinSku: number[] = []
+
+  const cel = (row: Record<string, unknown>, campo: CampoPlataforma): string | undefined => {
+    const col = mapeo[campo]
+    return col ? cellText(row[col]) : undefined
+  }
+
+  rows.forEach((row, i) => {
+    const fila = i + 2
+    const tieneDatos = CAMPOS_PLATAFORMA.some(({ campo }) => cel(row, campo) !== undefined)
+    if (!tieneDatos) return
+    const sku = cel(row, 'sku')
+    if (!sku) { sinSku.push(fila); return }
+
+    let g = map.get(sku)
+    if (!g) { g = { sku, filas: [], tallas: [], colores: [] }; map.set(sku, g) }
+    g.filas.push(fila)
+
+    if (mapeo.stock) {
+      const n = parseNum(row[mapeo.stock])
+      if (n !== undefined && !Number.isNaN(n)) g.stock = String((g.stock ? Number(g.stock) : 0) + n)
+    }
+    if (mapeo.talla) for (const t of splitList(row[mapeo.talla])) if (!g.tallas.includes(t)) g.tallas.push(t)
+    if (mapeo.color) for (const c of splitList(row[mapeo.color])) if (!g.colores.includes(c)) g.colores.push(c)
+
+    for (const campo of ESCALARES) {
+      if (g[campo] === undefined) {
+        const v = cel(row, campo)
+        if (v !== undefined) (g as Record<string, unknown>)[campo] = v
+      }
+    }
+  })
+
+  return { grupos: [...map.values()], sinSku }
 }

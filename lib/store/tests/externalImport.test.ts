@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  CAMPOS_PLATAFORMA, sugerirMapeo, validarMapeo,
+  CAMPOS_PLATAFORMA, sugerirMapeo, validarMapeo, agruparPorSku,
   type Mapeo,
 } from '../externalImport'
 
@@ -57,5 +57,50 @@ describe('validarMapeo', () => {
   })
   it('sin errores cuando están los tres obligatorios', () => {
     expect(validarMapeo({ sku: 'cb', nombre: 'n', precio: 'p' })).toEqual([])
+  })
+})
+
+const MAPEO_POS = {
+  sku: 'cbarras', nombre: 'nombre_producto', precio: 'precio_venta',
+  stock: 'existencia', talla: 'tamano', color: 'color', marca: 'marca',
+} as const
+
+describe('agruparPorSku', () => {
+  it('agrupa variantes por SKU: suma stock, une tallas/colores, primer no-vacío', () => {
+    const rows = [
+      { cbarras: 'A10', nombre_producto: 'Samba OG', precio_venta: 2720, existencia: 3, tamano: '40', color: 'Negro', marca: 'Adidas' },
+      { cbarras: 'A10', nombre_producto: 'Samba OG', precio_venta: 2720, existencia: 2, tamano: '41', color: 'Blanco', marca: 'Adidas' },
+    ]
+    const { grupos, sinSku } = agruparPorSku(rows, MAPEO_POS)
+    expect(sinSku).toEqual([])
+    expect(grupos).toHaveLength(1)
+    const g = grupos[0]
+    expect(g.sku).toBe('A10')
+    expect(g.nombre).toBe('Samba OG')
+    expect(g.precio).toBe('2720')
+    expect(g.stock).toBe('5')
+    expect(g.tallas).toEqual(['40', '41'])
+    expect(g.colores).toEqual(['Negro', 'Blanco'])
+    expect(g.filas).toEqual([2, 3])
+  })
+
+  it('fila con datos pero sin SKU va a sinSku', () => {
+    const rows = [{ cbarras: '', nombre_producto: 'X', precio_venta: 10 }]
+    const { grupos, sinSku } = agruparPorSku(rows, MAPEO_POS)
+    expect(grupos).toEqual([])
+    expect(sinSku).toEqual([2])
+  })
+
+  it('ignora filas totalmente vacías', () => {
+    const rows = [{ cbarras: '', nombre_producto: '', precio_venta: '' }]
+    const { grupos, sinSku } = agruparPorSku(rows, MAPEO_POS)
+    expect(grupos).toEqual([])
+    expect(sinSku).toEqual([])
+  })
+
+  it('no suma stock cuando la columna no está mapeada', () => {
+    const rows = [{ cbarras: 'A1', nombre_producto: 'Y', precio_venta: 5 }]
+    const { grupos } = agruparPorSku(rows, { sku: 'cbarras', nombre: 'nombre_producto', precio: 'precio_venta' })
+    expect(grupos[0].stock).toBeUndefined()
   })
 })
