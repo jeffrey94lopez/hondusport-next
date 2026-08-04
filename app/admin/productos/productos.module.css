@@ -203,6 +203,31 @@
   color: var(--danger);
 }
 
+.variantesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+}
+
+.varianteRow {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr auto auto auto auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.varianteActiva {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .formFooter {
   display: flex;
   gap: 0.6rem;

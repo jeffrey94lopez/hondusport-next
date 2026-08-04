@@ -2,7 +2,7 @@
 import { useMemo } from 'react'
 import ImageUpload from './ImageUpload'
 import Toggle from './Toggle'
-import type { Producto, ProductoForm, Categoria } from '@/types'
+import type { Producto, ProductoForm, Categoria, VarianteForm } from '@/types'
 import { slugify } from '@/lib/store/slug'
 import styles from '@/app/admin/productos/productos.module.css'
 
@@ -25,7 +25,16 @@ export function productoAForm(p: Producto): ProductoForm {
     imagenes: p.imagenes ?? [],
     personalizable: p.personalizable,
     activo: p.activo,
-    variantes: [],
+    variantes: [...(p.producto_variantes ?? [])]
+      .sort((a, b) => a.orden - b.orden)
+      .map(v => ({
+        id: v.id,
+        nombre: v.nombre,
+        sku: v.sku ?? '',
+        precio: v.precio != null ? Number(v.precio) : null,
+        stock: v.stock,
+        activo: v.activo,
+      })),
   }
 }
 
@@ -59,6 +68,24 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
       return { ...prev, nombre, slug }
     })
   }
+
+  const setVariante = (i: number, patch: Partial<VarianteForm>) =>
+    setForm(prev => ({ ...prev, variantes: prev.variantes.map((v, idx) => (idx === i ? { ...v, ...patch } : v)) }))
+
+  const agregarVariante = () =>
+    setForm(prev => ({ ...prev, variantes: [...prev.variantes, { nombre: '', sku: '', precio: null, stock: null, activo: true }] }))
+
+  const quitarVariante = (i: number) =>
+    setForm(prev => ({ ...prev, variantes: prev.variantes.filter((_, idx) => idx !== i) }))
+
+  const moverVariante = (i: number, delta: number) =>
+    setForm(prev => {
+      const j = i + delta
+      if (j < 0 || j >= prev.variantes.length) return prev
+      const copia = [...prev.variantes]
+      ;[copia[i], copia[j]] = [copia[j], copia[i]]
+      return { ...prev, variantes: copia }
+    })
 
   function handleCategoriaChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const categoria_id = e.target.value || null
@@ -159,7 +186,11 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
             value={form.stock ?? ''}
             onChange={e => setForm(p => ({ ...p, stock: e.target.value ? parseInt(e.target.value) : null }))}
             min="0"
+            disabled={form.variantes.length > 0}
           />
+          {form.variantes.length > 0 && (
+            <small>Este producto vende por variantes; el stock y las tallas del padre no se usan</small>
+          )}
         </label>
       </div>
       {completo && (
@@ -191,12 +222,67 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
           </label>
           <label className={styles.formLabel}>
             Tallas (separadas por coma)
-            <input type="text" value={form.tallas} onChange={f('tallas')} placeholder="S, M, L, XL, XXL" />
+            <input
+              type="text"
+              value={form.tallas}
+              onChange={f('tallas')}
+              placeholder="S, M, L, XL, XXL"
+              disabled={form.variantes.length > 0}
+            />
+            {form.variantes.length > 0 && (
+              <small>Este producto vende por variantes; el stock y las tallas del padre no se usan</small>
+            )}
           </label>
           <label className={styles.formLabel}>
             Colores (separados por coma)
             <input type="text" value={form.colores} onChange={f('colores')} placeholder="Rojo, Azul, Negro" />
           </label>
+          <div className={styles.variantesSection}>
+            <label className={styles.formLabel}>
+              Variantes (opcional) — si agregas variantes, el producto se vende por variante
+            </label>
+            {form.variantes.map((v, i) => (
+              <div key={v.id ?? `nueva-${i}`} className={styles.varianteRow}>
+                <input
+                  placeholder="Nombre (ej. M, Edición retro)"
+                  value={v.nombre}
+                  onChange={e => setVariante(i, { nombre: e.target.value })}
+                />
+                <input
+                  placeholder="SKU"
+                  value={v.sku}
+                  onChange={e => setVariante(i, { sku: e.target.value })}
+                />
+                <input
+                  type="number"
+                  placeholder="Precio (vacío = hereda)"
+                  value={v.precio ?? ''}
+                  onChange={e => setVariante(i, { precio: e.target.value === '' ? null : Number(e.target.value) })}
+                  min="0"
+                  step="0.01"
+                />
+                <input
+                  type="number"
+                  placeholder="Stock (vacío = ilimitado)"
+                  value={v.stock ?? ''}
+                  onChange={e => setVariante(i, { stock: e.target.value === '' ? null : Number(e.target.value) })}
+                  min="0"
+                />
+                <label className={styles.varianteActiva}>
+                  <input
+                    type="checkbox"
+                    checked={v.activo}
+                    onChange={e => setVariante(i, { activo: e.target.checked })}
+                  />{' '}
+                  Activa
+                </label>
+                <button type="button" onClick={() => moverVariante(i, -1)} disabled={i === 0}>↑</button>
+                <button type="button" onClick={() => moverVariante(i, 1)} disabled={i === form.variantes.length - 1}>↓</button>
+                <button type="button" className={styles.btnDelete} onClick={() => quitarVariante(i)}>Quitar</button>
+              </div>
+            ))}
+            <button type="button" className={styles.btnSecondary} onClick={agregarVariante}>+ Agregar variante</button>
+          </div>
         </>
       )}
       <div className={styles.formLabel}>
