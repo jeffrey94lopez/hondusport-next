@@ -1,4 +1,4 @@
-import type { Producto } from '@/types'
+import type { Producto, ProductoVariante } from '@/types'
 import { slugify, uniqueSlug } from './slug'
 
 export const COLUMNAS = [
@@ -6,6 +6,12 @@ export const COLUMNAS = [
   'stock', 'descripcion', 'categoria', 'subcategoria', 'genero',
   'badge', 'tallas', 'colores', 'personalizable', 'activo',
 ] as const
+
+export const VARIANTES_COLUMNAS = [
+  'producto_id', 'producto', 'variante_id', 'variante', 'sku', 'precio', 'stock', 'activo',
+] as const
+
+export const NOTA_VENDE_POR_VARIANTES = 'vende por variantes'
 
 export const INSTRUCCIONES: string[] = [
   'Hondusport — Plantilla de inventario',
@@ -24,6 +30,14 @@ export const INSTRUCCIONES: string[] = [
   '- tallas y colores: separados por coma. Ejemplo: "S, M, L".',
   '- categoria y subcategoria: por nombre exacto. La subcategoría debe pertenecer a esa categoría.',
   '- personalizable y activo: VERDADERO o FALSO.',
+  '',
+  'Pestaña "Variantes": variantes de productos (stock y precio por variante).',
+  '- NO modifiques producto_id ni variante_id: son las llaves.',
+  '- Para crear una variante: fila nueva con producto_id y variante (nombre), variante_id vacío.',
+  '- variante (nombre): obligatorio y único dentro del producto.',
+  '- precio: vacío = hereda el precio del producto padre.',
+  '- stock: vacío = no cambia (en filas nuevas = ilimitado); 0 = agotada.',
+  '- Si un producto tiene variantes, su stock y tallas en "Actualizar" se ignoran.',
 ]
 
 export interface InventoryRow {
@@ -85,9 +99,11 @@ export function buildExportData(
   productos: Producto[],
   categorias: CategoriaRef[],
   subcategorias: CategoriaRef[],
-): { actualizar: Record<string, string | number>[] } {
+  variantes: ProductoVariante[],
+): { actualizar: Record<string, string | number>[]; variantes: Record<string, string | number>[] } {
   const catById = new Map(categorias.map(c => [c.id, c.valor]))
   const subById = new Map(subcategorias.map(c => [c.id, c.valor]))
+  const conVariantes = new Set(variantes.map(v => v.producto_id))
 
   const actualizar = productos.map(p => ({
     id: p.id,
@@ -96,19 +112,45 @@ export function buildExportData(
     marca: p.marca ?? '',
     precio: p.precio,
     precio_original: p.precio_original ?? '',
-    stock: p.stock ?? '',
+    stock: conVariantes.has(p.id) ? NOTA_VENDE_POR_VARIANTES : (p.stock ?? ''),
     descripcion: p.descripcion ?? '',
     categoria: p.categoria_id ? (catById.get(p.categoria_id) ?? '') : '',
     subcategoria: p.subcategoria_id ? (subById.get(p.subcategoria_id) ?? '') : '',
     genero: p.genero ?? '',
     badge: p.badge ?? '',
-    tallas: joinList(p.tallas),
+    tallas: conVariantes.has(p.id) ? NOTA_VENDE_POR_VARIANTES : joinList(p.tallas),
     colores: joinList(p.colores),
     personalizable: p.personalizable ? 'VERDADERO' : 'FALSO',
     activo: p.activo ? 'VERDADERO' : 'FALSO',
   }))
 
-  return { actualizar }
+  const variantesPorProducto = new Map<string, ProductoVariante[]>()
+  for (const v of variantes) {
+    const lista = variantesPorProducto.get(v.producto_id) ?? []
+    lista.push(v)
+    variantesPorProducto.set(v.producto_id, lista)
+  }
+
+  const filasVariantes: Record<string, string | number>[] = []
+  for (const p of productos) {
+    const propias = variantesPorProducto.get(p.id)
+    if (!propias) continue
+    const ordenadas = [...propias].sort((a, b) => a.orden - b.orden)
+    for (const v of ordenadas) {
+      filasVariantes.push({
+        producto_id: v.producto_id,
+        producto: p.nombre,
+        variante_id: v.id,
+        variante: v.nombre,
+        sku: v.sku ?? '',
+        precio: v.precio ?? '',
+        stock: v.stock ?? '',
+        activo: v.activo ? 'VERDADERO' : 'FALSO',
+      })
+    }
+  }
+
+  return { actualizar, variantes: filasVariantes }
 }
 
 export interface ProductoData {

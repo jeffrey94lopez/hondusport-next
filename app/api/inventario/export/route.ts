@@ -21,6 +21,7 @@ export async function GET() {
     (productos ?? []) as Producto[],
     categorias ?? [],
     subcategorias ?? [],
+    [],
   )
 
   const wb = XLSX.utils.book_new()

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
-  COLUMNAS, INSTRUCCIONES,
+  COLUMNAS, INSTRUCCIONES, VARIANTES_COLUMNAS, NOTA_VENDE_POR_VARIANTES,
   parseBool, parseNum, cellText, cellBool, splitList, joinList, normNombre,
   buildExportData, parseInventoryUpload,
 } from '../inventoryRoundtrip'
-import type { Producto } from '@/types'
+import type { Producto, ProductoVariante } from '@/types'
 import type { ParseContext } from '../inventoryRoundtrip'
 
 describe('helpers de celdas', () => {
@@ -67,13 +67,21 @@ function prod(overrides: Partial<Producto> = {}): Producto {
   }
 }
 
+function varianteBD(overrides: Partial<ProductoVariante> = {}): ProductoVariante {
+  return {
+    id: 'v1', producto_id: 'p1', nombre: 'M', sku: null, precio: null, stock: null,
+    activo: true, orden: 0, created_at: '', updated_at: '',
+    ...overrides,
+  }
+}
+
 describe('buildExportData', () => {
   const cats = [{ id: 'c1', valor: 'Ropa' }]
   const subs = [{ id: 's1', valor: 'Camisetas' }]
 
   it('mapea un producto a una fila con nombres de categoría', () => {
     const { actualizar } = buildExportData(
-      [prod({ categoria_id: 'c1', subcategoria_id: 's1' })], cats, subs,
+      [prod({ categoria_id: 'c1', subcategoria_id: 's1' })], cats, subs, [],
     )
     expect(actualizar).toHaveLength(1)
     const r = actualizar[0]
@@ -88,12 +96,41 @@ describe('buildExportData', () => {
 
   it('nulos (stock, precio_original) salen como cadena vacía', () => {
     const { actualizar } = buildExportData(
-      [prod({ stock: null, precio_original: null, sku: null, categoria_id: null })], cats, subs,
+      [prod({ stock: null, precio_original: null, sku: null, categoria_id: null })], cats, subs, [],
     )
     expect(actualizar[0].stock).toBe('')
     expect(actualizar[0].precio_original).toBe('')
     expect(actualizar[0].sku).toBe('')
     expect(actualizar[0].categoria).toBe('')
+  })
+
+  it('VARIANTES_COLUMNAS trae las 8 columnas esperadas', () => {
+    expect(VARIANTES_COLUMNAS).toEqual([
+      'producto_id', 'producto', 'variante_id', 'variante', 'sku', 'precio', 'stock', 'activo',
+    ])
+  })
+
+  it('exporta la pestaña Variantes con una fila por variante', () => {
+    const { variantes } = buildExportData([prod()], [], [], [
+      varianteBD({ id: 'v1', producto_id: prod().id, nombre: 'M', sku: 'SKU-M', precio: 150, stock: 3, orden: 0 }),
+      varianteBD({ id: 'v2', producto_id: prod().id, nombre: 'L', sku: null, precio: null, stock: null, orden: 1 }),
+    ])
+    expect(variantes).toEqual([
+      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v1', variante: 'M', sku: 'SKU-M', precio: 150, stock: 3, activo: 'VERDADERO' },
+      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v2', variante: 'L', sku: '', precio: '', stock: '', activo: 'VERDADERO' },
+    ])
+  })
+
+  it('un producto con variantes exporta stock y tallas con la nota', () => {
+    const { actualizar } = buildExportData([prod()], [], [], [varianteBD({ producto_id: prod().id })])
+    expect(actualizar[0].stock).toBe(NOTA_VENDE_POR_VARIANTES)
+    expect(actualizar[0].tallas).toBe(NOTA_VENDE_POR_VARIANTES)
+  })
+
+  it('un producto sin variantes exporta stock y tallas normales', () => {
+    const { actualizar } = buildExportData([prod({ stock: 4 })], [], [], [])
+    expect(actualizar[0].stock).toBe(4)
+    expect(actualizar[0].tallas).toBe('S, M')
   })
 })
 
