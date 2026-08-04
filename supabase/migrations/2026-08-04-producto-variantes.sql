@@ -21,17 +21,21 @@ create index if not exists producto_variantes_producto_id_idx
 create unique index if not exists producto_variantes_sku_unico
   on producto_variantes (sku) where sku is not null;
 
+drop trigger if exists producto_variantes_updated_at on producto_variantes;
 create trigger producto_variantes_updated_at
   before update on producto_variantes
   for each row execute function update_updated_at();
 
 alter table producto_variantes enable row level security;
 
+drop policy if exists "public_read_variantes" on producto_variantes;
 create policy "public_read_variantes" on producto_variantes for select
   using (
     activo = true
     and exists (select 1 from productos p where p.id = producto_id and p.activo = true)
   );
+
+drop policy if exists "admin_all_variantes" on producto_variantes;
 create policy "admin_all_variantes" on producto_variantes for all
   using (auth.role() = 'authenticated');
 
