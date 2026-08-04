@@ -1,6 +1,9 @@
-import { cellText, parseNum, parseBool, splitList, normNombre, type ProductoData, type ParseContext } from './inventoryRoundtrip'
+import {
+  cellText, parseNum, parseBool, splitList, normNombre,
+  type ProductoData, type ParseContext, type VarianteData, type VarianteUpdate,
+} from './inventoryRoundtrip'
 import { slugify, uniqueSlug } from './slug'
-import type { Producto } from '@/types'
+import type { Producto, ProductoVariante } from '@/types'
 
 export type CampoPlataforma =
   | 'sku' | 'nombre' | 'precio' | 'precio_original' | 'stock'
@@ -193,12 +196,23 @@ export function agruparPorSku(
 }
 
 export interface ImportExternoError { sku: string | null; fila: number | null; motivo: string }
-export interface Resumen { crear: number; actualizar: number; conError: number }
+export interface Resumen {
+  crear: number
+  actualizar: number
+  conError: number
+  variantesCrear: number
+  variantesActualizar: number
+}
+export interface VarianteCreateExterna extends VarianteData {
+  productoSku: string      // liga con el padre (existente o por crear); la ruta resuelve el producto_id
+  orden: number
+}
 export interface ExternalParseResult {
   updates: (ProductoData & { id: string })[]
   creates: ProductoData[]
   errors: ImportExternoError[]
   resumen: Resumen
+  variantes: { updates: VarianteUpdate[]; creates: VarianteCreateExterna[] }
 }
 
 function precioReq(v: string | undefined, errs: string[]): number | null {
@@ -224,10 +238,117 @@ function boolOpt(v: string | undefined): boolean | undefined {
   return v === undefined ? undefined : parseBool(v)
 }
 
+// Determina el resultado de casar/validar las variantes de un grupo.
+// Devuelve null (con motivos en `groupErrors`) si el grupo debe descartarse
+// por completo — atómico, como el resto de errores de grupo.
+function resolverVariantesDeGrupo(
+  g: GrupoProducto,
+  existente: Producto | null,
+  precioPadre: number | null,
+  varPorSku: Map<string, ProductoVariante>,
+  varsPorProducto: Map<string, ProductoVariante[]>,
+  skuVarVistosGlobal: Map<string, number>,
+  groupErrors: { fila: number; motivo: string }[],
+): { updates: VarianteUpdate[]; creates: VarianteCreateExterna[]; skuReservas: Map<string, number> } | null {
+  const varUpdates: VarianteUpdate[] = []
+  const varCreates: VarianteCreateExterna[] = []
+  const nombresEnGrupo = new Set<string>()
+  const idsUsadosEnGrupo = new Set<string>()
+  const skuReservas = new Map<string, number>() // reservas locales; se funden al global solo si el grupo entero es válido
+
+  g.variantes.forEach((v, idx) => {
+    const rowErrors: string[] = []
+    const nombreV = cellText(v.nombre)
+    if (!nombreV) {
+      groupErrors.push({ fila: v.fila, motivo: `la fila ${v.fila} no se puede distinguir como variante (falta talla/color/sku de variante)` })
+      return
+    }
+    const nombreKey = normNombre(nombreV)
+    if (nombresEnGrupo.has(nombreKey)) {
+      groupErrors.push({ fila: v.fila, motivo: `la variante "${nombreV}" está repetida en el archivo (fila ${v.fila})` })
+      return
+    }
+
+    let skuFinal: string | null = null
+    if (v.sku) {
+      const skuTrim = v.sku.trim()
+      if (skuVarVistosGlobal.has(skuTrim) || skuReservas.has(skuTrim)) {
+        groupErrors.push({ fila: v.fila, motivo: `el SKU de variante "${skuTrim}" está repetido en el archivo` })
+        return
+      }
+      skuFinal = skuTrim
+    }
+
+    // Casar: por sku de variante (BD, global) → debe pertenecer al producto del grupo.
+    let matched: ProductoVariante | null = null
+    if (skuFinal) {
+      const found = varPorSku.get(skuFinal)
+      if (found) {
+        if (!existente || found.producto_id !== existente.id) {
+          groupErrors.push({ fila: v.fila, motivo: `el SKU de variante "${skuFinal}" ya pertenece a otro producto` })
+          return
+        }
+        matched = found
+      }
+    }
+    // si no casó por sku, por nombre dentro del producto existente
+    if (!matched && existente) {
+      const candidatos = varsPorProducto.get(existente.id) ?? []
+      matched = candidatos.find(c => normNombre(c.nombre) === nombreKey) ?? null
+    }
+    if (matched && idsUsadosEnGrupo.has(matched.id)) {
+      groupErrors.push({ fila: v.fila, motivo: `la variante existente "${matched.nombre}" ya fue usada en otra fila del mismo grupo` })
+      return
+    }
+
+    // precio propio: solo si viene y difiere del precio del padre
+    let precioVar: number | null = null
+    if (v.precio !== undefined) {
+      const n = parseNum(v.precio)
+      if (n === undefined || Number.isNaN(n) || n <= 0) {
+        rowErrors.push(`el precio de la variante en la fila ${v.fila} no es un número válido`)
+      } else if (precioPadre !== null && n !== precioPadre) {
+        precioVar = n
+      }
+    }
+
+    // stock: si viene, entero >= 0; si no, hereda el de la variante existente (updates) o null (altas)
+    let stockVar: number | null = matched ? matched.stock : null
+    if (v.stock !== undefined) {
+      const n = parseNum(v.stock)
+      if (n === undefined || Number.isNaN(n) || n < 0 || !Number.isInteger(n)) {
+        rowErrors.push(`el stock de la variante en la fila ${v.fila} debe ser un entero de 0 o más`)
+      } else {
+        stockVar = n
+      }
+    }
+
+    if (rowErrors.length) { rowErrors.forEach(m => groupErrors.push({ fila: v.fila, motivo: m })); return }
+
+    nombresEnGrupo.add(nombreKey)
+    if (matched) idsUsadosEnGrupo.add(matched.id)
+    if (skuFinal) skuReservas.set(skuFinal, v.fila)
+
+    if (matched) {
+      varUpdates.push({
+        id: matched.id, producto_id: matched.producto_id, nombre: nombreV,
+        sku: skuFinal, precio: precioVar, stock: stockVar, activo: matched.activo,
+      })
+    } else {
+      varCreates.push({ productoSku: g.sku, orden: idx, nombre: nombreV, sku: skuFinal, precio: precioVar, stock: stockVar, activo: true })
+    }
+  })
+
+  if (groupErrors.length) return null
+  return { updates: varUpdates, creates: varCreates, skuReservas }
+}
+
 export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext): ExternalParseResult {
   const updates: (ProductoData & { id: string })[] = []
   const creates: ProductoData[] = []
   const errors: ImportExternoError[] = []
+  const varUpdates: VarianteUpdate[] = []
+  const varCreates: VarianteCreateExterna[] = []
 
   const catByNombre = new Map(ctx.categorias.map(c => [normNombre(c.valor), c]))
   const subByNombre = new Map(ctx.subcategorias.map(c => [normNombre(c.valor), c]))
@@ -242,6 +363,20 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
   }
   const slugs = ctx.existentes.map(p => p.slug)
   let conError = 0
+
+  // --- Índices de variantes existentes (BD) ---
+  const varPorSku = new Map<string, ProductoVariante>()
+  for (const v of ctx.variantesExistentes) {
+    if (v.sku) varPorSku.set(v.sku.trim(), v)
+  }
+  const varsPorProducto = new Map<string, ProductoVariante[]>()
+  for (const v of ctx.variantesExistentes) {
+    const lista = varsPorProducto.get(v.producto_id) ?? []
+    lista.push(v)
+    varsPorProducto.set(v.producto_id, lista)
+  }
+  // sku de variante ya reservado por un grupo VÁLIDO anterior de este mismo archivo
+  const skuVarVistosGlobal = new Map<string, number>()
 
   for (const g of grupos) {
     const errs: string[] = []
@@ -283,7 +418,30 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
       }
     }
 
-    if (errs.length) { conError++; errs.forEach(m => errors.push({ sku: g.sku, fila, motivo: m })); continue }
+    // --- variantes del grupo (si aplica) ---
+    const groupErrors: { fila: number; motivo: string }[] = []
+    let varUpdatesGrupo: VarianteUpdate[] = []
+    let varCreatesGrupo: VarianteCreateExterna[] = []
+    let skuReservasGrupo = new Map<string, number>()
+    if (g.variantes.length > 0) {
+      const resultado = resolverVariantesDeGrupo(g, existente, precio, varPorSku, varsPorProducto, skuVarVistosGlobal, groupErrors)
+      if (resultado) {
+        varUpdatesGrupo = resultado.updates
+        varCreatesGrupo = resultado.creates
+        skuReservasGrupo = resultado.skuReservas
+      }
+    }
+
+    if (errs.length || groupErrors.length) {
+      conError++
+      errs.forEach(m => errors.push({ sku: g.sku, fila, motivo: m }))
+      groupErrors.forEach(e => errors.push({ sku: g.sku, fila: e.fila, motivo: e.motivo }))
+      continue
+    }
+
+    for (const [sku, f] of skuReservasGrupo) skuVarVistosGlobal.set(sku, f)
+    varUpdates.push(...varUpdatesGrupo)
+    varCreates.push(...varCreatesGrupo)
 
     if (existente) {
       updates.push({
@@ -329,5 +487,17 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
     }
   }
 
-  return { updates, creates, errors, resumen: { crear: creates.length, actualizar: updates.length, conError } }
+  return {
+    updates,
+    creates,
+    errors,
+    resumen: {
+      crear: creates.length,
+      actualizar: updates.length,
+      conError,
+      variantesCrear: varCreates.length,
+      variantesActualizar: varUpdates.length,
+    },
+    variantes: { updates: varUpdates, creates: varCreates },
+  }
 }

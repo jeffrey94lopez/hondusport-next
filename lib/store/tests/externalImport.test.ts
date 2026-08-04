@@ -4,7 +4,7 @@ import {
   type Mapeo, type GrupoProducto,
 } from '../externalImport'
 import type { ParseContext } from '../inventoryRoundtrip'
-import type { Producto } from '@/types'
+import type { Producto, ProductoVariante } from '@/types'
 
 describe('CAMPOS_PLATAFORMA', () => {
   it('sku, nombre y precio son obligatorios; el resto no', () => {
@@ -140,6 +140,16 @@ describe('agruparPorSku', () => {
     expect(grupos[0].variantes[0].sku).toBe('A1-M')
   })
 
+  it('una sola fila con sku_variante también activa el modo con-variantes (Task 16)', () => {
+    const { grupos } = agruparPorSku(
+      [{ SKU: 'A1', Nombre: 'X', Precio: '100', VarSku: 'A1-M' }],
+      { sku: 'SKU', nombre: 'Nombre', precio: 'Precio', sku_variante: 'VarSku' },
+    )
+    expect(grupos[0].variantes).toHaveLength(1)
+    expect(grupos[0].variantes[0].sku).toBe('A1-M')
+    expect(grupos[0].stock).toBeUndefined()
+  })
+
   it('fila indistinguible en grupo múltiple queda sin nombre y se reporta en parse', () => {
     const { grupos } = agruparPorSku([
       { SKU: 'A1', Nombre: 'X', Precio: '1', Talla: 'M' },
@@ -177,6 +187,18 @@ function ctx(): ParseContext {
 function grupo(o: Partial<GrupoProducto> = {}): GrupoProducto {
   return { sku: 'NEW1', filas: [2], tallas: [], colores: [], variantes: [], nombre: 'Nuevo', precio: '50', ...o }
 }
+function varianteBD(o: Partial<ProductoVariante> = {}): ProductoVariante {
+  return {
+    id: 'v1', producto_id: 'p1', nombre: 'V', sku: null, precio: null, stock: null,
+    activo: true, orden: 0, created_at: '', updated_at: '', ...o,
+  }
+}
+function ctxSinExistentes(): ParseContext {
+  return { ...ctx(), existentes: [] }
+}
+function ctxConProductoA1(): ParseContext {
+  return { ...ctx(), existentes: [prod({ id: 'prod-a1', sku: 'A1', nombre: 'Camisa', precio: 100, stock: null })] }
+}
 
 describe('parseExternalImport', () => {
   it('actualiza cuando el SKU ya existe (merge de opcionales, conserva slug)', () => {
@@ -192,7 +214,7 @@ describe('parseExternalImport', () => {
     expect(u.stock).toBe(5)
     expect(u.tallas).toEqual(['40', '41'])
     expect(u.colores).toEqual(['Rojo']) // no venía en el grupo → conserva
-    expect(r.resumen).toEqual({ crear: 0, actualizar: 1, conError: 0 })
+    expect(r.resumen).toEqual({ crear: 0, actualizar: 1, conError: 0, variantesCrear: 0, variantesActualizar: 0 })
   })
 
   it('crea cuando el SKU no existe (slug generado, defaults)', () => {
@@ -241,5 +263,97 @@ describe('parseExternalImport', () => {
     expect(r.updates).toEqual([])
     expect(r.creates).toEqual([])
     expect(r.errors.some(e => /duplicado en la base de datos/.test(e.motivo))).toBe(true)
+  })
+})
+
+describe('parseExternalImport: variantes', () => {
+  it('grupo con variantes: crea variantes con precio propio solo si difiere del padre', () => {
+    const g = grupo({ sku: 'A1', nombre: 'Camisa', precio: '100', variantes: [
+      { fila: 2, nombre: 'M', sku: null, precio: '100', stock: '3' },
+      { fila: 3, nombre: 'L', sku: null, precio: '150', stock: '2' },
+    ] })
+    const r = parseExternalImport([g], ctxSinExistentes())
+    expect(r.errors).toEqual([])
+    expect(r.variantes.creates).toEqual([
+      { productoSku: 'A1', orden: 0, nombre: 'M', sku: null, precio: null, stock: 3, activo: true },
+      { productoSku: 'A1', orden: 1, nombre: 'L', sku: null, precio: 150, stock: 2, activo: true },
+    ])
+    expect(r.creates[0].stock).toBeNull() // el padre no lleva stock propio
+    expect(r.resumen.variantesCrear).toBe(2)
+  })
+
+  it('variante existente casa por sku de variante y se actualiza', () => {
+    const ctx2 = { ...ctxConProductoA1(), variantesExistentes: [
+      varianteBD({ id: 'v1', producto_id: 'prod-a1', nombre: 'vieja', sku: 'A1-M' }),
+    ] }
+    const g = grupo({ sku: 'A1', variantes: [{ fila: 2, nombre: 'M', sku: 'A1-M', stock: '9' }] })
+    const r = parseExternalImport([g], ctx2)
+    expect(r.errors).toEqual([])
+    expect(r.variantes.updates[0]).toMatchObject({ id: 'v1', nombre: 'M', stock: 9 })
+    expect(r.resumen.variantesActualizar).toBe(1)
+  })
+
+  it('sin sku de variante casa por nombre dentro del producto', () => {
+    const ctx2 = { ...ctxConProductoA1(), variantesExistentes: [
+      varianteBD({ id: 'v1', producto_id: 'prod-a1', nombre: 'M', stock: 1 }),
+    ] }
+    const g = grupo({ sku: 'A1', variantes: [{ fila: 2, nombre: 'M', sku: null, stock: '9' }] })
+    const r = parseExternalImport([g], ctx2)
+    expect(r.errors).toEqual([])
+    expect(r.variantes.updates[0]).toMatchObject({ id: 'v1', stock: 9 })
+  })
+
+  it('variante sin nombre = error del grupo', () => {
+    const g = grupo({ sku: 'A1', variantes: [{ fila: 3, nombre: '', sku: null }] })
+    const r = parseExternalImport([g], ctxSinExistentes())
+    expect(r.errors.some(e => e.motivo.includes('fila 3'))).toBe(true)
+    expect(r.creates).toEqual([])
+    expect(r.variantes.creates).toEqual([])
+    expect(r.resumen.conError).toBe(1)
+  })
+
+  it('grupo plano sigue funcionando igual que antes', () => {
+    const g = grupo({ sku: 'B1', nombre: 'Balón', precio: '100', stock: '7', variantes: [] })
+    const r = parseExternalImport([g], ctxSinExistentes())
+    expect(r.creates[0].stock).toBe(7)
+    expect(r.variantes.creates).toEqual([])
+    expect(r.resumen.variantesCrear).toBe(0)
+    expect(r.resumen.variantesActualizar).toBe(0)
+  })
+
+  it('sku de variante que pertenece a otro producto es error, no lo hijacka', () => {
+    const ctx2 = { ...ctxSinExistentes(), existentes: [
+      prod({ id: 'prod-a1', sku: 'A1' }),
+      prod({ id: 'prod-b1', sku: 'B1', slug: 'b1' }),
+    ], variantesExistentes: [
+      varianteBD({ id: 'v1', producto_id: 'prod-b1', nombre: 'M', sku: 'B1-M' }),
+    ] }
+    const g = grupo({ sku: 'A1', nombre: 'Camisa', precio: '100', variantes: [
+      { fila: 2, nombre: 'M', sku: 'B1-M' },
+    ] })
+    const r = parseExternalImport([g], ctx2)
+    expect(r.variantes.updates).toEqual([])
+    expect(r.variantes.creates).toEqual([])
+    expect(r.errors.some(e => /ya pertenece a otro producto/.test(e.motivo))).toBe(true)
+  })
+
+  it('duplicados: mismo nombre repetido en el grupo es error', () => {
+    const g = grupo({ sku: 'A1', nombre: 'Camisa', precio: '100', variantes: [
+      { fila: 2, nombre: 'M', sku: null },
+      { fila: 3, nombre: 'M', sku: null },
+    ] })
+    const r = parseExternalImport([g], ctxSinExistentes())
+    expect(r.variantes.creates).toEqual([])
+    expect(r.errors.some(e => /repetid/.test(e.motivo))).toBe(true)
+  })
+
+  it('duplicados: mismo sku de variante repetido en el archivo es error', () => {
+    const g = grupo({ sku: 'A1', nombre: 'Camisa', precio: '100', variantes: [
+      { fila: 2, nombre: 'M', sku: 'X1' },
+      { fila: 3, nombre: 'L', sku: 'X1' },
+    ] })
+    const r = parseExternalImport([g], ctxSinExistentes())
+    expect(r.variantes.creates).toEqual([])
+    expect(r.errors.some(e => /repetid/.test(e.motivo))).toBe(true)
   })
 })
