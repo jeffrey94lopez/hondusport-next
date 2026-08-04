@@ -46,7 +46,9 @@ export interface PedidoItemInsert {
   nombre_producto: string
   precio: number
   cantidad: number
-  talla: string
+  talla: string | null
+  variante_id: string | null
+  variante_nombre: string | null
   personalizado_nombre: string | null
   imagen_url: string
 }
@@ -67,7 +69,9 @@ export function cartItemsToPedidoItems(cart: CartItem[]): PedidoItemInsert[] {
     nombre_producto: item.nombre,
     precio: item.precio,
     cantidad: item.qty,
-    talla: item.size,
+    talla: item.varianteId ? null : item.size,
+    variante_id: item.varianteId ?? null,
+    variante_nombre: item.variante ?? null,
     personalizado_nombre: item.custom === SIN_PERSONALIZACION || item.custom === '' ? null : item.custom,
     imagen_url: item.imagen,
   }))

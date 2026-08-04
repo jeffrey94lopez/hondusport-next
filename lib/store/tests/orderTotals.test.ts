@@ -158,6 +158,8 @@ describe('cartItemsToPedidoItems', () => {
         precio: 100,
         cantidad: 2,
         talla: 'M',
+        variante_id: null,
+        variante_nombre: null,
         personalizado_nombre: null,
         imagen_url: 'a.jpg',
       },
@@ -167,10 +169,35 @@ describe('cartItemsToPedidoItems', () => {
         precio: 50,
         cantidad: 1,
         talla: 'L',
+        variante_id: null,
+        variante_nombre: null,
         personalizado_nombre: 'Pérez #10',
         imagen_url: 'b.jpg',
       },
     ])
+  })
+
+  describe('cartItemsToPedidoItems con variantes', () => {
+    it('item con variante lleva variante_id/nombre y talla null', () => {
+      const cart: CartItem[] = [{
+        id: 'p1', nombre: 'Camisa', precio: 150, imagen: 'img', size: '',
+        custom: 'Sin personalización', qty: 2, personalizable: false,
+        varianteId: 'v1', variante: 'Edición retro',
+      }]
+      expect(cartItemsToPedidoItems(cart)[0]).toMatchObject({
+        producto_id: 'p1', precio: 150, cantidad: 2,
+        talla: null, variante_id: 'v1', variante_nombre: 'Edición retro',
+      })
+    })
+    it('item plano lleva talla y variante_* null', () => {
+      const cart: CartItem[] = [{
+        id: 'p1', nombre: 'Camisa', precio: 100, imagen: '', size: 'M',
+        custom: '', qty: 1, personalizable: false,
+      }]
+      expect(cartItemsToPedidoItems(cart)[0]).toMatchObject({
+        talla: 'M', variante_id: null, variante_nombre: null,
+      })
+    })
   })
 })
 
