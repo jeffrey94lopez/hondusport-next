@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx'
 import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase-server'
 import { agruparPorSku, parseExternalImport, validarMapeo, type Mapeo } from '@/lib/store/externalImport'
-import { parseNum, type ParseContext } from '@/lib/store/inventoryRoundtrip'
+import type { ParseContext } from '@/lib/store/inventoryRoundtrip'
 import type { Producto, ProductoVariante } from '@/types'
 
 const CLAVE_MAPEO = 'import_plantilla_mapeo'
@@ -62,6 +62,27 @@ export async function POST(request: NextRequest) {
   const todos = [...erroresSinSku, ...errors]
   const conError = resumen.conError + erroresSinSku.length
 
+  // Índice de variantes RESUELTAS (los valores exactos que persistirá la RPC:
+  // precio null = hereda del padre, stock null = ilimitado), agrupadas por el
+  // sku del grupo — nunca las celdas crudas del archivo, que pueden divergir
+  // (ej. precio de variante igual al del padre → resuelto a null/"hereda";
+  // stock vacío en un update → resuelto al stock actual de la variante en BD).
+  const skuPorProductoId = new Map<string, string>()
+  for (const u of updates) if (u.sku) skuPorProductoId.set(u.id, u.sku)
+  const variantesPorSku = new Map<string, { nombre: string; precio: number | null; stock: number | null }[]>()
+  const agregarVarianteResuelta = (sku: string, v: { nombre: string; precio: number | null; stock: number | null }) => {
+    const lista = variantesPorSku.get(sku) ?? []
+    lista.push(v)
+    variantesPorSku.set(sku, lista)
+  }
+  for (const v of variantes.updates) {
+    const sku = skuPorProductoId.get(v.producto_id)
+    if (sku) agregarVarianteResuelta(sku, { nombre: v.nombre, precio: v.precio, stock: v.stock })
+  }
+  for (const v of variantes.creates) {
+    agregarVarianteResuelta(v.productoSku, { nombre: v.nombre, precio: v.precio, stock: v.stock })
+  }
+
   if (!confirmar) {
     return NextResponse.json({
       resumen: { ...resumen, conError },
@@ -69,15 +90,7 @@ export async function POST(request: NextRequest) {
       muestra: grupos.slice(0, 10).map(g => ({
         sku: g.sku, nombre: g.nombre, precio: g.precio, stock: g.stock,
         tallas: g.tallas, colores: g.colores,
-        variantes: g.variantes.map(v => {
-          const precio = parseNum(v.precio)
-          const stock = parseNum(v.stock)
-          return {
-            nombre: v.nombre,
-            precio: precio !== undefined && !Number.isNaN(precio) ? precio : null,
-            stock: stock !== undefined && !Number.isNaN(stock) ? stock : null,
-          }
-        }),
+        variantes: variantesPorSku.get(g.sku) ?? [],
       })),
     })
   }
