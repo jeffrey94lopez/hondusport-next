@@ -47,12 +47,21 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
   const stars = '⭐'.repeat(producto.rating || 5)
   const showOriginalPrice = producto.precioOriginal != null && producto.precioOriginal > producto.precio
 
+  const variantes = producto.variantes
+  const conVariantes = variantes.length > 0
   const [selectedImageIdx, setSelectedImageIdx] = useState(0)
   const [selectedTalla, setSelectedTalla] = useState(tallas[0] ?? '')
+  const [selectedVarianteId, setSelectedVarianteId] = useState(
+    () => variantes.find(v => !v.agotada)?.id ?? ''
+  )
   const [custom, setCustom] = useState('')
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
   const [zoomStyle, setZoomStyle] = useState<CSSProperties>({})
   const [recentProducts] = useState(() => readRecentProducts(producto.id, allProductos))
+
+  const selectedVariante = variantes.find(v => v.id === selectedVarianteId) ?? null
+  const precioActual = selectedVariante?.precioEfectivo ?? producto.precio
+  const todasAgotadas = conVariantes && variantes.every(v => v.agotada)
 
   useEffect(() => {
     localStorage.setItem(RECENT_VIEWS_KEY, JSON.stringify(addRecentView(readRecentViewIds(), producto.id)))
@@ -70,14 +79,18 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
   }
 
   function handleAddToCart() {
+    if (conVariantes && (!selectedVariante || selectedVariante.agotada)) return
     addToCart({
       id: producto.id,
       nombre: producto.nombre,
-      precio: producto.precio,
+      precio: precioActual,
       imagen: producto.imagenes[0] ?? '',
-      size: selectedTalla || 'Única',
+      size: conVariantes ? '' : selectedTalla || 'Única',
       custom: custom.trim() || 'Sin personalización',
       personalizable: producto.personalizable,
+      ...(selectedVariante
+        ? { varianteId: selectedVariante.id, variante: selectedVariante.nombre, stockDisponible: selectedVariante.stock }
+        : {}),
     })
   }
 
@@ -141,12 +154,33 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
           {showOriginalPrice && (
             <span className={styles.originalPrice}>{formatPrice(producto.precioOriginal as number)}</span>
           )}
-          <span className={styles.currentPrice}>{formatPrice(producto.precio)}</span>
+          <span className={styles.currentPrice}>{formatPrice(precioActual)}</span>
         </p>
 
         {producto.descripcion && <p className={styles.desc}>{producto.descripcion}</p>}
 
-        {tallas.length > 0 && (
+        {conVariantes && (
+          <div className={styles.section}>
+            <label className={styles.label} htmlFor="variante-select">ELIGE UNA OPCIÓN</label>
+            <select
+              id="variante-select"
+              className={styles.varianteSelect}
+              value={selectedVarianteId}
+              onChange={e => setSelectedVarianteId(e.target.value)}
+            >
+              {selectedVarianteId === '' && <option value="">Selecciona…</option>}
+              {variantes.map(v => (
+                <option key={v.id} value={v.id} disabled={v.agotada}>
+                  {v.nombre}
+                  {v.precioEfectivo !== producto.precio ? ` — ${formatPrice(v.precioEfectivo)}` : ''}
+                  {v.agotada ? ' (Agotada)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {!conVariantes && tallas.length > 0 && (
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <span>SELECCIONA TU TALLA</span>
@@ -187,8 +221,12 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
           </div>
         )}
 
-        <button className={styles.addBtn} onClick={handleAddToCart}>
-          AGREGAR AL CARRITO
+        <button
+          className={styles.addBtn}
+          onClick={handleAddToCart}
+          disabled={todasAgotadas || (conVariantes && !selectedVariante)}
+        >
+          {todasAgotadas ? 'AGOTADO' : 'AGREGAR AL CARRITO'}
         </button>
 
         <div className={styles.shareGrid}>

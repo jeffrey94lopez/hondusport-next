@@ -160,6 +160,30 @@
   color: white;
 }
 
+.varianteSelect {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.varianteSelect:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.varianteSelect option:disabled {
+  color: var(--text);
+  opacity: 0.5;
+}
+
 .label {
   font-size: 0.75rem;
   letter-spacing: 1px;
@@ -227,6 +251,11 @@
 .addBtn:hover {
   background: var(--btn-hover);
   opacity: 0.9;
+}
+
+.addBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .shareGrid {

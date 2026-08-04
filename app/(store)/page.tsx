@@ -5,7 +5,7 @@ import { toConfigMap, toStoreProducto } from '@/lib/store/adapters'
 import StoreClient from './StoreClient'
 
 const PRODUCTO_SELECT =
-  '*, categorias!productos_categoria_id_fkey(valor), subcategorias:categorias!productos_subcategoria_id_fkey(valor)'
+  '*, categorias!productos_categoria_id_fkey(valor), subcategorias:categorias!productos_subcategoria_id_fkey(valor), producto_variantes(*)'
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()

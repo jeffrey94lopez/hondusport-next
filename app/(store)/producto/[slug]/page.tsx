@@ -8,7 +8,7 @@ import Footer from '@/components/store/Footer'
 import ProductDetail from '@/components/store/ProductDetail'
 
 const PRODUCTO_SELECT =
-  '*, categorias!productos_categoria_id_fkey(valor), subcategorias:categorias!productos_subcategoria_id_fkey(valor)'
+  '*, categorias!productos_categoria_id_fkey(valor), subcategorias:categorias!productos_subcategoria_id_fkey(valor), producto_variantes(*)'
 const RELACIONADOS_LIMIT = 2
 
 interface ProductPageProps {
