@@ -25,6 +25,11 @@ export default function WishlistDrawer({ productos, tallaFiltros, isOpen, onClos
   const items = productos.filter(p => ids.includes(p.id))
 
   function handleAddToCart(producto: StoreProducto) {
+    if (producto.variantes.length > 0) {
+      onClose()
+      onOpenProduct?.(producto.slug)
+      return
+    }
     const tallas = getTallas(producto, tallaFiltros)
     addToCart({
       id: producto.id,

@@ -101,6 +101,16 @@
   margin-top: 4px;
 }
 
+.outOfStock {
+  color: #E74C3C;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 4px;
+}
+
 .btnAddMain {
   display: block;
   width: 100%;

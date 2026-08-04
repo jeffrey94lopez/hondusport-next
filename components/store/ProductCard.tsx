@@ -4,6 +4,7 @@ import Image from 'next/image'
 import styles from './ProductCard.module.css'
 import { formatPrice, getBadgeColor } from '@/lib/store/format'
 import { getOfferSecondsRemaining } from '@/lib/store/offerTimer'
+import { precioDesde, stockEfectivo, estaAgotado } from '@/lib/store/variantes'
 import { useWishlist } from '@/lib/store/wishlist-context'
 import type { StoreProducto } from '@/types/store'
 
@@ -42,8 +43,12 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
     return () => clearInterval(id)
   }, [producto.badge, secondsRemaining])
 
-  const showStockWarning = producto.stock != null && producto.stock > 0 && producto.stock <= STOCK_LIMITE
-  const showOriginalPrice = producto.precioOriginal != null && producto.precioOriginal > producto.precio
+  const desde = precioDesde(producto.precio, producto.variantes)
+  const stock = stockEfectivo(producto.stock, producto.variantes)
+  const agotado = estaAgotado(producto.stock, producto.variantes)
+
+  const showStockWarning = !agotado && stock != null && stock > 0 && stock <= STOCK_LIMITE
+  const showOriginalPrice = !desde.varia && producto.precioOriginal != null && producto.precioOriginal > producto.precio
   const imagen = producto.imagenes[0] ?? ''
 
   return (
@@ -89,10 +94,12 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
             {showOriginalPrice && (
               <span className={styles.originalPrice}>{formatPrice(producto.precioOriginal as number)}</span>
             )}
-            {formatPrice(producto.precio)}
+            {desde.varia ? `Desde ${formatPrice(desde.min)}` : formatPrice(producto.precio)}
           </p>
-          {showStockWarning && (
-            <span className={styles.stockWarning}>ÚLTIMAS {producto.stock} UNIDADES</span>
+          {agotado ? (
+            <span className={styles.outOfStock}>AGOTADO</span>
+          ) : (
+            showStockWarning && <span className={styles.stockWarning}>ÚLTIMAS {stock} UNIDADES</span>
           )}
         </div>
         <div className={styles.btnRow}>

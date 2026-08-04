@@ -76,6 +76,10 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
   function quickAdd(id: string) {
     const producto = productos.find(p => p.id === id)
     if (!producto) return
+    if (producto.variantes.length > 0) {
+      router.push(`/producto/${producto.slug}`)
+      return
+    }
     const tallas = getTallas(producto, tallaFiltros)
     addToCart({
       id: producto.id,
