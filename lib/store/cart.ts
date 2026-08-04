@@ -31,8 +31,9 @@ export function changeQty(cart: CartItem[], idx: number, delta: number): CartIte
   return cart
     .map((item, i) => {
       if (i !== idx) return item
+      if (delta <= 0) return { ...item, qty: item.qty + delta }
       const tope = item.stockDisponible ?? Infinity
-      return { ...item, qty: Math.min(item.qty + delta, tope) }
+      return { ...item, qty: Math.min(item.qty + delta, Math.max(tope, item.qty)) }
     })
     .filter(item => item.qty > 0)
 }

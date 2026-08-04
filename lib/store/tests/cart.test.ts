@@ -234,6 +234,27 @@ describe('changeQty con stockDisponible', () => {
     const cart: CartItem[] = [{ ...base, qty: 1, stockDisponible: 5 }]
     expect(changeQty(cart, 0, -1)).toHaveLength(0)
   })
+
+  it('item agotado (stockDisponible: 0), incremento no lo elimina', () => {
+    const cart: CartItem[] = [{ ...base, qty: 1, stockDisponible: 0 }]
+    const result = changeQty(cart, 0, +1)
+    expect(result).toHaveLength(1)
+    expect(result[0].qty).toBe(1)
+  })
+
+  it('qty supera stock (stale), incremento no crece ni recorta', () => {
+    const cart: CartItem[] = [{ ...base, qty: 5, stockDisponible: 3 }]
+    const result = changeQty(cart, 0, +1)
+    expect(result).toHaveLength(1)
+    expect(result[0].qty).toBe(5)
+  })
+
+  it('qty supera stock (stale), decremento baja de a 1', () => {
+    const cart: CartItem[] = [{ ...base, qty: 5, stockDisponible: 3 }]
+    const result = changeQty(cart, 0, -1)
+    expect(result).toHaveLength(1)
+    expect(result[0].qty).toBe(4)
+  })
 })
 
 describe('normalizeStoredCart con carritos viejos', () => {
