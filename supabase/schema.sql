@@ -48,6 +48,21 @@ create table if not exists productos (
   updated_at       timestamptz default now()
 );
 
+-- ── PRODUCTO_VARIANTES ──
+create table if not exists producto_variantes (
+  id          uuid primary key default gen_random_uuid(),
+  producto_id uuid not null references productos(id) on delete cascade,
+  nombre      text not null,
+  sku         text,
+  precio      numeric check (precio is null or precio > 0),
+  stock       integer check (stock is null or stock >= 0),
+  activo      boolean not null default true,
+  orden       integer not null default 0,
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now(),
+  unique (producto_id, nombre)
+);
+
 -- ── PEDIDOS ──
 create table if not exists pedidos (
   id               uuid primary key default gen_random_uuid(),
@@ -81,7 +96,9 @@ create table if not exists pedido_items (
   color                text,
   personalizado_nombre text,
   personalizado_numero text,
-  imagen_url           text
+  imagen_url           text,
+  variante_id          uuid references producto_variantes(id) on delete set null,
+  variante_nombre      text
 );
 
 -- ── CUPONES ──
@@ -155,8 +172,17 @@ $$ language plpgsql;
 create index if not exists productos_subcategoria_id_idx
   on productos (subcategoria_id);
 
+create index if not exists producto_variantes_producto_id_idx
+  on producto_variantes (producto_id);
+create unique index if not exists producto_variantes_sku_unico
+  on producto_variantes (sku) where sku is not null;
+
 create trigger productos_updated_at
   before update on productos
+  for each row execute function update_updated_at();
+
+create trigger producto_variantes_updated_at
+  before update on producto_variantes
   for each row execute function update_updated_at();
 
 create trigger pedidos_updated_at
@@ -166,6 +192,7 @@ create trigger pedidos_updated_at
 -- ── RLS ──
 alter table productos enable row level security;
 alter table categorias enable row level security;
+alter table producto_variantes enable row level security;
 alter table pedidos enable row level security;
 alter table pedido_items enable row level security;
 alter table envios enable row level security;
@@ -176,6 +203,11 @@ alter table configuracion enable row level security;
 -- Lectura pública para la tienda
 create policy "public_read_productos" on productos for select using (activo = true);
 create policy "public_read_categorias" on categorias for select using (activo = true);
+create policy "public_read_variantes" on producto_variantes for select
+  using (
+    activo = true
+    and exists (select 1 from productos p where p.id = producto_id and p.activo = true)
+  );
 create policy "public_read_envios" on envios for select using (activo = true);
 create policy "public_read_cupones" on cupones for select using (activo = true);
 create policy "public_read_banners" on banners for select using (activo = true);
@@ -188,6 +220,7 @@ create policy "public_insert_pedido_items" on pedido_items for insert with check
 -- Admin: acceso completo para usuarios autenticados
 create policy "admin_all_productos" on productos for all using (auth.role() = 'authenticated');
 create policy "admin_all_categorias" on categorias for all using (auth.role() = 'authenticated');
+create policy "admin_all_variantes" on producto_variantes for all using (auth.role() = 'authenticated');
 create policy "admin_all_pedidos" on pedidos for all using (auth.role() = 'authenticated');
 create policy "admin_all_pedido_items" on pedido_items for all using (auth.role() = 'authenticated');
 create policy "admin_all_envios" on envios for all using (auth.role() = 'authenticated');
