@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import type { Producto } from '@/types'
+import type { Producto, ProductoVariante } from '@/types'
 import {
   sinCategoria, sinImagen, sinDescripcion, sinPrecio, sinSku,
   filtrarInventario, UMBRAL_STOCK_BAJO,
 } from '../inventoryFilters'
 
-function make(overrides: Partial<Producto> = {}): Producto {
+function producto(overrides: Partial<Producto> = {}): Producto {
   return {
     id: 'id-' + Math.random().toString(36).slice(2),
     nombre: 'Producto', slug: 'producto', descripcion: 'desc',
@@ -15,6 +15,22 @@ function make(overrides: Partial<Producto> = {}): Producto {
     tallas: null, colores: null, imagenes: ['http://x/img.jpg'],
     marca: null, sku: 'SKU1', personalizable: false,
     oferta_fin: null, activo: true, rating: 5,
+    created_at: '', updated_at: '',
+    ...overrides,
+  }
+}
+const make = producto
+
+function variante(overrides: Partial<ProductoVariante> = {}): ProductoVariante {
+  return {
+    id: 'var-' + Math.random().toString(36).slice(2),
+    producto_id: 'id-1',
+    nombre: 'Variante',
+    sku: null,
+    precio: null,
+    stock: 10,
+    activo: true,
+    orden: 0,
     created_at: '', updated_at: '',
     ...overrides,
   }
@@ -95,5 +111,27 @@ describe('filtrarInventario', () => {
     expect(filtrarInventario([on, off], { activo: true })).toEqual([on])
     expect(filtrarInventario([on, off], { activo: false })).toEqual([off])
     expect(filtrarInventario([on, off], {})).toHaveLength(2)
+  })
+  it('sinStock detecta producto cuyas variantes suman 0', () => {
+    const p = producto({ stock: 99, producto_variantes: [
+      variante({ stock: 0 }), variante({ stock: 0 }),
+    ]})
+    expect(filtrarInventario([p], { sinStock: true })).toHaveLength(1)
+  })
+  it('stockBajo usa la suma de variantes', () => {
+    const p = producto({ stock: null, producto_variantes: [
+      variante({ stock: 1 }), variante({ stock: 2 }),
+    ]})
+    expect(filtrarInventario([p], { stockBajo: true })).toHaveLength(1)
+  })
+  it('variante ilimitada = no cuenta como bajo ni sin stock', () => {
+    const p = producto({ stock: 0, producto_variantes: [variante({ stock: null })] })
+    expect(filtrarInventario([p], { sinStock: true })).toHaveLength(0)
+  })
+  it('variantes inactivas no suman', () => {
+    const p = producto({ stock: null, producto_variantes: [
+      variante({ stock: 50, activo: false }), variante({ stock: 0 }),
+    ]})
+    expect(filtrarInventario([p], { sinStock: true })).toHaveLength(1)
   })
 })

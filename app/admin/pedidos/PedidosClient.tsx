@@ -105,7 +105,7 @@ export default function PedidosClient({ pedidos }: Props) {
                   <div key={item.id} className={styles.item}>
                     <span className={styles.itemNombre}>{item.nombre_producto}</span>
                     <span className={styles.itemDet}>
-                      {item.talla && `Talla: ${item.talla}`}
+                      {(item.variante_nombre ?? item.talla) && `Talla: ${item.variante_nombre ?? item.talla}`}
                       {item.color && ` · Color: ${item.color}`}
                       {item.personalizado_nombre && ` · Nombre: ${item.personalizado_nombre}`}
                       {item.personalizado_numero && ` · Número: ${item.personalizado_numero}`}

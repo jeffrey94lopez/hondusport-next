@@ -1,4 +1,5 @@
 import type { Producto } from '@/types'
+import { stockEfectivo } from './variantes'
 
 export const UMBRAL_STOCK_BAJO = 5
 
@@ -35,10 +36,15 @@ export function sinSku(p: Producto): boolean {
   return !(p.sku ?? '').trim()
 }
 
+function stockDe(p: Producto): number | null {
+  return stockEfectivo(p.stock, (p.producto_variantes ?? []).filter(v => v.activo))
+}
+
 function pasaStock(p: Producto, c: CriteriosInventario): boolean {
   if (!c.stockBajo && !c.sinStock) return true
-  const bajo = c.stockBajo === true && p.stock != null && p.stock > 0 && p.stock < UMBRAL_STOCK_BAJO
-  const sin = c.sinStock === true && p.stock === 0
+  const stock = stockDe(p)
+  const bajo = c.stockBajo === true && stock != null && stock > 0 && stock < UMBRAL_STOCK_BAJO
+  const sin = c.sinStock === true && stock === 0
   return bajo || sin
 }
 

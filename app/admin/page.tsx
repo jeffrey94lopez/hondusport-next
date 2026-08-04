@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import styles from './dashboard.module.css'
 import type { EstadoPedido } from '@/types'
+import { stockEfectivo } from '@/lib/store/variantes'
 
 interface PedidoReciente {
   id: string
@@ -22,19 +23,24 @@ export default async function DashboardPage() {
     { count: totalPedidosHoy },
     { count: pedidosPendientes },
     { count: totalProductos },
-    { count: stockBajo },
+    { data: productosStock },
     { data: pedidosRecientes },
     ventasHoyResult,
   ] = await Promise.all([
     supabase.from('pedidos').select('*', { count: 'exact', head: true }).gte('created_at', todayISO),
     supabase.from('pedidos').select('*', { count: 'exact', head: true }).eq('estado', 'recibido'),
     supabase.from('productos').select('*', { count: 'exact', head: true }).eq('activo', true),
-    supabase.from('productos').select('*', { count: 'exact', head: true }).not('stock', 'is', null).lt('stock', 5).eq('activo', true),
+    supabase.from('productos').select('id, stock, activo, producto_variantes(stock, activo)').eq('activo', true),
     supabase.from('pedidos').select('id, numero, nombre_cliente, total, estado, created_at').order('created_at', { ascending: false }).limit(5),
     supabase.from('pedidos').select('total').gte('created_at', todayISO),
   ])
 
   const ventasHoy = (ventasHoyResult.data ?? []).reduce((sum, p) => sum + (p.total ?? 0), 0)
+
+  const stockBajo = (productosStock ?? []).filter(p => {
+    const stock = stockEfectivo(p.stock, (p.producto_variantes ?? []).filter(v => v.activo))
+    return stock != null && stock < 5
+  }).length
 
   const ESTADO_COLOR: Record<string, string> = {
     recibido: '#3b8fed',

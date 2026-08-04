@@ -7,6 +7,7 @@ import ProductoFields, { productoAForm } from '@/components/admin/ProductoFields
 import ImportarPlantilla from '@/components/admin/ImportarPlantilla'
 import type { Producto, Categoria, ProductoForm } from '@/types'
 import type { ImportError } from '@/lib/store/inventoryRoundtrip'
+import { stockEfectivo } from '@/lib/store/variantes'
 import {
   createProducto,
   updateProducto,
@@ -190,7 +191,9 @@ export default function ProductosClient({ productos, categorias, subcategorias }
             </tr>
           </thead>
           <tbody>
-            {filtered.map(p => (
+            {filtered.map(p => {
+              const stock = stockEfectivo(p.stock, (p.producto_variantes ?? []).filter(v => v.activo))
+              return (
               <tr key={p.id}>
                 <td>
                   <div className={styles.productName}>{p.nombre}</div>
@@ -203,9 +206,12 @@ export default function ProductosClient({ productos, categorias, subcategorias }
                   )}
                 </td>
                 <td>
-                  <span className={p.stock !== null && p.stock < 5 ? styles.stockLow : ''}>
-                    {p.stock ?? '∞'}
+                  <span className={stock !== null && stock < 5 ? styles.stockLow : ''}>
+                    {stock ?? '∞'}
                   </span>
+                  {p.producto_variantes && p.producto_variantes.length > 0 && (
+                    <span className={styles.productMeta}> · {p.producto_variantes.length} var.</span>
+                  )}
                 </td>
                 <td>{p.categorias?.valor ?? '—'}</td>
                 <td>
@@ -224,7 +230,8 @@ export default function ProductosClient({ productos, categorias, subcategorias }
                   </div>
                 </td>
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
         {filtered.length === 0 && (
