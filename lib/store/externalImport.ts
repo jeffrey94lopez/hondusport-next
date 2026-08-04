@@ -247,6 +247,7 @@ function resolverVariantesDeGrupo(
   precioPadre: number | null,
   varPorSku: Map<string, ProductoVariante>,
   varsPorProducto: Map<string, ProductoVariante[]>,
+  maxOrdenPorProducto: Map<string, number>,
   skuVarVistosGlobal: Map<string, number>,
   groupErrors: { fila: number; motivo: string }[],
 ): { updates: VarianteUpdate[]; creates: VarianteCreateExterna[]; skuReservas: Map<string, number> } | null {
@@ -255,8 +256,13 @@ function resolverVariantesDeGrupo(
   const nombresEnGrupo = new Set<string>()
   const idsUsadosEnGrupo = new Set<string>()
   const skuReservas = new Map<string, number>() // reservas locales; se funden al global solo si el grupo entero es válido
+  // orden de las altas: continúa después del máximo orden ya usado en BD para
+  // este producto (o desde 0 si es un producto nuevo); el contador SOLO avanza
+  // con altas, nunca con updates (misma posición no debe "saltar" por ellos).
+  const maxOrdenBD = (existente ? maxOrdenPorProducto.get(existente.id) : undefined) ?? -1
+  let siguienteOrden = maxOrdenBD + 1
 
-  g.variantes.forEach((v, idx) => {
+  g.variantes.forEach(v => {
     const rowErrors: string[] = []
     const nombreV = cellText(v.nombre)
     if (!nombreV) {
@@ -265,7 +271,7 @@ function resolverVariantesDeGrupo(
     }
     const nombreKey = normNombre(nombreV)
     if (nombresEnGrupo.has(nombreKey)) {
-      groupErrors.push({ fila: v.fila, motivo: `la variante "${nombreV}" está repetida en el archivo (fila ${v.fila})` })
+      groupErrors.push({ fila: v.fila, motivo: `la variante "${nombreV}" está repetida en el archivo` })
       return
     }
 
@@ -335,7 +341,8 @@ function resolverVariantesDeGrupo(
         sku: skuFinal, precio: precioVar, stock: stockVar, activo: matched.activo,
       })
     } else {
-      varCreates.push({ productoSku: g.sku, orden: idx, nombre: nombreV, sku: skuFinal, precio: precioVar, stock: stockVar, activo: true })
+      varCreates.push({ productoSku: g.sku, orden: siguienteOrden, nombre: nombreV, sku: skuFinal, precio: precioVar, stock: stockVar, activo: true })
+      siguienteOrden++
     }
   })
 
@@ -374,6 +381,11 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
     const lista = varsPorProducto.get(v.producto_id) ?? []
     lista.push(v)
     varsPorProducto.set(v.producto_id, lista)
+  }
+  // máximo orden ya usado en BD, por producto (para que las altas no colisionen)
+  const maxOrdenPorProducto = new Map<string, number>()
+  for (const [pid, lista] of varsPorProducto) {
+    maxOrdenPorProducto.set(pid, Math.max(...lista.map(v => v.orden)))
   }
   // sku de variante ya reservado por un grupo VÁLIDO anterior de este mismo archivo
   const skuVarVistosGlobal = new Map<string, number>()
@@ -424,7 +436,7 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
     let varCreatesGrupo: VarianteCreateExterna[] = []
     let skuReservasGrupo = new Map<string, number>()
     if (g.variantes.length > 0) {
-      const resultado = resolverVariantesDeGrupo(g, existente, precio, varPorSku, varsPorProducto, skuVarVistosGlobal, groupErrors)
+      const resultado = resolverVariantesDeGrupo(g, existente, precio, varPorSku, varsPorProducto, maxOrdenPorProducto, skuVarVistosGlobal, groupErrors)
       if (resultado) {
         varUpdatesGrupo = resultado.updates
         varCreatesGrupo = resultado.creates

@@ -356,4 +356,36 @@ describe('parseExternalImport: variantes', () => {
     expect(r.variantes.creates).toEqual([])
     expect(r.errors.some(e => /repetid/.test(e.motivo))).toBe(true)
   })
+
+  it('el orden de una variante nueva continúa después del máximo orden ya usado en BD', () => {
+    const ctx2 = { ...ctxConProductoA1(), variantesExistentes: [
+      varianteBD({ id: 'v1', producto_id: 'prod-a1', nombre: 'S', orden: 0 }),
+      varianteBD({ id: 'v2', producto_id: 'prod-a1', nombre: 'M', orden: 1 }),
+    ] }
+    const g = grupo({ sku: 'A1', variantes: [{ fila: 2, nombre: 'XL', sku: null }] })
+    const r = parseExternalImport([g], ctx2)
+    expect(r.errors).toEqual([])
+    expect(r.variantes.creates).toEqual([
+      { productoSku: 'A1', orden: 2, nombre: 'XL', sku: null, precio: null, stock: null, activo: true },
+    ])
+  })
+
+  it('grupo mixto update+create: el create lleva orden = maxOrdenBD + 1, no su posición en el grupo', () => {
+    const ctx2 = { ...ctxConProductoA1(), variantesExistentes: [
+      varianteBD({ id: 'v1', producto_id: 'prod-a1', nombre: 'S', orden: 0 }),
+      varianteBD({ id: 'v2', producto_id: 'prod-a1', nombre: 'M', orden: 1 }),
+    ] }
+    // fila 2 casa por nombre con la variante existente "M" (update); fila 3 es nueva ("XL")
+    const g = grupo({ sku: 'A1', variantes: [
+      { fila: 2, nombre: 'M', sku: null },
+      { fila: 3, nombre: 'XL', sku: null },
+    ] })
+    const r = parseExternalImport([g], ctx2)
+    expect(r.errors).toEqual([])
+    expect(r.variantes.updates).toHaveLength(1)
+    expect(r.variantes.updates[0]).toMatchObject({ id: 'v2' })
+    expect(r.variantes.creates).toEqual([
+      { productoSku: 'A1', orden: 2, nombre: 'XL', sku: null, precio: null, stock: null, activo: true },
+    ])
+  })
 })
