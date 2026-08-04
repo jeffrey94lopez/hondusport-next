@@ -187,3 +187,60 @@ describe('getShippingProgress', () => {
     expect(getShippingProgress(100, 0)).toBe(100)
   })
 })
+
+const base: Omit<CartItem, 'qty'> = {
+  id: 'p1',
+  nombre: 'Camisa',
+  precio: 100,
+  imagen: '',
+  size: '',
+  custom: 'Sin personalización',
+  personalizable: false,
+}
+
+describe('addToCart con variantes', () => {
+  it('distinta variante = líneas separadas', () => {
+    let cart = addToCart([], { ...base, varianteId: 'v1', variante: 'M' })
+    cart = addToCart(cart, { ...base, varianteId: 'v2', variante: 'L' })
+    expect(cart).toHaveLength(2)
+  })
+
+  it('misma variante suma cantidad', () => {
+    let cart = addToCart([], { ...base, varianteId: 'v1', variante: 'M' })
+    cart = addToCart(cart, { ...base, varianteId: 'v1', variante: 'M' })
+    expect(cart).toHaveLength(1)
+    expect(cart[0].qty).toBe(2)
+  })
+
+  it('item plano guardado sin varianteId sigue combinando por talla', () => {
+    let cart = addToCart([], { ...base, size: 'M' })
+    cart = addToCart(cart, { ...base, size: 'M' })
+    expect(cart).toHaveLength(1)
+  })
+})
+
+describe('changeQty con stockDisponible', () => {
+  it('no supera el stock conocido', () => {
+    const cart: CartItem[] = [{ ...base, qty: 3, varianteId: 'v1', stockDisponible: 3 }]
+    expect(changeQty(cart, 0, +1)[0].qty).toBe(3)
+  })
+
+  it('sin stockDisponible no hay tope', () => {
+    const cart: CartItem[] = [{ ...base, qty: 3 }]
+    expect(changeQty(cart, 0, +1)[0].qty).toBe(4)
+  })
+
+  it('bajar y eliminar en 0 sigue funcionando', () => {
+    const cart: CartItem[] = [{ ...base, qty: 1, stockDisponible: 5 }]
+    expect(changeQty(cart, 0, -1)).toHaveLength(0)
+  })
+})
+
+describe('normalizeStoredCart con carritos viejos', () => {
+  it('items sin campos de variante quedan como planos', () => {
+    const viejo = [{ id: 'p1', nombre: 'X', precio: 1, imagen: '', size: 'M', custom: '', qty: 1 }] as CartItem[]
+    const [item] = normalizeStoredCart(viejo)
+    expect(item.varianteId).toBeUndefined()
+    expect(item.personalizable).toBe(false)
+  })
+})

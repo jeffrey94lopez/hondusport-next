@@ -13,10 +13,13 @@ export function normalizeStoredCart(items: CartItem[]): CartItem[] {
 
 export function addToCart(cart: CartItem[], item: Omit<CartItem, 'qty'>): CartItem[] {
   const idx = cart.findIndex(
-    i => i.id === item.id && i.size === item.size && i.custom === item.custom
+    i =>
+      i.id === item.id &&
+      (i.varianteId ?? '') === (item.varianteId ?? '') &&
+      i.size === item.size &&
+      i.custom === item.custom
   )
   if (idx === -1) return [...cart, { ...item, qty: 1 }]
-
   return cart.map((i, index) => (index === idx ? { ...i, qty: i.qty + 1 } : i))
 }
 
@@ -26,7 +29,11 @@ export function removeFromCart(cart: CartItem[], idx: number): CartItem[] {
 
 export function changeQty(cart: CartItem[], idx: number, delta: number): CartItem[] {
   return cart
-    .map((item, i) => (i === idx ? { ...item, qty: item.qty + delta } : item))
+    .map((item, i) => {
+      if (i !== idx) return item
+      const tope = item.stockDisponible ?? Infinity
+      return { ...item, qty: Math.min(item.qty + delta, tope) }
+    })
     .filter(item => item.qty > 0)
 }
 
