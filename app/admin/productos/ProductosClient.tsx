@@ -52,7 +52,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
   const [isPending, startTransition] = useTransition()
   const [importing, setImporting] = useState(false)
   const [resultado, setResultado] = useState<
-    | { tipo: 'ok'; actualizados: number; creados: number }
+    | { tipo: 'ok'; actualizados: number; creados: number; variantesActualizadas: number; variantesCreadas: number }
     | { tipo: 'error'; mensaje: string; errores?: ImportError[] }
     | null
   >(null)
@@ -70,7 +70,13 @@ export default function ProductosClient({ productos, categorias, subcategorias }
         setResultado({ tipo: 'error', mensaje: json.error ?? 'Error al importar', errores: json.errores })
         return
       }
-      setResultado({ tipo: 'ok', actualizados: json.actualizados, creados: json.creados })
+      setResultado({
+        tipo: 'ok',
+        actualizados: json.actualizados,
+        creados: json.creados,
+        variantesActualizadas: json.variantesActualizadas ?? 0,
+        variantesCreadas: json.variantesCreadas ?? 0,
+      })
     } catch {
       setResultado({ tipo: 'error', mensaje: 'No se pudo importar (error de red o del servidor).' })
     } finally {
@@ -269,7 +275,12 @@ export default function ProductosClient({ productos, categorias, subcategorias }
           maxWidth="560px"
         >
           {resultado.tipo === 'ok' ? (
-            <p>✓ {resultado.actualizados} actualizados, {resultado.creados} creados.</p>
+            <p>
+              ✓ {resultado.actualizados} actualizados, {resultado.creados} creados.
+              {(resultado.variantesActualizadas > 0 || resultado.variantesCreadas > 0) && (
+                <> {resultado.variantesActualizadas} variantes actualizadas, {resultado.variantesCreadas} creadas.</>
+              )}
+            </p>
           ) : (
             <div>
               <p>{resultado.mensaje}</p>
