@@ -34,6 +34,29 @@ export interface Producto {
   updated_at: string
   categorias?: { valor: string } | null
   subcategorias?: { valor: string } | null
+  producto_variantes?: ProductoVariante[]
+}
+
+export interface ProductoVariante {
+  id: string
+  producto_id: string
+  nombre: string
+  sku: string | null
+  precio: number | null   // null = hereda productos.precio
+  stock: number | null    // null = ilimitado
+  activo: boolean
+  orden: number
+  created_at: string
+  updated_at: string
+}
+
+export interface VarianteForm {
+  id?: string
+  nombre: string
+  sku: string
+  precio: number | null
+  stock: number | null
+  activo: boolean
 }
 
 export interface ProductoForm {
@@ -54,6 +77,7 @@ export interface ProductoForm {
   imagenes: string[]
   personalizable: boolean
   activo: boolean
+  variantes: VarianteForm[]
 }
 
 export type EstadoPedido = 'recibido' | 'preparando' | 'enviado' | 'entregado' | 'cancelado'

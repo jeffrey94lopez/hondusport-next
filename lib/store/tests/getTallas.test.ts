@@ -21,6 +21,7 @@ const BASE_PRODUCTO: StoreProducto = {
   rating: 5,
   ofertaFin: null,
   personalizable: false,
+  variantes: [],
 }
 
 const TALLA_FILTROS: Categoria[] = [

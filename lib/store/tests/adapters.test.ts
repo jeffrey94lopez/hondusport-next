@@ -86,6 +86,7 @@ describe('toStoreProducto', () => {
       rating: 5,
       ofertaFin: null,
       personalizable: false,
+      variantes: [],
     })
     expect(result.slug).toBe('camiseta-roja')
   })

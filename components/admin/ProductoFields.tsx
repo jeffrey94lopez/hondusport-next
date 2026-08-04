@@ -25,6 +25,7 @@ export function productoAForm(p: Producto): ProductoForm {
     imagenes: p.imagenes ?? [],
     personalizable: p.personalizable,
     activo: p.activo,
+    variantes: [],
   }
 }
 

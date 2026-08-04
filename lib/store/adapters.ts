@@ -1,5 +1,6 @@
 import type { Producto, ConfigEntry, ConfigMap } from '@/types'
 import type { StoreProducto } from '@/types/store'
+import { toStoreVariantes } from './variantes'
 
 export function toConfigMap(rows: ConfigEntry[]): ConfigMap {
   return Object.fromEntries(rows.map(r => [r.key, r.value ?? '']))
@@ -25,5 +26,6 @@ export function toStoreProducto(p: Producto): StoreProducto {
     rating: p.rating ?? 5,
     ofertaFin: p.oferta_fin,
     personalizable: p.personalizable,
+    variantes: toStoreVariantes(Number(p.precio), p.producto_variantes ?? []),
   }
 }

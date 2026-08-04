@@ -39,6 +39,7 @@ const EMPTY_FORM: ProductoForm = {
   imagenes: [],
   personalizable: false,
   activo: true,
+  variantes: [],
 }
 
 export default function ProductosClient({ productos, categorias, subcategorias }: Props) {

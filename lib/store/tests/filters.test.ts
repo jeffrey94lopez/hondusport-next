@@ -22,6 +22,7 @@ function makeProducto(overrides: Partial<StoreProducto> = {}): StoreProducto {
     rating: 5,
     ofertaFin: null,
     personalizable: false,
+    variantes: [],
     ...overrides,
   }
 }
