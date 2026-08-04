@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { precioEfectivo, toStoreVariantes, stockEfectivo, estaAgotado, precioDesde } from '../variantes'
+import { precioEfectivo, toStoreVariantes, stockEfectivo, estaAgotado, precioDesde, validarCompra, traducirErrorPedido } from '../variantes'
 import type { ProductoVariante } from '@/types'
 
 function variante(over: Partial<ProductoVariante>): ProductoVariante {
@@ -62,4 +62,46 @@ describe('precioDesde', () => {
     expect(precioDesde(100, [{ precioEfectivo: 90 }, { precioEfectivo: 120 }])).toEqual({ min: 90, varia: true }))
   it('con precios iguales: varia=false', () =>
     expect(precioDesde(100, [{ precioEfectivo: 100 }, { precioEfectivo: 100 }])).toEqual({ min: 100, varia: false }))
+})
+
+describe('validarCompra', () => {
+  const prod = { id: 'p1', nombre: 'Camisa', activo: true }
+  it('producto inactivo se rechaza', () => {
+    const r = validarCompra({ ...prod, activo: false }, [], undefined)
+    expect(r.ok).toBe(false)
+  })
+  it('plano sin variante pasa con variante null', () => {
+    expect(validarCompra(prod, [], undefined)).toEqual({ ok: true, variante: null })
+  })
+  it('producto con variantes exige varianteId', () => {
+    const r = validarCompra(prod, [variante({ id: 'v1' })], undefined)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.motivo).toContain('Camisa')
+  })
+  it('varianteId ajeno o inexistente se rechaza', () => {
+    const ajena = variante({ id: 'v9', producto_id: 'OTRO' })
+    expect(validarCompra(prod, [ajena], 'v9').ok).toBe(false)
+    expect(validarCompra(prod, [variante({ id: 'v1' })], 'no-existe').ok).toBe(false)
+  })
+  it('variante válida se devuelve', () => {
+    const v = variante({ id: 'v1', producto_id: 'p1' })
+    expect(validarCompra(prod, [v], 'v1')).toEqual({ ok: true, variante: v })
+  })
+})
+
+describe('traducirErrorPedido', () => {
+  it('stock insuficiente con unidades', () =>
+    expect(traducirErrorPedido('HS_STOCK|Camisa (M)|3')).toBe('Solo quedan 3 unidades de "Camisa (M)"'))
+  it('stock cero = agotado', () =>
+    expect(traducirErrorPedido('HS_STOCK|Camisa|0')).toBe('"Camisa" está agotado'))
+  it('requiere variante', () =>
+    expect(traducirErrorPedido('HS_REQUIERE_VARIANTE|Camisa')).toBe('Elige una variante de "Camisa"'))
+  it('variante inválida', () =>
+    expect(traducirErrorPedido('HS_VARIANTE|Camisa')).toBe('La variante seleccionada de "Camisa" ya no está disponible'))
+  it('producto inactivo', () =>
+    expect(traducirErrorPedido('HS_INACTIVO|Camisa')).toBe('"Camisa" ya no está disponible'))
+  it('desconocido devuelve null', () => {
+    expect(traducirErrorPedido('otra cosa')).toBeNull()
+    expect(traducirErrorPedido(undefined)).toBeNull()
+  })
 })

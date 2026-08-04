@@ -35,3 +35,47 @@ export function precioDesde(precioPadre: number, variantes: { precioEfectivo: nu
   const min = Math.min(...precios)
   return { min, varia: min !== Math.max(...precios) }
 }
+
+export type ValidacionCompra =
+  | { ok: true; variante: ProductoVariante | null }
+  | { ok: false; motivo: string }
+
+// Frontera de confianza: decide si un item del carrito puede comprarse.
+// `variantesActivas` deben venir ya filtradas a activas del producto.
+export function validarCompra(
+  producto: { id: string; nombre: string; activo: boolean },
+  variantesActivas: ProductoVariante[],
+  varianteId: string | undefined,
+): ValidacionCompra {
+  if (!producto.activo) return { ok: false, motivo: `"${producto.nombre}" ya no está disponible` }
+  if (!varianteId) {
+    if (variantesActivas.length > 0) {
+      return { ok: false, motivo: `Elige una variante de "${producto.nombre}"` }
+    }
+    return { ok: true, variante: null }
+  }
+  const v = variantesActivas.find(v => v.id === varianteId && v.producto_id === producto.id)
+  if (!v) {
+    return { ok: false, motivo: `La variante seleccionada de "${producto.nombre}" ya no está disponible` }
+  }
+  return { ok: true, variante: v }
+}
+
+// Traduce los errores HS_* que lanza la RPC crear_pedido (ver migración
+// 2026-08-04-producto-variantes.sql). null = no reconocido.
+export function traducirErrorPedido(message: string | null | undefined): string | null {
+  if (!message) return null
+  const [codigo, nombre, dato] = message.split('|')
+  switch (codigo) {
+    case 'HS_STOCK':
+      return dato === '0' ? `"${nombre}" está agotado` : `Solo quedan ${dato} unidades de "${nombre}"`
+    case 'HS_REQUIERE_VARIANTE':
+      return `Elige una variante de "${nombre}"`
+    case 'HS_VARIANTE':
+      return `La variante seleccionada de "${nombre}" ya no está disponible`
+    case 'HS_INACTIVO':
+      return `"${nombre}" ya no está disponible`
+    default:
+      return null
+  }
+}
