@@ -3,14 +3,17 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase-server'
 import { calculateOrderTotals, cartItemsToPedidoItems, resolveTrustedCustom } from '@/lib/store/orderTotals'
 import { toConfigMap } from '@/lib/store/adapters'
+import { validarCompra, precioEfectivo, traducirErrorPedido } from '@/lib/store/variantes'
 import type { EnvioPricing } from '@/lib/store/orderTotals'
 import type { CartItem } from '@/types/store'
+import type { ProductoVariante } from '@/types'
 
 const cartItemSchema = z.object({
   id: z.string().uuid(),
-  size: z.string().min(1),
+  size: z.string(),                       // '' en items con variante
   custom: z.string(),
   qty: z.number().int().positive().max(99),
+  varianteId: z.string().uuid().optional(),
 })
 
 const crearPedidoSchema = z.object({
@@ -45,31 +48,53 @@ export async function crearPedido(payload: CrearPedidoInput): Promise<CrearPedid
   const supabase = await createClient()
 
   const productIds = [...new Set(cart.map(item => item.id))]
-  const { data: productos, error: productosError } = await supabase
-    .from('productos')
-    .select('id, nombre, precio, imagenes, activo, personalizable')
-    .in('id', productIds)
+  const [{ data: productos, error: productosError }, { data: variantesRows, error: variantesError }] =
+    await Promise.all([
+      supabase
+        .from('productos')
+        .select('id, nombre, precio, imagenes, activo, personalizable')
+        .in('id', productIds),
+      supabase
+        .from('producto_variantes')
+        .select('*')
+        .in('producto_id', productIds)
+        .eq('activo', true),
+    ])
 
-  if (productosError || !productos) {
+  if (productosError || !productos || variantesError) {
     return { error: GENERIC_ERROR }
   }
 
   const productosById = new Map(productos.map(p => [p.id, p]))
+  const variantesPorProducto = new Map<string, ProductoVariante[]>()
+  for (const v of (variantesRows ?? []) as ProductoVariante[]) {
+    const lista = variantesPorProducto.get(v.producto_id) ?? []
+    lista.push(v)
+    variantesPorProducto.set(v.producto_id, lista)
+  }
+
   const trustedCart: CartItem[] = []
   for (const item of cart) {
     const producto = productosById.get(item.id)
-    if (!producto || !producto.activo) {
+    if (!producto) {
       return { error: 'Uno o más productos del carrito ya no están disponibles' }
     }
+    const resultado = validarCompra(producto, variantesPorProducto.get(item.id) ?? [], item.varianteId)
+    if (!resultado.ok) return { error: resultado.motivo }
+    const variante = resultado.variante
     trustedCart.push({
       id: producto.id,
       nombre: producto.nombre,
-      precio: Number(producto.precio),
+      precio: variante
+        ? precioEfectivo(Number(producto.precio), variante.precio != null ? Number(variante.precio) : null)
+        : Number(producto.precio),
       imagen: producto.imagenes?.[0] ?? '',
-      size: item.size,
+      size: variante ? '' : item.size,
       custom: resolveTrustedCustom(producto.personalizable, item.custom),
       qty: item.qty,
       personalizable: producto.personalizable,
+      varianteId: variante?.id,
+      variante: variante?.nombre,
     })
   }
 
@@ -148,7 +173,7 @@ export async function crearPedido(payload: CrearPedidoInput): Promise<CrearPedid
 
   if (error || !data) {
     console.error('crear_pedido RPC error:', error)
-    return { error: GENERIC_ERROR }
+    return { error: traducirErrorPedido(error?.message) ?? GENERIC_ERROR }
   }
 
   return { pedidoId: data.id, numero: data.numero }

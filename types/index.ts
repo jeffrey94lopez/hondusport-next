@@ -111,6 +111,8 @@ export interface PedidoItem {
   cantidad: number
   talla: string | null
   color: string | null
+  variante_id: string | null
+  variante_nombre: string | null
   personalizado_nombre: string | null
   personalizado_numero: string | null
   imagen_url: string | null

@@ -110,7 +110,13 @@ export default function CheckoutModal({
       direccion: delivery.address,
       envioId: selectedEnvio.id,
       cuponCodigo,
-      cart: cart.map(item => ({ id: item.id, size: item.size, custom: item.custom, qty: item.qty })),
+      cart: cart.map(item => ({
+        id: item.id,
+        size: item.size,
+        custom: item.custom,
+        qty: item.qty,
+        ...(item.varianteId ? { varianteId: item.varianteId } : {}),
+      })),
     })
 
     if (result.error) {
