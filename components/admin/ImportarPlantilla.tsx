@@ -1,15 +1,17 @@
 'use client'
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import Modal from './Modal'
 import { CAMPOS_PLATAFORMA, type Mapeo, type CampoPlataforma } from '@/lib/store/externalImport'
+import { formatPrice } from '@/lib/store/format'
 import styles from '@/app/admin/productos/productos.module.css'
 
 type Paso = 'subir' | 'mapear' | 'preview'
 interface ErrItem { sku: string | null; fila: number | null; motivo: string }
+interface VarianteMuestra { nombre: string; precio: number | null; stock: number | null }
 interface PreviewData {
-  resumen: { crear: number; actualizar: number; conError: number }
+  resumen: { crear: number; actualizar: number; conError: number; variantesCrear: number; variantesActualizar: number }
   errores: ErrItem[]
-  muestra: { sku: string; nombre?: string; precio?: string; stock?: string; tallas: string[]; colores: string[] }[]
+  muestra: { sku: string; nombre?: string; precio?: string; stock?: string; tallas: string[]; colores: string[]; variantes: VarianteMuestra[] }[]
 }
 
 export default function ImportarPlantilla() {
@@ -118,7 +120,10 @@ export default function ImportarPlantilla() {
 
           {paso === 'preview' && preview && (
             <div>
-              <p>Resumen: <b>{preview.resumen.crear}</b> a crear, <b>{preview.resumen.actualizar}</b> a actualizar, <b>{preview.resumen.conError}</b> con error.</p>
+              <p>Resumen: <b>{preview.resumen.crear}</b> a crear, <b>{preview.resumen.actualizar}</b> a actualizar, <b>{preview.resumen.conError}</b> con error
+                {(preview.resumen.variantesCrear > 0 || preview.resumen.variantesActualizar > 0) && (
+                  <>{' '}(variantes: <b>{preview.resumen.variantesCrear}</b> a crear, <b>{preview.resumen.variantesActualizar}</b> a actualizar)</>
+                )}.</p>
               {preview.errores.length > 0 && (
                 <div>
                   <p>Errores (no se aplicará nada hasta corregirlos):</p>
@@ -136,10 +141,23 @@ export default function ImportarPlantilla() {
                     <thead><tr><th>SKU</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Tallas</th><th>Colores</th></tr></thead>
                     <tbody>
                       {preview.muestra.map((m, i) => (
-                        <tr key={`${m.sku}-${i}`}>
-                          <td>{m.sku}</td><td>{m.nombre}</td><td>{m.precio}</td><td>{m.stock}</td>
-                          <td>{m.tallas.join(', ')}</td><td>{m.colores.join(', ')}</td>
-                        </tr>
+                        <Fragment key={`${m.sku}-${i}`}>
+                          <tr>
+                            <td>{m.sku}</td><td>{m.nombre}</td><td>{m.precio}</td><td>{m.stock}</td>
+                            <td>{m.tallas.join(', ')}</td><td>{m.colores.join(', ')}</td>
+                          </tr>
+                          {m.variantes.length > 0 && (
+                            <tr>
+                              <td colSpan={6}>
+                                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                                  {m.variantes.map((v, j) => (
+                                    <li key={j}>{v.nombre} — stock {v.stock ?? '∞'} — {v.precio != null ? formatPrice(v.precio) : 'hereda'}</li>
+                                  ))}
+                                </ul>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>
