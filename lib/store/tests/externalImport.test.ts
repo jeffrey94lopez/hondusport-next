@@ -123,6 +123,7 @@ function ctx(): ParseContext {
       { id: 's1', valor: 'Tenis', categorias_padre: ['c2'] },
       { id: 's2', valor: 'Playeras', categorias_padre: ['c1'] },
     ],
+    variantesExistentes: [],
   }
 }
 function grupo(o: Partial<GrupoProducto> = {}): GrupoProducto {

@@ -40,9 +40,10 @@ export async function POST(request: NextRequest) {
     existentes: (existentes ?? []) as Producto[],
     categorias: categorias ?? [],
     subcategorias: subcategorias ?? [],
+    variantesExistentes: [], // TODO(Task 15): leer variantes existentes
   }
 
-  const { updates, creates, errors } = parseInventoryUpload({ actualizar, nuevos }, ctx)
+  const { updates, creates, errors } = parseInventoryUpload({ actualizar, nuevos, variantes: [] }, ctx)
 
   if (errors.length > 0) {
     return NextResponse.json({ error: 'No se importó nada. Corrige los errores y vuelve a subir.', errores: errors }, { status: 422 })

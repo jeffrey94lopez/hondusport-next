@@ -173,7 +173,7 @@ export interface ProductoData {
 }
 
 export interface ImportError {
-  pestaña: 'Actualizar' | 'Nuevos'
+  pestaña: 'Actualizar' | 'Nuevos' | 'Variantes'
   fila: number
   motivo: string
 }
@@ -184,21 +184,47 @@ export interface ParseContext {
   existentes: Producto[]
   categorias: CategoriaRef[]
   subcategorias: SubcategoriaRef[]
+  variantesExistentes: ProductoVariante[]
 }
+
+export interface VarianteRow {
+  producto_id?: string
+  producto?: string
+  variante_id?: string
+  variante?: string
+  sku?: string | number
+  precio?: string | number
+  stock?: string | number
+  activo?: string | boolean | number
+}
+
+export interface VarianteData {
+  nombre: string
+  sku: string | null
+  precio: number | null
+  stock: number | null
+  activo: boolean
+}
+
+export type VarianteUpdate = VarianteData & { id: string; producto_id: string }
+export type VarianteCreate = VarianteData & { producto_id: string; orden: number }
 
 export interface ParseResult {
   updates: (ProductoData & { id: string })[]
   creates: ProductoData[]
   errors: ImportError[]
+  variantes: { updates: VarianteUpdate[]; creates: VarianteCreate[] }
 }
 
 export function parseInventoryUpload(
-  input: { actualizar: InventoryRow[]; nuevos: InventoryRow[] },
+  input: { actualizar: InventoryRow[]; nuevos: InventoryRow[]; variantes: VarianteRow[] },
   ctx: ParseContext,
 ): ParseResult {
   const errors: ImportError[] = []
   const updates: (ProductoData & { id: string })[] = []
   const creates: ProductoData[] = []
+  const varUpdates: VarianteUpdate[] = []
+  const varCreates: VarianteCreate[] = []
 
   const porId = new Map(ctx.existentes.map(p => [p.id, p]))
   const catByNombre = new Map(ctx.categorias.map(c => [normNombre(c.valor), c]))
@@ -215,6 +241,35 @@ export function parseInventoryUpload(
   const idVistos = new Map<string, number>()
   const slugs = ctx.existentes.map(p => p.slug)
   const subPorId = new Map(ctx.subcategorias.map(s => [s.id, s]))
+
+  // --- Índices de variantes (BD) ---
+  const varPorId = new Map(ctx.variantesExistentes.map(v => [v.id, v]))
+  const varsPorProducto = new Map<string, ProductoVariante[]>()
+  for (const v of ctx.variantesExistentes) {
+    const lista = varsPorProducto.get(v.producto_id) ?? []
+    lista.push(v)
+    varsPorProducto.set(v.producto_id, lista)
+  }
+  // nombre (normalizado) -> id de variante dueña, por producto
+  const nombresVarBDPorProducto = new Map<string, Map<string, string>>()
+  for (const [pid, lista] of varsPorProducto) {
+    nombresVarBDPorProducto.set(pid, new Map(lista.map(v => [normNombre(v.nombre), v.id])))
+  }
+  // orden máximo ya usado por producto (para las altas)
+  const maxOrdenPorProducto = new Map<string, number>()
+  for (const [pid, lista] of varsPorProducto) {
+    maxOrdenPorProducto.set(pid, Math.max(...lista.map(v => v.orden)))
+  }
+  // SKU (recortado) de variante -> id de variante dueña en BD
+  const skuVarEnBD = new Map<string, string>()
+  for (const v of ctx.variantesExistentes) {
+    if (v.sku) skuVarEnBD.set(v.sku.trim(), v.id)
+  }
+  // vistos en este archivo: "producto_id::nombre normalizado" -> fila; sku -> fila
+  const nombreVarVistos = new Map<string, number>()
+  const skuVarVistos = new Map<string, number>()
+  // cuántas altas de variante ya se contaron para cada producto (para calcular "orden")
+  const nuevasVarPorProducto = new Map<string, number>()
 
   // Resuelve categoría/subcat efectivas o empuja errores. Devuelve ids resueltos.
   function resolverCategorias(
@@ -303,6 +358,54 @@ export function parseInventoryUpload(
     return n
   }
 
+  // precio de variante: vacío = no cambia (updates) / hereda (altas, base = null)
+  function parsePrecioVariante(v: unknown, base: number | null, rowErrors: string[]): number | null {
+    const n = parseNum(v)
+    if (n === undefined) return base
+    if (Number.isNaN(n) || n <= 0) { rowErrors.push('el precio de la variante debe ser mayor a 0'); return base }
+    return n
+  }
+
+  // Valida y registra el nombre de la variante (único por producto, BD + archivo).
+  function resolverNombreVariante(
+    producto_id: string, fila: number, propioId: string | null, nombre: string, rowErrors: string[],
+  ): void {
+    const key = normNombre(nombre)
+    const dueñoBD = nombresVarBDPorProducto.get(producto_id)?.get(key)
+    if (dueñoBD && dueñoBD !== propioId) {
+      rowErrors.push(`la variante "${nombre}" ya existe en este producto`)
+      return
+    }
+    const fileKey = `${producto_id}::${key}`
+    const filaPrevia = nombreVarVistos.get(fileKey)
+    if (filaPrevia !== undefined) {
+      rowErrors.push(`la variante "${nombre}" está repetida en el archivo (también en la fila ${filaPrevia})`)
+      return
+    }
+    nombreVarVistos.set(fileKey, fila)
+  }
+
+  // Valida y registra el SKU de variante (único global, BD + archivo).
+  function resolverSkuVariante(
+    row: VarianteRow, fila: number, propioId: string | null, baseSku: string | null, rowErrors: string[],
+  ): string | null {
+    const cell = cellText(row.sku)
+    const skuFinal = cell !== undefined ? cell : baseSku
+    if (!skuFinal) return null
+    const dueño = skuVarEnBD.get(skuFinal)
+    if (dueño && dueño !== propioId) {
+      rowErrors.push(`el SKU "${skuFinal}" ya pertenece a otra variante`)
+      return skuFinal
+    }
+    const filaPrevia = skuVarVistos.get(skuFinal)
+    if (filaPrevia !== undefined) {
+      rowErrors.push(`el SKU "${skuFinal}" está repetido (también en la fila ${filaPrevia})`)
+      return skuFinal
+    }
+    skuVarVistos.set(skuFinal, fila)
+    return skuFinal
+  }
+
   // --- Pestaña Actualizar ---
   input.actualizar.forEach((row, i) => {
     const fila = i + 2
@@ -318,11 +421,15 @@ export function parseInventoryUpload(
     }
     idVistos.set(id, fila)
 
+    // Si el producto vende por variantes, su stock y tallas se administran desde
+    // la pestaña Variantes: las celdas de Actualizar (incluida la nota exportada) se ignoran.
+    const tieneVariantes = (varsPorProducto.get(id) ?? []).length > 0
+
     const nombre = cellText(row.nombre)
     if (!nombre) rowErrors.push('el nombre no puede ir vacío')
     const precio = parsePrecio(row.precio, rowErrors)
     const precio_original = parsePrecioOriginal(row.precio_original, prod.precio_original, rowErrors)
-    const stock = parseStock(row.stock, prod.stock, rowErrors)
+    const stock = tieneVariantes ? prod.stock : parseStock(row.stock, prod.stock, rowErrors)
     const { categoria_id, subcategoria_id } = resolverCategorias(row, 'Actualizar', fila, prod.categoria_id, prod.subcategoria_id, rowErrors)
 
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Actualizar', fila, motivo: m })); return }
@@ -344,7 +451,7 @@ export function parseInventoryUpload(
       stock,
       genero: cellText(row.genero) ?? prod.genero,
       badge: cellText(row.badge) ?? prod.badge,
-      tallas: cellText(row.tallas) !== undefined ? splitList(row.tallas) : prod.tallas,
+      tallas: tieneVariantes ? prod.tallas : (cellText(row.tallas) !== undefined ? splitList(row.tallas) : prod.tallas),
       colores: cellText(row.colores) !== undefined ? splitList(row.colores) : prod.colores,
       marca: cellText(row.marca) ?? prod.marca,
       sku,
@@ -399,5 +506,60 @@ export function parseInventoryUpload(
     })
   })
 
-  return { updates, creates, errors }
+  // --- Pestaña Variantes ---
+  input.variantes.forEach((row, i) => {
+    const fila = i + 2
+    const vacia = VARIANTES_COLUMNAS.every(col => cellText((row as Record<string, unknown>)[col]) === undefined)
+    if (vacia) return
+
+    const rowErrors: string[] = []
+    const producto_id = cellText(row.producto_id)
+    if (!producto_id) { errors.push({ pestaña: 'Variantes', fila, motivo: 'falta el producto_id' }); return }
+    if (!porId.has(producto_id)) {
+      errors.push({ pestaña: 'Variantes', fila, motivo: `el producto_id "${producto_id}" no existe` })
+      return
+    }
+
+    const variante_id = cellText(row.variante_id) ?? null
+    let base: ProductoVariante | null = null
+    if (variante_id) {
+      const v = varPorId.get(variante_id)
+      if (!v || v.producto_id !== producto_id) {
+        errors.push({ pestaña: 'Variantes', fila, motivo: `la variante_id "${variante_id}" no existe o no pertenece a ese producto` })
+        return
+      }
+      base = v
+    }
+
+    const nombreCell = cellText(row.variante)
+    if (!variante_id && !nombreCell) rowErrors.push('el nombre de la variante no puede ir vacío')
+    const nombre = nombreCell ?? (base ? base.nombre : undefined)
+
+    const precio = parsePrecioVariante(row.precio, base ? base.precio : null, rowErrors)
+    const stock = parseStock(row.stock, base ? base.stock : null, rowErrors)
+    const activo = cellBool(row.activo) ?? (base ? base.activo : true)
+
+    if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Variantes', fila, motivo: m })); return }
+
+    // El nombre y el SKU solo se validan/reservan una vez que el resto de la
+    // fila es válido, para no bloquear una fila futura por un dato de una
+    // fila que de todos modos será descartada.
+    resolverNombreVariante(producto_id, fila, variante_id, nombre!, rowErrors)
+    if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Variantes', fila, motivo: m })); return }
+
+    const sku = resolverSkuVariante(row, fila, variante_id, base ? base.sku : null, rowErrors)
+    if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Variantes', fila, motivo: m })); return }
+
+    if (variante_id) {
+      varUpdates.push({ id: variante_id, producto_id, nombre: nombre!, sku, precio, stock, activo })
+    } else {
+      const maxOrden = maxOrdenPorProducto.get(producto_id) ?? -1
+      const posicion = nuevasVarPorProducto.get(producto_id) ?? 0
+      const orden = maxOrden + 1 + posicion
+      nuevasVarPorProducto.set(producto_id, posicion + 1)
+      varCreates.push({ producto_id, nombre: nombre!, sku, precio, stock, activo, orden })
+    }
+  })
+
+  return { updates, creates, errors, variantes: { updates: varUpdates, creates: varCreates } }
 }

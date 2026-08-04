@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     existentes,
     categorias: cats ?? [],
     subcategorias: subs ?? [],
+    variantesExistentes: [], // TODO(Tasks 16-17): leer variantes existentes
   }
 
   const { grupos, sinSku } = agruparPorSku(rows, mapeo)
