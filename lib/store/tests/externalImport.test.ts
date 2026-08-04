@@ -68,7 +68,7 @@ const MAPEO_POS = {
 } as const
 
 describe('agruparPorSku', () => {
-  it('agrupa variantes por SKU: suma stock, une tallas/colores, primer no-vacío', () => {
+  it('agrupa filas con talla/color en variantes: no suma stock, conserva tallas/colores union, primer no-vacío en escalares', () => {
     const rows = [
       { cbarras: 'A10', nombre_producto: 'Samba OG', precio_venta: 2720, existencia: 3, tamano: '40', color: 'Negro', marca: 'Adidas' },
       { cbarras: 'A10', nombre_producto: 'Samba OG', precio_venta: 2720, existencia: 2, tamano: '41', color: 'Blanco', marca: 'Adidas' },
@@ -80,10 +80,14 @@ describe('agruparPorSku', () => {
     expect(g.sku).toBe('A10')
     expect(g.nombre).toBe('Samba OG')
     expect(g.precio).toBe('2720')
-    expect(g.stock).toBe('5')
+    expect(g.stock).toBeUndefined() // con variantes: el stock ya no se suma en el padre
     expect(g.tallas).toEqual(['40', '41'])
     expect(g.colores).toEqual(['Negro', 'Blanco'])
     expect(g.filas).toEqual([2, 3])
+    expect(g.variantes).toEqual([
+      { fila: 2, nombre: '40 / Negro', sku: null, precio: '2720', stock: '3' },
+      { fila: 3, nombre: '41 / Blanco', sku: null, precio: '2720', stock: '2' },
+    ])
   })
 
   it('fila con datos pero sin SKU va a sinSku', () => {
@@ -104,6 +108,50 @@ describe('agruparPorSku', () => {
     const rows = [{ cbarras: 'A1', nombre_producto: 'Y', precio_venta: 5 }]
     const { grupos } = agruparPorSku(rows, { sku: 'cbarras', nombre: 'nombre_producto', precio: 'precio_venta' })
     expect(grupos[0].stock).toBeUndefined()
+  })
+
+  it('filas con talla/color se vuelven variantes con su stock y precio', () => {
+    const { grupos } = agruparPorSku([
+      { SKU: 'A1', Nombre: 'Camisa', Precio: '100', Talla: 'M', Color: 'Azul', Stock: '3' },
+      { SKU: 'A1', Nombre: 'Camisa', Precio: '120', Talla: 'L', Color: '', Stock: '2' },
+    ], { sku: 'SKU', nombre: 'Nombre', precio: 'Precio', talla: 'Talla', color: 'Color', stock: 'Stock' })
+    expect(grupos[0].variantes).toEqual([
+      { fila: 2, nombre: 'M / Azul', sku: null, precio: '100', stock: '3' },
+      { fila: 3, nombre: 'L', sku: null, precio: '120', stock: '2' },
+    ])
+    expect(grupos[0].stock).toBeUndefined()
+  })
+
+  it('una fila sin talla/color/sku_variante = producto plano', () => {
+    const { grupos } = agruparPorSku(
+      [{ SKU: 'A1', Nombre: 'Balón', Precio: '100', Stock: '7' }],
+      { sku: 'SKU', nombre: 'Nombre', precio: 'Precio', stock: 'Stock' },
+    )
+    expect(grupos[0].variantes).toEqual([])
+    expect(grupos[0].stock).toBe('7')
+  })
+
+  it('sku_variante nombra la variante si no hay talla/color', () => {
+    const { grupos } = agruparPorSku([
+      { SKU: 'A1', Nombre: 'X', Precio: '1', VarSku: 'A1-M' },
+      { SKU: 'A1', Nombre: 'X', Precio: '1', VarSku: 'A1-L' },
+    ], { sku: 'SKU', nombre: 'Nombre', precio: 'Precio', sku_variante: 'VarSku' })
+    expect(grupos[0].variantes.map(v => v.nombre)).toEqual(['A1-M', 'A1-L'])
+    expect(grupos[0].variantes[0].sku).toBe('A1-M')
+  })
+
+  it('fila indistinguible en grupo múltiple queda sin nombre y se reporta en parse', () => {
+    const { grupos } = agruparPorSku([
+      { SKU: 'A1', Nombre: 'X', Precio: '1', Talla: 'M' },
+      { SKU: 'A1', Nombre: 'X', Precio: '1' },
+    ], { sku: 'SKU', nombre: 'Nombre', precio: 'Precio', talla: 'Talla' })
+    expect(grupos[0].variantes[1].nombre).toBe('')
+  })
+})
+
+describe('sugerirMapeo: sku_variante', () => {
+  it('sugerirMapeo reconoce columnas de sku de variante', () => {
+    expect(sugerirMapeo(['SKU', 'SKU Variante', 'Nombre']).sku_variante).toBe('SKU Variante')
   })
 })
 
@@ -127,7 +175,7 @@ function ctx(): ParseContext {
   }
 }
 function grupo(o: Partial<GrupoProducto> = {}): GrupoProducto {
-  return { sku: 'NEW1', filas: [2], tallas: [], colores: [], nombre: 'Nuevo', precio: '50', ...o }
+  return { sku: 'NEW1', filas: [2], tallas: [], colores: [], variantes: [], nombre: 'Nuevo', precio: '50', ...o }
 }
 
 describe('parseExternalImport', () => {

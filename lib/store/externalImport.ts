@@ -5,7 +5,7 @@ import type { Producto } from '@/types'
 export type CampoPlataforma =
   | 'sku' | 'nombre' | 'precio' | 'precio_original' | 'stock'
   | 'descripcion' | 'categoria' | 'subcategoria' | 'genero'
-  | 'badge' | 'marca' | 'talla' | 'color' | 'personalizable' | 'activo'
+  | 'badge' | 'marca' | 'talla' | 'color' | 'sku_variante' | 'personalizable' | 'activo'
 
 export type Mapeo = Partial<Record<CampoPlataforma, string>>
 
@@ -21,6 +21,7 @@ export const CAMPOS_PLATAFORMA: { campo: CampoPlataforma; label: string; obligat
   { campo: 'genero', label: 'Género', obligatorio: false },
   { campo: 'talla', label: 'Talla (por variante)', obligatorio: false },
   { campo: 'color', label: 'Color (por variante)', obligatorio: false },
+  { campo: 'sku_variante', label: 'SKU de variante', obligatorio: false },
   { campo: 'descripcion', label: 'Descripción', obligatorio: false },
   { campo: 'badge', label: 'Badge', obligatorio: false },
   { campo: 'personalizable', label: 'Personalizable', obligatorio: false },
@@ -49,6 +50,7 @@ const ALIAS: Record<CampoPlataforma, string[]> = {
   marca: ['marca', 'fabricante'],
   talla: ['talla', 'tamano', 'size', 'medida'],
   color: ['color', 'colores'],
+  sku_variante: ['skuvariante', 'codigovariante', 'skuhijo', 'variantsku'],
   personalizable: ['personalizable'],
   activo: ['activo', 'isactive', 'habilitado'],
 }
@@ -74,6 +76,14 @@ export function validarMapeo(mapeo: Mapeo): string[] {
   return errs
 }
 
+export interface VarianteExterna {
+  fila: number
+  nombre: string          // "M / Azul" | "M" | "Azul" | sku_variante si no hay talla/color
+  sku: string | null      // sku_variante de la fila
+  precio?: string
+  stock?: string
+}
+
 export interface GrupoProducto {
   sku: string
   filas: number[]
@@ -89,6 +99,7 @@ export interface GrupoProducto {
   marca?: string
   tallas: string[]
   colores: string[]
+  variantes: VarianteExterna[]
   personalizable?: string
   activo?: string
 }
@@ -98,11 +109,21 @@ const ESCALARES = [
   'subcategoria', 'genero', 'badge', 'marca', 'personalizable', 'activo',
 ] as const
 
+interface FilaDatos {
+  fila: number
+  talla?: string
+  color?: string
+  skuVar?: string
+  precio?: string
+  stock?: string
+}
+
 export function agruparPorSku(
   rows: Record<string, unknown>[],
   mapeo: Mapeo,
 ): { grupos: GrupoProducto[]; sinSku: number[] } {
   const map = new Map<string, GrupoProducto>()
+  const filasPorSku = new Map<string, FilaDatos[]>()
   const sinSku: number[] = []
 
   const cel = (row: Record<string, unknown>, campo: CampoPlataforma): string | undefined => {
@@ -118,13 +139,9 @@ export function agruparPorSku(
     if (!sku) { sinSku.push(fila); return }
 
     let g = map.get(sku)
-    if (!g) { g = { sku, filas: [], tallas: [], colores: [] }; map.set(sku, g) }
+    if (!g) { g = { sku, filas: [], tallas: [], colores: [], variantes: [] }; map.set(sku, g) }
     g.filas.push(fila)
 
-    if (mapeo.stock) {
-      const n = parseNum(row[mapeo.stock])
-      if (n !== undefined && !Number.isNaN(n)) g.stock = String((g.stock ? Number(g.stock) : 0) + n)
-    }
     if (mapeo.talla) for (const t of splitList(row[mapeo.talla])) if (!g.tallas.includes(t)) g.tallas.push(t)
     if (mapeo.color) for (const c of splitList(row[mapeo.color])) if (!g.colores.includes(c)) g.colores.push(c)
 
@@ -134,7 +151,43 @@ export function agruparPorSku(
         if (v !== undefined) g[campo] = v
       }
     }
+
+    const filas = filasPorSku.get(sku) ?? []
+    filas.push({
+      fila,
+      talla: cel(row, 'talla'),
+      color: cel(row, 'color'),
+      skuVar: cel(row, 'sku_variante'),
+      precio: cel(row, 'precio'),
+      stock: cel(row, 'stock'),
+    })
+    filasPorSku.set(sku, filas)
   })
+
+  for (const g of map.values()) {
+    const filasDatos = filasPorSku.get(g.sku) ?? []
+    const esConVariantes = filasDatos.length > 1 || filasDatos.some(f => f.talla || f.color || f.skuVar)
+
+    if (esConVariantes) {
+      g.variantes = filasDatos.map(f => ({
+        fila: f.fila,
+        nombre: [f.talla, f.color].filter(Boolean).join(' / ') || f.skuVar || '',
+        sku: f.skuVar ?? null,
+        ...(f.precio !== undefined ? { precio: f.precio } : {}),
+        ...(f.stock !== undefined ? { stock: f.stock } : {}),
+      }))
+      g.stock = undefined
+    } else {
+      g.variantes = []
+      let total: number | undefined
+      for (const f of filasDatos) {
+        if (f.stock === undefined) continue
+        const n = parseNum(f.stock)
+        if (n !== undefined && !Number.isNaN(n)) total = (total ?? 0) + n
+      }
+      g.stock = total !== undefined ? String(total) : undefined
+    }
+  }
 
   return { grupos: [...map.values()], sinSku }
 }
