@@ -208,6 +208,11 @@
   transition: 0.2s;
 }
 
+.qtyBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .itemPrice {
   font-weight: 600;
   font-size: 0.9rem;

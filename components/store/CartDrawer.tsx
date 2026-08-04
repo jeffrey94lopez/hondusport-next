@@ -102,7 +102,7 @@ export default function CartDrawer({
             </div>
           ) : (
             cart.map((item, idx) => (
-              <div className={styles.item} key={`${item.id}-${item.size}-${item.custom}-${idx}`}>
+              <div className={styles.item} key={`${item.id}-${item.varianteId ?? ''}-${item.size}-${item.custom}-${idx}`}>
                 <Image src={item.imagen} alt={item.nombre} className={styles.itemImg} width={50} height={50} />
                 <div className={styles.itemInfo}>
                   <div className={styles.itemTitleRow}>
@@ -113,7 +113,11 @@ export default function CartDrawer({
                       🗑️
                     </button>
                   </div>
-                  <p className={styles.itemSize}>TALLA: {item.size}</p>
+                  <p className={styles.itemSize}>
+                    {item.variante
+                      ? <>OPCIÓN: {item.variante}</>
+                      : <>TALLA: {item.size}</>}
+                  </p>
                   {item.personalizable && (
                     <div className={styles.customEditContainer}>
                       <span className={styles.inputIconLabel}>✏️</span>
@@ -135,7 +139,12 @@ export default function CartDrawer({
                         -
                       </button>
                       <span>{item.qty}</span>
-                      <button className={styles.qtyBtn} onClick={() => changeQty(idx, 1)} aria-label="Sumar cantidad">
+                      <button
+                        className={styles.qtyBtn}
+                        onClick={() => changeQty(idx, 1)}
+                        disabled={item.stockDisponible != null && item.qty >= item.stockDisponible}
+                        aria-label="Sumar cantidad"
+                      >
                         +
                       </button>
                     </div>
