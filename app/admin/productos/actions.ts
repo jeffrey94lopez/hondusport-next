@@ -14,43 +14,27 @@ function validarVariantes(variantes: VarianteForm[]): string | null {
   return null
 }
 
-// Sincroniza las hijas de un producto con lo enviado por el form:
-// upsert de las presentes (orden = posición) y delete de las ausentes.
+// Sincroniza las hijas de un producto con lo enviado por el form, de forma
+// atómica vía RPC (delete de ausentes + upsert de presentes en una transacción).
 async function syncVariantes(
   supabase: SupabaseServerClient,
   productoId: string,
   variantes: VarianteForm[],
 ): Promise<string | null> {
-  const { data: actuales, error: readError } = await supabase
-    .from('producto_variantes')
-    .select('id')
-    .eq('producto_id', productoId)
-  if (readError) return readError.message
-
-  const enviados = new Set(variantes.map(v => v.id).filter(Boolean))
-  const aBorrar = (actuales ?? []).map(r => r.id as string).filter(id => !enviados.has(id))
-  if (aBorrar.length) {
-    const { error } = await supabase.from('producto_variantes').delete().in('id', aBorrar)
-    if (error) return error.message
-  }
-
-  if (variantes.length) {
-    const payload = variantes.map((v, i) => ({
-      ...(v.id ? { id: v.id } : {}),
-      producto_id: productoId,
-      nombre: v.nombre.trim(),
-      sku: v.sku.trim() || null,
-      precio: v.precio ?? null,
-      stock: v.stock ?? null,
-      activo: v.activo,
-      orden: i,
-    }))
-    const { error } = await supabase
-      .from('producto_variantes')
-      .upsert(payload, { onConflict: 'id' })
-    if (error) return error.message
-  }
-  return null
+  const payload = variantes.map((v, i) => ({
+    ...(v.id ? { id: v.id } : {}),
+    nombre: v.nombre.trim(),
+    sku: v.sku.trim() || null,
+    precio: v.precio ?? null,
+    stock: v.stock ?? null,
+    activo: v.activo,
+    orden: i,
+  }))
+  const { error } = await supabase.rpc('sync_producto_variantes', {
+    p_producto_id: productoId,
+    p_variantes: payload,
+  })
+  return error ? error.message : null
 }
 
 export async function createProducto(form: ProductoForm): Promise<ActionResult> {

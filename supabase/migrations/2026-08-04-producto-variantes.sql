@@ -225,3 +225,47 @@ end;
 $$;
 
 grant execute on function importar_productos_variantes(jsonb, jsonb) to authenticated;
+
+-- ── Sync atómico de las variantes de un producto (form del admin) ──
+-- SECURITY INVOKER: corre con la sesión autenticada del admin y respeta RLS.
+-- Borra las hijas ausentes del payload e inserta/actualiza las presentes,
+-- todo en una transacción. El WHERE del ON CONFLICT ignora ids ajenos:
+-- una variante de otro producto jamás se modifica desde aquí.
+create or replace function sync_producto_variantes(p_producto_id uuid, p_variantes jsonb)
+returns void
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  delete from producto_variantes v
+  where v.producto_id = p_producto_id
+    and v.id not in (
+      select (x->>'id')::uuid
+      from jsonb_array_elements(coalesce(p_variantes, '[]'::jsonb)) x
+      where x->>'id' is not null
+    );
+
+  insert into producto_variantes (id, producto_id, nombre, sku, precio, stock, activo, orden)
+  select
+    coalesce(nullif(x->>'id', '')::uuid, gen_random_uuid()),
+    p_producto_id,
+    x->>'nombre',
+    nullif(x->>'sku', ''),
+    (x->>'precio')::numeric,
+    (x->>'stock')::integer,
+    coalesce((x->>'activo')::boolean, true),
+    coalesce((x->>'orden')::integer, 0)
+  from jsonb_array_elements(coalesce(p_variantes, '[]'::jsonb)) x
+  on conflict (id) do update set
+    nombre = excluded.nombre,
+    sku    = excluded.sku,
+    precio = excluded.precio,
+    stock  = excluded.stock,
+    activo = excluded.activo,
+    orden  = excluded.orden
+  where producto_variantes.producto_id = p_producto_id;
+end;
+$$;
+
+grant execute on function sync_producto_variantes(uuid, jsonb) to authenticated;
