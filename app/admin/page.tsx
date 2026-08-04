@@ -30,7 +30,7 @@ export default async function DashboardPage() {
     supabase.from('pedidos').select('*', { count: 'exact', head: true }).gte('created_at', todayISO),
     supabase.from('pedidos').select('*', { count: 'exact', head: true }).eq('estado', 'recibido'),
     supabase.from('productos').select('*', { count: 'exact', head: true }).eq('activo', true),
-    supabase.from('productos').select('id, stock, activo, producto_variantes(stock, activo)').eq('activo', true),
+    supabase.from('productos').select('id, stock, activo, producto_variantes(stock, activo)').eq('activo', true).limit(5000),
     supabase.from('pedidos').select('id, numero, nombre_cliente, total, estado, created_at').order('created_at', { ascending: false }).limit(5),
     supabase.from('pedidos').select('total').gte('created_at', todayISO),
   ])

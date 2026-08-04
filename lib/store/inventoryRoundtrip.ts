@@ -35,7 +35,7 @@ export const INSTRUCCIONES: string[] = [
   '- NO modifiques producto_id ni variante_id: son las llaves.',
   '- Para crear una variante: fila nueva con producto_id y variante (nombre), variante_id vacío.',
   '- variante (nombre): obligatorio y único dentro del producto.',
-  '- precio: vacío = hereda el precio del producto padre.',
+  '- precio: vacío = no cambia (en filas nuevas = hereda el precio del padre).',
   '- stock: vacío = no cambia (en filas nuevas = ilimitado); 0 = agotada.',
   '- Si un producto tiene variantes, su stock y tallas en "Actualizar" se ignoran.',
 ]

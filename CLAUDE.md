@@ -45,6 +45,7 @@ npx tsc --noEmit # typecheck (los Server Actions no están cubiertos por tests)
   desde los layouts. Nuevos ajustes globales van en esa tabla, no hardcodeados.
 - **`categorias` es polimórfica** por `tipo` (`cat`/`subcat`/`talla`/`genero`).
   Las tallas de un producto salen de `getTallas()`, no de un campo directo.
+- **Variantes padre/hijo:** un producto con hijas activas en `producto_variantes` se vende POR variante (precio propio o heredado, stock propio). La RPC `crear_pedido` valida y **descuenta stock atómicamente** al crear el pedido — también para productos planos (stock null = ilimitado). Lógica pura en `lib/store/variantes.ts`.
 - **CSS Modules** por componente (`Componente.module.css`). La tienda scopea sus
   estilos globales bajo `.storeRoot` (ver `store-globals.css`).
 - **Idioma:** UI, nombres de dominio y mensajes de commit en español. Moneda en

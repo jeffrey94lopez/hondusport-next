@@ -60,7 +60,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       supabase.from('cupones').select('id, codigo, descuento, tipo, activo, created_at').eq('activo', true),
     ])
 
-  let productoRow = producto
+  const productoRow = producto
   if (!productoRow && esUuid(slug)) {
     const { data: porId } = await supabase
       .from('productos')

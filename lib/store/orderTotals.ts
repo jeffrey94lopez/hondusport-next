@@ -107,7 +107,7 @@ export function getOrderText({ cart, envio, totals, cliente }: OrderTextInput): 
 
   msg += `\nPEDIDO\n`
   cart.forEach(item => {
-    msg += `- ${item.nombre} (${item.size}) [${item.custom}] x${item.qty} - ${formatPrice(item.precio * item.qty)}\n`
+    msg += `- ${item.nombre} (${item.variante ?? item.size}) [${item.custom}] x${item.qty} - ${formatPrice(item.precio * item.qty)}\n`
   })
 
   msg += `\nSubtotal: ${formatPrice(totals.subtotal)}`

@@ -262,4 +262,50 @@ describe('getOrderText', () => {
     expect(decoded).toContain('Local principal')
     expect(decoded).not.toContain('Ciudad:')
   })
+
+  it('shows the variante name instead of an empty size for variant items', () => {
+    const itemConVariante: CartItem = {
+      id: 'p1', nombre: 'Camisa', precio: 150, imagen: 'img', size: '',
+      custom: 'Sin personalización', qty: 1, personalizable: false,
+      varianteId: 'v1', variante: 'Edición retro',
+    }
+
+    const totals = calculateOrderTotals({
+      cart: [itemConVariante],
+      activeDiscount: 0,
+      envio: null,
+      freeShippingActivo: true,
+      freeShippingThreshold: 999,
+    })
+
+    const text = getOrderText({
+      cart: [itemConVariante],
+      envio: null,
+      totals,
+      cliente: { nombre: 'Ana', telefono: '8888-8888', email: 'ana@test.com', ciudad: '', direccion: '' },
+    })
+
+    const decoded = decodeURIComponent(text)
+    expect(decoded).toContain('(Edición retro)')
+  })
+
+  it('still shows the size for a plain item without variante', () => {
+    const totals = calculateOrderTotals({
+      cart: [ITEM_A],
+      activeDiscount: 0,
+      envio: null,
+      freeShippingActivo: true,
+      freeShippingThreshold: 999,
+    })
+
+    const text = getOrderText({
+      cart: [ITEM_A],
+      envio: null,
+      totals,
+      cliente: { nombre: 'Ana', telefono: '8888-8888', email: 'ana@test.com', ciudad: '', direccion: '' },
+    })
+
+    const decoded = decodeURIComponent(text)
+    expect(decoded).toContain('(M)')
+  })
 })
