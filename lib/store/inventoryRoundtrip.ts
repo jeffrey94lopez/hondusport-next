@@ -366,9 +366,13 @@ export function parseInventoryUpload(
     return n
   }
 
-  // Valida y registra el nombre de la variante (único por producto, BD + archivo).
-  function resolverNombreVariante(
-    producto_id: string, fila: number, propioId: string | null, nombre: string, rowErrors: string[],
+  // Valida el nombre de la variante (único por producto, BD + archivo).
+  // NO reserva: solo empuja errores. La reserva (nombreVarVistos.set) se hace
+  // en el sitio de la llamada, una vez que TODA la fila pasó validación —
+  // igual que el SKU de producto, para no bloquear una fila futura válida con
+  // el nombre de una fila descartada por otro motivo (ej. SKU repetido).
+  function validarNombreVariante(
+    producto_id: string, propioId: string | null, nombre: string, rowErrors: string[],
   ): void {
     const key = normNombre(nombre)
     const dueñoBD = nombresVarBDPorProducto.get(producto_id)?.get(key)
@@ -380,14 +384,14 @@ export function parseInventoryUpload(
     const filaPrevia = nombreVarVistos.get(fileKey)
     if (filaPrevia !== undefined) {
       rowErrors.push(`la variante "${nombre}" está repetida en el archivo (también en la fila ${filaPrevia})`)
-      return
     }
-    nombreVarVistos.set(fileKey, fila)
   }
 
-  // Valida y registra el SKU de variante (único global, BD + archivo).
-  function resolverSkuVariante(
-    row: VarianteRow, fila: number, propioId: string | null, baseSku: string | null, rowErrors: string[],
+  // Valida el SKU de variante (único global, BD + archivo) y devuelve el SKU final.
+  // NO reserva: la reserva (skuVarVistos.set) se hace en el sitio de la llamada,
+  // una vez que TODA la fila pasó validación (mismo motivo que arriba).
+  function validarSkuVariante(
+    row: VarianteRow, propioId: string | null, baseSku: string | null, rowErrors: string[],
   ): string | null {
     const cell = cellText(row.sku)
     const skuFinal = cell !== undefined ? cell : baseSku
@@ -400,9 +404,7 @@ export function parseInventoryUpload(
     const filaPrevia = skuVarVistos.get(skuFinal)
     if (filaPrevia !== undefined) {
       rowErrors.push(`el SKU "${skuFinal}" está repetido (también en la fila ${filaPrevia})`)
-      return skuFinal
     }
-    skuVarVistos.set(skuFinal, fila)
     return skuFinal
   }
 
@@ -509,7 +511,7 @@ export function parseInventoryUpload(
   // --- Pestaña Variantes ---
   input.variantes.forEach((row, i) => {
     const fila = i + 2
-    const vacia = VARIANTES_COLUMNAS.every(col => cellText((row as Record<string, unknown>)[col]) === undefined)
+    const vacia = VARIANTES_COLUMNAS.every(col => cellText(row[col]) === undefined)
     if (vacia) return
 
     const rowErrors: string[] = []
@@ -541,14 +543,17 @@ export function parseInventoryUpload(
 
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Variantes', fila, motivo: m })); return }
 
-    // El nombre y el SKU solo se validan/reservan una vez que el resto de la
-    // fila es válido, para no bloquear una fila futura por un dato de una
-    // fila que de todos modos será descartada.
-    resolverNombreVariante(producto_id, fila, variante_id, nombre!, rowErrors)
+    // Nombre y SKU solo se validan (sin reservar todavía) en este punto. Si
+    // cualquiera de los dos falla, la fila completa se descarta y NINGUNO de
+    // los dos recursos se reserva — así una fila válida posterior con el
+    // mismo nombre o SKU no se bloquea por una fila rechazada por el otro dato.
+    validarNombreVariante(producto_id, variante_id, nombre!, rowErrors)
+    const sku = validarSkuVariante(row, variante_id, base ? base.sku : null, rowErrors)
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Variantes', fila, motivo: m })); return }
 
-    const sku = resolverSkuVariante(row, fila, variante_id, base ? base.sku : null, rowErrors)
-    if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Variantes', fila, motivo: m })); return }
+    // La fila completa es válida: recién ahora se reservan nombre y SKU.
+    nombreVarVistos.set(`${producto_id}::${normNombre(nombre!)}`, fila)
+    if (sku) skuVarVistos.set(sku, fila)
 
     if (variante_id) {
       varUpdates.push({ id: variante_id, producto_id, nombre: nombre!, sku, precio, stock, activo })

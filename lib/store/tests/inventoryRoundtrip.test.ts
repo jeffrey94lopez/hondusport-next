@@ -354,6 +354,16 @@ describe('parseInventoryUpload — pestaña Variantes', () => {
     expect(r.errors.every(e => e.pestaña === 'Variantes')).toBe(true)
   })
 
+  it('una fila que falla por sku no reserva su nombre (la fila válida posterior pasa)', () => {
+    const r = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: prod.id, variante: 'Z', sku: 'SKU-M' },   // sku de otra variante BD → fila inválida
+      { producto_id: prod.id, variante: 'Z', stock: '5' },      // fila válida, mismo nombre
+    ] }, ctxV)
+    expect(r.errors).toHaveLength(1)                             // solo el error de sku
+    expect(r.variantes.creates).toHaveLength(1)
+    expect(r.variantes.creates[0]).toMatchObject({ nombre: 'Z', stock: 5 })
+  })
+
   it('los productos con variantes ignoran stock y tallas en Actualizar', () => {
     const r = parseInventoryUpload({
       actualizar: [{ id: prod.id, nombre: prod.nombre, precio: prod.precio, stock: '99', tallas: 'S, M' }],
