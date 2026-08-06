@@ -10,3 +10,27 @@
 .nav { display: flex; gap: 0.75rem; justify-content: space-between; margin-top: 1.5rem; }
 .error { color: var(--error-strong); margin-top: 0.5rem; }
 .resumen { text-align: center; padding: 2rem; }
+
+/* Patrón Tertiary (tokens de .btnMerlinTertiary) para navegación/toggles
+   baratos del carrusel — espejo de .btnSecondary en productos.module.css. */
+.btnNav {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+.btnNav:hover { border-color: var(--accent); color: var(--accent); }
+.btnNav:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Colores/tipografía/radio del CTA los da la clase global .btnMerlinPrimary
+   (compuesta en el JSX); aquí solo el layout propio del botón. */
+.btnGuardar {
+  padding: 0.55rem 1rem;
+  white-space: nowrap;
+}

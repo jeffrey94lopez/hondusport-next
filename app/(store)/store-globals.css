@@ -5,7 +5,10 @@
   --bg: var(--page);
   --text: var(--ink);
   --text-muted: var(--ink-muted);
-  --card: var(--card);
+  /* NO redeclarar --card aquí: `--x: var(--x)` es un ciclo (auto-referencia),
+     no una herencia — invalida la propiedad en .storeRoot y sus hijos.
+     .storeRoot ya hereda --card: #ffffff del :root de merlin.css; el bloque
+     [data-theme="dark"] de abajo la redefine con un literal (#141414). */
   --border: var(--line);
   --btn-bg: var(--cta);
   --btn-text: #ffffff;

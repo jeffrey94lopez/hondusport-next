@@ -130,7 +130,7 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
         </div>
         <div className={styles.nav}>
           <Link href="/admin/productos">← Volver</Link>
-          <button onClick={empezar}>Empezar</button>
+          <button className={styles.btnNav} onClick={empezar}>Empezar</button>
         </div>
       </div>
     )
@@ -140,7 +140,7 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
     return (
       <div className={styles.page}>
         <p>Ningún producto coincide con esos filtros.</p>
-        <button onClick={() => setStarted(false)}>← Cambiar filtros</button>
+        <button className={styles.btnNav} onClick={() => setStarted(false)}>← Cambiar filtros</button>
       </div>
     )
   }
@@ -164,19 +164,19 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
           <span className={styles.contador}>{idx + 1} / {set.length}</span>
           <span>
             {guardados.has(actual.id) && <span className={styles.saved}>✓ guardado</span>}{' '}
-            <button onClick={() => setStarted(false)}>Cambiar filtros</button>
+            <button className={styles.btnNav} onClick={() => setStarted(false)}>Cambiar filtros</button>
           </span>
         </div>
         <h3>{actual.nombre}</h3>
         <ProductoFields form={form} setForm={setFormDirty} categorias={categorias} subcategorias={subcategorias} modo={modoCampos} />
         {modoCampos === 'rapido' && (
-          <button type="button" onClick={() => setModoCampos('completo')}>Ver más campos</button>
+          <button type="button" className={styles.btnNav} onClick={() => setModoCampos('completo')}>Ver más campos</button>
         )}
         {error && <p className={styles.error}>{error}</p>}
         <div className={styles.nav}>
-          <button onClick={anteriorConAviso} disabled={idx === 0 || isPending}>← Anterior</button>
-          <button onClick={siguienteConAviso} disabled={isPending}>Saltar →</button>
-          <button onClick={guardarYSiguiente} disabled={isPending}>
+          <button className={styles.btnNav} onClick={anteriorConAviso} disabled={idx === 0 || isPending}>← Anterior</button>
+          <button className={styles.btnNav} onClick={siguienteConAviso} disabled={isPending}>Saltar →</button>
+          <button className={`${styles.btnGuardar} btnMerlinPrimary`} onClick={guardarYSiguiente} disabled={isPending}>
             {isPending ? 'Guardando…' : 'Guardar y siguiente'}
           </button>
         </div>
