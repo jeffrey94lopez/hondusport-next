@@ -17,6 +17,9 @@
   /* fondos de estado por tema (claro = Merlin *-bg) */
   --estado-error-bg: var(--error-bg);
   --estado-success-bg: var(--success-bg);
+  /* texto de estado por tema (claro = Merlin --error/--success) */
+  --estado-error-text: var(--error);
+  --estado-success-text: var(--success);
 
   background: var(--bg);
   color: var(--text);
@@ -39,6 +42,8 @@
   --btn-hover: #e8e8e6;
   --estado-error-bg: rgba(145, 0, 34, 0.15);
   --estado-success-bg: rgba(27, 137, 89, 0.15);
+  --estado-error-text: #fbf3f5;
+  --estado-success-text: #6cdcab;
 }
 
 .storeRoot h1 { font: var(--text-header); }

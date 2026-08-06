@@ -107,7 +107,7 @@
 .pickupDiscountBadge {
   display: block;
   margin-top: 10px;
-  color: var(--success);
+  color: var(--estado-success-text);
   font-weight: 700;
   font-size: 0.75rem;
 }
@@ -160,7 +160,7 @@
 }
 
 .errorMsg {
-  color: var(--error);
+  color: var(--estado-error-text);
   background: var(--estado-error-bg);
   font-size: 0.8rem;
   padding: 10px;
