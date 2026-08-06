@@ -1,0 +1,83 @@
+/* Tokens del sistema de diseño Merlin (merlin-hondusport.md).
+   Nombres semánticos: el mapeo Merlin→semántico vive en el spec
+   2026-08-06-merlin-design-system-design.md. */
+:root {
+  /* Marca (dorado) */
+  --brand: #c9a84c;
+  --brand-hover: #a58a3e;
+  --brand-subtle: #efe5c9;
+  --brand-bg: #faf6ed;
+  /* CTA (negro) */
+  --cta: #0a0a0a;
+  --cta-hover: #080808;
+  --cta-disabled-bg: #6c6c6c;
+  --cta-disabled-text: #b6b6b6;
+  /* Superficies y texto */
+  --page: #f7f8fb;
+  --card: #ffffff;
+  --ink: #1e1e1e;
+  --ink-muted: #606060;
+  --ink-disabled: #969696;
+  --hover-input: #f3f3f3;
+  --line: #e7e7e7;
+  /* Estados */
+  --error: #910022;
+  --error-deep: #610017;
+  --error-strong: #c31a2f;
+  --error-bg: #fbf3f5;
+  --warning: #a16b00;
+  --warning-deep: #5b3100;
+  --warning-star: #ffc217;
+  --warning-bg: #fff3d1;
+  --success: #1b8959;
+  --success-deep: #0b3b26;
+  --success-strong: #6cdcab;
+  --success-bg: #f4fdf9;
+  --info: #0a53a5;
+  --info-deep: #052d65;
+  --info-strong: #227ad1;
+  --info-bg: #f1f9ff;
+  /* Forma */
+  --radius-input: 9px;
+  --radius-card: 9px;
+  --radius-btn: 25px;
+  --radius-tag: 26px;
+  /* Sombras */
+  --shadow-card: 0px 4px 12px 0px rgba(18, 30, 108, 0.08);
+  --shadow-raised: 0px 4px 16px 0px rgba(18, 30, 108, 0.08);
+  --shadow-pop: 0px 8px 20px 0px rgba(18, 30, 108, 0.08);
+  --shadow-modal: 0px 12px 28px 0px rgba(18, 30, 108, 0.08);
+  /* Gradientes */
+  --gradient-h: linear-gradient(to right, #c9a84c, #0a0a0a);
+  --gradient-v: linear-gradient(to bottom, #0a0a0a, #c9a84c);
+  /* Tipografía (shorthands para font:) */
+  --text-header: 500 clamp(32px, 5vw, 48px)/1.08 var(--font-poppins), sans-serif;
+  --text-title: 400 28px/32px var(--font-poppins), sans-serif;
+  --text-subtitle: 600 16px/24px var(--font-poppins), sans-serif;
+  --text-body: 400 16px/24px var(--font-poppins), sans-serif;
+  --text-caption: 700 12px/16px var(--font-poppins), sans-serif;
+}
+
+/* Variantes de botón Merlin (pill). Los módulos las componen con sus
+   clases propias: className={`${styles.addBtn} btnMerlinPrimary`}. */
+.btnMerlinPrimary,
+.btnMerlinSecondary,
+.btnMerlinTertiary {
+  border: none;
+  border-radius: var(--radius-btn);
+  font: var(--text-subtitle);
+  cursor: pointer;
+}
+.btnMerlinPrimary { background: var(--cta); color: #ffffff; }
+.btnMerlinPrimary:hover:not(:disabled) { background: var(--cta-hover); }
+.btnMerlinPrimary:disabled {
+  background: var(--cta-disabled-bg);
+  color: var(--cta-disabled-text);
+  cursor: not-allowed;
+}
+.btnMerlinSecondary { background: var(--brand-bg); color: var(--brand); }
+.btnMerlinSecondary:hover:not(:disabled) { background: var(--brand-subtle); }
+.btnMerlinTertiary { background: var(--hover-input); color: var(--brand); }
+.btnMerlinTertiary:hover:not(:disabled) { background: var(--line); }
+.btnMerlinSecondary:disabled,
+.btnMerlinTertiary:disabled { color: var(--ink-disabled); cursor: not-allowed; }
