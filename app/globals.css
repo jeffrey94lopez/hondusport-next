@@ -1,24 +1,24 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:           #0f0f0f;
-  --bg-deep:      #0a0a0a;
-  --bg-card:      #141414;
-  --bg-hover:     #1a1a1a;
-  --bg-input:     #1a1a1a;
-  --border:       #1e1e1e;
-  --border-light: #252525;
-  --border-input: #2a2a2a;
-  --accent:       #C9A84C;
-  --accent-dim:   rgba(201, 168, 76, 0.12);
-  --accent-border:rgba(201, 168, 76, 0.35);
-  --text:         #e0e0e0;
-  --text-muted:   rgba(255, 255, 255, 0.45);
-  --text-dim:     rgba(255, 255, 255, 0.25);
-  --danger:       #e05555;
-  --success:      #5bbf6b;
-  --warning:      #f59e0b;
-  --info:         #3b8fed;
+  --bg:           var(--page);
+  --bg-deep:      #eef0f5;
+  --bg-card:      var(--card);
+  --bg-hover:     var(--hover-input);
+  --bg-input:     var(--page);
+  --border:       var(--line);
+  --border-light: #f0f0f0;
+  --border-input: var(--line);
+  --accent:       var(--brand);
+  --accent-dim:   var(--brand-bg);
+  --accent-border: var(--brand-subtle);
+  --text:         var(--ink);
+  --text-muted:   var(--ink-muted);
+  --text-dim:     var(--ink-disabled);
+  --danger:       #910022;   /* --error */
+  --success:      #1b8959;   /* Merlin success-150 (no var(): el nombre choca) */
+  --warning:      #a16b00;   /* Merlin warning-150 (idem) */
+  --info:         #0a53a5;   /* Merlin info-150 (idem) */
   --sidebar-w:    200px;
   --sidebar-col:  52px;
   --topbar-h:     52px;
@@ -46,7 +46,7 @@ textarea,
 select {
   background: var(--bg-input);
   border: 1px solid var(--border-input);
-  border-radius: 7px;
+  border-radius: var(--radius-input);
   color: var(--text);
   padding: 0.55rem 0.85rem;
   font-size: 0.875rem;
@@ -70,5 +70,5 @@ select option {
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-disabled); }
