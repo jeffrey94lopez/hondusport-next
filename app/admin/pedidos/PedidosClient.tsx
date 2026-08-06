@@ -25,12 +25,17 @@ interface Props { pedidos: Pedido[] }
 export default function PedidosClient({ pedidos }: Props) {
   const [filtro, setFiltro] = useState<EstadoPedido | 'todos'>('todos')
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const filtered = filtro === 'todos' ? pedidos : pedidos.filter(p => p.estado === filtro)
 
   function handleEstado(id: string, estado: EstadoPedido) {
-    startTransition(async () => { await cambiarEstado(id, estado) })
+    setError(null)
+    startTransition(async () => {
+      const result = await cambiarEstado(id, estado)
+      if (result.error) setError(result.error)
+    })
   }
 
   return (
@@ -41,6 +46,8 @@ export default function PedidosClient({ pedidos }: Props) {
           <p className={styles.subtitle}>{filtered.length} pedidos</p>
         </div>
       </div>
+
+      {error && <div className={styles.errorBanner}>{error}</div>}
 
       <div className={styles.filtros}>
         <button

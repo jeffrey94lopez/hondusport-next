@@ -11,9 +11,10 @@ Con este cambio, cancelar repone y des-cancelar re-descuenta, de forma atómica.
   text)` (nueva migración), y el server action `cambiarEstado`
   (`app/admin/pedidos/actions.ts`) que pasa de `.update()` directo a la RPC, con
   errores traducidos vía `traducirErrorPedido`.
-- **No incluye:** cambios de UI (la vista de pedidos ya muestra el error del
-  action), historial de movimientos de stock, y reposición para pedidos cancelados
-  ANTES de este deploy (esos ya se ajustaron o se ajustan a mano).
+- **No incluye:** cambios de UI más allá de mostrar el error del action en la
+  vista de pedidos (la revisión final detectó que el resultado se descartaba; se
+  corrigió), historial de movimientos de stock, y reposición para pedidos
+  cancelados ANTES de este deploy (esos ya se ajustaron o se ajustan a mano).
 
 ## Decisiones tomadas
 
@@ -74,6 +75,8 @@ const { error } = await supabase.rpc('cambiar_estado_pedido', {
 })
 if (error) return { error: traducirErrorPedido(error.message) ?? error.message }
 ```
+
+La vista `PedidosClient` captura el `ActionResult` y muestra `error` al admin.
 
 `traducirErrorPedido` (lib/store/variantes.ts) ya maneja `HS_STOCK`/`HS_VARIANTE`;
 gana un caso `HS_PEDIDO` → `'El pedido ya no existe'` (con test).

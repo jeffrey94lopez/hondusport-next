@@ -27,14 +27,15 @@ begin
     -- Reponer: los WHERE con "stock is not null" saltan ilimitados y,
     -- al no matchear filas, también variantes/productos borrados.
     for v_item in
-      select pi.producto_id, pi.variante_id, pi.cantidad
+      select pi.producto_id, pi.variante_id, pi.cantidad, pi.variante_nombre
       from pedido_items pi where pi.pedido_id = p_pedido_id
+      order by pi.producto_id, pi.variante_id
     loop
       if v_item.variante_id is not null then
         update producto_variantes pv
           set stock = pv.stock + v_item.cantidad
           where pv.id = v_item.variante_id and pv.stock is not null;
-      elsif v_item.producto_id is not null then
+      elsif v_item.producto_id is not null and v_item.variante_nombre is null then
         update productos pr
           set stock = pr.stock + v_item.cantidad
           where pr.id = v_item.producto_id and pr.stock is not null;
@@ -47,6 +48,7 @@ begin
       select pi.producto_id, pi.variante_id, pi.cantidad,
              pi.nombre_producto, pi.variante_nombre
       from pedido_items pi where pi.pedido_id = p_pedido_id
+      order by pi.producto_id, pi.variante_id
     loop
       if v_item.variante_id is not null then
         select pv.stock into v_stock from producto_variantes pv
@@ -60,7 +62,7 @@ begin
             set stock = stock - v_item.cantidad
             where producto_variantes.id = v_item.variante_id;
         end if;
-      elsif v_item.producto_id is not null then
+      elsif v_item.producto_id is not null and v_item.variante_nombre is null then
         select pr.stock into v_stock from productos pr
           where pr.id = v_item.producto_id for update;
         if found and v_stock is not null then
@@ -81,3 +83,4 @@ end;
 $$;
 
 grant execute on function cambiar_estado_pedido(uuid, text) to authenticated;
+revoke execute on function cambiar_estado_pedido(uuid, text) from public, anon;
