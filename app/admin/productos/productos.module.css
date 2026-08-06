@@ -229,6 +229,15 @@
   align-items: center;
 }
 
+.varianteHeadRow {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr auto auto auto auto;
+  gap: 0.5rem;
+  font: var(--text-caption);
+  color: var(--text-muted);
+  padding: 0 0.1rem;
+}
+
 .varianteActiva {
   display: flex;
   align-items: center;

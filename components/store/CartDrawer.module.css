@@ -208,7 +208,8 @@
 }
 
 .qtyBtn:disabled {
-  opacity: 0.5;
+  background: var(--cta-disabled-bg);
+  color: var(--cta-disabled-text);
   cursor: not-allowed;
 }
 

@@ -233,7 +233,7 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(231, 76, 60, 0.9);
+  background: color-mix(in srgb, var(--error-strong) 90%, transparent);
   color: white;
   text-align: center;
   font-size: 0.7rem;

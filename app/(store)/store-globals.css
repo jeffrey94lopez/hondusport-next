@@ -80,6 +80,7 @@
 .storeRoot input[type="number"],
 .storeRoot input[type="password"],
 .storeRoot input[type="search"],
+.storeRoot input:not([type]),
 .storeRoot textarea,
 .storeRoot select {
   background: var(--bg);
@@ -92,6 +93,7 @@
 .storeRoot input[type="number"]:hover,
 .storeRoot input[type="password"]:hover,
 .storeRoot input[type="search"]:hover,
+.storeRoot input:not([type]):hover,
 .storeRoot textarea:hover,
 .storeRoot select:hover {
   background: var(--hover-input);

@@ -11,7 +11,6 @@
   --border-input: var(--line);
   --accent:       var(--brand);
   --accent-dim:   var(--brand-bg);
-  --accent-border: var(--brand-subtle);
   --text:         var(--ink);
   --text-muted:   var(--ink-muted);
   --text-dim:     var(--ink-disabled);
@@ -21,7 +20,6 @@
   --info:         #0a53a5;   /* Merlin info-150 (idem) */
   --sidebar-w:    200px;
   --sidebar-col:  52px;
-  --topbar-h:     52px;
 }
 
 html, body {
@@ -42,6 +40,7 @@ input[type="email"],
 input[type="number"],
 input[type="password"],
 input[type="url"],
+input:not([type]),
 textarea,
 select {
   background: var(--bg-input);

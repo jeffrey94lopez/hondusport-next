@@ -237,7 +237,8 @@
 }
 
 .addBtn:disabled {
-  opacity: 0.6;
+  background: var(--cta-disabled-bg);
+  color: var(--cta-disabled-text);
   cursor: not-allowed;
 }
 

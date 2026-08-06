@@ -241,6 +241,18 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
             <label className={styles.formLabel}>
               Variantes (opcional) — si agregas variantes, el producto se vende por variante
             </label>
+            {form.variantes.length > 0 && (
+              <div className={styles.varianteHeadRow} aria-hidden="true">
+                <span>Nombre</span>
+                <span>SKU</span>
+                <span>Precio (vacío = hereda)</span>
+                <span>Stock (vacío = ilimitado)</span>
+                <span>Activa</span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            )}
             {form.variantes.map((v, i) => (
               <div key={v.id ?? `nueva-${i}`} className={styles.varianteRow}>
                 <input
