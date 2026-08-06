@@ -2,7 +2,6 @@
 
 :root {
   --bg:           var(--page);
-  --bg-deep:      #eef0f5;
   --bg-card:      var(--card);
   --bg-hover:     var(--hover-input);
   --bg-input:     var(--page);

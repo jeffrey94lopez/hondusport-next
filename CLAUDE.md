@@ -48,6 +48,10 @@ npx tsc --noEmit # typecheck (los Server Actions no están cubiertos por tests)
 - **Variantes padre/hijo:** un producto con hijas activas en `producto_variantes` se vende POR variante (precio propio o heredado, stock propio). La RPC `crear_pedido` valida y **descuenta stock atómicamente** al crear el pedido — también para productos planos (stock null = ilimitado). Lógica pura en `lib/store/variantes.ts`.
 - **CSS Modules** por componente (`Componente.module.css`). La tienda scopea sus
   estilos globales bajo `.storeRoot` (ver `store-globals.css`).
+- **Design system Merlin:** los estilos usan los tokens semánticos de `app/merlin.css`
+  (colores, radios, sombras, tipografía Poppins); el mapeo Merlin→semántico vive en
+  `docs/superpowers/specs/2026-08-06-merlin-design-system-design.md`. No hardcodees
+  valores que ya tienen token.
 - **Idioma:** UI, nombres de dominio y mensajes de commit en español. Moneda en
   Lempiras (`L.`). Precio con `formatPrice()`.
 

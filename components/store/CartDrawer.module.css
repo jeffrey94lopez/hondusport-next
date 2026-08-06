@@ -256,7 +256,7 @@
 
 .couponError {
   font-size: 0.7rem;
-  color: var(--error-strong);
+  color: var(--estado-error-text);
   margin: -4px 0 8px;
 }
 
@@ -279,7 +279,7 @@
 
 .subtotalVal {
   font-size: 0.9rem;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   text-decoration: line-through;
   margin-right: 6px;
 }
