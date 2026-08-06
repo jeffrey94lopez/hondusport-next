@@ -1,12 +1,12 @@
 const BADGE_COLORS: Record<string, string> = {
-  Oferta: '#E74C3C',
-  'Más Vendido': '#E74C3C',
-  Nuevo: '#27AE60',
-  Sustentable: '#2980B9',
-  'Últimas unidades': '#E67E22',
+  Oferta: '#c31a2f', // --error-strong
+  'Más Vendido': '#c31a2f',
+  Nuevo: '#1b8959', // --success
+  Sustentable: '#0a53a5', // --info
+  'Últimas unidades': '#a16b00', // --warning
 }
 
-const DEFAULT_BADGE_COLOR = '#E74C3C'
+const DEFAULT_BADGE_COLOR = '#c31a2f'
 
 export function formatPrice(amount: number): string {
   return 'L. ' + amount.toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })

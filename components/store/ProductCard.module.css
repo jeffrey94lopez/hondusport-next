@@ -1,7 +1,8 @@
 .card {
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   transition: var(--transition);
   position: relative;
   display: flex;
@@ -11,6 +12,7 @@
 
 .card:hover {
   transform: translateY(-4px);
+  box-shadow: var(--shadow-pop);
 }
 
 .imgContainer {
@@ -18,10 +20,10 @@
   max-height: 320px;
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   position: relative;
   cursor: pointer;
-  background: #fafafa;
+  background: var(--hover-input);
   border: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -96,17 +98,15 @@
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 1px;
-  text-transform: uppercase;
   display: block;
   margin-top: 4px;
 }
 
 .outOfStock {
-  color: #E74C3C;
+  color: var(--error-strong);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 1px;
-  text-transform: uppercase;
   display: block;
   margin-top: 4px;
 }
@@ -118,11 +118,10 @@
   background: var(--btn-bg);
   color: var(--btn-text);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-btn);
   font-weight: 700;
   font-size: 0.65rem;
   letter-spacing: 1px;
-  text-transform: uppercase;
   transition: 0.3s;
   margin-top: 10px;
   cursor: pointer;
@@ -156,11 +155,10 @@
     background: var(--primary);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-btn);
     font-weight: 700;
     font-size: 0.7rem;
     letter-spacing: 1px;
-    text-transform: uppercase;
     cursor: pointer;
     margin-top: 6px;
     transition: opacity 0.2s;
@@ -179,11 +177,10 @@
   padding: 5px 14px;
   font-size: 0.7rem;
   font-weight: 700;
-  border-radius: 6px;
+  border-radius: var(--radius-tag);
   z-index: 2;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-card);
 }
 
 .rank {
@@ -215,11 +212,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ccc;
+  color: var(--ink-disabled);
   font-size: 0.95rem;
   cursor: pointer;
   z-index: 10;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -228,7 +225,7 @@
 }
 
 .wishlistBtnActive {
-  color: #E74C3C;
+  color: var(--error-strong);
 }
 
 .offerTimer {
@@ -243,7 +240,6 @@
   font-weight: 700;
   padding: 6px 0;
   letter-spacing: 1px;
-  text-transform: uppercase;
   z-index: 5;
   backdrop-filter: blur(4px);
   transition: transform 0.3s;

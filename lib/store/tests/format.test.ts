@@ -13,12 +13,12 @@ describe('formatPrice', () => {
 
 describe('getBadgeColor', () => {
   it('returns the mapped color for known badges', () => {
-    expect(getBadgeColor('Oferta')).toBe('#E74C3C')
-    expect(getBadgeColor('Nuevo')).toBe('#27AE60')
+    expect(getBadgeColor('Oferta')).toBe('#c31a2f')
+    expect(getBadgeColor('Nuevo')).toBe('#1b8959')
   })
 
   it('falls back to the default color for unknown badges', () => {
-    expect(getBadgeColor('Edición Especial')).toBe('#E74C3C')
+    expect(getBadgeColor('Edición Especial')).toBe('#c31a2f')
   })
 })
 

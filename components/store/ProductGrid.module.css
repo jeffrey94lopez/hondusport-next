@@ -13,11 +13,11 @@
 }
 
 .sectionOfertas {
-  border-top: 3px solid #e74c3c;
+  border-top: 3px solid var(--error-strong);
 }
 
 .sectionNuevos {
-  border-top: 3px solid #27ae60;
+  border-top: 3px solid var(--success);
 }
 
 .sectionVendidos {
@@ -37,12 +37,11 @@
 }
 
 .offerTagPremium {
-  background: #e74c3c;
+  background: var(--error-strong);
   color: white;
-  border-radius: 4px;
+  border-radius: var(--radius-tag);
   font-size: 0.65rem;
   letter-spacing: 1px;
-  text-transform: uppercase;
   padding: 4px 10px;
   margin-left: 10px;
   vertical-align: middle;
@@ -83,7 +82,7 @@
   justify-content: center;
   font-size: 1.1rem;
   transition: 0.2s;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-card);
 }
 
 .carouselBtn:hover {
@@ -128,8 +127,8 @@
 }
 
 .todosGrid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 }
 
 .fadeInUp {
@@ -145,7 +144,7 @@
 
 .skeletonCard {
   background: transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -154,15 +153,15 @@
 
 .skeletonImg {
   height: 220px;
-  background: #e0e0e0;
-  border-radius: 8px;
+  background: var(--line);
+  border-radius: var(--radius-card);
   margin-bottom: 1rem;
 }
 
 .skeletonText {
   height: 14px;
-  background: #e0e0e0;
-  border-radius: 4px;
+  background: var(--line);
+  border-radius: var(--radius-input);
   margin-bottom: 8px;
   width: 90%;
 }
@@ -199,10 +198,9 @@
   font-weight: 700;
   font-size: 0.8rem;
   letter-spacing: 1.5px;
-  text-transform: uppercase;
   transition: 0.3s;
   cursor: pointer;
-  border-radius: 30px;
+  border-radius: var(--radius-btn);
 }
 
 .loadMoreBtn:hover {
