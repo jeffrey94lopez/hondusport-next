@@ -2,7 +2,7 @@
   position: relative;
   height: 100vh;
   overflow: hidden;
-  background: #000;
+  background: var(--cta);
 }
 
 .slide {
@@ -31,14 +31,13 @@
   -webkit-backdrop-filter: blur(8px);
   padding: 3rem 2rem;
   max-width: 800px;
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .slideContent h1 {
-  font-size: clamp(3rem, 8vw, 7rem);
+  font: var(--text-header);
   letter-spacing: 2px;
-  line-height: 1;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
   margin-bottom: 1rem;
 }
@@ -48,7 +47,6 @@
   opacity: 0.9;
   max-width: 400px;
   margin: 0 auto 2rem;
-  font-family: 'Inter', sans-serif;
 }
 
 .heroBtn {
@@ -61,9 +59,8 @@
   font-weight: 700;
   font-size: 0.85rem;
   letter-spacing: 2px;
-  text-transform: uppercase;
   transition: var(--transition);
-  border-radius: 6px;
+  border-radius: var(--radius-btn);
 }
 
 .heroBtn:hover {
