@@ -100,6 +100,8 @@ describe('traducirErrorPedido', () => {
     expect(traducirErrorPedido('HS_VARIANTE|Camisa')).toBe('La variante seleccionada de "Camisa" ya no está disponible'))
   it('producto inactivo', () =>
     expect(traducirErrorPedido('HS_INACTIVO|Camisa')).toBe('"Camisa" ya no está disponible'))
+  it('pedido inexistente', () =>
+    expect(traducirErrorPedido('HS_PEDIDO|abc-123')).toBe('El pedido ya no existe'))
   it('desconocido devuelve null', () => {
     expect(traducirErrorPedido('otra cosa')).toBeNull()
     expect(traducirErrorPedido(undefined)).toBeNull()

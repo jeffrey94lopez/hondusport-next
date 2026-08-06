@@ -75,6 +75,8 @@ export function traducirErrorPedido(message: string | null | undefined): string 
       return `La variante seleccionada de "${nombre}" ya no está disponible`
     case 'HS_INACTIVO':
       return `"${nombre}" ya no está disponible`
+    case 'HS_PEDIDO':
+      return 'El pedido ya no existe'
     default:
       return null
   }
