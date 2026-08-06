@@ -21,6 +21,8 @@
   width: 52px;
   height: 52px;
   background: var(--accent);
+  /* Icono cuadrado sin token de radio equivalente (9/25/26px no encajan);
+     mismo criterio que el .logo de Sidebar.module.css (Task 11, 8px literal). */
   border-radius: 12px;
   display: flex;
   align-items: center;

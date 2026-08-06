@@ -3,6 +3,8 @@
 .title { font-size: 1.25rem; font-weight: 800; }
 .subtitle { font-size: 0.8rem; color: var(--text-muted); }
 
+/* Reciente (fuera del barrido Merlin): se conserva tal cual, radio 8px
+   incluido, por indicación explícita del brief de Task 13. */
 .errorBanner {
   background: rgba(224, 85, 85, 0.1);
   border: 1px solid var(--danger);
