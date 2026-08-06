@@ -1,15 +1,36 @@
 .page { max-width: 720px; margin: 0 auto; padding: 1.5rem; }
-.filtros { display: flex; flex-direction: column; gap: 1rem; }
-.grupo { border: 1px solid var(--border); border-radius: var(--radius-card); padding: 1rem; }
+.filtros { display: flex; flex-direction: column; gap: 1.25rem; }
+/* Card Merlin estándar del admin (mismo patrón que dashboard .section):
+   fondo + sombra dan la jerarquía que el borde solo no aporta sobre el
+   fondo gris de la página. */
+.grupo {
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 1rem;
+}
 .grupoTitulo { font-weight: 600; margin-bottom: 0.5rem; }
 .checks { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-.card { border: 1px solid var(--border); border-radius: var(--radius-card); padding: 1.5rem; }
+.card {
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 1.5rem;
+}
 .cardHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 .contador { font-weight: 600; }
 .saved { color: var(--success); }
 .nav { display: flex; gap: 0.75rem; justify-content: space-between; margin-top: 1.5rem; }
 .error { color: var(--error-strong); margin-top: 0.5rem; }
-.resumen { text-align: center; padding: 2rem; }
+.resumen {
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-card);
+  text-align: center;
+  padding: 2rem;
+}
 
 /* Patrón Tertiary (tokens de .btnMerlinTertiary) para navegación/toggles
    baratos del carrusel — espejo de .btnSecondary en productos.module.css. */
