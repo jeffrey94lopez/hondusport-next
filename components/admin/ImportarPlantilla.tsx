@@ -111,7 +111,7 @@ export default function ImportarPlantilla() {
               </table>
               <div style={{ marginTop: 16, textAlign: 'right' }}>
                 <button className={styles.btnCancel} onClick={() => setPaso('subir')} type="button">Atrás</button>
-                <button className={styles.btnPrimary} onClick={() => enviar(false)} disabled={!obligatoriosOk || cargando} type="button">
+                <button className={`${styles.btnPrimary} btnMerlinPrimary`} onClick={() => enviar(false)} disabled={!obligatoriosOk || cargando} type="button">
                   {cargando ? 'Procesando…' : 'Ver preview'}
                 </button>
               </div>
@@ -165,7 +165,7 @@ export default function ImportarPlantilla() {
               )}
               <div style={{ marginTop: 16, textAlign: 'right' }}>
                 <button className={styles.btnCancel} onClick={() => setPaso('mapear')} type="button">Atrás</button>
-                <button className={styles.btnPrimary} onClick={() => enviar(true)} disabled={preview.errores.length > 0 || cargando} type="button">
+                <button className={`${styles.btnPrimary} btnMerlinPrimary`} onClick={() => enviar(true)} disabled={preview.errores.length > 0 || cargando} type="button">
                   {cargando ? 'Importando…' : 'Confirmar import'}
                 </button>
               </div>

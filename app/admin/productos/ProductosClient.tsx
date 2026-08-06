@@ -178,7 +178,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
           </label>
           <ImportarPlantilla />
           <Link href="/admin/productos/carrusel" className={styles.btnSecondary}>Modo carrusel</Link>
-          <button className={styles.btnPrimary} onClick={openCreate}>
+          <button className={`${styles.btnPrimary} btnMerlinPrimary`} onClick={openCreate}>
             + Nuevo producto
           </button>
         </div>
@@ -260,7 +260,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
               <button type="button" className={styles.btnCancel} onClick={closeModal}>
                 Cancelar
               </button>
-              <button type="submit" className={styles.btnPrimary} disabled={isPending}>
+              <button type="submit" className={`${styles.btnPrimary} btnMerlinPrimary`} disabled={isPending}>
                 {isPending ? 'Guardando…' : modal === 'edit' ? 'Guardar cambios' : 'Crear producto'}
               </button>
             </div>
@@ -294,7 +294,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
             </div>
           )}
           <div style={{ marginTop: 16, textAlign: 'right' }}>
-            <button className={styles.btnPrimary} onClick={cerrarResultado}>Cerrar</button>
+            <button className={`${styles.btnPrimary} btnMerlinPrimary`} onClick={cerrarResultado}>Cerrar</button>
           </div>
         </Modal>
       )}
