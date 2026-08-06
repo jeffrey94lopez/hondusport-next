@@ -58,7 +58,7 @@
 
 .shippingMeter {
   margin: 15px 0;
-  background: var(--border);
+  background: var(--brand-subtle);
   height: 4px;
   overflow: hidden;
 }
