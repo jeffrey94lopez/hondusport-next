@@ -40,7 +40,6 @@ export default function LoginPage() {
             onChange={e => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className={styles.input}
           />
           <input
             type="password"
@@ -49,10 +48,9 @@ export default function LoginPage() {
             onChange={e => setPassword(e.target.value)}
             required
             autoComplete="current-password"
-            className={styles.input}
           />
           {error && <p className={styles.error}>{error}</p>}
-          <button type="submit" disabled={loading} className={styles.btn}>
+          <button type="submit" disabled={loading} className={`${styles.btn} btnMerlinPrimary`}>
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>

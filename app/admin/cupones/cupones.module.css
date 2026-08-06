@@ -1,12 +1,12 @@
 .page { padding: 1.5rem; }
 .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .title { font-size: 1.25rem; font-weight: 800; }
-.btnPrimary { background: var(--accent); color: #000; border: none; border-radius: 7px; padding: 0.55rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.btnPrimary { background: var(--accent); color: var(--text); border: none; border-radius: var(--radius-input); padding: 0.55rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
 .btnPrimary:disabled { opacity: 0.5; }
-.btnCancel { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: 7px; padding: 0.55rem 1rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; }
-.btnDelete { background: none; border: 1px solid var(--border-light); border-radius: 6px; padding: 0.3rem 0.65rem; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; }
-.btnDelete:hover { border-color: var(--danger); color: var(--danger); }
-.tableWrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.btnCancel { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: var(--radius-input); padding: 0.55rem 1rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; }
+.btnDelete { background: none; border: 1px solid var(--border-light); border-radius: var(--radius-input); padding: 0.3rem 0.65rem; font-size: 0.75rem; color: var(--danger); cursor: pointer; }
+.btnDelete:hover { border-color: var(--danger); opacity: 0.75; }
+.tableWrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.855rem; }
 .table th { text-align: left; padding: 0.7rem 1rem; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border); }
 .table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }

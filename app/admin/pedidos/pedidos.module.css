@@ -24,7 +24,7 @@
 .filtroBtn {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 20px;
+  border-radius: var(--radius-tag);
   padding: 0.35rem 0.9rem;
   font-size: 0.78rem;
   color: var(--text-muted);
@@ -39,7 +39,7 @@
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   overflow: hidden;
 }
 
@@ -51,7 +51,7 @@
   cursor: pointer;
   gap: 1rem;
 }
-.cardHeader:hover { background: rgba(255,255,255,0.02); }
+.cardHeader:hover { background: var(--bg-hover); }
 
 .cardLeft, .cardRight {
   display: flex;
@@ -64,10 +64,13 @@
 .ciudad { font-size: 0.8rem; color: var(--text-muted); }
 .total { font-weight: 700; font-size: 0.9rem; }
 
+/* Fondo neutro: el color por estado ya viene inline desde ESTADO_COLOR
+   (app/admin/estadoColor.ts). Sin clase por estado en el markup no hay forma
+   limpia de variar el fondo por --*-bg sin duplicar el mapa en CSS. */
 .estadoSelect {
   background: var(--bg-hover);
   border: 1px solid var(--border-light);
-  border-radius: 6px;
+  border-radius: var(--radius-input);
   padding: 0.3rem 0.5rem;
   font-size: 0.78rem;
   font-weight: 600;
@@ -77,8 +80,8 @@
 
 .waBtn {
   background: #25d366;
-  color: #000;
-  border-radius: 6px;
+  color: var(--text);
+  border-radius: var(--radius-input);
   padding: 0.3rem 0.6rem;
   font-size: 0.75rem;
   font-weight: 700;
