@@ -45,12 +45,12 @@
   margin-bottom: 4px;
   cursor: pointer;
   padding: 6px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-input);
   transition: 0.2s;
 }
 
 .checkLabel:hover {
-  background: rgba(201, 168, 76, 0.1);
+  background: var(--brand-bg);
 }
 
 .filterCheck {
@@ -68,7 +68,7 @@
   height: 18px;
   border: 2px solid var(--border);
   background: var(--bg);
-  border-radius: 4px;
+  border-radius: var(--radius-input);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -102,7 +102,7 @@
   cursor: pointer;
   transition: 0.2s;
   letter-spacing: 0.5px;
-  border-radius: 6px;
+  border-radius: var(--radius-input);
 }
 
 .tallaBtn:hover,
@@ -126,14 +126,13 @@
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 1px;
-  text-transform: uppercase;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   transition: 0.2s;
-  border-radius: 6px;
+  border-radius: var(--radius-input);
 }
 
 .clearBtn:hover {
@@ -153,7 +152,7 @@
     padding: 2rem;
     overflow-y: auto;
     transition: left 0.3s ease;
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-modal);
   }
 
   .sidebarActive {

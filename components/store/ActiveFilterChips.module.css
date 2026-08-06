@@ -11,16 +11,16 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.3rem 0.7rem;
-  border: 1px solid var(--text);
-  border-radius: 999px;
+  border: none;
+  border-radius: var(--radius-tag);
   font-size: 0.8rem;
-  background: transparent;
-  color: var(--text);
+  background: var(--brand-bg);
+  color: var(--brand);
   cursor: pointer;
 }
 
 .chip:hover {
-  opacity: 0.7;
+  background: var(--brand-subtle);
 }
 
 .clearAll {
