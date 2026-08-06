@@ -1,6 +1,6 @@
 .footer {
   background: #0a0a0a;
-  color: var(--bg-light);
+  color: var(--page);
   padding: 4rem 5%;
   font-family: 'Inter', sans-serif;
 }
