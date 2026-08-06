@@ -23,6 +23,8 @@
   width: 90%;
   padding: 3rem;
   border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-modal);
 }
 
 .popupActive {
@@ -56,7 +58,6 @@
   color: var(--text);
   padding: 10px 4px;
   outline: none;
-  font-family: 'Inter', sans-serif;
 }
 
 .input:focus {
@@ -64,7 +65,7 @@
 }
 
 .error {
-  color: #e74c3c;
+  color: var(--error-strong);
   font-size: 0.8rem;
   margin-bottom: 10px;
 }
@@ -76,11 +77,8 @@
   background: var(--btn-bg);
   color: var(--btn-text);
   border: none;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 0.65rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  border-radius: var(--radius-btn);
+  font: var(--text-subtitle);
   cursor: pointer;
   transition: var(--transition);
 }

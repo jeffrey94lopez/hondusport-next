@@ -31,16 +31,14 @@
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  border-radius: 0;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-modal);
   position: relative;
   pointer-events: auto;
 }
 
 .content h3 {
-  font-family: 'Bebas Neue', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 1.5rem;
+  font: var(--text-subtitle);
   margin-bottom: 1.25rem;
   text-align: center;
 }
@@ -75,10 +73,8 @@
   font-weight: 700;
   font-size: 0.8rem;
   letter-spacing: 1px;
-  text-transform: uppercase;
   transition: 0.2s;
-  font-family: 'Inter', sans-serif;
-  border-radius: 0;
+  border-radius: var(--radius-input);
   flex: 1;
   justify-content: center;
 }
@@ -87,13 +83,13 @@
   border-color: var(--primary);
   color: var(--primary);
   opacity: 1;
-  background: rgba(201, 168, 76, 0.05);
+  background: var(--brand-bg);
 }
 
 .pickupInfo {
   padding: 1rem;
   border: 1.5px dashed var(--primary);
-  background: rgba(201, 168, 76, 0.05);
+  background: var(--brand-bg);
   margin-bottom: 1.5rem;
 }
 
@@ -111,7 +107,7 @@
 .pickupDiscountBadge {
   display: block;
   margin-top: 10px;
-  color: #27ae60;
+  color: var(--success);
   font-weight: 700;
   font-size: 0.75rem;
 }
@@ -124,11 +120,10 @@
   border-bottom: 2px solid var(--border);
   background: transparent;
   color: var(--text);
-  font-family: 'Inter', sans-serif;
   font-size: 0.85rem;
   outline: none;
   margin-bottom: 1.2rem;
-  border-radius: 0;
+  border-radius: var(--radius-input);
   transition: 0.2s;
   display: block;
 }
@@ -165,8 +160,11 @@
 }
 
 .errorMsg {
-  color: #e74c3c;
+  color: var(--error);
+  background: var(--estado-error-bg);
   font-size: 0.8rem;
+  padding: 10px;
+  border-radius: var(--radius-card);
   margin-bottom: 1rem;
   text-align: center;
 }
@@ -176,16 +174,12 @@
   width: 100%;
   padding: 14px;
   background: var(--primary);
-  color: #fff;
+  color: white;
   border: none;
-  border-radius: 0;
-  font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  border-radius: var(--radius-btn);
+  font: var(--text-subtitle);
   cursor: pointer;
   transition: 0.2s;
-  font-family: 'Inter', sans-serif;
 }
 
 .submitBtn:disabled {
