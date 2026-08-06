@@ -184,7 +184,7 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <span>SELECCIONA TU TALLA</span>
-              <button className={styles.sizeGuideBtn} onClick={() => setSizeGuideOpen(true)}>
+              <button className={`${styles.sizeGuideBtn} btnMerlinTertiary`} onClick={() => setSizeGuideOpen(true)}>
                 <i className="fa-solid fa-ruler-horizontal" /> GUÍA DE TALLAS
               </button>
             </div>
@@ -230,13 +230,13 @@ export default function ProductDetail({ producto, relacionados, tallaFiltros, al
         </button>
 
         <div className={styles.shareGrid}>
-          <button className={styles.shareBtn} onClick={shareWhatsApp}>
+          <button className={`${styles.shareBtn} btnMerlinTertiary`} onClick={shareWhatsApp}>
             <i className="fa-brands fa-whatsapp" /> WHATSAPP
           </button>
-          <button className={styles.shareBtn} onClick={shareFacebook}>
+          <button className={`${styles.shareBtn} btnMerlinTertiary`} onClick={shareFacebook}>
             <i className="fa-brands fa-facebook-f" /> FACEBOOK
           </button>
-          <button className={styles.shareBtn} onClick={copyLink}>
+          <button className={`${styles.shareBtn} btnMerlinTertiary`} onClick={copyLink}>
             <i className="fa-solid fa-copy" /> COPIAR ENLACE
           </button>
         </div>
