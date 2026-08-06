@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import styles from './dashboard.module.css'
 import type { EstadoPedido } from '@/types'
 import { stockEfectivo } from '@/lib/store/variantes'
+import { ESTADO_COLOR } from '@/app/admin/estadoColor'
 
 interface PedidoReciente {
   id: string
@@ -41,14 +42,6 @@ export default async function DashboardPage() {
     const stock = stockEfectivo(p.stock, (p.producto_variantes ?? []).filter(v => v.activo))
     return stock != null && stock < 5
   }).length
-
-  const ESTADO_COLOR: Record<string, string> = {
-    recibido: '#3b8fed',
-    preparando: '#f59e0b',
-    enviado: '#8b5cf6',
-    entregado: '#5bbf6b',
-    cancelado: '#e05555',
-  }
 
   return (
     <div className={styles.page}>

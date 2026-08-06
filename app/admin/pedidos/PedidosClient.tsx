@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react'
 import type { Pedido, EstadoPedido } from '@/types'
 import { cambiarEstado } from './actions'
+import { ESTADO_COLOR } from '@/app/admin/estadoColor'
 import styles from './pedidos.module.css'
 
 const ESTADOS: EstadoPedido[] = ['recibido', 'preparando', 'enviado', 'entregado', 'cancelado']
@@ -11,13 +12,6 @@ const ESTADO_LABEL: Record<EstadoPedido, string> = {
   enviado: 'Enviado',
   entregado: 'Entregado',
   cancelado: 'Cancelado',
-}
-const ESTADO_COLOR: Record<EstadoPedido, string> = {
-  recibido: '#3b8fed',
-  preparando: '#f59e0b',
-  enviado: '#8b5cf6',
-  entregado: '#5bbf6b',
-  cancelado: '#e05555',
 }
 
 interface Props { pedidos: Pedido[] }

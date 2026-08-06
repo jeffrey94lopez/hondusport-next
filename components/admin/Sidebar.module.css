@@ -1,6 +1,7 @@
 .sidebar {
   width: var(--sidebar-w);
-  background: var(--bg-deep);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -34,7 +35,7 @@
   justify-content: center;
   font-size: 11px;
   font-weight: 900;
-  color: #000;
+  color: var(--text);
   flex-shrink: 0;
 }
 
@@ -84,7 +85,7 @@
   gap: 0.6rem;
   padding: 0.45rem 0.7rem;
   margin: 0 0.4rem;
-  border-radius: 7px;
+  border-radius: var(--radius-input);
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 500;
@@ -121,8 +122,8 @@
 
 .badge {
   background: var(--accent);
-  color: #000;
-  border-radius: 10px;
+  color: var(--text);
+  border-radius: var(--radius-card);
   font-size: 0.68rem;
   font-weight: 900;
   min-width: 18px;
