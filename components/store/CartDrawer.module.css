@@ -256,7 +256,7 @@
 
 .couponError {
   font-size: 0.7rem;
-  color: var(--estado-error-text);
+  color: var(--error-strong);
   margin: -4px 0 8px;
 }
 

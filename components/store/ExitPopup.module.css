@@ -65,7 +65,7 @@
 }
 
 .error {
-  color: var(--estado-error-text);
+  color: var(--error-strong);
   font-size: 0.8rem;
   margin-bottom: 10px;
 }

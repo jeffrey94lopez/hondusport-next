@@ -103,7 +103,7 @@
 }
 
 .outOfStock {
-  color: var(--estado-error-text);
+  color: var(--error-strong);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 1px;
