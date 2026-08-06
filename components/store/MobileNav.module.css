@@ -78,10 +78,8 @@
   font-weight: 700;
   font-size: 0.9rem;
   letter-spacing: 1px;
-  text-transform: uppercase;
   padding: 1rem 0;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
   transition: color 0.2s;
 }
 
@@ -110,7 +108,7 @@
     padding: 10px 0;
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
     justify-content: space-around;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-raised);
   }
 }
 
@@ -123,7 +121,6 @@
   gap: 4px;
   color: var(--text);
   opacity: 0.5;
-  font-family: 'Inter', sans-serif;
   font-size: 0.65rem;
   cursor: pointer;
   position: relative;
@@ -142,10 +139,10 @@
   position: absolute;
   top: -5px;
   right: 5px;
-  background: #E74C3C;
+  background: var(--error-strong);
   color: white;
   font-size: 9px;
   padding: 2px 5px;
-  border-radius: 10px;
+  border-radius: var(--radius-tag);
   font-weight: bold;
 }
