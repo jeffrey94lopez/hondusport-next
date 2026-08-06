@@ -278,7 +278,7 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
                 </label>
                 <button type="button" onClick={() => moverVariante(i, -1)} disabled={i === 0}>↑</button>
                 <button type="button" onClick={() => moverVariante(i, 1)} disabled={i === form.variantes.length - 1}>↓</button>
-                <button type="button" className={styles.btnDelete} onClick={() => quitarVariante(i)}>Quitar</button>
+                <button type="button" className={styles.btnQuitarVariante} onClick={() => quitarVariante(i)}>Quitar</button>
               </div>
             ))}
             <button type="button" className={styles.btnSecondary} onClick={agregarVariante}>+ Agregar variante</button>

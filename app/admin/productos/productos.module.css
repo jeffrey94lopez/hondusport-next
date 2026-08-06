@@ -122,6 +122,20 @@
 .btnDelete { color: var(--danger); }
 .btnDelete:hover { border-color: var(--danger); opacity: 0.75; }
 
+/* Control barato y reversible dentro de la fila de variante (no es la
+   eliminación de la tabla de productos): énfasis bajo, rojo solo al hover. */
+.btnQuitarVariante {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.12s;
+}
+.btnQuitarVariante:hover { background: var(--error-bg); border-color: var(--danger); color: var(--danger); }
+
 .empty {
   padding: 3rem;
   text-align: center;
