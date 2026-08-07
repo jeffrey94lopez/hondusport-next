@@ -629,3 +629,127 @@
 }
 .varianteOption:hover:not(:disabled) { border-color: var(--accent); }
 .varianteOption:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Banner de aviso al retomar una espera (dismissible) */
+.avisoBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.avisoCerrar {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Modal de espera */
+.esperaModal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.esperaListTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+}
+.esperaList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.esperaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 0.6rem 0.75rem;
+}
+.esperaNombre { font-weight: 700; color: var(--text); font-size: 0.85rem; }
+.esperaFecha { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem; }
+.esperaAcciones {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Modal de cierre de caja */
+.cierreModal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.notasInput {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  resize: vertical;
+}
+.diferenciaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background: var(--bg-hover);
+  border-radius: var(--radius-card);
+  padding: 0.6rem 0.9rem;
+}
+
+/* Modal de historial de sesiones */
+.historialList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.historialRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) repeat(4, auto);
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.8rem;
+}
+.historialFecha { color: var(--text-muted); }
+.historialCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  color: var(--text);
+  font-weight: 600;
+}
+.historialCol span:first-child {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+  .historialRow { grid-template-columns: 1fr; text-align: left; }
+  .historialCol { align-items: flex-start; }
+}

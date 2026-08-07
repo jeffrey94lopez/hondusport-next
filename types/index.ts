@@ -323,6 +323,17 @@ export interface PagoPos {
   referencia?: string | null
 }
 
+// Forma simple de un documento + sus pagos para calcular el arqueo
+// (esperadoCaja, lib/pos/emision.ts). La usan tanto cerrarSesion (server,
+// app/admin/pos/actions.ts) como el resumen previo del modal de cierre en
+// PosClient — ambos releen `documentos` con el mismo embed
+// `documento_pagos(monto, metodos_pago(tipo))` y lo mapean a esta forma.
+export interface DocumentoParaArqueo {
+  estado: string
+  total: number
+  pagos: Array<{ tipo: MetodoPagoTipo; monto: number }>
+}
+
 // Documentos: factura o comprobante (espejo 1:1 de la tabla documentos)
 export interface Documento {
   id: string

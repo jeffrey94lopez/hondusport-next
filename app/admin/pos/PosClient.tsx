@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import type { FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { abrirSesion, emitirVenta } from './actions'
+import { abrirSesion, emitirVenta, guardarEspera, eliminarEspera, cerrarSesion } from './actions'
 import Modal from '@/components/admin/Modal'
-import { precioLineaPos, validarPagos, cambioPago, validarEmision } from '@/lib/pos/emision'
+import { precioLineaPos, validarPagos, cambioPago, validarEmision, esperadoCaja } from '@/lib/pos/emision'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { estadoCai } from '@/lib/pos/fiscal'
 import { toStoreVariantes, stockEfectivo, estaAgotado } from '@/lib/store/variantes'
@@ -24,6 +24,8 @@ import type {
   LineaPos,
   PagoPos,
   IsvTipo,
+  VentaEspera,
+  DocumentoParaArqueo,
 } from '@/types'
 import styles from './pos.module.css'
 
@@ -42,6 +44,12 @@ interface Props {
   clientes: Cliente[]
   cais: CaiAutorizacion[]
   config: ConfigMap
+  // Task 12: el page no conoce la caja seleccionada (vive en localStorage,
+  // solo se lee en el cliente), así que trae TODAS las esperas/sesiones
+  // cerradas y este componente filtra por `caja.id` una vez resuelta.
+  esperas: VentaEspera[]
+  sesionesCerradas: SesionCaja[]
+  documentosPorSesion: Record<string, DocumentoParaArqueo[]>
 }
 
 // Contrato de carrito para Task 11 (cobro/emisión, consume) y Task 12
@@ -81,6 +89,59 @@ function toLineaPos(l: LineaVenta): LineaPos {
     precio_unitario: l.precio_unitario,
     descuento: l.descuento,
     isv: l.isv,
+  }
+}
+
+// ---- Ventas en espera (Task 12) ----
+// Decisión de payload: `guardarEspera(cajaId, nombre, payload)` recibe
+// `payload: unknown` (columna jsonb) — se guardan las líneas de UI COMPLETAS
+// (con `precioManual`/`descuentoModo`), no solo `LineaPos`. Es un payload
+// interno que solo esta pantalla lee y escribe: al retomar hay que
+// reconstruir el carrito exacto (qué precios fueron editados a mano, en qué
+// modo se estaba viendo el descuento de cada línea), no solo los datos que
+// espera `emitirVenta`. `key` se descarta al guardar (id de React efímero,
+// se regenera al retomar) y `version` deja la puerta abierta a migrar el
+// formato sin romper esperas ya guardadas.
+interface LineaEsperaGuardada extends LineaPos {
+  precioManual: boolean
+  descuentoModo: DescuentoModo
+}
+
+interface EsperaPayload {
+  version: 1
+  lineas: LineaEsperaGuardada[]
+  descuentoGlobal: number
+  clienteId: string | null
+  vendedorId: string | null
+}
+
+function toLineaEsperaGuardada(l: LineaVenta): LineaEsperaGuardada {
+  return {
+    producto_id: l.producto_id,
+    variante_id: l.variante_id,
+    descripcion: l.descripcion,
+    cantidad: l.cantidad,
+    precio_unitario: l.precio_unitario,
+    descuento: l.descuento,
+    isv: l.isv,
+    precioManual: l.precioManual,
+    descuentoModo: l.descuentoModo,
+  }
+}
+
+// El payload viaja como `unknown` desde la BD (jsonb sin schema): se valida
+// la forma mínima antes de confiar en él (una espera corrupta o de un
+// formato futuro no debe tumbar la pantalla).
+function parseEsperaPayload(raw: unknown): EsperaPayload | null {
+  if (!raw || typeof raw !== 'object') return null
+  const p = raw as Partial<EsperaPayload>
+  if (!Array.isArray(p.lineas)) return null
+  return {
+    version: 1,
+    lineas: p.lineas as LineaEsperaGuardada[],
+    descuentoGlobal: typeof p.descuentoGlobal === 'number' ? p.descuentoGlobal : 0,
+    clienteId: typeof p.clienteId === 'string' ? p.clienteId : null,
+    vendedorId: typeof p.vendedorId === 'string' ? p.vendedorId : null,
   }
 }
 
@@ -155,7 +216,19 @@ function parseLimiteConsumidorFinal(config: ConfigMap): number {
   return Number.isFinite(n) ? n : 10000
 }
 
-export default function PosClient({ cajas, sesionesAbiertas, vendedores, metodos, productos, clientes, cais, config }: Props) {
+export default function PosClient({
+  cajas,
+  sesionesAbiertas,
+  vendedores,
+  metodos,
+  productos,
+  clientes,
+  cais,
+  config,
+  esperas,
+  sesionesCerradas,
+  documentosPorSesion,
+}: Props) {
   const router = useRouter()
   const [cajaId, setCajaId] = useState<string | null>(() => leerCajaGuardada(cajas))
   const [montoInicial, setMontoInicial] = useState('')
@@ -198,6 +271,14 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, metodos
   const [cobroAbierto, setCobroAbierto] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
   const nextKeyRef = useRef(0)
+
+  // ---- Espera / cierre de caja (Task 12) ----
+  const [esperaAbierta, setEsperaAbierta] = useState(false)
+  const [esperaError, setEsperaError] = useState('')
+  const [esperaPending, startEsperaTransition] = useTransition()
+  const [cierreAbierto, setCierreAbierto] = useState(false)
+  const [historialAbierto, setHistorialAbierto] = useState(false)
+  const [avisoRetomar, setAvisoRetomar] = useState('')
 
   const tasaCambioUsd = parseTasaUsd(config)
   const limiteConsumidorFinal = parseLimiteConsumidorFinal(config)
@@ -391,6 +472,114 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, metodos
     router.push(`/admin/pos/documento/${documentoId}?volver=pos`)
   }
 
+  // ---- Espera (Task 12) ----
+
+  function handleGuardarEspera(cajaIdActual: string, nombre: string) {
+    if (!nombre.trim()) {
+      setEsperaError('El nombre es requerido.')
+      return
+    }
+    if (lineas.length === 0) {
+      setEsperaError('Agrega productos antes de guardar en espera.')
+      return
+    }
+    setEsperaError('')
+    const payload: EsperaPayload = {
+      version: 1,
+      lineas: lineas.map(toLineaEsperaGuardada),
+      descuentoGlobal,
+      clienteId,
+      vendedorId,
+    }
+    startEsperaTransition(async () => {
+      const result = await guardarEspera(cajaIdActual, nombre.trim(), payload)
+      if (!result.ok) {
+        setEsperaError(result.error)
+        return
+      }
+      setLineas([])
+      setDescuentoGlobal(0)
+      setClienteId(null)
+      setVendedorId(null)
+      setEsperaAbierta(false)
+      router.refresh()
+    })
+  }
+
+  function handleDescartarEspera(id: string) {
+    setEsperaError('')
+    startEsperaTransition(async () => {
+      const result = await eliminarEspera(id)
+      if (!result.ok) {
+        setEsperaError(result.error)
+        return
+      }
+      router.refresh()
+    })
+  }
+
+  // Al retomar: revalida cada línea contra el catálogo actual (producto
+  // inexistente/inactivo, o variante que ya no está activa → se quita con
+  // aviso, tal como pide el brief); si el carrito actual tiene líneas, pide
+  // confirmación antes de reemplazarlas. La fila de espera se elimina siempre
+  // que se retome (con o sin avisos), igual que si el usuario la descartara.
+  function handleRetomarEspera(espera: VentaEspera) {
+    if (lineas.length > 0) {
+      const confirmado = window.confirm(
+        'Ya tienes productos en el carrito actual. Retomar esta venta en espera reemplazará el carrito. ¿Continuar?',
+      )
+      if (!confirmado) return
+    }
+
+    const payload = parseEsperaPayload(espera.payload)
+    if (!payload) {
+      setEsperaError('Esta venta en espera tiene un formato inválido y no se puede retomar.')
+      return
+    }
+
+    const avisos: string[] = []
+    const lineasRestauradas: LineaVenta[] = []
+    for (const l of payload.lineas) {
+      if (l.producto_id) {
+        const producto = productosPorId.get(l.producto_id)
+        if (!producto || !producto.activo) {
+          avisos.push(`"${l.descripcion}" ya no está disponible y se quitó de la venta.`)
+          continue
+        }
+        if (l.variante_id && !variantesActivasDe(producto).some(v => v.id === l.variante_id)) {
+          avisos.push(`"${l.descripcion}" ya no está disponible y se quitó de la venta.`)
+          continue
+        }
+      }
+      lineasRestauradas.push({ ...l, key: nuevaKey() })
+    }
+
+    setLineas(lineasRestauradas)
+    setDescuentoGlobal(clampDescuentoGlobal(lineasRestauradas, payload.descuentoGlobal))
+    setClienteId(payload.clienteId)
+    setVendedorId(payload.vendedorId)
+    setAvisoRetomar(avisos.length > 0 ? avisos.join(' ') : '')
+    setEsperaAbierta(false)
+    setEsperaError('')
+
+    startEsperaTransition(async () => {
+      await eliminarEspera(espera.id)
+      router.refresh()
+    })
+  }
+
+  // ---- Cierre de caja (Task 12) ----
+
+  function handleCierreCerrado() {
+    setLineas([])
+    setDescuentoGlobal(0)
+    setClienteId(null)
+    setVendedorId(null)
+    setAvisoRetomar('')
+    setCierreAbierto(false)
+    router.refresh()
+  }
+
   function seleccionarCaja(id: string) {
     window.localStorage.setItem(STORAGE_KEY, id)
     setCajaId(id)
@@ -545,6 +734,12 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, metodos
   const totales = totalesDocumento(lineasDesglosadas, descuentoGlobal, '')
   const brutoTotalActual = brutoTotalLineas(lineas)
 
+  // Esperas/sesiones llegan sin filtrar por caja desde page.tsx (ver Props):
+  // se filtran aquí, una vez que se conoce `caja.id`.
+  const esperasCaja = esperas.filter(e => e.caja_id === caja.id)
+  const sesionesCerradasCaja = sesionesCerradas.filter(s => s.caja_id === caja.id)
+  const documentosSesionActual = documentosPorSesion[sesion.id] ?? []
+
   const query = busqueda.trim().toLowerCase()
   const productosFiltrados =
     query === ''
@@ -573,10 +768,13 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, metodos
         <span className={styles.headerCaja}>{caja.nombre}</span>
         <span className={styles.headerSesion}>Sesión abierta desde {abiertaDesde}</span>
         <div className={styles.headerActions}>
-          <button type="button" className={styles.btnGhost} disabled title="Disponible en una próxima iteración">
-            Espera
+          <button type="button" className={styles.btnGhost} onClick={() => setHistorialAbierto(true)}>
+            Sesiones
           </button>
-          <button type="button" className={styles.btnGhost} disabled title="Disponible en una próxima iteración">
+          <button type="button" className={styles.btnGhost} onClick={() => setEsperaAbierta(true)}>
+            Espera{esperasCaja.length > 0 ? ` (${esperasCaja.length})` : ''}
+          </button>
+          <button type="button" className={styles.btnGhost} onClick={() => setCierreAbierto(true)}>
             Cerrar caja
           </button>
         </div>
@@ -592,6 +790,19 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, metodos
       )}
       {caiActivo && estadoCaiActivo && estadoCaiActivo.vigente && estadoCaiActivo.alerta && (
         <div className={`${styles.caiBanner} ${styles.caiBannerWarn}`}>{estadoCaiActivo.alerta}</div>
+      )}
+      {avisoRetomar && (
+        <div className={`${styles.caiBanner} ${styles.caiBannerWarn} ${styles.avisoBanner}`}>
+          <span>{avisoRetomar}</span>
+          <button
+            type="button"
+            className={styles.avisoCerrar}
+            onClick={() => setAvisoRetomar('')}
+            aria-label="Cerrar aviso"
+          >
+            ×
+          </button>
+        </div>
       )}
 
       <div className={styles.ventaGrid}>
@@ -855,6 +1066,36 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, metodos
           onClose={() => setCobroAbierto(false)}
           onEmitido={handleEmitido}
         />
+      )}
+
+      {esperaAbierta && (
+        <EsperaModal
+          esperas={esperasCaja}
+          carritoVacio={lineas.length === 0}
+          isPending={esperaPending}
+          error={esperaError}
+          onGuardar={nombre => handleGuardarEspera(caja.id, nombre)}
+          onRetomar={handleRetomarEspera}
+          onDescartar={handleDescartarEspera}
+          onClose={() => {
+            setEsperaAbierta(false)
+            setEsperaError('')
+          }}
+        />
+      )}
+
+      {cierreAbierto && (
+        <CierreModal
+          sesion={sesion}
+          documentos={documentosSesionActual}
+          cartLineasPendientes={lineas.length}
+          onClose={() => setCierreAbierto(false)}
+          onCerrado={handleCierreCerrado}
+        />
+      )}
+
+      {historialAbierto && (
+        <HistorialModal sesiones={sesionesCerradasCaja} onClose={() => setHistorialAbierto(false)} />
       )}
     </div>
   )
@@ -1271,6 +1512,283 @@ function CobroModal({
           </button>
         </div>
       </div>
+    </Modal>
+  )
+}
+
+// ---- Modal de espera (Task 12) ----
+
+interface EsperaModalProps {
+  esperas: VentaEspera[]
+  carritoVacio: boolean
+  isPending: boolean
+  error: string
+  onGuardar: (nombre: string) => void
+  onRetomar: (espera: VentaEspera) => void
+  onDescartar: (id: string) => void
+  onClose: () => void
+}
+
+function EsperaModal({ esperas, carritoVacio, isPending, error, onGuardar, onRetomar, onDescartar, onClose }: EsperaModalProps) {
+  const [nombre, setNombre] = useState('')
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    onGuardar(nombre)
+    setNombre('')
+  }
+
+  return (
+    <Modal title="Ventas en espera" onClose={onClose}>
+      <div className={styles.esperaModal}>
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <label className={styles.formLabel}>
+            Guardar carrito actual en espera
+            <input
+              type="text"
+              placeholder="Nombre del cliente o referencia"
+              value={nombre}
+              onChange={e => setNombre(e.target.value)}
+              disabled={isPending || carritoVacio}
+              autoFocus={!carritoVacio}
+            />
+          </label>
+          {carritoVacio && (
+            <div className={styles.empty}>Agrega productos al carrito para poder guardarlo en espera.</div>
+          )}
+          {error && <div className={styles.formError}>{error}</div>}
+          <div className={styles.formFooter}>
+            <button
+              type="submit"
+              className={`btnMerlinPrimary ${styles.btnSubmit}`}
+              disabled={isPending || carritoVacio || !nombre.trim()}
+            >
+              {isPending ? 'Guardando...' : 'Guardar en espera'}
+            </button>
+          </div>
+        </form>
+
+        <div>
+          <div className={styles.esperaListTitle}>Esperas de esta caja</div>
+          {esperas.length === 0 ? (
+            <div className={styles.empty}>No hay ventas en espera.</div>
+          ) : (
+            <div className={styles.esperaList}>
+              {esperas.map(e => (
+                <div key={e.id} className={styles.esperaRow}>
+                  <div>
+                    <div className={styles.esperaNombre}>{e.nombre}</div>
+                    <div className={styles.esperaFecha}>
+                      {new Date(e.created_at).toLocaleString('es-HN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                  </div>
+                  <div className={styles.esperaAcciones}>
+                    <button type="button" className={styles.btnCancel} onClick={() => onRetomar(e)} disabled={isPending}>
+                      Retomar
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.btnQuitar}
+                      onClick={() => onDescartar(e.id)}
+                      disabled={isPending}
+                      aria-label="Descartar espera"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+// ---- Modal de cierre de caja con arqueo (Task 12) ----
+
+const NOMBRES_METODO: Record<MetodoPagoTipo, string> = {
+  efectivo_lps: 'Efectivo L.',
+  efectivo_usd: 'Efectivo USD',
+  tarjeta: 'Tarjeta',
+  transferencia: 'Transferencia',
+  otro: 'Otro',
+}
+
+interface CierreModalProps {
+  sesion: SesionCaja
+  documentos: DocumentoParaArqueo[]
+  cartLineasPendientes: number
+  onClose: () => void
+  onCerrado: () => void
+}
+
+function CierreModal({ sesion, documentos, cartLineasPendientes, onClose, onCerrado }: CierreModalProps) {
+  const [montoContado, setMontoContado] = useState('')
+  const [notas, setNotas] = useState('')
+  const [error, setError] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  // Resumen previo (no persiste nada): la misma pura que usa `cerrarSesion`
+  // en el server para el cálculo definitivo al confirmar.
+  const { efectivoEsperado, porMetodo } = esperadoCaja(Number(sesion.monto_inicial), documentos)
+  const contadoNum = Number(montoContado)
+  const contadoValido = montoContado.trim() !== '' && Number.isFinite(contadoNum) && contadoNum >= 0
+  const diferencia = contadoValido ? round2(contadoNum - efectivoEsperado) : null
+
+  function handleCerrar() {
+    setError('')
+    if (!contadoValido) {
+      setError('Ingresa el monto contado en efectivo.')
+      return
+    }
+    startTransition(async () => {
+      const result = await cerrarSesion(sesion.id, contadoNum, notas.trim())
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      onCerrado()
+    })
+  }
+
+  return (
+    <Modal title="Cerrar caja" onClose={onClose}>
+      <div className={styles.cierreModal}>
+        {cartLineasPendientes > 0 && (
+          <div className={styles.identBlock}>
+            <div className={styles.identNota}>
+              Tienes {cartLineasPendientes} línea(s) sin cobrar en el carrito actual; se perderán al cerrar la caja
+              si no las guardas en espera antes.
+            </div>
+          </div>
+        )}
+
+        <div className={styles.totalesPanel}>
+          {(Object.keys(porMetodo) as MetodoPagoTipo[])
+            .filter(tipo => porMetodo[tipo] > 0)
+            .map(tipo => (
+              <div key={tipo} className={styles.totalesRow}>
+                <span>{NOMBRES_METODO[tipo]}</span>
+                <span>{formatPrice(porMetodo[tipo])}</span>
+              </div>
+            ))}
+          <div className={styles.totalesRowTotal}>
+            <span>Efectivo esperado</span>
+            <span>{formatPrice(efectivoEsperado)}</span>
+          </div>
+        </div>
+
+        <label className={styles.formLabel}>
+          Monto contado en efectivo (L.)
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={montoContado}
+            onChange={e => setMontoContado(e.target.value)}
+            autoFocus
+            disabled={isPending}
+          />
+        </label>
+
+        {diferencia !== null && (
+          <div
+            className={styles.diferenciaRow}
+            style={{ color: diferencia < 0 ? 'var(--danger)' : 'var(--success)' }}
+          >
+            <span>{diferencia === 0 ? 'Cuadra exacto' : diferencia > 0 ? 'Sobrante' : 'Faltante'}</span>
+            <span>{formatPrice(Math.abs(diferencia))}</span>
+          </div>
+        )}
+
+        <label className={styles.formLabel}>
+          Notas (opcional)
+          <textarea
+            className={styles.notasInput}
+            value={notas}
+            onChange={e => setNotas(e.target.value)}
+            disabled={isPending}
+            rows={2}
+          />
+        </label>
+
+        {error && <div className={styles.formError}>{error}</div>}
+
+        <div className={styles.formFooter}>
+          <button type="button" className={styles.btnCancel} onClick={onClose} disabled={isPending}>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className={`btnMerlinPrimary ${styles.btnSubmit}`}
+            onClick={handleCerrar}
+            disabled={isPending}
+          >
+            {isPending ? 'Cerrando...' : 'Cerrar caja'}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+// ---- Modal de historial de sesiones (Task 12) ----
+
+interface HistorialModalProps {
+  sesiones: SesionCaja[]
+  onClose: () => void
+}
+
+function HistorialModal({ sesiones, onClose }: HistorialModalProps) {
+  return (
+    <Modal title="Sesiones de esta caja" onClose={onClose} maxWidth="640px">
+      {sesiones.length === 0 ? (
+        <div className={styles.empty}>Aún no hay sesiones cerradas para esta caja.</div>
+      ) : (
+        <div className={styles.historialList}>
+          {sesiones.map(s => {
+            const fecha = new Date(s.cerrada_at ?? s.abierta_at).toLocaleString('es-HN', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+            const diferencia = s.diferencia ?? 0
+            return (
+              <div key={s.id} className={styles.historialRow}>
+                <div className={styles.historialFecha}>{fecha}</div>
+                <div className={styles.historialCol}>
+                  <span>Inicial</span>
+                  <span>{formatPrice(s.monto_inicial)}</span>
+                </div>
+                <div className={styles.historialCol}>
+                  <span>Esperado</span>
+                  <span>{formatPrice(s.monto_esperado ?? 0)}</span>
+                </div>
+                <div className={styles.historialCol}>
+                  <span>Contado</span>
+                  <span>{formatPrice(s.monto_contado ?? 0)}</span>
+                </div>
+                <div
+                  className={styles.historialCol}
+                  style={{ color: diferencia < 0 ? 'var(--danger)' : diferencia > 0 ? 'var(--success)' : undefined }}
+                >
+                  <span>Diferencia</span>
+                  <span>{formatPrice(diferencia)}</span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </Modal>
   )
 }
