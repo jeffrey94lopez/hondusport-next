@@ -97,6 +97,33 @@
 .productName { font-weight: 600; }
 .productMeta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 
+.canalBadge {
+  display: inline-block;
+  margin-left: 0.45rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  vertical-align: middle;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+}
+.canalBadge[data-canal="tienda"] { color: var(--info); border-color: var(--info); background: var(--info-bg); }
+.canalBadge[data-canal="mostrador"] { color: var(--warning); border-color: var(--warning); background: var(--warning-bg); }
+.canalBadge[data-canal="ambas"] { color: var(--success); border-color: var(--success); background: var(--success-bg); }
+
+/* Punto de alerta: stock efectivo <= stock_minimo configurado. */
+.stockDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--danger);
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
 .precio { font-weight: 600; }
 .precioOriginal { font-size: 0.75rem; color: var(--text-muted); text-decoration: line-through; }
 
@@ -220,22 +247,37 @@
   padding: 0.85rem;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
+  overflow-x: auto;
 }
 
 .varianteRow {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr auto auto auto auto;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1fr auto auto auto auto;
   gap: 0.5rem;
   align-items: center;
+  min-width: 760px;
 }
 
 .varianteHeadRow {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr auto auto auto auto;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1fr auto auto auto auto;
   gap: 0.5rem;
   font: var(--text-caption);
   color: var(--text-muted);
   padding: 0 0.1rem;
+  min-width: 760px;
+}
+
+/* Celda de Stock de una variante: el input principal y, cuando aplica, el
+   campo condicional de costo de la entrada apilados verticalmente. */
+.varianteStockCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.varianteCostoEntrada {
+  font-size: 0.72rem;
 }
 
 .varianteActiva {

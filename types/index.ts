@@ -124,6 +124,9 @@ export interface VarianteForm {
   costo: number | null
   precio_revendedor: number | null
   activo: boolean
+  // Costo de la entrada cuando `stock` sube respecto al valor guardado en BD
+  // (kardexable vía registrar_entrada). No se persiste como campo propio.
+  costoEntrada: number | null
 }
 
 export interface ProductoForm {
@@ -150,6 +153,9 @@ export interface ProductoForm {
   stock_minimo: number | null
   activo: boolean
   variantes: VarianteForm[]
+  // Costo de la entrada cuando `stock` sube respecto al valor guardado en BD
+  // (kardexable vía registrar_entrada). No se persiste como campo propio.
+  costoEntrada: number | null
 }
 
 export type EstadoPedido = 'recibido' | 'preparando' | 'enviado' | 'entregado' | 'cancelado'
@@ -229,4 +235,7 @@ export type ConfigMap = Record<string, string>
 
 export interface ActionResult {
   error?: string
+  // Aviso no bloqueante: la acción tuvo éxito pero ignoró algo (p.ej. un
+  // cambio de costo directo sobre un producto que ya tiene historial).
+  aviso?: string
 }

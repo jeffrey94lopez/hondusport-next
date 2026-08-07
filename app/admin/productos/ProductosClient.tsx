@@ -13,6 +13,7 @@ import {
   updateProducto,
   deleteProducto,
   toggleProductoActivo,
+  obtenerHistorialCostoProducto,
 } from './actions'
 import styles from './productos.module.css'
 
@@ -46,6 +47,13 @@ const EMPTY_FORM: ProductoForm = {
   stock_minimo: null,
   activo: true,
   variantes: [],
+  costoEntrada: null,
+}
+
+const CANAL_LABEL: Record<Producto['canal'], string> = {
+  tienda: 'Tienda',
+  mostrador: 'Mostrador',
+  ambas: 'Ambas',
 }
 
 export default function ProductosClient({ productos, categorias, subcategorias }: Props) {
@@ -54,6 +62,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
   const [editing, setEditing] = useState<Producto | null>(null)
   const [form, setForm] = useState<ProductoForm>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
+  const [historialCosto, setHistorialCosto] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [importing, setImporting] = useState(false)
   const [resultado, setResultado] = useState<
@@ -111,6 +120,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
     setForm(EMPTY_FORM)
     setFormError('')
     setEditing(null)
+    setHistorialCosto(false)
     setModal('create')
   }
 
@@ -118,7 +128,9 @@ export default function ProductosClient({ productos, categorias, subcategorias }
     setForm(productoAForm(p))
     setFormError('')
     setEditing(p)
+    setHistorialCosto(false)
     setModal('edit')
+    obtenerHistorialCostoProducto(p.id).then(setHistorialCosto)
   }
 
   function closeModal() {
@@ -151,6 +163,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
         ? await updateProducto(editing.id, form)
         : await createProducto(form)
       if (result.error) { setFormError(result.error); return }
+      if (result.aviso) alert(result.aviso)
       closeModal()
     })
   }
@@ -204,10 +217,14 @@ export default function ProductosClient({ productos, categorias, subcategorias }
           <tbody>
             {filtered.map(p => {
               const stock = stockEfectivo(p.stock, (p.producto_variantes ?? []).filter(v => v.activo))
+              const stockBajo = p.stock_minimo != null && stock != null && stock <= p.stock_minimo
               return (
               <tr key={p.id}>
                 <td>
-                  <div className={styles.productName}>{p.nombre}</div>
+                  <div className={styles.productName}>
+                    {p.nombre}
+                    <span className={styles.canalBadge} data-canal={p.canal}>{CANAL_LABEL[p.canal]}</span>
+                  </div>
                   {p.marca && <div className={styles.productMeta}>{p.marca}</div>}
                 </td>
                 <td>
@@ -220,6 +237,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
                   <span className={stock !== null && stock < 5 ? styles.stockLow : ''}>
                     {stock ?? '∞'}
                   </span>
+                  {stockBajo && <span className={styles.stockDot} title="Stock igual o por debajo del mínimo" />}
                   {p.producto_variantes && p.producto_variantes.length > 0 && (
                     <span className={styles.productMeta}> · {p.producto_variantes.length} var.</span>
                   )}
@@ -259,7 +277,15 @@ export default function ProductosClient({ productos, categorias, subcategorias }
           maxWidth="640px"
         >
           <form onSubmit={handleSubmit} className={styles.form}>
-            <ProductoFields form={form} setForm={setForm} categorias={categorias} subcategorias={subcategorias} modo="completo" />
+            <ProductoFields
+              form={form}
+              setForm={setForm}
+              categorias={categorias}
+              subcategorias={subcategorias}
+              modo="completo"
+              producto={editing}
+              historialCosto={historialCosto}
+            />
             {formError && <p className={styles.formError}>{formError}</p>}
             <div className={styles.formFooter}>
               <button type="button" className={styles.btnCancel} onClick={closeModal}>

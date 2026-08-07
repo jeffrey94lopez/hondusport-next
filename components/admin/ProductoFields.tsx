@@ -4,6 +4,7 @@ import ImageUpload from './ImageUpload'
 import Toggle from './Toggle'
 import type { Producto, ProductoForm, Categoria, VarianteForm } from '@/types'
 import { slugify } from '@/lib/store/slug'
+import { calcularCambioStock, margen } from '@/lib/store/costeo'
 import styles from '@/app/admin/productos/productos.module.css'
 
 export function productoAForm(p: Producto): ProductoForm {
@@ -41,7 +42,11 @@ export function productoAForm(p: Producto): ProductoForm {
         costo: v.costo,
         precio_revendedor: v.precio_revendedor,
         activo: v.activo,
+        costoEntrada: null,
       })),
+    // Campo transitorio para el "costo de esta entrada": nunca viene de BD,
+    // se resetea cada vez que se carga un producto en el form.
+    costoEntrada: null,
   }
 }
 
@@ -51,9 +56,17 @@ interface Props {
   categorias: { id: string; valor: string }[]
   subcategorias: Pick<Categoria, 'id' | 'valor' | 'categorias_padre'>[]
   modo?: 'completo' | 'rapido'
+  // Producto original en BD (null al crear): sirve de base para decidir si un
+  // cambio de stock es un delta (aumento/reducción) o un cambio de modalidad.
+  producto?: Producto | null
+  // true si el producto YA tiene movimientos propios (no de sus variantes):
+  // el costo se muestra solo-lectura con margen en vez de editable.
+  historialCosto?: boolean
 }
 
-export default function ProductoFields({ form, setForm, categorias, subcategorias, modo = 'completo' }: Props) {
+export default function ProductoFields({
+  form, setForm, categorias, subcategorias, modo = 'completo', producto = null, historialCosto = false,
+}: Props) {
   const completo = modo === 'completo'
 
   const f = (field: keyof ProductoForm) => (
@@ -80,7 +93,21 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
     setForm(prev => ({ ...prev, variantes: prev.variantes.map((v, idx) => (idx === i ? { ...v, ...patch } : v)) }))
 
   const agregarVariante = () =>
-    setForm(prev => ({ ...prev, variantes: [...prev.variantes, { nombre: '', sku: '', precio: null, stock: null, costo: null, precio_revendedor: null, activo: true }] }))
+    setForm(prev => ({
+      ...prev,
+      variantes: [...prev.variantes, { nombre: '', sku: '', precio: null, stock: null, costo: null, precio_revendedor: null, activo: true, costoEntrada: null }],
+    }))
+
+  // Stock base de cada variante existente (BD), para saber si su stock subió
+  // (y por tanto mostrar el campo de costo de la entrada) o es un cambio de
+  // modalidad (sin campo de costo, no es kardexable).
+  const stockBaseVariantes = useMemo(
+    () => new Map((producto?.producto_variantes ?? []).map(v => [v.id, v.stock])),
+    [producto]
+  )
+
+  const cambioStockProducto = producto ? calcularCambioStock(producto.stock, form.stock) : { tipo: 'sin_cambio' as const }
+  const mostrarCostoEntradaProducto = cambioStockProducto.tipo === 'delta' && cambioStockProducto.delta > 0
 
   const quitarVariante = (i: number) =>
     setForm(prev => ({ ...prev, variantes: prev.variantes.filter((_, idx) => idx !== i) }))
@@ -195,6 +222,16 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
             min="0"
             disabled={form.variantes.length > 0}
           />
+          {completo && mostrarCostoEntradaProducto && (
+            <input
+              type="number"
+              placeholder="Costo de esta entrada (opcional)"
+              value={form.costoEntrada ?? ''}
+              onChange={e => setForm(p => ({ ...p, costoEntrada: e.target.value === '' ? null : Number(e.target.value) }))}
+              min="0"
+              step="0.01"
+            />
+          )}
           {form.variantes.length > 0 && (
             <small>Este producto vende por variantes; el stock y las tallas del padre no se usan</small>
           )}
@@ -202,6 +239,69 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
       </div>
       {completo && (
         <>
+          <div className={styles.formRow}>
+            <label className={styles.formLabel}>
+              Canal
+              <select value={form.canal} onChange={e => setForm(p => ({ ...p, canal: e.target.value as ProductoForm['canal'] }))}>
+                <option value="tienda">Tienda</option>
+                <option value="mostrador">Mostrador</option>
+                <option value="ambas">Ambas</option>
+              </select>
+            </label>
+            <label className={styles.formLabel}>
+              ISV
+              <select value={form.isv} onChange={e => setForm(p => ({ ...p, isv: e.target.value as ProductoForm['isv'] }))}>
+                <option value="15">15%</option>
+                <option value="18">18%</option>
+                <option value="exento">Exento</option>
+              </select>
+            </label>
+          </div>
+          <div className={styles.formRow}>
+            <label className={styles.formLabel}>
+              Costo (L.)
+              {historialCosto ? (
+                <>
+                  <input type="text" value={form.costo != null ? `L. ${form.costo}` : '—'} disabled readOnly />
+                  {(() => {
+                    const m = form.costo != null ? margen(form.precio, form.costo) : null
+                    return m ? <small>Margen: L. {m.ganancia} ({m.porcentaje}%)</small> : null
+                  })()}
+                  <small>Ya tiene movimientos de inventario; usa &quot;Registrar entrada&quot; para actualizarlo</small>
+                </>
+              ) : (
+                <input
+                  type="number"
+                  placeholder="Costo inicial (opcional)"
+                  value={form.costo ?? ''}
+                  onChange={e => setForm(p => ({ ...p, costo: e.target.value === '' ? null : Number(e.target.value) }))}
+                  min="0"
+                  step="0.01"
+                />
+              )}
+            </label>
+            <label className={styles.formLabel}>
+              Precio revendedor (L., vacío = no aplica)
+              <input
+                type="number"
+                value={form.precio_revendedor ?? ''}
+                onChange={e => setForm(p => ({ ...p, precio_revendedor: e.target.value === '' ? null : Number(e.target.value) }))}
+                min="0"
+                step="0.01"
+              />
+            </label>
+          </div>
+          <div className={styles.formRow}>
+            <label className={styles.formLabel}>
+              Stock mínimo (alerta de stock bajo)
+              <input
+                type="number"
+                value={form.stock_minimo ?? ''}
+                onChange={e => setForm(p => ({ ...p, stock_minimo: e.target.value === '' ? null : parseInt(e.target.value) }))}
+                min="0"
+              />
+            </label>
+          </div>
           <div className={styles.formRow}>
             <label className={styles.formLabel}>
               Género
@@ -254,13 +354,23 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
                 <span>SKU</span>
                 <span>Precio (vacío = hereda)</span>
                 <span>Stock (vacío = ilimitado)</span>
+                <span>Costo</span>
+                <span>P. revendedor</span>
                 <span>Activa</span>
                 <span></span>
                 <span></span>
                 <span></span>
               </div>
             )}
-            {form.variantes.map((v, i) => (
+            {form.variantes.map((v, i) => {
+              const stockBase = v.id ? stockBaseVariantes.get(v.id) ?? null : null
+              const cambioVariante = v.id ? calcularCambioStock(stockBase, v.stock) : { tipo: 'sin_cambio' as const }
+              const mostrarCostoEntradaVariante = cambioVariante.tipo === 'delta' && cambioVariante.delta > 0
+              // El costo de una variante existente solo lo gobierna registrar_entrada
+              // (sync_producto_variantes lo ignora en el UPDATE); las nuevas sí lo
+              // aceptan como costo inicial.
+              const costoBloqueado = !!v.id
+              return (
               <div key={v.id ?? `nueva-${i}`} className={styles.varianteRow}>
                 <input
                   placeholder="Nombre (ej. M, Edición retro)"
@@ -280,12 +390,51 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
                   min="0"
                   step="0.01"
                 />
+                <div className={styles.varianteStockCell}>
+                  <input
+                    type="number"
+                    placeholder="Stock (vacío = ilimitado)"
+                    value={v.stock ?? ''}
+                    onChange={e => setVariante(i, { stock: e.target.value === '' ? null : Number(e.target.value) })}
+                    min="0"
+                  />
+                  {mostrarCostoEntradaVariante && (
+                    <input
+                      type="number"
+                      className={styles.varianteCostoEntrada}
+                      placeholder="Costo de esta entrada (opcional)"
+                      value={v.costoEntrada ?? ''}
+                      onChange={e => setVariante(i, { costoEntrada: e.target.value === '' ? null : Number(e.target.value) })}
+                      min="0"
+                      step="0.01"
+                    />
+                  )}
+                </div>
+                {costoBloqueado ? (
+                  <input
+                    type="text"
+                    value={v.costo != null ? `L. ${v.costo}` : '—'}
+                    disabled
+                    readOnly
+                    title="Fijado por movimientos de inventario; usa Registrar entrada para ajustarlo"
+                  />
+                ) : (
+                  <input
+                    type="number"
+                    placeholder="Costo inicial (vacío = hereda)"
+                    value={v.costo ?? ''}
+                    onChange={e => setVariante(i, { costo: e.target.value === '' ? null : Number(e.target.value) })}
+                    min="0"
+                    step="0.01"
+                  />
+                )}
                 <input
                   type="number"
-                  placeholder="Stock (vacío = ilimitado)"
-                  value={v.stock ?? ''}
-                  onChange={e => setVariante(i, { stock: e.target.value === '' ? null : Number(e.target.value) })}
+                  placeholder="P. revendedor (vacío = hereda)"
+                  value={v.precio_revendedor ?? ''}
+                  onChange={e => setVariante(i, { precio_revendedor: e.target.value === '' ? null : Number(e.target.value) })}
                   min="0"
+                  step="0.01"
                 />
                 <label className={styles.varianteActiva}>
                   <input
@@ -299,7 +448,8 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
                 <button type="button" onClick={() => moverVariante(i, 1)} disabled={i === form.variantes.length - 1}>↓</button>
                 <button type="button" className={styles.btnQuitarVariante} onClick={() => quitarVariante(i)}>Quitar</button>
               </div>
-            ))}
+              )
+            })}
             <button type="button" className={styles.btnSecondary} onClick={agregarVariante}>+ Agregar variante</button>
           </div>
         </>

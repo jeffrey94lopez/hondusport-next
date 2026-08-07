@@ -3,7 +3,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import ProductoFields, { productoAForm } from '@/components/admin/ProductoFields'
 import Toggle from '@/components/admin/Toggle'
-import { updateProducto } from './actions'
+import { updateProducto, obtenerHistorialCostoProducto } from './actions'
 import { filtrarInventario, type CriteriosInventario } from '@/lib/store/inventoryFilters'
 import type { Producto, ProductoForm, Categoria } from '@/types'
 import styles from './carrusel.module.css'
@@ -26,6 +26,7 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
   const [modoCampos, setModoCampos] = useState<'rapido' | 'completo'>('rapido')
   const [dirty, setDirty] = useState(false)
   const [error, setError] = useState('')
+  const [historialCosto, setHistorialCosto] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const flag = (k: keyof CriteriosInventario) => (v: boolean) =>
@@ -50,6 +51,8 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
     setModoCampos('rapido')
     setDirty(false)
     setError('')
+    setHistorialCosto(false)
+    if (p.id) obtenerHistorialCostoProducto(p.id).then(setHistorialCosto)
   }
 
   const actual = set[idx]
@@ -84,6 +87,7 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
     startTransition(async () => {
       const res = await updateProducto(actual.id, form)
       if (res.error) { setError(res.error); return }
+      if (res.aviso) alert(res.aviso)
       setGuardados(prev => new Set(prev).add(actual.id))
       setDirty(false)
       if (idx + 1 < set.length) irA(idx + 1)
@@ -168,7 +172,15 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
           </span>
         </div>
         <h3>{actual.nombre}</h3>
-        <ProductoFields form={form} setForm={setFormDirty} categorias={categorias} subcategorias={subcategorias} modo={modoCampos} />
+        <ProductoFields
+          form={form}
+          setForm={setFormDirty}
+          categorias={categorias}
+          subcategorias={subcategorias}
+          modo={modoCampos}
+          producto={actual}
+          historialCosto={historialCosto}
+        />
         {modoCampos === 'rapido' && (
           <button type="button" className={styles.btnNav} onClick={() => setModoCampos('completo')}>Ver más campos</button>
         )}

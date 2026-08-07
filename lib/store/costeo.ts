@@ -32,3 +32,20 @@ export function margen(precio: number, costo: number | null): { ganancia: number
   const porcentaje = costo === 0 ? 100 : round4((ganancia / costo) * 100)
   return { ganancia, porcentaje }
 }
+
+export type CambioStock =
+  | { tipo: 'sin_cambio' }
+  // null <-> número: cambio de modalidad (ilimitado a limitado o viceversa).
+  // No es un movimiento real de inventario: se escribe directo, sin kardex.
+  | { tipo: 'modalidad'; valor: number | null }
+  // número -> número distinto: sí es kardexable, pasa por registrar_entrada.
+  | { tipo: 'delta'; delta: number }
+
+// Decide cómo tratar el cambio de `stock` de un form de producto/variante
+// frente al valor guardado en BD. Ver comentario del tipo CambioStock para
+// el porqué de la distinción modalidad vs delta.
+export function calcularCambioStock(stockActual: number | null, stockForm: number | null): CambioStock {
+  if (stockActual === stockForm) return { tipo: 'sin_cambio' }
+  if (stockActual === null || stockForm === null) return { tipo: 'modalidad', valor: stockForm }
+  return { tipo: 'delta', delta: stockForm - stockActual }
+}

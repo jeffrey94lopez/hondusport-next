@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { aplicarEntradaCosto, precioParaCliente, margen } from '../costeo'
+import { aplicarEntradaCosto, precioParaCliente, margen, calcularCambioStock } from '../costeo'
 
 describe('aplicarEntradaCosto', () => {
   it('promedio ponderado', () =>
@@ -29,4 +29,19 @@ describe('margen', () => {
   it('sin costo devuelve null', () => expect(margen(150, null)).toBeNull())
   it('con costo cero porcentaje es 100', () =>
     expect(margen(150, 0)).toEqual({ ganancia: 150, porcentaje: 100 }))
+})
+
+describe('calcularCambioStock', () => {
+  it('sin cambio (mismo número)', () =>
+    expect(calcularCambioStock(10, 10)).toEqual({ tipo: 'sin_cambio' }))
+  it('sin cambio (ambos ilimitados)', () =>
+    expect(calcularCambioStock(null, null)).toEqual({ tipo: 'sin_cambio' }))
+  it('delta positivo (aumento de stock)', () =>
+    expect(calcularCambioStock(10, 15)).toEqual({ tipo: 'delta', delta: 5 }))
+  it('delta negativo (reducción de stock)', () =>
+    expect(calcularCambioStock(10, 4)).toEqual({ tipo: 'delta', delta: -6 }))
+  it('modalidad: limitado a ilimitado', () =>
+    expect(calcularCambioStock(10, null)).toEqual({ tipo: 'modalidad', valor: null }))
+  it('modalidad: ilimitado a limitado', () =>
+    expect(calcularCambioStock(null, 10)).toEqual({ tipo: 'modalidad', valor: 10 }))
 })
