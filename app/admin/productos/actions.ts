@@ -28,11 +28,34 @@ async function tieneHistorialCostoProducto(supabase: SupabaseServerClient, produ
   return (count ?? 0) > 0
 }
 
-// Server action de solo lectura para que el form sepa, ANTES de guardar, si
-// debe mostrar el costo del producto como solo-lectura (con margen) o editable.
-export async function obtenerHistorialCostoProducto(productoId: string): Promise<boolean> {
+// ids de variantes (de las dadas) que YA tienen movimientos propios. Igual que
+// tieneHistorialCostoProducto pero por variante — se usa tanto para que el
+// form sepa qué filas bloquear como para que el server la re-valide.
+async function idsConHistorialCosto(
+  supabase: SupabaseServerClient, productoId: string, varianteIds: string[]
+): Promise<Set<string>> {
+  if (varianteIds.length === 0) return new Set()
+  const { data } = await supabase
+    .from('movimientos_inventario')
+    .select('variante_id')
+    .eq('producto_id', productoId)
+    .in('variante_id', varianteIds)
+  return new Set((data ?? []).map(r => r.variante_id as string).filter(Boolean))
+}
+
+// Server action de solo lectura para que el form sepa, ANTES de guardar, qué
+// costos mostrar solo-lectura (con margen) vs. editables: el del producto (si
+// tiene movimientos propios) y el de cada variante (si YA tiene movimientos,
+// no simplemente por existir/tener id).
+export async function obtenerHistorialCosto(
+  productoId: string, varianteIds: string[]
+): Promise<{ producto: boolean; variantes: string[] }> {
   const supabase = await createClient()
-  return tieneHistorialCostoProducto(supabase, productoId)
+  const [producto, variantesConHistorial] = await Promise.all([
+    tieneHistorialCostoProducto(supabase, productoId),
+    idsConHistorialCosto(supabase, productoId, varianteIds),
+  ])
+  return { producto, variantes: Array.from(variantesConHistorial) }
 }
 
 // Aplica un cambio de `stock` de producto o variante contra el valor guardado
@@ -75,27 +98,42 @@ async function aplicarCambioStock(
   return error ? error.message : null
 }
 
+type VarianteActual = { id: string; stock: number | null; costo: number | null; nombre: string }
+type SyncResult = { error: string | null; avisos: string[] }
+
 // Sincroniza las hijas de un producto con lo enviado por el form, de forma
 // atómica vía RPC (delete de ausentes + upsert de presentes en una transacción).
-// El stock de variantes EXISTENTES no se manda directo en el upsert cuando hay
-// delta: se manda el valor actual (sin cambio para el RPC) y el delta real se
-// aplica DESPUÉS vía aplicarCambioStock/registrar_entrada (kardexable). Las
-// variantes nuevas sí llevan su stock inicial directo (no hay historial que
-// proteger). El costo de variantes existentes lo ignora sync_producto_variantes
-// a nivel de RPC (solo se asigna en el INSERT de una variante nueva).
+//
+// Stock de variantes EXISTENTES: el upsert de sync_producto_variantes NUNCA
+// manda su stock "nuevo" — siempre manda el valor ACTUAL de BD (sin cambio
+// para el RPC), sea el cambio un delta o una modalidad (null<->número). El
+// cambio real se aplica DESPUÉS, fila por fila, vía aplicarCambioStock. Así
+// el resultado no depende de si el on conflict do update de la RPC toca o no
+// la columna `stock` (hoy sí la toca, pero no queremos acoplar la corrección
+// de este flujo a ese detalle interno de la RPC — de ahí el bug original
+// donde el camino de modalidad de variantes nunca se aplicaba).
+// Variantes NUEVAS sí llevan su stock inicial directo en el upsert (no hay
+// historial que proteger todavía).
+//
+// Costo de variantes existentes: sync_producto_variantes lo ignora en su
+// UPDATE a nivel de RPC (solo lo asigna al insertar una variante nueva; ver
+// comentario en la migración). Aquí solo generamos el AVISO cuando la
+// variante ya tiene historial real y el form intentó cambiarlo (igual que a
+// nivel de producto, pero por variante — variante_id, no producto_id).
 async function syncVariantes(
   supabase: SupabaseServerClient,
   productoId: string,
   variantes: VarianteForm[],
-  variantesActuales: { id: string; stock: number | null }[],
+  variantesActuales: VarianteActual[],
   usuario: string | null,
-): Promise<string | null> {
-  const stockActualPorId = new Map(variantesActuales.map(v => [v.id, v.stock]))
+): Promise<SyncResult> {
+  const actualPorId = new Map(variantesActuales.map(v => [v.id, v]))
+  const idsExistentes = variantes.map(v => v.id).filter((id): id is string => !!id)
+  const historialCostoSet = await idsConHistorialCosto(supabase, productoId, idsExistentes)
 
   const payload = variantes.map((v, i) => {
-    const stockActual = v.id ? stockActualPorId.get(v.id) ?? null : null
-    const cambio = v.id ? calcularCambioStock(stockActual, v.stock) : { tipo: 'sin_cambio' as const }
-    const stockParaUpsert = cambio.tipo === 'delta' ? stockActual : v.stock
+    const actual = v.id ? actualPorId.get(v.id) : undefined
+    const stockParaUpsert = v.id ? (actual?.stock ?? null) : v.stock
     return {
       ...(v.id ? { id: v.id } : {}),
       nombre: v.nombre.trim(),
@@ -112,15 +150,18 @@ async function syncVariantes(
     p_producto_id: productoId,
     p_variantes: payload,
   })
-  if (error) return error.message
+  if (error) return { error: error.message, avisos: [] }
 
-  // Deltas de variantes existentes: DESPUÉS del sync (que ya dejó su stock
-  // intacto arriba), uno por uno vía registrar_entrada.
+  const avisos: string[] = []
+
+  // Cambios de stock de variantes existentes: delta O modalidad, ambos DESPUÉS
+  // del sync (que dejó el stock intacto arriba), uno por uno.
   for (const v of variantes) {
     if (!v.id) continue
-    const stockActual = stockActualPorId.get(v.id) ?? null
+    const actual = actualPorId.get(v.id)
+    const stockActual = actual?.stock ?? null
     const cambio = calcularCambioStock(stockActual, v.stock)
-    if (cambio.tipo !== 'delta') continue
+    if (cambio.tipo === 'sin_cambio') continue
     const err = await aplicarCambioStock(supabase, {
       productoId,
       varianteId: v.id,
@@ -129,9 +170,20 @@ async function syncVariantes(
       costoEntrada: v.costoEntrada,
       usuario,
     })
-    if (err) return err
+    if (err) return { error: err, avisos }
   }
-  return null
+
+  // Aviso de costo por variante (no bloquea el guardado, solo informa).
+  for (const v of variantes) {
+    if (!v.id) continue
+    const actual = actualPorId.get(v.id)
+    if (!actual) continue
+    if (v.costo !== actual.costo && historialCostoSet.has(v.id)) {
+      avisos.push(`Variante "${actual.nombre}": ya tiene movimientos de inventario, el costo no se modificó directamente.`)
+    }
+  }
+
+  return { error: null, avisos }
 }
 
 export async function createProducto(form: ProductoForm): Promise<ActionResult> {
@@ -169,14 +221,27 @@ export async function createProducto(form: ProductoForm): Promise<ActionResult> 
   if (error) return { error: error.message }
 
   // Producto nuevo: no hay stock/historial previo que proteger, se sincroniza
-  // directo (sin deltas ni registrar_entrada).
-  const syncError = await syncVariantes(supabase, data.id, form.variantes, [], null)
-  if (syncError) return { error: syncError }
+  // directo (sin deltas ni registrar_entrada). Si esto falla, el producto YA
+  // quedó creado (sin variantes) — se lo decimos al usuario en vez de dejarlo
+  // creer que nada pasó.
+  const { error: syncError } = await syncVariantes(supabase, data.id, form.variantes, [], null)
+  if (syncError) return { error: `El producto se creó, pero las variantes fallaron: ${syncError}` }
 
   revalidatePath('/admin/productos')
   return {}
 }
 
+// Orden de operaciones (importa para saber qué queda guardado si algo falla
+// a mitad de camino — no hay una única transacción que cubra las cuatro):
+//   1. SELECT de stock/costo/variantes actuales en BD (no del form).
+//   2. UPDATE de `productos` con todo excepto `stock` (y `costo` protegido
+//      si el producto ya tiene historial propio).
+//   3. Cambio de stock del producto (delta vía registrar_entrada, o directo
+//      si es modalidad).
+//   4. syncVariantes: upsert atómico de variantes + cambios de stock/avisos
+//      de costo por variante.
+// Si (2) tuvo éxito y (3) o (4) fallan, los datos generales SÍ quedaron
+// guardados — el error se lo indica explícitamente al usuario.
 export async function updateProducto(id: string, form: ProductoForm): Promise<ActionResult> {
   const varianteError = validarVariantes(form.variantes)
   if (varianteError) return { error: varianteError }
@@ -189,7 +254,7 @@ export async function updateProducto(id: string, form: ProductoForm): Promise<Ac
   // es la base para el delta de kardex y para decidir si el costo es editable.
   const { data: actual, error: fetchError } = await supabase
     .from('productos')
-    .select('stock, costo, producto_variantes(id, stock)')
+    .select('stock, costo, producto_variantes(id, stock, costo, nombre)')
     .eq('id', id)
     .single()
   if (fetchError || !actual) return { error: fetchError?.message ?? 'Producto no encontrado' }
@@ -229,6 +294,8 @@ export async function updateProducto(id: string, form: ProductoForm): Promise<Ac
   }).eq('id', id)
   if (error) return { error: error.message }
 
+  // A partir de aquí los datos generales YA quedaron guardados: cualquier
+  // error se lo antepone al usuario para que no crea que no pasó nada.
   const stockError = await aplicarCambioStock(supabase, {
     productoId: id,
     varianteId: null,
@@ -237,15 +304,20 @@ export async function updateProducto(id: string, form: ProductoForm): Promise<Ac
     costoEntrada: form.costoEntrada,
     usuario,
   })
-  if (stockError) return { error: stockError }
+  if (stockError) return { error: `Los datos generales se guardaron, pero falló: ${stockError}` }
 
-  const syncError = await syncVariantes(supabase, id, form.variantes, actual.producto_variantes ?? [], usuario)
-  if (syncError) return { error: syncError }
+  const { error: syncError, avisos: variantAvisos } =
+    await syncVariantes(supabase, id, form.variantes, actual.producto_variantes ?? [], usuario)
+  if (syncError) return { error: `Los datos generales se guardaron, pero falló: ${syncError}` }
 
   revalidatePath('/admin/productos')
-  return tieneHistorial && costoCambiado
-    ? { aviso: 'El producto ya tiene movimientos de inventario: el costo no se modificó directamente. Usa "Registrar entrada" para ajustarlo.' }
-    : {}
+
+  const avisos: string[] = []
+  if (tieneHistorial && costoCambiado) {
+    avisos.push('El producto ya tiene movimientos de inventario: el costo no se modificó directamente. Usa "Registrar entrada" para ajustarlo.')
+  }
+  avisos.push(...variantAvisos)
+  return avisos.length > 0 ? { aviso: avisos.join('\n') } : {}
 }
 
 export async function deleteProducto(id: string): Promise<ActionResult> {

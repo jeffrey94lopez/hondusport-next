@@ -13,7 +13,7 @@ import {
   updateProducto,
   deleteProducto,
   toggleProductoActivo,
-  obtenerHistorialCostoProducto,
+  obtenerHistorialCosto,
 } from './actions'
 import styles from './productos.module.css'
 
@@ -63,6 +63,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
   const [form, setForm] = useState<ProductoForm>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [historialCosto, setHistorialCosto] = useState(false)
+  const [historialCostoVariantes, setHistorialCostoVariantes] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
   const [importing, setImporting] = useState(false)
   const [resultado, setResultado] = useState<
@@ -121,6 +122,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
     setFormError('')
     setEditing(null)
     setHistorialCosto(false)
+    setHistorialCostoVariantes(new Set())
     setModal('create')
   }
 
@@ -129,8 +131,13 @@ export default function ProductosClient({ productos, categorias, subcategorias }
     setFormError('')
     setEditing(p)
     setHistorialCosto(false)
+    setHistorialCostoVariantes(new Set())
     setModal('edit')
-    obtenerHistorialCostoProducto(p.id).then(setHistorialCosto)
+    const varianteIds = (p.producto_variantes ?? []).map(v => v.id)
+    obtenerHistorialCosto(p.id, varianteIds).then(({ producto, variantes }) => {
+      setHistorialCosto(producto)
+      setHistorialCostoVariantes(new Set(variantes))
+    })
   }
 
   function closeModal() {
@@ -285,6 +292,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
               modo="completo"
               producto={editing}
               historialCosto={historialCosto}
+              historialCostoVariantes={historialCostoVariantes}
             />
             {formError && <p className={styles.formError}>{formError}</p>}
             <div className={styles.formFooter}>

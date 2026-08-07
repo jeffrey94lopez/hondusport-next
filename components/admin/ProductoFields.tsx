@@ -62,10 +62,15 @@ interface Props {
   // true si el producto YA tiene movimientos propios (no de sus variantes):
   // el costo se muestra solo-lectura con margen en vez de editable.
   historialCosto?: boolean
+  // ids de variantes que YA tienen movimientos propios en movimientos_inventario
+  // (historial real, no simplemente "ya tiene id"): determina qué filas de
+  // variante muestran el costo solo-lectura con margen.
+  historialCostoVariantes?: ReadonlySet<string>
 }
 
 export default function ProductoFields({
   form, setForm, categorias, subcategorias, modo = 'completo', producto = null, historialCosto = false,
+  historialCostoVariantes,
 }: Props) {
   const completo = modo === 'completo'
 
@@ -366,10 +371,11 @@ export default function ProductoFields({
               const stockBase = v.id ? stockBaseVariantes.get(v.id) ?? null : null
               const cambioVariante = v.id ? calcularCambioStock(stockBase, v.stock) : { tipo: 'sin_cambio' as const }
               const mostrarCostoEntradaVariante = cambioVariante.tipo === 'delta' && cambioVariante.delta > 0
-              // El costo de una variante existente solo lo gobierna registrar_entrada
-              // (sync_producto_variantes lo ignora en el UPDATE); las nuevas sí lo
-              // aceptan como costo inicial.
-              const costoBloqueado = !!v.id
+              // Solo-lectura + margen cuando la variante YA tiene movimientos reales
+              // (no simplemente por tener id): igual que a nivel de producto.
+              const costoBloqueado = !!v.id && !!historialCostoVariantes?.has(v.id)
+              const precioEfectivoVariante = v.precio ?? form.precio
+              const margenVariante = v.costo != null ? margen(precioEfectivoVariante, v.costo) : null
               return (
               <div key={v.id ?? `nueva-${i}`} className={styles.varianteRow}>
                 <input
@@ -411,13 +417,18 @@ export default function ProductoFields({
                   )}
                 </div>
                 {costoBloqueado ? (
-                  <input
-                    type="text"
-                    value={v.costo != null ? `L. ${v.costo}` : '—'}
-                    disabled
-                    readOnly
-                    title="Fijado por movimientos de inventario; usa Registrar entrada para ajustarlo"
-                  />
+                  <div className={styles.varianteCostoBloqueado}>
+                    <input
+                      type="text"
+                      value={v.costo != null ? `L. ${v.costo}` : '—'}
+                      disabled
+                      readOnly
+                      title="Ya tiene movimientos de inventario; usa Registrar entrada para ajustarlo"
+                    />
+                    {margenVariante && (
+                      <small>Margen: L. {margenVariante.ganancia} ({margenVariante.porcentaje}%)</small>
+                    )}
+                  </div>
                 ) : (
                   <input
                     type="number"

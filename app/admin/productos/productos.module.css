@@ -280,6 +280,18 @@
   font-size: 0.72rem;
 }
 
+/* Celda de Costo bloqueado de una variante: el valor solo-lectura y, si hay
+   precio para calcularlo, el margen debajo. */
+.varianteCostoBloqueado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.varianteCostoBloqueado small {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
 .varianteActiva {
   display: flex;
   align-items: center;

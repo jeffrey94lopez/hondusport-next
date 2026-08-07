@@ -3,7 +3,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import ProductoFields, { productoAForm } from '@/components/admin/ProductoFields'
 import Toggle from '@/components/admin/Toggle'
-import { updateProducto, obtenerHistorialCostoProducto } from './actions'
+import { updateProducto, obtenerHistorialCosto } from './actions'
 import { filtrarInventario, type CriteriosInventario } from '@/lib/store/inventoryFilters'
 import type { Producto, ProductoForm, Categoria } from '@/types'
 import styles from './carrusel.module.css'
@@ -27,6 +27,7 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
   const [dirty, setDirty] = useState(false)
   const [error, setError] = useState('')
   const [historialCosto, setHistorialCosto] = useState(false)
+  const [historialCostoVariantes, setHistorialCostoVariantes] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
 
   const flag = (k: keyof CriteriosInventario) => (v: boolean) =>
@@ -52,7 +53,14 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
     setDirty(false)
     setError('')
     setHistorialCosto(false)
-    if (p.id) obtenerHistorialCostoProducto(p.id).then(setHistorialCosto)
+    setHistorialCostoVariantes(new Set())
+    if (p.id) {
+      const varianteIds = (p.producto_variantes ?? []).map(v => v.id)
+      obtenerHistorialCosto(p.id, varianteIds).then(({ producto, variantes }) => {
+        setHistorialCosto(producto)
+        setHistorialCostoVariantes(new Set(variantes))
+      })
+    }
   }
 
   const actual = set[idx]
@@ -180,6 +188,7 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
           modo={modoCampos}
           producto={actual}
           historialCosto={historialCosto}
+          historialCostoVariantes={historialCostoVariantes}
         />
         {modoCampos === 'rapido' && (
           <button type="button" className={styles.btnNav} onClick={() => setModoCampos('completo')}>Ver más campos</button>
