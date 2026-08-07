@@ -494,9 +494,15 @@ begin
     end if;
 
     if (v_mov->>'tipo') = 'entrada' then
+      -- [Fix costeo] Misma semántica que registrar_entrada: el costo actual de
+      -- una variante es su pv.costo crudo (puede ser null); NO se hereda el
+      -- costo del padre aquí. Si es null, aplicar_costeo toma el costo de
+      -- entrada como nuevo costo. Solo para productos sin variante se usa
+      -- p.costo (no hay variante de la que heredar).
       v_nuevo := aplicar_costeo(
         (v_mov->>'stock_anterior')::integer,
-        (select coalesce(pv.costo, p.costo) from productos p
+        (select case when v_variante_id is not null then pv.costo else p.costo end
+           from productos p
            left join producto_variantes pv on pv.id = v_variante_id
            where p.id = (v_mov->>'producto_id')::uuid),
         (v_mov->>'cantidad')::integer,
