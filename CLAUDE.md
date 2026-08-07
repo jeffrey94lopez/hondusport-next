@@ -45,6 +45,11 @@ npx tsc --noEmit # typecheck (los Server Actions no están cubiertos por tests)
   desde los layouts. Nuevos ajustes globales van en esa tabla, no hardcodeados.
 - **`categorias` es polimórfica** por `tipo` (`cat`/`subcat`/`talla`/`genero`).
   Las tallas de un producto salen de `getTallas()`, no de un campo directo.
+- **Kardex y costeo:** el stock nunca se escribe directo; toda variación pasa por
+  `registrar_entrada`/RPCs que insertan en `movimientos_inventario` (append-only).
+  Costeo configurable (`metodo_costeo`); las ventas no cambian el costo.
+  Excepciones documentadas: cambio de modalidad (stock null↔número) y el alta
+  manual de producto/variante (estado inicial) no generan movimiento.
 - **Variantes padre/hijo:** un producto con hijas activas en `producto_variantes` se vende POR variante (precio propio o heredado, stock propio). La RPC `crear_pedido` valida y **descuenta stock atómicamente** al crear el pedido — también para productos planos (stock null = ilimitado). Lógica pura en `lib/store/variantes.ts`.
 - **CSS Modules** por componente (`Componente.module.css`). La tienda scopea sus
   estilos globales bajo `.storeRoot` (ver `store-globals.css`).
