@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
   ]
 
   const referencia = `import:${file.name}`
+  const usuario = user.email ?? null
   const p_movimientos: MovimientoImport[] = []
   for (const m of movimientos) {
     let producto_id = m.producto_id
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
         )
       }
     }
-    p_movimientos.push({ ...m, producto_id, referencia })
+    p_movimientos.push({ ...m, producto_id, referencia, usuario })
   }
 
   const { error } = await supabase.rpc('importar_productos_variantes', { p_productos, p_variantes, p_movimientos })

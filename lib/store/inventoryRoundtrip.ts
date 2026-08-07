@@ -238,6 +238,10 @@ export interface MovimientoImport {
   costo_unitario: number | null
   stock_anterior: number | null
   referencia: string
+  // El parser no conoce al usuario (no tiene acceso a la sesión/auth) — queda
+  // sin poblar aquí; la ruta lo asigna (user.email) antes de llamar la RPC,
+  // igual patrón que ya usa para sobrescribir `referencia`.
+  usuario?: string | null
 }
 
 export interface VarianteRow {

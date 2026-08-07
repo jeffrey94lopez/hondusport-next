@@ -482,6 +482,13 @@ begin
       select t.id into v_variante_id from tmp_variantes_nuevas t
         where t.producto_id = (v_mov->>'producto_id')::uuid
           and t.orden = (v_mov->>'orden')::integer;
+      -- Defensivo: un movimiento con `orden` es SIEMPRE una alta de variante;
+      -- si no se resuelve, no debe caer silenciosamente como movimiento de
+      -- producto (mismo estilo defensivo que registrar_entrada/crear_pedido).
+      if v_variante_id is null then
+        raise exception 'No se encontró la variante nueva (producto_id=%, orden=%) para su movimiento de kardex',
+          v_mov->>'producto_id', v_mov->>'orden';
+      end if;
     else
       v_variante_id := nullif(v_mov->>'variante_id', '')::uuid;
     end if;
@@ -502,10 +509,10 @@ begin
     else
       v_nuevo := null;
     end if;
-    insert into movimientos_inventario (producto_id, variante_id, tipo, cantidad, costo_unitario, costo_resultante, referencia)
+    insert into movimientos_inventario (producto_id, variante_id, tipo, cantidad, costo_unitario, costo_resultante, referencia, usuario)
     values ((v_mov->>'producto_id')::uuid, v_variante_id,
             v_mov->>'tipo', (v_mov->>'cantidad')::integer,
-            (v_mov->>'costo_unitario')::numeric, v_nuevo, v_mov->>'referencia');
+            (v_mov->>'costo_unitario')::numeric, v_nuevo, v_mov->>'referencia', v_mov->>'usuario');
   end loop;
 end;
 $$;
