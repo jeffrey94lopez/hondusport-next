@@ -300,7 +300,7 @@ export async function emitirDesdePedido(input: {
   const { data: pedido, error: pedidoError } = await supabase
     .from('pedidos')
     .select(
-      'id, nombre_cliente, pedido_items(producto_id, variante_id, nombre_producto, variante_nombre, talla, precio, cantidad)',
+      'id, nombre_cliente, total, costo_envio, descuento_cupon, envio_nombre, pedido_items(producto_id, variante_id, nombre_producto, variante_nombre, talla, precio, cantidad)',
     )
     .eq('id', input.pedidoId)
     .maybeSingle()
@@ -361,6 +361,22 @@ export async function emitirDesdePedido(input: {
     },
   )
 
+  // El envío es un servicio con costo propio que el pedido cobró aparte del
+  // subtotal de productos: si no se factura como línea, el documento queda
+  // corto por el monto del envío. Es gravado (15%) igual que cualquier servicio.
+  const costoEnvio = Number(pedido.costo_envio) || 0
+  if (costoEnvio > 0) {
+    lineas.push({
+      producto_id: null,
+      variante_id: null,
+      descripcion: pedido.envio_nombre ? `Envío — ${pedido.envio_nombre}` : 'Envío',
+      cantidad: 1,
+      precio_unitario: costoEnvio,
+      descuento: 0,
+      isv: '15',
+    })
+  }
+
   let cliente: {
     id: string | null
     nombre: string
@@ -399,7 +415,27 @@ export async function emitirDesdePedido(input: {
     }
   }
 
-  const { lineas: lineasDesglosadas, totales } = construirTotales(lineas, 0, cliente.exonerado)
+  const descuentoGlobal = Number(pedido.descuento_cupon) || 0
+  const { lineas: lineasDesglosadas, totales } = construirTotales(lineas, descuentoGlobal, cliente.exonerado)
+
+  // El documento debe facturar exactamente lo que el pedido cobró (envío y
+  // cupón incluidos). Si no cuadra, es mejor no emitir que emitir un
+  // documento fiscal divergente del pedido de origen.
+  if (Math.abs(totales.total - Number(pedido.total)) > 0.01) {
+    return { ok: false, error: 'El total del documento no coincide con el total del pedido; revisa envío y cupón antes de emitir.' }
+  }
+
+  const limite = await limiteConsumidorFinal(supabase)
+  const errorEmision = validarEmision({
+    tipo: input.tipo,
+    clienteNombre: cliente.nombre,
+    clienteRtn: cliente.rtn,
+    clienteIdentidad: cliente.identidad,
+    total: totales.total,
+    limite,
+  })
+  if (errorEmision) return { ok: false, error: errorEmision }
+
   const usuario = await usuarioActual(supabase)
 
   const payload = {
