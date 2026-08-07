@@ -1,15 +1,22 @@
 import type { Producto, ProductoVariante } from '@/types'
 import { slugify, uniqueSlug } from './slug'
+import { calcularCambioStock } from './costeo'
 
 export const COLUMNAS = [
-  'id', 'sku', 'nombre', 'marca', 'precio', 'precio_original',
-  'stock', 'descripcion', 'categoria', 'subcategoria', 'genero',
-  'badge', 'tallas', 'colores', 'personalizable', 'activo',
+  'id', 'sku', 'nombre', 'marca', 'precio', 'precio_original', 'precio_revendedor',
+  'stock', 'stock_minimo', 'costo_entrada', 'descripcion', 'categoria', 'subcategoria',
+  'genero', 'canal', 'isv', 'badge', 'tallas', 'colores', 'personalizable', 'activo',
 ] as const
 
 export const VARIANTES_COLUMNAS = [
-  'producto_id', 'producto', 'variante_id', 'variante', 'sku', 'precio', 'stock', 'activo',
+  'producto_id', 'producto', 'variante_id', 'variante', 'sku', 'precio', 'stock',
+  'costo', 'precio_revendedor', 'costo_entrada', 'activo',
 ] as const
+
+export const CANALES = ['tienda', 'mostrador', 'ambas'] as const
+export const ISV_VALORES = ['15', '18', 'exento'] as const
+
+const REFERENCIA_IMPORT = 'import excel'
 
 export const NOTA_VENDE_POR_VARIANTES = 'vende por variantes'
 
@@ -47,11 +54,16 @@ export interface InventoryRow {
   marca?: string
   precio?: string | number
   precio_original?: string | number
+  precio_revendedor?: string | number
   stock?: string | number
+  stock_minimo?: string | number
+  costo_entrada?: string | number
   descripcion?: string
   categoria?: string
   subcategoria?: string
   genero?: string
+  canal?: string
+  isv?: string
   badge?: string
   tallas?: string
   colores?: string
@@ -112,11 +124,16 @@ export function buildExportData(
     marca: p.marca ?? '',
     precio: p.precio,
     precio_original: p.precio_original ?? '',
+    precio_revendedor: p.precio_revendedor ?? '',
     stock: conVariantes.has(p.id) ? NOTA_VENDE_POR_VARIANTES : (p.stock ?? ''),
+    stock_minimo: p.stock_minimo ?? '',
+    costo_entrada: '', // campo de entrada (acción), no informativo: siempre vacío al exportar
     descripcion: p.descripcion ?? '',
     categoria: p.categoria_id ? (catById.get(p.categoria_id) ?? '') : '',
     subcategoria: p.subcategoria_id ? (subById.get(p.subcategoria_id) ?? '') : '',
     genero: p.genero ?? '',
+    canal: p.canal,
+    isv: p.isv,
     badge: p.badge ?? '',
     tallas: conVariantes.has(p.id) ? NOTA_VENDE_POR_VARIANTES : joinList(p.tallas),
     colores: joinList(p.colores),
@@ -145,6 +162,9 @@ export function buildExportData(
         sku: v.sku ?? '',
         precio: v.precio ?? '',
         stock: v.stock ?? '',
+        costo: v.costo ?? '', // solo-lectura informativo: el import lo ignora
+        precio_revendedor: v.precio_revendedor ?? '',
+        costo_entrada: '', // campo de entrada (acción), no informativo: siempre vacío al exportar
         activo: v.activo ? 'VERDADERO' : 'FALSO',
       })
     }
@@ -159,10 +179,14 @@ export interface ProductoData {
   descripcion: string | null
   precio: number
   precio_original: number | null
+  precio_revendedor: number | null
   categoria_id: string | null
   subcategoria_id: string | null
   stock: number | null
+  stock_minimo: number | null
   genero: string | null
+  canal: 'tienda' | 'mostrador' | 'ambas'
+  isv: '15' | '18' | 'exento'
   badge: string | null
   tallas: string[] | null
   colores: string[] | null
@@ -187,6 +211,25 @@ export interface ParseContext {
   variantesExistentes: ProductoVariante[]
 }
 
+// Movimiento de kardex calculado por el parser a partir de un diff de stock.
+// producto_id / variante_id en null significan "se resuelve al crear": la ruta
+// (Task 10) liga el movimiento con el alta correspondiente por posición
+// (round-trip: mismo orden relativo que `creates`/`variantes.creates`) o, para
+// productos por venir en el import externo, por `productoSlugTemp` (el SKU
+// del grupo). Un movimiento de variante nueva de un producto YA existente
+// lleva su producto_id real y variante_id null (se liga por posición dentro
+// de las altas de variante de ese mismo producto).
+export interface MovimientoImport {
+  producto_id: string | null
+  productoSlugTemp?: string
+  variante_id: string | null
+  tipo: 'entrada' | 'ajuste'
+  cantidad: number
+  costo_unitario: number | null
+  stock_anterior: number | null
+  referencia: string
+}
+
 export interface VarianteRow {
   producto_id?: string
   producto?: string
@@ -195,6 +238,9 @@ export interface VarianteRow {
   sku?: string | number
   precio?: string | number
   stock?: string | number
+  costo?: string | number         // solo-lectura informativo: el import lo ignora
+  precio_revendedor?: string | number
+  costo_entrada?: string | number
   activo?: string | boolean | number
 }
 
@@ -203,6 +249,7 @@ export interface VarianteData {
   sku: string | null
   precio: number | null
   stock: number | null
+  precio_revendedor: number | null
   activo: boolean
 }
 
@@ -214,6 +261,79 @@ export interface ParseResult {
   creates: ProductoData[]
   errors: ImportError[]
   variantes: { updates: VarianteUpdate[]; creates: VarianteCreate[] }
+  movimientos: MovimientoImport[]
+}
+
+// Datos suficientes para construir un MovimientoImport una vez se conocen los
+// ids (o el productoSlugTemp) del recurso. Separa la VALIDACIÓN (temprana,
+// junto al resto de la fila) de la construcción del objeto final (tardía,
+// una vez resueltos slug/sku de un alta) sin repetir el cálculo.
+export interface MovimientoParcial {
+  tipo: 'entrada' | 'ajuste'
+  cantidad: number
+  costo_unitario: number | null
+  stock_anterior: number | null
+}
+
+// Valida y calcula (sin ids) el movimiento de kardex a partir de un diff de
+// stock. Reutiliza calcularCambioStock: un cambio de modalidad (null <-> número)
+// no es un movimiento real de inventario (se escribe directo, sin kardex) —
+// mismo criterio que ya usa el panel de admin (ver costeo.ts). Devuelve null
+// si no hay movimiento que registrar. Empuja a rowErrors si costoEntrada viene
+// en una fila que no es un aumento de stock.
+export function calcularMovimientoStock(
+  stockAnterior: number | null,
+  stockNuevo: number | null,
+  costoEntrada: number | null,
+  rowErrors: string[],
+): MovimientoParcial | null {
+  const cambio = calcularCambioStock(stockAnterior, stockNuevo)
+  if (cambio.tipo !== 'delta') {
+    if (costoEntrada != null) rowErrors.push('el costo_entrada solo aplica si el stock aumenta')
+    return null
+  }
+  if (cambio.delta > 0) {
+    return { tipo: costoEntrada != null ? 'entrada' : 'ajuste', cantidad: cambio.delta, costo_unitario: costoEntrada ?? null, stock_anterior: stockAnterior }
+  }
+  if (costoEntrada != null) rowErrors.push('el costo_entrada solo aplica si el stock aumenta')
+  return { tipo: 'ajuste', cantidad: cambio.delta, costo_unitario: null, stock_anterior: stockAnterior }
+}
+
+function parseCanal(v: unknown, base: Producto['canal'], rowErrors: string[]): Producto['canal'] {
+  const cell = cellText(v)
+  if (cell === undefined) return base
+  if (!(CANALES as readonly string[]).includes(cell)) { rowErrors.push(`el canal "${cell}" no es válido`); return base }
+  return cell as Producto['canal']
+}
+
+function parseIsv(v: unknown, base: Producto['isv'], rowErrors: string[]): Producto['isv'] {
+  const cell = cellText(v)
+  if (cell === undefined) return base
+  if (!(ISV_VALORES as readonly string[]).includes(cell)) { rowErrors.push(`el isv "${cell}" no es válido`); return base }
+  return cell as Producto['isv']
+}
+
+// precio_revendedor (producto o variante): vacío = no cambia (updates) / hereda-null (altas).
+export function parsePrecioRevendedor(v: unknown, base: number | null, rowErrors: string[]): number | null {
+  const n = parseNum(v)
+  if (n === undefined) return base
+  if (Number.isNaN(n) || n <= 0) { rowErrors.push('el precio_revendedor debe ser mayor a 0'); return base }
+  return n
+}
+
+function parseStockMinimo(v: unknown, base: number | null, rowErrors: string[]): number | null {
+  const n = parseNum(v)
+  if (n === undefined) return base
+  if (Number.isNaN(n) || n < 0 || !Number.isInteger(n)) { rowErrors.push('el stock_minimo debe ser un número entero de 0 o más'); return base }
+  return n
+}
+
+// costo_entrada: transitorio, no se persiste como campo propio. vacío = null.
+export function parseCostoEntrada(v: unknown, rowErrors: string[]): number | null {
+  const n = parseNum(v)
+  if (n === undefined) return null
+  if (Number.isNaN(n) || n <= 0) { rowErrors.push('el costo_entrada debe ser mayor a 0'); return null }
+  return n
 }
 
 export function parseInventoryUpload(
@@ -225,6 +345,7 @@ export function parseInventoryUpload(
   const creates: ProductoData[] = []
   const varUpdates: VarianteUpdate[] = []
   const varCreates: VarianteCreate[] = []
+  const movimientos: MovimientoImport[] = []
 
   const porId = new Map(ctx.existentes.map(p => [p.id, p]))
   const catByNombre = new Map(ctx.categorias.map(c => [normNombre(c.valor), c]))
@@ -431,8 +552,14 @@ export function parseInventoryUpload(
     if (!nombre) rowErrors.push('el nombre no puede ir vacío')
     const precio = parsePrecio(row.precio, rowErrors)
     const precio_original = parsePrecioOriginal(row.precio_original, prod.precio_original, rowErrors)
+    const precio_revendedor = parsePrecioRevendedor(row.precio_revendedor, prod.precio_revendedor, rowErrors)
     const stock = tieneVariantes ? prod.stock : parseStock(row.stock, prod.stock, rowErrors)
+    const stock_minimo = parseStockMinimo(row.stock_minimo, prod.stock_minimo, rowErrors)
+    const canal = parseCanal(row.canal, prod.canal, rowErrors)
+    const isv = parseIsv(row.isv, prod.isv, rowErrors)
+    const costoEntrada = parseCostoEntrada(row.costo_entrada, rowErrors)
     const { categoria_id, subcategoria_id } = resolverCategorias(row, 'Actualizar', fila, prod.categoria_id, prod.subcategoria_id, rowErrors)
+    const movInfo = calcularMovimientoStock(prod.stock, stock, costoEntrada, rowErrors)
 
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Actualizar', fila, motivo: m })); return }
 
@@ -448,10 +575,14 @@ export function parseInventoryUpload(
       descripcion: cellText(row.descripcion) ?? prod.descripcion,
       precio: precio!,
       precio_original,
+      precio_revendedor,
       categoria_id,
       subcategoria_id,
       stock,
+      stock_minimo,
       genero: cellText(row.genero) ?? prod.genero,
+      canal,
+      isv,
       badge: cellText(row.badge) ?? prod.badge,
       tallas: tieneVariantes ? prod.tallas : (cellText(row.tallas) !== undefined ? splitList(row.tallas) : prod.tallas),
       colores: cellText(row.colores) !== undefined ? splitList(row.colores) : prod.colores,
@@ -460,6 +591,8 @@ export function parseInventoryUpload(
       personalizable: cellBool(row.personalizable) ?? prod.personalizable,
       activo: cellBool(row.activo) ?? prod.activo,
     })
+
+    if (movInfo) movimientos.push({ ...movInfo, producto_id: id, variante_id: null, referencia: REFERENCIA_IMPORT })
   })
 
   // --- Pestaña Nuevos ---
@@ -475,8 +608,15 @@ export function parseInventoryUpload(
     if (!nombre) rowErrors.push('el nombre no puede ir vacío')
     const precio = parsePrecio(row.precio, rowErrors)
     const precio_original = parsePrecioOriginal(row.precio_original, null, rowErrors)
+    const precio_revendedor = parsePrecioRevendedor(row.precio_revendedor, null, rowErrors)
     const stock = parseStock(row.stock, null, rowErrors)
+    const stock_minimo = parseStockMinimo(row.stock_minimo, null, rowErrors)
+    const canal = parseCanal(row.canal, 'ambas', rowErrors)
+    const isv = parseIsv(row.isv, '15', rowErrors)
+    const costoEntrada = parseCostoEntrada(row.costo_entrada, rowErrors)
     const { categoria_id, subcategoria_id } = resolverCategorias(row, 'Nuevos', fila, null, null, rowErrors)
+    // Alta: no hay stock previo (el producto no existe todavía) -> stock_anterior = 0.
+    const movInfo = calcularMovimientoStock(0, stock, costoEntrada, rowErrors)
 
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Nuevos', fila, motivo: m })); return }
 
@@ -494,10 +634,14 @@ export function parseInventoryUpload(
       descripcion: cellText(row.descripcion) ?? null,
       precio: precio!,
       precio_original,
+      precio_revendedor,
       categoria_id,
       subcategoria_id,
       stock,
+      stock_minimo,
       genero: cellText(row.genero) ?? null,
+      canal,
+      isv,
       badge: cellText(row.badge) ?? null,
       tallas: cellText(row.tallas) !== undefined ? splitList(row.tallas) : null,
       colores: cellText(row.colores) !== undefined ? splitList(row.colores) : null,
@@ -506,6 +650,8 @@ export function parseInventoryUpload(
       personalizable: cellBool(row.personalizable) ?? false,
       activo: cellBool(row.activo) ?? true,
     })
+
+    if (movInfo) movimientos.push({ ...movInfo, producto_id: null, productoSlugTemp: slug, variante_id: null, referencia: REFERENCIA_IMPORT })
   })
 
   // --- Pestaña Variantes ---
@@ -539,7 +685,11 @@ export function parseInventoryUpload(
 
     const precio = parsePrecioVariante(row.precio, base ? base.precio : null, rowErrors)
     const stock = parseStock(row.stock, base ? base.stock : null, rowErrors)
+    const precio_revendedor = parsePrecioRevendedor(row.precio_revendedor, base ? base.precio_revendedor : null, rowErrors)
     const activo = cellBool(row.activo) ?? (base ? base.activo : true)
+    const costoEntrada = parseCostoEntrada(row.costo_entrada, rowErrors)
+    // Alta de variante: no hay stock previo (la variante no existe todavía) -> stock_anterior = 0.
+    const movInfo = calcularMovimientoStock(base ? base.stock : 0, stock, costoEntrada, rowErrors)
 
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Variantes', fila, motivo: m })); return }
 
@@ -555,16 +705,23 @@ export function parseInventoryUpload(
     nombreVarVistos.set(`${producto_id}::${normNombre(nombre!)}`, fila)
     if (sku) skuVarVistos.set(sku, fila)
 
+    if (movInfo) {
+      // Update: variante_id conocido. Alta: variante_id null (se resuelve al
+      // crear); producto_id ya es real porque en round-trip la pestaña
+      // Variantes solo liga a productos existentes (ver validación arriba).
+      movimientos.push({ ...movInfo, producto_id, variante_id, referencia: REFERENCIA_IMPORT })
+    }
+
     if (variante_id) {
-      varUpdates.push({ id: variante_id, producto_id, nombre: nombre!, sku, precio, stock, activo })
+      varUpdates.push({ id: variante_id, producto_id, nombre: nombre!, sku, precio, stock, precio_revendedor, activo })
     } else {
       const maxOrden = maxOrdenPorProducto.get(producto_id) ?? -1
       const posicion = nuevasVarPorProducto.get(producto_id) ?? 0
       const orden = maxOrden + 1 + posicion
       nuevasVarPorProducto.set(producto_id, posicion + 1)
-      varCreates.push({ producto_id, nombre: nombre!, sku, precio, stock, activo, orden })
+      varCreates.push({ producto_id, nombre: nombre!, sku, precio, stock, precio_revendedor, activo, orden })
     }
   })
 
-  return { updates, creates, errors, variantes: { updates: varUpdates, creates: varCreates } }
+  return { updates, creates, errors, variantes: { updates: varUpdates, creates: varCreates }, movimientos }
 }

@@ -1,6 +1,7 @@
 import {
   cellText, parseNum, parseBool, splitList, normNombre,
-  type ProductoData, type ParseContext, type VarianteData, type VarianteUpdate,
+  parseCostoEntrada, calcularMovimientoStock,
+  type ProductoData, type ParseContext, type VarianteData, type VarianteUpdate, type MovimientoImport,
 } from './inventoryRoundtrip'
 import { slugify, uniqueSlug } from './slug'
 import type { Producto, ProductoVariante } from '@/types'
@@ -8,9 +9,11 @@ import type { Producto, ProductoVariante } from '@/types'
 export type CampoPlataforma =
   | 'sku' | 'nombre' | 'precio' | 'precio_original' | 'stock'
   | 'descripcion' | 'categoria' | 'subcategoria' | 'genero'
-  | 'badge' | 'marca' | 'talla' | 'color' | 'sku_variante' | 'personalizable' | 'activo'
+  | 'badge' | 'marca' | 'talla' | 'color' | 'sku_variante' | 'costo' | 'personalizable' | 'activo'
 
 export type Mapeo = Partial<Record<CampoPlataforma, string>>
+
+const REFERENCIA_IMPORT_EXTERNO = 'import externo'
 
 export const CAMPOS_PLATAFORMA: { campo: CampoPlataforma; label: string; obligatorio: boolean }[] = [
   { campo: 'sku', label: 'SKU (identificador)', obligatorio: true },
@@ -18,6 +21,7 @@ export const CAMPOS_PLATAFORMA: { campo: CampoPlataforma; label: string; obligat
   { campo: 'precio', label: 'Precio', obligatorio: true },
   { campo: 'precio_original', label: 'Precio original (oferta)', obligatorio: false },
   { campo: 'stock', label: 'Stock', obligatorio: false },
+  { campo: 'costo', label: 'Costo (de la entrada de stock)', obligatorio: false },
   { campo: 'marca', label: 'Marca', obligatorio: false },
   { campo: 'categoria', label: 'Categoría', obligatorio: false },
   { campo: 'subcategoria', label: 'Subcategoría', obligatorio: false },
@@ -45,6 +49,7 @@ const ALIAS: Record<CampoPlataforma, string[]> = {
   precio: ['precio', 'precioventa', 'pvp'],
   precio_original: ['preciooriginal', 'precioanterior', 'preciolista', 'preciotachado'],
   stock: ['stock', 'existencia', 'existencias', 'cantidad', 'inventario', 'disponible'],
+  costo: ['costo', 'preciocosto', 'preciocompra', 'costounitario', 'costodeentrada'],
   descripcion: ['descripcion', 'descripcionproducto', 'detalle', 'descripcionlarga'],
   categoria: ['categoria', 'nombrecategoria'],
   subcategoria: ['subcategoria', 'vnombresubcategoria', 'nombresubcategoria'],
@@ -85,6 +90,7 @@ export interface VarianteExterna {
   sku: string | null      // sku_variante de la fila
   precio?: string
   stock?: string
+  costo?: string          // costo de la entrada de stock de esta variante (opcional)
 }
 
 export interface GrupoProducto {
@@ -94,6 +100,7 @@ export interface GrupoProducto {
   precio?: string
   precio_original?: string
   stock?: string
+  costo?: string           // solo para grupos planos (sin variantes): costo de la entrada de stock
   descripcion?: string
   categoria?: string
   subcategoria?: string
@@ -119,6 +126,7 @@ interface FilaDatos {
   skuVar?: string
   precio?: string
   stock?: string
+  costo?: string
 }
 
 export function agruparPorSku(
@@ -163,6 +171,7 @@ export function agruparPorSku(
       skuVar: cel(row, 'sku_variante'),
       precio: cel(row, 'precio'),
       stock: cel(row, 'stock'),
+      costo: cel(row, 'costo'),
     })
     filasPorSku.set(sku, filas)
   })
@@ -178,8 +187,10 @@ export function agruparPorSku(
         sku: f.skuVar ?? null,
         ...(f.precio !== undefined ? { precio: f.precio } : {}),
         ...(f.stock !== undefined ? { stock: f.stock } : {}),
+        ...(f.costo !== undefined ? { costo: f.costo } : {}),
       }))
       g.stock = undefined
+      g.costo = undefined
     } else {
       g.variantes = []
       let total: number | undefined
@@ -189,6 +200,7 @@ export function agruparPorSku(
         if (n !== undefined && !Number.isNaN(n)) total = (total ?? 0) + n
       }
       g.stock = total !== undefined ? String(total) : undefined
+      g.costo = filasDatos.find(f => f.costo !== undefined)?.costo
     }
   }
 
@@ -213,6 +225,7 @@ export interface ExternalParseResult {
   errors: ImportExternoError[]
   resumen: Resumen
   variantes: { updates: VarianteUpdate[]; creates: VarianteCreateExterna[] }
+  movimientos: MovimientoImport[]
 }
 
 function precioReq(v: string | undefined, errs: string[]): number | null {
@@ -250,9 +263,10 @@ function resolverVariantesDeGrupo(
   maxOrdenPorProducto: Map<string, number>,
   skuVarVistosGlobal: Map<string, number>,
   groupErrors: { fila: number; motivo: string }[],
-): { updates: VarianteUpdate[]; creates: VarianteCreateExterna[]; skuReservas: Map<string, number> } | null {
+): { updates: VarianteUpdate[]; creates: VarianteCreateExterna[]; skuReservas: Map<string, number>; movimientos: MovimientoImport[] } | null {
   const varUpdates: VarianteUpdate[] = []
   const varCreates: VarianteCreateExterna[] = []
+  const movimientos: MovimientoImport[] = []
   const nombresEnGrupo = new Set<string>()
   const idsUsadosEnGrupo = new Set<string>()
   const skuReservas = new Map<string, number>() // reservas locales; se funden al global solo si el grupo entero es válido
@@ -329,6 +343,11 @@ function resolverVariantesDeGrupo(
       }
     }
 
+    // costo de la entrada (opcional): valida y calcula el movimiento de kardex.
+    // Alta de variante: no hay stock previo -> stock_anterior = 0.
+    const costoEntrada = parseCostoEntrada(v.costo, rowErrors)
+    const movInfo = calcularMovimientoStock(matched ? matched.stock : 0, stockVar, costoEntrada, rowErrors)
+
     if (rowErrors.length) { rowErrors.forEach(m => groupErrors.push({ fila: v.fila, motivo: m })); return }
 
     nombresEnGrupo.add(nombreKey)
@@ -338,16 +357,30 @@ function resolverVariantesDeGrupo(
     if (matched) {
       varUpdates.push({
         id: matched.id, producto_id: matched.producto_id, nombre: nombreV,
-        sku: skuFinal, precio: precioVar, stock: stockVar, activo: matched.activo,
+        sku: skuFinal, precio: precioVar, stock: stockVar, precio_revendedor: matched.precio_revendedor, activo: matched.activo,
       })
     } else {
-      varCreates.push({ productoSku: g.sku, orden: siguienteOrden, nombre: nombreV, sku: skuFinal, precio: precioVar, stock: stockVar, activo: true })
+      varCreates.push({ productoSku: g.sku, orden: siguienteOrden, nombre: nombreV, sku: skuFinal, precio: precioVar, stock: stockVar, precio_revendedor: null, activo: true })
       siguienteOrden++
+    }
+
+    if (movInfo) {
+      // Update: producto_id/variante_id reales (la variante ya existe).
+      // Alta de variante de un producto YA existente: producto_id real, variante_id
+      // null (se resuelve al crear). Alta de variante de un producto TAMBIÉN nuevo:
+      // ni producto_id ni variante_id existen aún -> se liga por productoSlugTemp (sku).
+      if (matched) {
+        movimientos.push({ ...movInfo, producto_id: matched.producto_id, variante_id: matched.id, referencia: REFERENCIA_IMPORT_EXTERNO })
+      } else if (existente) {
+        movimientos.push({ ...movInfo, producto_id: existente.id, variante_id: null, referencia: REFERENCIA_IMPORT_EXTERNO })
+      } else {
+        movimientos.push({ ...movInfo, producto_id: null, productoSlugTemp: g.sku, variante_id: null, referencia: REFERENCIA_IMPORT_EXTERNO })
+      }
     }
   })
 
   if (groupErrors.length) return null
-  return { updates: varUpdates, creates: varCreates, skuReservas }
+  return { updates: varUpdates, creates: varCreates, skuReservas, movimientos }
 }
 
 export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext): ExternalParseResult {
@@ -356,6 +389,7 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
   const errors: ImportExternoError[] = []
   const varUpdates: VarianteUpdate[] = []
   const varCreates: VarianteCreateExterna[] = []
+  const movimientos: MovimientoImport[] = []
 
   const catByNombre = new Map(ctx.categorias.map(c => [normNombre(c.valor), c]))
   const subByNombre = new Map(ctx.subcategorias.map(c => [normNombre(c.valor), c]))
@@ -405,6 +439,11 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
     const precio = precioReq(g.precio, errs)
     const precio_original = numOpt(g.precio_original, existente?.precio_original ?? null, 'precio_original', errs)
     const stock = stockOpt(g.stock, existente?.stock ?? null, errs)
+    // Costo de la entrada (solo aplica a grupos planos: g.costo viene undefined
+    // cuando el grupo tiene variantes, ya que el costo ahí se maneja por fila).
+    // Alta: no hay stock previo (el producto no existe todavía) -> stock_anterior = 0.
+    const costoEntrada = parseCostoEntrada(g.costo, errs)
+    const movInfoProducto = calcularMovimientoStock(existente ? existente.stock : 0, stock, costoEntrada, errs)
 
     // categoría / subcategoría
     let categoria_id = existente?.categoria_id ?? null
@@ -435,12 +474,14 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
     let varUpdatesGrupo: VarianteUpdate[] = []
     let varCreatesGrupo: VarianteCreateExterna[] = []
     let skuReservasGrupo = new Map<string, number>()
+    let movimientosGrupo: MovimientoImport[] = []
     if (g.variantes.length > 0) {
       const resultado = resolverVariantesDeGrupo(g, existente, precio, varPorSku, varsPorProducto, maxOrdenPorProducto, skuVarVistosGlobal, groupErrors)
       if (resultado) {
         varUpdatesGrupo = resultado.updates
         varCreatesGrupo = resultado.creates
         skuReservasGrupo = resultado.skuReservas
+        movimientosGrupo = resultado.movimientos
       }
     }
 
@@ -454,6 +495,16 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
     for (const [sku, f] of skuReservasGrupo) skuVarVistosGlobal.set(sku, f)
     varUpdates.push(...varUpdatesGrupo)
     varCreates.push(...varCreatesGrupo)
+    movimientos.push(...movimientosGrupo)
+
+    if (movInfoProducto) {
+      // Alta: producto_id null, se liga por productoSlugTemp (el sku del grupo).
+      movimientos.push(
+        existente
+          ? { ...movInfoProducto, producto_id: existente.id, variante_id: null, referencia: REFERENCIA_IMPORT_EXTERNO }
+          : { ...movInfoProducto, producto_id: null, productoSlugTemp: g.sku, variante_id: null, referencia: REFERENCIA_IMPORT_EXTERNO },
+      )
+    }
 
     if (existente) {
       updates.push({
@@ -463,10 +514,14 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
         descripcion: cellText(g.descripcion) ?? existente.descripcion,
         precio: precio!,
         precio_original,
+        precio_revendedor: existente.precio_revendedor,
         categoria_id,
         subcategoria_id,
         stock,
+        stock_minimo: existente.stock_minimo,
         genero: cellText(g.genero) ?? existente.genero,
+        canal: existente.canal,
+        isv: existente.isv,
         badge: cellText(g.badge) ?? existente.badge,
         tallas: g.tallas.length ? g.tallas : existente.tallas,
         colores: g.colores.length ? g.colores : existente.colores,
@@ -484,10 +539,14 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
         descripcion: cellText(g.descripcion) ?? null,
         precio: precio!,
         precio_original,
+        precio_revendedor: null,
         categoria_id,
         subcategoria_id,
         stock,
+        stock_minimo: null,
         genero: cellText(g.genero) ?? null,
+        canal: 'ambas',
+        isv: '15',
         badge: cellText(g.badge) ?? null,
         tallas: g.tallas.length ? g.tallas : null,
         colores: g.colores.length ? g.colores : null,
@@ -511,5 +570,6 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
       variantesActualizar: varUpdates.length,
     },
     variantes: { updates: varUpdates, creates: varCreates },
+    movimientos,
   }
 }

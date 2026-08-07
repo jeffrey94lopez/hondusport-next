@@ -8,11 +8,16 @@ import type { Producto, ProductoVariante } from '@/types'
 import type { ParseContext } from '../inventoryRoundtrip'
 
 describe('helpers de celdas', () => {
-  it('COLUMNAS trae id primero y las 16 columnas', () => {
+  it('COLUMNAS trae id primero y las 21 columnas (incluye canal/isv/precio_revendedor/stock_minimo/costo_entrada)', () => {
     expect(COLUMNAS[0]).toBe('id')
     expect(COLUMNAS).toContain('precio')
     expect(COLUMNAS).toContain('activo')
-    expect(COLUMNAS.length).toBe(16)
+    expect(COLUMNAS).toContain('canal')
+    expect(COLUMNAS).toContain('isv')
+    expect(COLUMNAS).toContain('precio_revendedor')
+    expect(COLUMNAS).toContain('stock_minimo')
+    expect(COLUMNAS).toContain('costo_entrada')
+    expect(COLUMNAS.length).toBe(21)
   })
   it('INSTRUCCIONES no está vacío', () => {
     expect(INSTRUCCIONES.length).toBeGreaterThan(3)
@@ -106,9 +111,10 @@ describe('buildExportData', () => {
     expect(actualizar[0].categoria).toBe('')
   })
 
-  it('VARIANTES_COLUMNAS trae las 8 columnas esperadas', () => {
+  it('VARIANTES_COLUMNAS trae las 11 columnas esperadas (incluye costo/precio_revendedor/costo_entrada)', () => {
     expect(VARIANTES_COLUMNAS).toEqual([
-      'producto_id', 'producto', 'variante_id', 'variante', 'sku', 'precio', 'stock', 'activo',
+      'producto_id', 'producto', 'variante_id', 'variante', 'sku', 'precio', 'stock',
+      'costo', 'precio_revendedor', 'costo_entrada', 'activo',
     ])
   })
 
@@ -118,8 +124,8 @@ describe('buildExportData', () => {
       varianteBD({ id: 'v2', producto_id: prod().id, nombre: 'L', sku: null, precio: null, stock: null, orden: 1 }),
     ])
     expect(variantes).toEqual([
-      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v1', variante: 'M', sku: 'SKU-M', precio: 150, stock: 3, activo: 'VERDADERO' },
-      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v2', variante: 'L', sku: '', precio: '', stock: '', activo: 'VERDADERO' },
+      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v1', variante: 'M', sku: 'SKU-M', precio: 150, stock: 3, costo: '', precio_revendedor: '', costo_entrada: '', activo: 'VERDADERO' },
+      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v2', variante: 'L', sku: '', precio: '', stock: '', costo: '', precio_revendedor: '', costo_entrada: '', activo: 'VERDADERO' },
     ])
   })
 
@@ -133,6 +139,40 @@ describe('buildExportData', () => {
     const { actualizar } = buildExportData([prod({ stock: 4 })], [], [], [])
     expect(actualizar[0].stock).toBe(4)
     expect(actualizar[0].tallas).toBe('S, M')
+  })
+
+  it('exporta canal/isv/precio_revendedor/stock_minimo; costo_entrada siempre vacío (es de entrada, no informativo)', () => {
+    const { actualizar } = buildExportData(
+      [prod({ canal: 'tienda', isv: '18', precio_revendedor: 200, stock_minimo: 3 })], [], [], [],
+    )
+    expect(actualizar[0].canal).toBe('tienda')
+    expect(actualizar[0].isv).toBe('18')
+    expect(actualizar[0].precio_revendedor).toBe(200)
+    expect(actualizar[0].stock_minimo).toBe(3)
+    expect(actualizar[0].costo_entrada).toBe('')
+  })
+
+  it('nulos en precio_revendedor/stock_minimo salen como cadena vacía', () => {
+    const { actualizar } = buildExportData([prod({ precio_revendedor: null, stock_minimo: null })], [], [], [])
+    expect(actualizar[0].precio_revendedor).toBe('')
+    expect(actualizar[0].stock_minimo).toBe('')
+  })
+
+  it('exporta costo (solo-lectura) y precio_revendedor de variante; costo_entrada siempre vacío', () => {
+    const { variantes } = buildExportData([prod()], [], [], [
+      varianteBD({ id: 'v1', producto_id: prod().id, nombre: 'M', costo: 80, precio_revendedor: 150 }),
+    ])
+    expect(variantes[0].costo).toBe(80)
+    expect(variantes[0].precio_revendedor).toBe(150)
+    expect(variantes[0].costo_entrada).toBe('')
+  })
+
+  it('costo/precio_revendedor null de variante salen como cadena vacía', () => {
+    const { variantes } = buildExportData([prod()], [], [], [
+      varianteBD({ id: 'v1', producto_id: prod().id, nombre: 'M', costo: null, precio_revendedor: null }),
+    ])
+    expect(variantes[0].costo).toBe('')
+    expect(variantes[0].precio_revendedor).toBe('')
   })
 })
 
@@ -314,6 +354,267 @@ describe('parseInventoryUpload — atomicidad de datos', () => {
     expect(res.errors).toEqual([])
     expect(res.updates).toHaveLength(1)
     expect(res.creates).toHaveLength(1)
+  })
+})
+
+describe('parseInventoryUpload — canal/isv/precio_revendedor/stock_minimo', () => {
+  it('actualiza canal, isv, precio_revendedor y stock_minimo', () => {
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, canal: 'tienda', isv: '18', precio_revendedor: 200, stock_minimo: 3 }],
+      nuevos: [], variantes: [],
+    }, ctxBase())
+    expect(res.errors).toEqual([])
+    const u = res.updates[0]
+    expect(u.canal).toBe('tienda')
+    expect(u.isv).toBe('18')
+    expect(u.precio_revendedor).toBe(200)
+    expect(u.stock_minimo).toBe(3)
+  })
+
+  it('vacío = no cambia (conserva canal/isv/precio_revendedor/stock_minimo previos)', () => {
+    const c = ctxBase()
+    c.existentes[0].canal = 'mostrador'
+    c.existentes[0].isv = 'exento'
+    c.existentes[0].precio_revendedor = 180
+    c.existentes[0].stock_minimo = 2
+    const res = parseInventoryUpload({ actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250 }], nuevos: [], variantes: [] }, c)
+    const u = res.updates[0]
+    expect(u.canal).toBe('mostrador')
+    expect(u.isv).toBe('exento')
+    expect(u.precio_revendedor).toBe(180)
+    expect(u.stock_minimo).toBe(2)
+  })
+
+  it('error: canal inválido', () => {
+    const res = parseInventoryUpload({ actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, canal: 'x' }], nuevos: [], variantes: [] }, ctxBase())
+    expect(res.updates).toEqual([])
+    expect(res.errors.some(e => e.motivo.includes('canal'))).toBe(true)
+  })
+
+  it('error: isv inválido', () => {
+    const res = parseInventoryUpload({ actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, isv: '99' }], nuevos: [], variantes: [] }, ctxBase())
+    expect(res.errors.some(e => e.motivo.includes('isv'))).toBe(true)
+  })
+
+  it('error: precio_revendedor debe ser mayor a 0', () => {
+    const res = parseInventoryUpload({ actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, precio_revendedor: 0 }], nuevos: [], variantes: [] }, ctxBase())
+    expect(res.errors.some(e => e.motivo.includes('precio_revendedor'))).toBe(true)
+  })
+
+  it('error: stock_minimo debe ser entero de 0 o más', () => {
+    const res = parseInventoryUpload({ actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock_minimo: -1 }], nuevos: [], variantes: [] }, ctxBase())
+    expect(res.errors.some(e => e.motivo.includes('stock_minimo'))).toBe(true)
+  })
+
+  it('altas: defaults canal=ambas, isv=15, precio_revendedor=null, stock_minimo=null', () => {
+    const res = parseInventoryUpload({ actualizar: [], nuevos: [{ nombre: 'Gorra', precio: 120 }], variantes: [] }, ctxBase())
+    const c = res.creates[0]
+    expect(c.canal).toBe('ambas')
+    expect(c.isv).toBe('15')
+    expect(c.precio_revendedor).toBeNull()
+    expect(c.stock_minimo).toBeNull()
+  })
+
+  it('altas: toma canal/isv/precio_revendedor/stock_minimo de la fila', () => {
+    const res = parseInventoryUpload({
+      actualizar: [], nuevos: [{ nombre: 'Gorra', precio: 120, canal: 'mostrador', isv: 'exento', precio_revendedor: 90, stock_minimo: 1 }], variantes: [],
+    }, ctxBase())
+    const c = res.creates[0]
+    expect(c.canal).toBe('mostrador')
+    expect(c.isv).toBe('exento')
+    expect(c.precio_revendedor).toBe(90)
+    expect(c.stock_minimo).toBe(1)
+  })
+})
+
+describe('parseInventoryUpload — movimientos de stock (Actualizar)', () => {
+  it('aumento de stock con costo_entrada genera movimiento tipo entrada', () => {
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 15, costo_entrada: 100 }],
+      nuevos: [], variantes: [],
+    }, ctxBase())
+    expect(res.errors).toEqual([])
+    expect(res.movimientos).toEqual([
+      { producto_id: 'p1', variante_id: null, tipo: 'entrada', cantidad: 5, costo_unitario: 100, stock_anterior: 10, referencia: expect.any(String) },
+    ])
+  })
+
+  it('aumento de stock sin costo_entrada genera movimiento tipo ajuste', () => {
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 15 }],
+      nuevos: [], variantes: [],
+    }, ctxBase())
+    expect(res.errors).toEqual([])
+    expect(res.movimientos[0]).toMatchObject({ tipo: 'ajuste', cantidad: 5, costo_unitario: null, stock_anterior: 10 })
+  })
+
+  it('disminución de stock genera ajuste sin costo', () => {
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 4 }],
+      nuevos: [], variantes: [],
+    }, ctxBase())
+    expect(res.errors).toEqual([])
+    expect(res.movimientos[0]).toMatchObject({ tipo: 'ajuste', cantidad: -6, costo_unitario: null, stock_anterior: 10 })
+  })
+
+  it('error: costo_entrada en fila con disminución de stock', () => {
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 4, costo_entrada: 100 }],
+      nuevos: [], variantes: [],
+    }, ctxBase())
+    expect(res.updates).toEqual([])
+    expect(res.movimientos).toEqual([])
+    expect(res.errors.some(e => e.motivo.includes('costo_entrada'))).toBe(true)
+  })
+
+  it('error: costo_entrada en fila sin cambio de stock', () => {
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, costo_entrada: 100 }],
+      nuevos: [], variantes: [],
+    }, ctxBase())
+    expect(res.updates).toEqual([])
+    expect(res.movimientos).toEqual([])
+    expect(res.errors.some(e => e.motivo.includes('costo_entrada'))).toBe(true)
+  })
+
+  it('cambio de modalidad (ilimitado <-> número) no genera movimiento', () => {
+    const c = ctxBase()
+    c.existentes[0].stock = null
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 20 }],
+      nuevos: [], variantes: [],
+    }, c)
+    expect(res.errors).toEqual([])
+    expect(res.movimientos).toEqual([])
+  })
+
+  it('sin cambio de stock no genera movimiento', () => {
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 10 }],
+      nuevos: [], variantes: [],
+    }, ctxBase())
+    expect(res.movimientos).toEqual([])
+  })
+
+  it('producto con variantes: stock se ignora en Actualizar; costo_entrada ahí es error (no hay aumento real)', () => {
+    const c = ctxBase()
+    const ctxV = { ...c, variantesExistentes: [varianteBD({ id: 'v1', producto_id: 'p1', nombre: 'M' })] }
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 999, costo_entrada: 50 }],
+      nuevos: [], variantes: [],
+    }, ctxV)
+    expect(res.updates).toEqual([])
+    expect(res.movimientos).toEqual([])
+    expect(res.errors.some(e => e.motivo.includes('costo_entrada'))).toBe(true)
+  })
+})
+
+describe('parseInventoryUpload — movimientos de stock (Nuevos/altas)', () => {
+  it('alta con stock inicial > 0 y costo_entrada genera movimiento entrada con stock_anterior 0', () => {
+    const res = parseInventoryUpload({
+      actualizar: [], nuevos: [{ nombre: 'Gorra', precio: 120, stock: 8, costo_entrada: 40 }], variantes: [],
+    }, ctxBase())
+    expect(res.errors).toEqual([])
+    expect(res.movimientos).toEqual([
+      { producto_id: null, productoSlugTemp: 'gorra', variante_id: null, tipo: 'entrada', cantidad: 8, costo_unitario: 40, stock_anterior: 0, referencia: expect.any(String) },
+    ])
+  })
+
+  it('alta con stock inicial > 0 sin costo genera ajuste', () => {
+    const res = parseInventoryUpload({
+      actualizar: [], nuevos: [{ nombre: 'Gorra', precio: 120, stock: 8 }], variantes: [],
+    }, ctxBase())
+    expect(res.movimientos[0]).toMatchObject({ tipo: 'ajuste', cantidad: 8, costo_unitario: null, stock_anterior: 0 })
+  })
+
+  it('alta sin stock (vacío = ilimitado) no genera movimiento', () => {
+    const res = parseInventoryUpload({
+      actualizar: [], nuevos: [{ nombre: 'Gorra', precio: 120 }], variantes: [],
+    }, ctxBase())
+    expect(res.movimientos).toEqual([])
+  })
+
+  it('alta con stock 0 no genera movimiento', () => {
+    const res = parseInventoryUpload({
+      actualizar: [], nuevos: [{ nombre: 'Gorra', precio: 120, stock: 0 }], variantes: [],
+    }, ctxBase())
+    expect(res.movimientos).toEqual([])
+  })
+
+  it('error: costo_entrada en alta sin stock inicial', () => {
+    const res = parseInventoryUpload({
+      actualizar: [], nuevos: [{ nombre: 'Gorra', precio: 120, costo_entrada: 40 }], variantes: [],
+    }, ctxBase())
+    expect(res.creates).toEqual([])
+    expect(res.movimientos).toEqual([])
+    expect(res.errors.some(e => e.motivo.includes('costo_entrada'))).toBe(true)
+  })
+})
+
+describe('parseInventoryUpload — Variantes: precio_revendedor y movimientos', () => {
+  const ctx = ctxBase()
+  const prodV = ctx.existentes[0]
+
+  it('actualiza precio_revendedor de variante; vacío conserva (hereda si base es null)', () => {
+    const ctxV = { ...ctx, variantesExistentes: [varianteBD({ id: 'v1', producto_id: prodV.id, nombre: 'M', precio_revendedor: null })] }
+    const r1 = parseInventoryUpload({ actualizar: [], nuevos: [], variantes: [
+      { producto_id: prodV.id, variante_id: 'v1', variante: 'M', precio_revendedor: 90 },
+    ] }, ctxV)
+    expect(r1.errors).toEqual([])
+    expect(r1.variantes.updates[0].precio_revendedor).toBe(90)
+
+    const r2 = parseInventoryUpload({ actualizar: [], nuevos: [], variantes: [
+      { producto_id: prodV.id, variante_id: 'v1', variante: 'M' },
+    ] }, ctxV)
+    expect(r2.variantes.updates[0].precio_revendedor).toBeNull()
+  })
+
+  it('error: precio_revendedor de variante <= 0', () => {
+    const ctxV = { ...ctx, variantesExistentes: [varianteBD({ id: 'v1', producto_id: prodV.id, nombre: 'M' })] }
+    const r = parseInventoryUpload({ actualizar: [], nuevos: [], variantes: [
+      { producto_id: prodV.id, variante_id: 'v1', variante: 'M', precio_revendedor: 0 },
+    ] }, ctxV)
+    expect(r.errors.some(e => e.motivo.includes('precio_revendedor'))).toBe(true)
+  })
+
+  it('variante nueva sin precio_revendedor hereda (null)', () => {
+    const ctxV = { ...ctx, variantesExistentes: [] }
+    const r = parseInventoryUpload({ actualizar: [], nuevos: [], variantes: [
+      { producto_id: prodV.id, variante: 'L' },
+    ] }, ctxV)
+    expect(r.variantes.creates[0].precio_revendedor).toBeNull()
+  })
+
+  it('aumento de stock de variante existente con costo_entrada genera movimiento entrada con variante_id', () => {
+    const ctxV = { ...ctx, variantesExistentes: [varianteBD({ id: 'v1', producto_id: prodV.id, nombre: 'M', stock: 3 })] }
+    const r = parseInventoryUpload({ actualizar: [], nuevos: [], variantes: [
+      { producto_id: prodV.id, variante_id: 'v1', variante: 'M', stock: 10, costo_entrada: 55 },
+    ] }, ctxV)
+    expect(r.errors).toEqual([])
+    expect(r.movimientos).toEqual([
+      { producto_id: prodV.id, variante_id: 'v1', tipo: 'entrada', cantidad: 7, costo_unitario: 55, stock_anterior: 3, referencia: expect.any(String) },
+    ])
+  })
+
+  it('variante nueva con stock inicial > 0 genera movimiento con variante_id null, producto_id conocido (stock_anterior 0)', () => {
+    const ctxV = { ...ctx, variantesExistentes: [] }
+    const r = parseInventoryUpload({ actualizar: [], nuevos: [], variantes: [
+      { producto_id: prodV.id, variante: 'L', stock: 4, costo_entrada: 20 },
+    ] }, ctxV)
+    expect(r.errors).toEqual([])
+    expect(r.movimientos).toEqual([
+      { producto_id: prodV.id, variante_id: null, tipo: 'entrada', cantidad: 4, costo_unitario: 20, stock_anterior: 0, referencia: expect.any(String) },
+    ])
+  })
+
+  it('error: costo_entrada en variante sin aumento de stock', () => {
+    const ctxV = { ...ctx, variantesExistentes: [varianteBD({ id: 'v1', producto_id: prodV.id, nombre: 'M', stock: 3 })] }
+    const r = parseInventoryUpload({ actualizar: [], nuevos: [], variantes: [
+      { producto_id: prodV.id, variante_id: 'v1', variante: 'M', costo_entrada: 55 },
+    ] }, ctxV)
+    expect(r.variantes.updates).toEqual([])
+    expect(r.movimientos).toEqual([])
+    expect(r.errors.some(e => e.motivo.includes('costo_entrada'))).toBe(true)
   })
 })
 

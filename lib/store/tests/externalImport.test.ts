@@ -11,6 +11,11 @@ describe('CAMPOS_PLATAFORMA', () => {
     const oblig = CAMPOS_PLATAFORMA.filter(c => c.obligatorio).map(c => c.campo)
     expect(oblig).toEqual(['sku', 'nombre', 'precio'])
   })
+  it('incluye costo como campo opcional (mapeo de costo de entrada)', () => {
+    const campo = CAMPOS_PLATAFORMA.find(c => c.campo === 'costo')
+    expect(campo).toBeDefined()
+    expect(campo?.obligatorio).toBe(false)
+  })
 })
 
 describe('sugerirMapeo', () => {
@@ -165,6 +170,33 @@ describe('sugerirMapeo: sku_variante', () => {
   })
 })
 
+describe('sugerirMapeo: costo', () => {
+  it('reconoce columnas típicas de costo de entrada', () => {
+    expect(sugerirMapeo(['sku', 'nombre', 'precio', 'costo']).costo).toBe('costo')
+    expect(sugerirMapeo(['sku', 'nombre', 'precio', 'precio_costo']).costo).toBe('precio_costo')
+  })
+})
+
+describe('agruparPorSku: costo', () => {
+  const MAPEO_CON_COSTO = { ...MAPEO_POS, costo: 'costo' } as const
+
+  it('grupo plano toma el costo como escalar (primer no vacío)', () => {
+    const rows = [{ cbarras: 'A1', nombre_producto: 'Balón', precio_venta: 100, existencia: 7, costo: '60' }]
+    const { grupos } = agruparPorSku(rows, MAPEO_CON_COSTO)
+    expect(grupos[0].costo).toBe('60')
+  })
+
+  it('grupo con variantes: el costo se captura por fila de variante, no en el grupo', () => {
+    const rows = [
+      { cbarras: 'A10', nombre_producto: 'Samba', precio_venta: 2720, existencia: 3, tamano: '40', costo: '1000' },
+      { cbarras: 'A10', nombre_producto: 'Samba', precio_venta: 2720, existencia: 2, tamano: '41', costo: '1100' },
+    ]
+    const { grupos } = agruparPorSku(rows, { ...MAPEO_CON_COSTO, talla: 'tamano' })
+    expect(grupos[0].variantes[0].costo).toBe('1000')
+    expect(grupos[0].variantes[1].costo).toBe('1100')
+  })
+})
+
 function prod(o: Partial<Producto> = {}): Producto {
   return {
     id: 'p1', nombre: 'Viejo', slug: 'viejo', descripcion: 'd', precio: 100, precio_original: null,
@@ -277,8 +309,8 @@ describe('parseExternalImport: variantes', () => {
     const r = parseExternalImport([g], ctxSinExistentes())
     expect(r.errors).toEqual([])
     expect(r.variantes.creates).toEqual([
-      { productoSku: 'A1', orden: 0, nombre: 'M', sku: null, precio: null, stock: 3, activo: true },
-      { productoSku: 'A1', orden: 1, nombre: 'L', sku: null, precio: 150, stock: 2, activo: true },
+      { productoSku: 'A1', orden: 0, nombre: 'M', sku: null, precio: null, stock: 3, precio_revendedor: null, activo: true },
+      { productoSku: 'A1', orden: 1, nombre: 'L', sku: null, precio: 150, stock: 2, precio_revendedor: null, activo: true },
     ])
     expect(r.creates[0].stock).toBeNull() // el padre no lleva stock propio
     expect(r.resumen.variantesCrear).toBe(2)
@@ -312,6 +344,20 @@ describe('parseExternalImport: variantes', () => {
     expect(r.creates).toEqual([])
     expect(r.variantes.creates).toEqual([])
     expect(r.resumen.conError).toBe(1)
+  })
+
+  it('herencia: variante actualizada conserva su precio_revendedor de BD; variante nueva no tiene (null)', () => {
+    const ctx2 = { ...ctxConProductoA1(), variantesExistentes: [
+      varianteBD({ id: 'v1', producto_id: 'prod-a1', nombre: 'M', precio_revendedor: 70 }),
+    ] }
+    const g = grupo({ sku: 'A1', variantes: [
+      { fila: 2, nombre: 'M', sku: null },
+      { fila: 3, nombre: 'L', sku: null },
+    ] })
+    const r = parseExternalImport([g], ctx2)
+    expect(r.errors).toEqual([])
+    expect(r.variantes.updates[0]).toMatchObject({ id: 'v1', precio_revendedor: 70 })
+    expect(r.variantes.creates[0]).toMatchObject({ nombre: 'L', precio_revendedor: null })
   })
 
   it('grupo plano sigue funcionando igual que antes', () => {
@@ -368,8 +414,76 @@ describe('parseExternalImport: variantes', () => {
     const r = parseExternalImport([g], ctx2)
     expect(r.errors).toEqual([])
     expect(r.variantes.creates).toEqual([
-      { productoSku: 'A1', orden: 2, nombre: 'XL', sku: null, precio: null, stock: null, activo: true },
+      { productoSku: 'A1', orden: 2, nombre: 'XL', sku: null, precio: null, stock: null, precio_revendedor: null, activo: true },
     ])
+  })
+
+  it('movimientos: grupo plano actualiza stock con costo -> entrada; sin costo -> ajuste', () => {
+    const c = ctxConProductoA1() // existente: stock null (ilimitado)
+    c.existentes[0].stock = 4
+    const g1 = grupo({ sku: 'A1', nombre: 'Camisa', precio: '100', stock: '10', costo: '50' })
+    const r1 = parseExternalImport([g1], c)
+    expect(r1.errors).toEqual([])
+    expect(r1.movimientos).toEqual([
+      { producto_id: 'prod-a1', variante_id: null, tipo: 'entrada', cantidad: 6, costo_unitario: 50, stock_anterior: 4, referencia: expect.any(String) },
+    ])
+
+    const c2 = ctxConProductoA1()
+    c2.existentes[0].stock = 4
+    const g2 = grupo({ sku: 'A1', nombre: 'Camisa', precio: '100', stock: '10' })
+    const r2 = parseExternalImport([g2], c2)
+    expect(r2.movimientos[0]).toMatchObject({ tipo: 'ajuste', cantidad: 6, costo_unitario: null })
+  })
+
+  it('movimientos: error si viene costo sin aumento de stock (grupo plano)', () => {
+    const c = ctxConProductoA1()
+    c.existentes[0].stock = 10
+    const g = grupo({ sku: 'A1', nombre: 'Camisa', precio: '100', stock: '4', costo: '50' })
+    const r = parseExternalImport([g], c)
+    expect(r.updates).toEqual([])
+    expect(r.movimientos).toEqual([])
+    expect(r.errors.some(e => /costo/.test(e.motivo))).toBe(true)
+  })
+
+  it('movimientos: alta (producto nuevo) con stock inicial > 0 liga por productoSlugTemp (sku)', () => {
+    const g = grupo({ sku: 'NEW1', nombre: 'Nuevo', precio: '50', stock: '9', costo: '30' })
+    const r = parseExternalImport([g], ctxSinExistentes())
+    expect(r.errors).toEqual([])
+    expect(r.movimientos).toEqual([
+      { producto_id: null, productoSlugTemp: 'NEW1', variante_id: null, tipo: 'entrada', cantidad: 9, costo_unitario: 30, stock_anterior: 0, referencia: expect.any(String) },
+    ])
+  })
+
+  it('movimientos: variante existente con costo genera entrada con variante_id conocido', () => {
+    const ctx2 = { ...ctxConProductoA1(), variantesExistentes: [
+      varianteBD({ id: 'v1', producto_id: 'prod-a1', nombre: 'M', sku: 'A1-M', stock: 3 }),
+    ] }
+    const g = grupo({ sku: 'A1', variantes: [{ fila: 2, nombre: 'M', sku: 'A1-M', stock: '10', costo: '25' }] })
+    const r = parseExternalImport([g], ctx2)
+    expect(r.errors).toEqual([])
+    expect(r.movimientos).toEqual([
+      { producto_id: 'prod-a1', variante_id: 'v1', tipo: 'entrada', cantidad: 7, costo_unitario: 25, stock_anterior: 3, referencia: expect.any(String) },
+    ])
+  })
+
+  it('movimientos: variante nueva de producto existente con stock inicial > 0 (variante_id null, producto_id conocido)', () => {
+    const g = grupo({ sku: 'A1', variantes: [{ fila: 2, nombre: 'XL', sku: null, stock: '5', costo: '15' }] })
+    const r = parseExternalImport([g], ctxConProductoA1())
+    expect(r.errors).toEqual([])
+    expect(r.movimientos).toEqual([
+      { producto_id: 'prod-a1', variante_id: null, tipo: 'entrada', cantidad: 5, costo_unitario: 15, stock_anterior: 0, referencia: expect.any(String) },
+    ])
+  })
+
+  it('movimientos: error si el costo de variante viene sin aumento de stock', () => {
+    const ctx2 = { ...ctxConProductoA1(), variantesExistentes: [
+      varianteBD({ id: 'v1', producto_id: 'prod-a1', nombre: 'M', sku: 'A1-M', stock: 10 }),
+    ] }
+    const g = grupo({ sku: 'A1', variantes: [{ fila: 2, nombre: 'M', sku: 'A1-M', stock: '4', costo: '25' }] })
+    const r = parseExternalImport([g], ctx2)
+    expect(r.variantes.updates).toEqual([])
+    expect(r.movimientos).toEqual([])
+    expect(r.errors.some(e => /costo/.test(e.motivo))).toBe(true)
   })
 
   it('grupo mixto update+create: el create lleva orden = maxOrdenBD + 1, no su posición en el grupo', () => {
@@ -387,7 +501,7 @@ describe('parseExternalImport: variantes', () => {
     expect(r.variantes.updates).toHaveLength(1)
     expect(r.variantes.updates[0]).toMatchObject({ id: 'v2' })
     expect(r.variantes.creates).toEqual([
-      { productoSku: 'A1', orden: 2, nombre: 'XL', sku: null, precio: null, stock: null, activo: true },
+      { productoSku: 'A1', orden: 2, nombre: 'XL', sku: null, precio: null, stock: null, precio_revendedor: null, activo: true },
     ])
   })
 })
