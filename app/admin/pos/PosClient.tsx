@@ -94,6 +94,30 @@ function preciosCatalogo(producto: Producto, tipoCliente: 'final' | 'revendedor'
   return activas.map(v => precioLineaPos(tipoCliente, producto, v))
 }
 
+function brutoLinea(l: LineaVenta): number {
+  return l.cantidad * l.precio_unitario
+}
+
+// Nunca deja que el descuento de una línea supere su propio bruto (cantidad
+// × precio_unitario) — evita que emitirVenta (que NO relee precio/descuento,
+// el override es intencional) reciba un total negativo en un documento
+// fiscal cuando cantidad o precio bajan después de haber puesto un descuento.
+function clampDescuentoLinea(l: LineaVenta): LineaVenta {
+  const bruto = brutoLinea(l)
+  return { ...l, descuento: Math.min(Math.max(l.descuento, 0), bruto) }
+}
+
+// Bruto disponible para el descuento global: suma de cada línea ya neta de
+// su propio descuento (mismo criterio que usa `prorratearDescuentoGlobal`
+// para repartirlo). El descuento global nunca puede superar esto.
+function brutoTotalLineas(ls: LineaVenta[]): number {
+  return round2(ls.reduce((s, l) => s + (brutoLinea(l) - l.descuento), 0))
+}
+
+function clampDescuentoGlobal(next: LineaVenta[], descuentoGlobal: number): number {
+  return Math.min(Math.max(descuentoGlobal, 0), brutoTotalLineas(next))
+}
+
 // Tope de cantidad para una línea de inventario: null = ilimitado (mismo
 // criterio que el carrito de la tienda, ver lib/store/cart.ts).
 function topeStock(linea: LineaVenta, productosPorId: Map<string, Producto>): number | null {
@@ -232,39 +256,51 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, product
     setVarianteModal(null)
   }
 
+  // Las mutaciones que pueden reducir el bruto disponible (bajar cantidad o
+  // precio de una línea, subir su descuento, quitarla, o recalcular precios
+  // al cambiar de cliente) reclaman tanto el descuento de esa línea
+  // (clampDescuentoLinea) como el descuento global (clampDescuentoGlobal),
+  // para que el estado nunca quede con un descuento mayor que el bruto que
+  // lo respalda — ver nota del Fix round 1 en task-10-report.md.
   function quitarLinea(key: string) {
-    setLineas(prev => prev.filter(l => l.key !== key))
+    const next = lineas.filter(l => l.key !== key)
+    setLineas(next)
+    setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
   }
 
   function cambiarCantidadDelta(key: string, delta: number) {
-    setLineas(prev =>
-      prev
-        .map(l => {
-          if (l.key !== key) return l
-          if (delta <= 0) return { ...l, cantidad: l.cantidad + delta }
-          const tope = topeStock(l, productosPorId) ?? Infinity
-          return { ...l, cantidad: Math.min(l.cantidad + delta, Math.max(tope, l.cantidad)) }
-        })
-        .filter(l => l.cantidad > 0),
-    )
+    const next = lineas
+      .map(l => {
+        if (l.key !== key) return l
+        if (delta <= 0) return clampDescuentoLinea({ ...l, cantidad: l.cantidad + delta })
+        const tope = topeStock(l, productosPorId) ?? Infinity
+        return clampDescuentoLinea({ ...l, cantidad: Math.min(l.cantidad + delta, Math.max(tope, l.cantidad)) })
+      })
+      .filter(l => l.cantidad > 0)
+    setLineas(next)
+    setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
   }
 
   function cambiarCantidadInput(key: string, valor: string) {
     const n = Number(valor)
     if (!Number.isFinite(n)) return
-    setLineas(prev =>
-      prev.map(l => {
-        if (l.key !== key) return l
-        const tope = topeStock(l, productosPorId) ?? Infinity
-        return { ...l, cantidad: Math.max(1, Math.min(Math.round(n), tope)) }
-      }),
-    )
+    const next = lineas.map(l => {
+      if (l.key !== key) return l
+      const tope = topeStock(l, productosPorId) ?? Infinity
+      return clampDescuentoLinea({ ...l, cantidad: Math.max(1, Math.min(Math.round(n), tope)) })
+    })
+    setLineas(next)
+    setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
   }
 
   function cambiarPrecio(key: string, valor: string) {
     const n = Number(valor)
     if (!Number.isFinite(n)) return
-    setLineas(prev => prev.map(l => (l.key === key ? { ...l, precio_unitario: Math.max(0, n), precioManual: true } : l)))
+    const next = lineas.map(l =>
+      l.key === key ? clampDescuentoLinea({ ...l, precio_unitario: Math.max(0, n), precioManual: true }) : l,
+    )
+    setLineas(next)
+    setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
   }
 
   function cambiarModoDescuento(key: string, modo: DescuentoModo) {
@@ -274,14 +310,15 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, product
   function cambiarDescuento(key: string, valor: string) {
     const n = Number(valor)
     if (!Number.isFinite(n) || n < 0) return
-    setLineas(prev =>
-      prev.map(l => {
-        if (l.key !== key) return l
-        if (l.descuentoModo === 'monto') return { ...l, descuento: n }
-        const brutoBase = l.cantidad * l.precio_unitario
-        return { ...l, descuento: brutoBase > 0 ? round2((brutoBase * n) / 100) : 0 }
-      }),
-    )
+    const next = lineas.map(l => {
+      if (l.key !== key) return l
+      const brutoBase = brutoLinea(l)
+      if (l.descuentoModo === 'monto') return { ...l, descuento: Math.min(n, brutoBase) }
+      const pct = Math.min(n, 100)
+      return { ...l, descuento: brutoBase > 0 ? round2((brutoBase * pct) / 100) : 0 }
+    })
+    setLineas(next)
+    setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
   }
 
   function agregarItemLibre(descripcion: string, cantidad: number, precio: number, isv: IsvTipo) {
@@ -306,15 +343,18 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, product
   function seleccionarCliente(cliente: Cliente | null) {
     setClienteId(cliente?.id ?? null)
     const tipo = cliente?.tipo_cliente ?? 'final'
-    setLineas(prev =>
-      prev.map(l => {
-        if (!l.producto_id || l.precioManual) return l
-        const producto = productosPorId.get(l.producto_id)
-        if (!producto) return l
-        const variante = l.variante_id ? variantesActivasDe(producto).find(v => v.id === l.variante_id) ?? null : null
-        return { ...l, precio_unitario: precioLineaPos(tipo, producto, variante) }
-      }),
-    )
+    // El nuevo precio (p.ej. revendedor) puede ser menor al anterior: se
+    // reclampa el descuento de cada línea recalculada, igual que en
+    // cambiarPrecio, para no dejar un descuento mayor que el nuevo bruto.
+    const next = lineas.map(l => {
+      if (!l.producto_id || l.precioManual) return l
+      const producto = productosPorId.get(l.producto_id)
+      if (!producto) return l
+      const variante = l.variante_id ? variantesActivasDe(producto).find(v => v.id === l.variante_id) ?? null : null
+      return clampDescuentoLinea({ ...l, precio_unitario: precioLineaPos(tipo, producto, variante) })
+    })
+    setLineas(next)
+    setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
     setClienteQuery('')
     setClienteOpen(false)
   }
@@ -471,6 +511,7 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, product
   const lineasProrrateadas = prorratearDescuentoGlobal(lineasPos, descuentoGlobal)
   const lineasDesglosadas = lineasProrrateadas.map(l => desglosarLinea(l, exonerado))
   const totales = totalesDocumento(lineasDesglosadas, descuentoGlobal, '')
+  const brutoTotalActual = brutoTotalLineas(lineas)
 
   const query = busqueda.trim().toLowerCase()
   const productosFiltrados =
@@ -654,9 +695,10 @@ export default function PosClient({ cajas, sesionesAbiertas, vendedores, product
             <input
               type="number"
               min={0}
+              max={brutoTotalActual}
               step="0.01"
               value={descuentoGlobal}
-              onChange={e => setDescuentoGlobal(Math.max(0, Number(e.target.value) || 0))}
+              onChange={e => setDescuentoGlobal(Math.min(Math.max(0, Number(e.target.value) || 0), brutoTotalActual))}
             />
           </div>
 
