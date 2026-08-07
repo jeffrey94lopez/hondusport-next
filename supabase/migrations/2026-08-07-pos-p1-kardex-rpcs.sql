@@ -334,7 +334,7 @@ begin
       where x->>'id' is not null
     );
 
-  insert into producto_variantes (id, producto_id, nombre, sku, precio, stock, activo, orden)
+  insert into producto_variantes (id, producto_id, nombre, sku, precio, stock, costo, precio_revendedor, activo, orden)
   select
     coalesce(nullif(x->>'id', '')::uuid, gen_random_uuid()),
     p_producto_id,
@@ -342,6 +342,8 @@ begin
     nullif(x->>'sku', ''),
     (x->>'precio')::numeric,
     (x->>'stock')::integer,
+    (x->>'costo')::numeric,
+    (x->>'precio_revendedor')::numeric,
     coalesce((x->>'activo')::boolean, true),
     coalesce((x->>'orden')::integer, 0)
   from jsonb_array_elements(coalesce(p_variantes, '[]'::jsonb)) x
@@ -350,8 +352,10 @@ begin
     sku    = excluded.sku,
     precio = excluded.precio,
     stock  = excluded.stock,
+    precio_revendedor = excluded.precio_revendedor,
     activo = excluded.activo,
     orden  = excluded.orden
+    -- costo: solo se asigna en INSERT de variante nueva (sin historial); después lo gobierna registrar_entrada
   where producto_variantes.producto_id = p_producto_id;
 end;
 $$;
