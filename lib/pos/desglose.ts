@@ -114,13 +114,24 @@ export function totalesDocumento(
     }
   }
 
-  const total =
+  // Redondear los acumulados antes de sumar: sumar muchos valores ya
+  // redondeados por línea igual arrastra residuos de punto flotante
+  // (942.4300000000001) que no deben persistirse en columnas fiscales.
+  total_exento = round2(total_exento)
+  total_exonerado = round2(total_exonerado)
+  total_gravado15 = round2(total_gravado15)
+  total_gravado18 = round2(total_gravado18)
+  isv15 = round2(isv15)
+  isv18 = round2(isv18)
+
+  const total = round2(
     total_exento +
     total_exonerado +
     total_gravado15 +
     total_gravado18 +
     isv15 +
-    isv18
+    isv18,
+  )
 
   // Las líneas ya llevan el descuento global prorrateado, no sumar descuentoGlobal
   const descuento_total = round2(lineas.reduce((s, l) => s + l.descuento, 0))
