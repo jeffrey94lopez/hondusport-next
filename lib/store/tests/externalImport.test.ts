@@ -471,7 +471,33 @@ describe('parseExternalImport: variantes', () => {
     const r = parseExternalImport([g], ctxConProductoA1())
     expect(r.errors).toEqual([])
     expect(r.movimientos).toEqual([
-      { producto_id: 'prod-a1', variante_id: null, tipo: 'entrada', cantidad: 5, costo_unitario: 15, stock_anterior: 0, referencia: expect.any(String) },
+      { producto_id: 'prod-a1', variante_id: null, orden: 0, tipo: 'entrada', cantidad: 5, costo_unitario: 15, stock_anterior: 0, referencia: expect.any(String) },
+    ])
+  })
+
+  it('movimientos: producto NUEVO con variante nueva liga ambos por productoSlugTemp + orden (caso más frágil del contrato)', () => {
+    const g = grupo({
+      sku: 'NUEVO-SKU', nombre: 'Camisa Nueva', precio: '200',
+      variantes: [{ fila: 2, nombre: 'M', sku: null, stock: '6', costo: '35' }],
+    })
+    const r = parseExternalImport([g], ctxSinExistentes())
+    expect(r.errors).toEqual([])
+    expect(r.creates).toHaveLength(1)
+    expect(r.variantes.creates).toEqual([
+      { productoSku: 'NUEVO-SKU', orden: 0, nombre: 'M', sku: null, precio: null, stock: 6, precio_revendedor: null, activo: true },
+    ])
+    expect(r.movimientos).toEqual([
+      {
+        producto_id: null,
+        productoSlugTemp: 'NUEVO-SKU',
+        variante_id: null,
+        orden: 0,
+        tipo: 'entrada',
+        cantidad: 6,
+        costo_unitario: 35,
+        stock_anterior: 0,
+        referencia: expect.any(String),
+      },
     ])
   })
 

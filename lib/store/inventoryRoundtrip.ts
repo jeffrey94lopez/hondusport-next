@@ -212,17 +212,24 @@ export interface ParseContext {
 }
 
 // Movimiento de kardex calculado por el parser a partir de un diff de stock.
-// producto_id / variante_id en null significan "se resuelve al crear": la ruta
-// (Task 10) liga el movimiento con el alta correspondiente por posición
-// (round-trip: mismo orden relativo que `creates`/`variantes.creates`) o, para
-// productos por venir en el import externo, por `productoSlugTemp` (el SKU
-// del grupo). Un movimiento de variante nueva de un producto YA existente
-// lleva su producto_id real y variante_id null (se liga por posición dentro
-// de las altas de variante de ese mismo producto).
+// producto_id / variante_id en null significan "se resuelve al crear":
+// - Alta de PRODUCTO: producto_id null; se liga por `productoSlugTemp` (el
+//   `slug` generado del create en round-trip, o el `sku` del grupo en el
+//   import externo) contra el uuid que la ruta obtiene al insertar productos.
+// - Alta de VARIANTE nueva: variante_id null; `producto_id` ya viene resuelto
+//   (real) si el producto padre existe (round-trip siempre; externo cuando el
+//   producto ya existía) o null + `productoSlugTemp` si el producto padre
+//   TAMBIÉN es un alta (solo posible en el import externo). El campo `orden`
+//   lleva el MISMO valor que el `VarianteCreate`/`VarianteCreateExterna`
+//   correspondiente en `variantes.creates` — es la clave de correlación
+//   directa que la ruta usa (join por `(producto_id | productoSlugTemp,
+//   orden)`) para resolver el `variante_id` real tras el insert, sin depender
+//   de posición ni re-derivar qué creates generaron movimiento.
 export interface MovimientoImport {
   producto_id: string | null
   productoSlugTemp?: string
   variante_id: string | null
+  orden?: number   // solo en altas de variante nueva (ver arriba)
   tipo: 'entrada' | 'ajuste'
   cantidad: number
   costo_unitario: number | null
@@ -705,21 +712,22 @@ export function parseInventoryUpload(
     nombreVarVistos.set(`${producto_id}::${normNombre(nombre!)}`, fila)
     if (sku) skuVarVistos.set(sku, fila)
 
-    if (movInfo) {
-      // Update: variante_id conocido. Alta: variante_id null (se resuelve al
-      // crear); producto_id ya es real porque en round-trip la pestaña
-      // Variantes solo liga a productos existentes (ver validación arriba).
-      movimientos.push({ ...movInfo, producto_id, variante_id, referencia: REFERENCIA_IMPORT })
-    }
-
     if (variante_id) {
       varUpdates.push({ id: variante_id, producto_id, nombre: nombre!, sku, precio, stock, precio_revendedor, activo })
+      // Update: variante_id conocido directamente.
+      if (movInfo) movimientos.push({ ...movInfo, producto_id, variante_id, referencia: REFERENCIA_IMPORT })
     } else {
       const maxOrden = maxOrdenPorProducto.get(producto_id) ?? -1
       const posicion = nuevasVarPorProducto.get(producto_id) ?? 0
       const orden = maxOrden + 1 + posicion
       nuevasVarPorProducto.set(producto_id, posicion + 1)
       varCreates.push({ producto_id, nombre: nombre!, sku, precio, stock, precio_revendedor, activo, orden })
+      // Alta: variante_id null (se resuelve al crear); producto_id ya es real
+      // porque en round-trip la pestaña Variantes solo liga a productos
+      // existentes (ver validación arriba). `orden` es la clave de correlación
+      // que Task 10 usa para ligar este movimiento con la fila insertada en
+      // producto_variantes: mismo valor que lleva el VarianteCreate.
+      if (movInfo) movimientos.push({ ...movInfo, producto_id, variante_id: null, orden, referencia: REFERENCIA_IMPORT })
     }
   })
 

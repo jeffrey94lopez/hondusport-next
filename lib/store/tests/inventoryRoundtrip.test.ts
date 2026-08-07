@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   COLUMNAS, INSTRUCCIONES, VARIANTES_COLUMNAS, NOTA_VENDE_POR_VARIANTES,
   parseBool, parseNum, cellText, cellBool, splitList, joinList, normNombre,
-  buildExportData, parseInventoryUpload,
+  buildExportData, parseInventoryUpload, parseCostoEntrada,
 } from '../inventoryRoundtrip'
 import type { Producto, ProductoVariante } from '@/types'
 import type { ParseContext } from '../inventoryRoundtrip'
@@ -58,6 +58,23 @@ describe('helpers de celdas', () => {
   })
   it('normNombre recorta y baja a minúsculas', () => {
     expect(normNombre('  Zapatos  ')).toBe('zapatos')
+  })
+  it('parseCostoEntrada: vacío→null; negativo o cero→error y null; positivo→número', () => {
+    const errs1: string[] = []
+    expect(parseCostoEntrada('', errs1)).toBeNull()
+    expect(errs1).toEqual([])
+
+    const errs2: string[] = []
+    expect(parseCostoEntrada(-5, errs2)).toBeNull()
+    expect(errs2.some(e => e.includes('costo_entrada'))).toBe(true)
+
+    const errs3: string[] = []
+    expect(parseCostoEntrada(0, errs3)).toBeNull()
+    expect(errs3.some(e => e.includes('costo_entrada'))).toBe(true)
+
+    const errs4: string[] = []
+    expect(parseCostoEntrada(50, errs4)).toBe(50)
+    expect(errs4).toEqual([])
   })
 })
 
@@ -488,6 +505,18 @@ describe('parseInventoryUpload — movimientos de stock (Actualizar)', () => {
     expect(res.movimientos).toEqual([])
   })
 
+  it('error: costo_entrada presente durante un cambio de modalidad (ilimitado -> número)', () => {
+    const c = ctxBase()
+    c.existentes[0].stock = null
+    const res = parseInventoryUpload({
+      actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 20, costo_entrada: 50 }],
+      nuevos: [], variantes: [],
+    }, c)
+    expect(res.updates).toEqual([])
+    expect(res.movimientos).toEqual([])
+    expect(res.errors.some(e => e.motivo.includes('costo_entrada'))).toBe(true)
+  })
+
   it('sin cambio de stock no genera movimiento', () => {
     const res = parseInventoryUpload({
       actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 10 }],
@@ -603,8 +632,19 @@ describe('parseInventoryUpload — Variantes: precio_revendedor y movimientos', 
     ] }, ctxV)
     expect(r.errors).toEqual([])
     expect(r.movimientos).toEqual([
-      { producto_id: prodV.id, variante_id: null, tipo: 'entrada', cantidad: 4, costo_unitario: 20, stock_anterior: 0, referencia: expect.any(String) },
+      { producto_id: prodV.id, variante_id: null, orden: 0, tipo: 'entrada', cantidad: 4, costo_unitario: 20, stock_anterior: 0, referencia: expect.any(String) },
     ])
+  })
+
+  it('el orden del movimiento de alta de variante coincide con el orden del VarianteCreate correspondiente', () => {
+    const ctxV = { ...ctx, variantesExistentes: [varianteBD({ id: 'v1', producto_id: prodV.id, nombre: 'S', orden: 0 })] }
+    const r = parseInventoryUpload({ actualizar: [], nuevos: [], variantes: [
+      { producto_id: prodV.id, variante: 'M', stock: 3, costo_entrada: 10 },
+      { producto_id: prodV.id, variante: 'L', stock: 2, costo_entrada: 10 },
+    ] }, ctxV)
+    expect(r.errors).toEqual([])
+    expect(r.variantes.creates.map(c => c.orden)).toEqual([1, 2])
+    expect(r.movimientos.map(m => m.orden)).toEqual([1, 2])
   })
 
   it('error: costo_entrada en variante sin aumento de stock', () => {

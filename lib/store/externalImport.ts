@@ -359,22 +359,25 @@ function resolverVariantesDeGrupo(
         id: matched.id, producto_id: matched.producto_id, nombre: nombreV,
         sku: skuFinal, precio: precioVar, stock: stockVar, precio_revendedor: matched.precio_revendedor, activo: matched.activo,
       })
-    } else {
-      varCreates.push({ productoSku: g.sku, orden: siguienteOrden, nombre: nombreV, sku: skuFinal, precio: precioVar, stock: stockVar, precio_revendedor: null, activo: true })
-      siguienteOrden++
-    }
-
-    if (movInfo) {
       // Update: producto_id/variante_id reales (la variante ya existe).
-      // Alta de variante de un producto YA existente: producto_id real, variante_id
-      // null (se resuelve al crear). Alta de variante de un producto TAMBIÉN nuevo:
-      // ni producto_id ni variante_id existen aún -> se liga por productoSlugTemp (sku).
-      if (matched) {
-        movimientos.push({ ...movInfo, producto_id: matched.producto_id, variante_id: matched.id, referencia: REFERENCIA_IMPORT_EXTERNO })
-      } else if (existente) {
-        movimientos.push({ ...movInfo, producto_id: existente.id, variante_id: null, referencia: REFERENCIA_IMPORT_EXTERNO })
-      } else {
-        movimientos.push({ ...movInfo, producto_id: null, productoSlugTemp: g.sku, variante_id: null, referencia: REFERENCIA_IMPORT_EXTERNO })
+      if (movInfo) movimientos.push({ ...movInfo, producto_id: matched.producto_id, variante_id: matched.id, referencia: REFERENCIA_IMPORT_EXTERNO })
+    } else {
+      const ordenAlta = siguienteOrden
+      varCreates.push({ productoSku: g.sku, orden: ordenAlta, nombre: nombreV, sku: skuFinal, precio: precioVar, stock: stockVar, precio_revendedor: null, activo: true })
+      siguienteOrden++
+
+      if (movInfo) {
+        // Alta de variante de un producto YA existente: producto_id real,
+        // variante_id null (se resuelve al crear). Alta de variante de un
+        // producto TAMBIÉN nuevo: ni producto_id ni variante_id existen aún
+        // -> se liga por productoSlugTemp (sku). `orden` es la clave de
+        // correlación (igual al orden del VarianteCreateExterna de arriba)
+        // que la ruta usa para resolver el variante_id real tras el insert.
+        movimientos.push(
+          existente
+            ? { ...movInfo, producto_id: existente.id, variante_id: null, orden: ordenAlta, referencia: REFERENCIA_IMPORT_EXTERNO }
+            : { ...movInfo, producto_id: null, productoSlugTemp: g.sku, variante_id: null, orden: ordenAlta, referencia: REFERENCIA_IMPORT_EXTERNO },
+        )
       }
     }
   })
