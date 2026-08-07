@@ -1298,9 +1298,11 @@ function CobroModal({
   const restante = Math.max(0, round2(total - sumaPagos))
   const cambio = cambioPago(pagosPos, total)
 
-  // Cliente CONSUMIDOR FINAL (clienteActual null, convención del carrito) en
-  // factura que supera el límite: exige identificación inline antes de emitir.
-  const necesitaIdentificacion = tipo === 'factura' && !clienteActual && total > limite
+  // Art. 11: cualquier factura que supere el límite exige RTN o identidad,
+  // sin importar el nombre — aplica igual a CONSUMIDOR FINAL (clienteActual
+  // null) que a un cliente ya registrado sin esos datos capturados.
+  const necesitaIdentificacion =
+    tipo === 'factura' && total > limite && !clienteActual?.rtn && !clienteActual?.identidad
 
   function clientePayload() {
     if (clienteActual) {
@@ -1308,7 +1310,7 @@ function CobroModal({
         id: clienteActual.id,
         nombre: clienteActual.nombre,
         rtn: clienteActual.rtn,
-        identidad: clienteActual.identidad,
+        identidad: necesitaIdentificacion ? (identIdentidad.trim() || null) : clienteActual.identidad,
         exonerado: clienteActual.exonerado,
         ordenCompraExenta: null,
         constanciaExonerado: clienteActual.constancia_exonerado,
@@ -1342,8 +1344,8 @@ function CobroModal({
   function handleEmitir() {
     setError('')
 
-    if (necesitaIdentificacion && (!identNombre.trim() || !identIdentidad.trim())) {
-      setError('Completa el nombre y la identidad del cliente.')
+    if (necesitaIdentificacion && ((!clienteActual && !identNombre.trim()) || !identIdentidad.trim())) {
+      setError(clienteActual ? 'Completa la identidad del cliente.' : 'Completa el nombre y la identidad del cliente.')
       return
     }
 
@@ -1417,10 +1419,12 @@ function CobroModal({
             <div className={styles.identNota}>
               El total supera {formatPrice(limite)}: identifica al cliente para emitir la factura.
             </div>
-            <label className={styles.formLabel}>
-              Nombre completo
-              <input type="text" value={identNombre} onChange={e => setIdentNombre(e.target.value)} disabled={isPending} />
-            </label>
+            {!clienteActual && (
+              <label className={styles.formLabel}>
+                Nombre completo
+                <input type="text" value={identNombre} onChange={e => setIdentNombre(e.target.value)} disabled={isPending} />
+              </label>
+            )}
             <label className={styles.formLabel}>
               Identidad
               <input type="text" value={identIdentidad} onChange={e => setIdentIdentidad(e.target.value)} disabled={isPending} />

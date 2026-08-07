@@ -40,6 +40,15 @@ describe('validarEmision', () => {
     expect(validarEmision({ tipo: 'comprobante', clienteNombre: 'CONSUMIDOR FINAL',
       clienteRtn: null, clienteIdentidad: null, total: 15000, limite: 10000 })).toBeNull()
   })
+  it('Art. 11: aplica a cualquier nombre, no solo CONSUMIDOR FINAL', () => {
+    expect(validarEmision({ tipo: 'factura', clienteNombre: 'Juan Pérez',
+      clienteRtn: null, clienteIdentidad: null, total: 15000, limite: 10000 }))
+      .toMatch(/identificación/)
+  })
+  it('Art. 11: con RTN no requiere más, sin importar el nombre', () => {
+    expect(validarEmision({ tipo: 'factura', clienteNombre: 'Juan Pérez',
+      clienteRtn: '08011999123456', clienteIdentidad: null, total: 15000, limite: 10000 })).toBeNull()
+  })
 })
 
 describe('validarPagos / cambioPago', () => {

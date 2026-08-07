@@ -22,7 +22,10 @@ export function precioLineaPos(
 
 /**
  * Validaciones de emisión previas a enviar a la RPC.
- * El límite de identificación de consumidor final solo aplica a facturas.
+ * Art. 11 del Acuerdo: toda factura que supere el límite exige RTN o
+ * identificación del cliente, sin importar el nombre que traiga (no solo
+ * cuando es "CONSUMIDOR FINAL" — cualquier cliente sin RTN ni identidad
+ * registrada cae en la misma exigencia).
  */
 export function validarEmision(args: {
   tipo: 'factura' | 'comprobante'
@@ -32,12 +35,9 @@ export function validarEmision(args: {
   total: number
   limite: number
 }): string | null {
-  const { tipo, clienteNombre, clienteRtn, clienteIdentidad, total, limite } = args
-  if (tipo === 'factura' && total > limite) {
-    const esConsumidorFinal = clienteNombre.trim().toUpperCase() === 'CONSUMIDOR FINAL'
-    if (esConsumidorFinal && !clienteRtn && !clienteIdentidad) {
-      return `El total supera ${formatPrice(limite)}: se requiere RTN o identificación del cliente.`
-    }
+  const { tipo, clienteRtn, clienteIdentidad, total, limite } = args
+  if (tipo === 'factura' && total > limite && !clienteRtn && !clienteIdentidad) {
+    return `El total supera ${formatPrice(limite)}: se requiere RTN o identificación del cliente.`
   }
   return null
 }
