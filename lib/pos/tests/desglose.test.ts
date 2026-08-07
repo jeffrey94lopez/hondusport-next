@@ -65,4 +65,15 @@ describe('totalesDocumento', () => {
     const t = totalesDocumento(ls, 0, 'CIEN LEMPIRAS CON 00/100')
     expect(t).toMatchObject({ total_exonerado: 100, total_gravado15: 0, isv15: 0, total: 100 })
   })
+  it('pipeline encadenado: prorratear → desglosar → totales sin doble conteo', () => {
+    // 2 líneas de 100 cada una, descuento global 10
+    const ls = [linea({ precio_unitario: 100 }), linea({ precio_unitario: 100 })]
+    const prorrateadas = prorratearDescuentoGlobal(ls, 10)
+    const desglosadas = prorrateadas.map(l => desglosarLinea(l, false))
+    const t = totalesDocumento(desglosadas, 10, 'CIENTO NOVENTA LEMPIRAS CON 00/100')
+    // descuento_total debe ser 10 (no 20)
+    expect(t.descuento_total).toBe(10)
+    // total = 2*95 (bruto con descuento) = 190 después de desgloses
+    expect(t.total).toBe(190)
+  })
 })

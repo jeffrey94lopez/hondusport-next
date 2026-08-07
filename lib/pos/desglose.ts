@@ -67,7 +67,7 @@ export function prorratearDescuentoGlobal(lineas: LineaPos[], descuentoGlobal: n
 
   // Asignar descuento proporcional a cada línea
   const partes = brutos.map(b => round2((b / totalBruto) * descuentoGlobal))
-  const sumaPartes = partes.reduce((s, p) => s + p, 0)
+  const sumaPartes = round2(partes.reduce((s, p) => s + p, 0))
   const residuo = round2(descuentoGlobal - sumaPartes)
 
   // Encontrar índice de mayor bruto (empate: primer)
@@ -122,7 +122,8 @@ export function totalesDocumento(
     isv15 +
     isv18
 
-  const descuento_total = lineas.reduce((s, l) => s + l.descuento, 0) + descuentoGlobal
+  // Las líneas ya llevan el descuento global prorrateado, no sumar descuentoGlobal
+  const descuento_total = round2(lineas.reduce((s, l) => s + l.descuento, 0))
 
   return {
     total_exento,
