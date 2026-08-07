@@ -27,6 +27,8 @@ async function syncVariantes(
     sku: v.sku.trim() || null,
     precio: v.precio ?? null,
     stock: v.stock ?? null,
+    costo: v.costo ?? null,
+    precio_revendedor: v.precio_revendedor ?? null,
     activo: v.activo,
     orden: i,
   }))
@@ -62,6 +64,11 @@ export async function createProducto(form: ProductoForm): Promise<ActionResult> 
     sku: form.sku || null,
     imagenes: form.imagenes.length > 0 ? form.imagenes : null,
     personalizable: form.personalizable,
+    canal: form.canal,
+    isv: form.isv,
+    costo: form.costo ?? null,
+    precio_revendedor: form.precio_revendedor ?? null,
+    stock_minimo: form.stock_minimo ?? null,
     activo: form.activo,
   }).select('id').single()
   if (error) return { error: error.message }
@@ -98,6 +105,11 @@ export async function updateProducto(id: string, form: ProductoForm): Promise<Ac
     sku: form.sku || null,
     imagenes: form.imagenes.length > 0 ? form.imagenes : null,
     personalizable: form.personalizable,
+    canal: form.canal,
+    isv: form.isv,
+    costo: form.costo ?? null,
+    precio_revendedor: form.precio_revendedor ?? null,
+    stock_minimo: form.stock_minimo ?? null,
     activo: form.activo,
   }).eq('id', id)
   if (error) return { error: error.message }

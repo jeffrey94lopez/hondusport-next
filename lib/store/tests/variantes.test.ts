@@ -5,7 +5,7 @@ import type { ProductoVariante } from '@/types'
 function variante(over: Partial<ProductoVariante>): ProductoVariante {
   return {
     id: 'v1', producto_id: 'p1', nombre: 'M', sku: null, precio: null,
-    stock: null, activo: true, orden: 0, created_at: '', updated_at: '', ...over,
+    stock: null, costo: null, precio_revendedor: null, activo: true, orden: 0, created_at: '', updated_at: '', ...over,
   }
 }
 

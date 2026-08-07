@@ -39,6 +39,11 @@ const EMPTY_FORM: ProductoForm = {
   sku: '',
   imagenes: [],
   personalizable: false,
+  canal: 'ambas',
+  isv: '15',
+  costo: null,
+  precio_revendedor: null,
+  stock_minimo: null,
   activo: true,
   variantes: [],
 }

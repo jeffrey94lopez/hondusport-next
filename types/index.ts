@@ -1,3 +1,36 @@
+export interface Cliente {
+  id: string
+  nombre: string
+  rtn: string | null
+  identidad: string | null
+  tipo_cliente: 'final' | 'revendedor'
+  exonerado: boolean
+  constancia_exonerado: string | null
+  registro_sag: string | null
+  direccion: string | null
+  telefono: string | null
+  correo: string | null
+  notas: string | null
+  activo: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CaiAutorizacion {
+  id: string
+  cai: string
+  establecimiento: string
+  punto_emision: string
+  tipo_documento: string
+  rango_desde: number
+  rango_hasta: number
+  correlativo_actual: number
+  fecha_limite: string
+  activo: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface Categoria {
   id: string
   tipo: 'cat' | 'subcat' | 'talla' | 'genero'
@@ -28,6 +61,11 @@ export interface Producto {
   sku: string | null
   personalizable: boolean
   oferta_fin: string | null
+  canal: 'tienda' | 'mostrador' | 'ambas'
+  isv: '15' | '18' | 'exento'
+  costo: number | null
+  precio_revendedor: number | null
+  stock_minimo: number | null
   activo: boolean
   rating: number
   created_at: string
@@ -44,6 +82,8 @@ export interface ProductoVariante {
   sku: string | null
   precio: number | null   // null = hereda productos.precio
   stock: number | null    // null = ilimitado
+  costo: number | null    // null = hereda producto.costo
+  precio_revendedor: number | null  // null = hereda producto.precio_revendedor
   activo: boolean
   orden: number
   created_at: string
@@ -56,6 +96,8 @@ export interface VarianteForm {
   sku: string
   precio: number | null
   stock: number | null
+  costo: number | null
+  precio_revendedor: number | null
   activo: boolean
 }
 
@@ -76,6 +118,11 @@ export interface ProductoForm {
   sku: string
   imagenes: string[]
   personalizable: boolean
+  canal: 'tienda' | 'mostrador' | 'ambas'
+  isv: '15' | '18' | 'exento'
+  costo: number | null
+  precio_revendedor: number | null
+  stock_minimo: number | null
   activo: boolean
   variantes: VarianteForm[]
 }

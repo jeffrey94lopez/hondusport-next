@@ -24,6 +24,11 @@ export function productoAForm(p: Producto): ProductoForm {
     sku: p.sku ?? '',
     imagenes: p.imagenes ?? [],
     personalizable: p.personalizable,
+    canal: p.canal,
+    isv: p.isv,
+    costo: p.costo,
+    precio_revendedor: p.precio_revendedor,
+    stock_minimo: p.stock_minimo,
     activo: p.activo,
     variantes: [...(p.producto_variantes ?? [])]
       .sort((a, b) => a.orden - b.orden)
@@ -33,6 +38,8 @@ export function productoAForm(p: Producto): ProductoForm {
         sku: v.sku ?? '',
         precio: v.precio != null ? Number(v.precio) : null,
         stock: v.stock,
+        costo: v.costo,
+        precio_revendedor: v.precio_revendedor,
         activo: v.activo,
       })),
   }
@@ -73,7 +80,7 @@ export default function ProductoFields({ form, setForm, categorias, subcategoria
     setForm(prev => ({ ...prev, variantes: prev.variantes.map((v, idx) => (idx === i ? { ...v, ...patch } : v)) }))
 
   const agregarVariante = () =>
-    setForm(prev => ({ ...prev, variantes: [...prev.variantes, { nombre: '', sku: '', precio: null, stock: null, activo: true }] }))
+    setForm(prev => ({ ...prev, variantes: [...prev.variantes, { nombre: '', sku: '', precio: null, stock: null, costo: null, precio_revendedor: null, activo: true }] }))
 
   const quitarVariante = (i: number) =>
     setForm(prev => ({ ...prev, variantes: prev.variantes.filter((_, idx) => idx !== i) }))
