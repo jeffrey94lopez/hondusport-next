@@ -351,7 +351,14 @@ begin
     nombre = excluded.nombre,
     sku    = excluded.sku,
     precio = excluded.precio,
-    stock  = excluded.stock,
+    -- [Fix carrera] stock NO se toca en el UPDATE de variantes existentes:
+    -- el caller (syncVariantes/updateProducto) lee el stock al inicio del
+    -- request y lo manda de vuelta sin cambios; si en la ventana crear_pedido
+    -- descontó stock por una venta concurrente, este upsert lo restauraría al
+    -- valor viejo sin generar kardex (oversell silencioso). Los cambios reales
+    -- de stock de variantes existentes van por aplicarCambioStock/registrar_entrada.
+    -- Las variantes NUEVAS (rama insert de este mismo statement) sí insertan
+    -- su stock inicial con normalidad.
     precio_revendedor = excluded.precio_revendedor,
     activo = excluded.activo,
     orden  = excluded.orden,
