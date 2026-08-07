@@ -48,3 +48,7 @@ app.js
 styles.css
 
 .vercel
+
+# artefactos de debug de sesiones de browser/testing (no commitear)
+.playwright-mcp/
+mobile-*.png
