@@ -10,12 +10,15 @@ function esCaiSolapado(error: { code?: string; message: string }): boolean {
   return error.code === '23505' && error.message.includes('cai_activo_unico')
 }
 
-// Un check constraint (nombre variable, pero referencia correlativo_actual)
-// impide que el rango editado deje fuera al correlativo ya avanzado por
-// facturas emitidas. Postgres reporta esto como 23514; se traduce a un
-// mensaje accionable en vez del detalle crudo del constraint.
+// El check de rango (supabase/migrations/2026-08-07-pos-p1-catalogos.sql:43)
+// es un constraint de tabla sin nombre y multi-columna: Postgres lo autonombra
+// (p.ej. cai_autorizaciones_check1) y el mensaje NUNCA incluye el literal
+// "correlativo_actual", así que no se puede matchear por texto. Basta con el
+// código 23514 porque es el único check de esa tabla que puede violarse en
+// updateCai: el otro (rango_hasta >= rango_desde) ya lo bloquea validarForm
+// antes de llegar a Postgres.
 function esRangoFueraDeCorrelativo(error: { code?: string; message: string }): boolean {
-  return error.code === '23514' && error.message.includes('correlativo_actual')
+  return error.code === '23514'
 }
 
 function mensajeError(error: { code?: string; message: string }): string {
