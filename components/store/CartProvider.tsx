@@ -43,13 +43,31 @@ interface CartProviderProps {
 }
 
 export default function CartProvider({ children }: CartProviderProps) {
-  const [cart, setCart] = useState<CartItem[]>(readCart)
-  const [activeDiscount, setActiveDiscount] = useState<number>(readDiscount)
+  // Guard de montaje (mismo motivo que PosClient): el SSR pinta carrito
+  // vacío; si el initializer leyera localStorage, el primer render del
+  // cliente ya tendría el carrito guardado y React reportaría un hydration
+  // mismatch. El carrito se carga después de montar.
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [activeDiscount, setActiveDiscount] = useState<number>(0)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
+    // Carga diferida a propósito: leer localStorage en el initializer
+    // reintroduce el hydration mismatch (ver comentario del guard).
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setCart(readCart())
+    setActiveDiscount(readDiscount())
+    setLoaded(true)
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [])
+
+  useEffect(() => {
+    // Sin `loaded`, el primer render (carrito vacío) sobreescribiría lo
+    // guardado antes de que el efecto de carga lo lea.
+    if (!loaded) return
     localStorage.setItem(CART_KEY, JSON.stringify(cart))
     localStorage.setItem(DISCOUNT_KEY, JSON.stringify(activeDiscount))
-  }, [cart, activeDiscount])
+  }, [loaded, cart, activeDiscount])
 
   const subtotal = useMemo(() => getSubtotal(cart), [cart])
   const finalTotal = useMemo(() => getFinalTotal(subtotal, activeDiscount), [subtotal, activeDiscount])
