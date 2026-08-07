@@ -64,6 +64,14 @@ export function cambioPago(pagos: PagoPos[], total: number): number {
 }
 
 /**
+ * Tasa de cambio a imprimir en el documento (Art. 11): la del primer pago en
+ * USD que traiga tasa, o null si no hubo pago en USD.
+ */
+export function tasaUsdDePagos(pagos: PagoPos[]): number | null {
+  return pagos.find(p => p.tipo === 'efectivo_usd' && p.tasa != null)?.tasa ?? null
+}
+
+/**
  * Efectivo y por-método esperados en caja a partir de los documentos emitidos.
  * El cambio entregado sale del efectivo (se resta), pero no de porMetodo.
  */

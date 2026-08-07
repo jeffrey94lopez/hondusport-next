@@ -5,7 +5,7 @@ import { toConfigMap } from '@/lib/store/adapters'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import type { LineaConColumna } from '@/lib/pos/desglose'
 import { numeroALetras } from '@/lib/pos/letras'
-import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos } from '@/lib/pos/emision'
+import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos } from '@/lib/pos/emision'
 import type { LineaPos, PagoPos, TotalesDocumento, MetodoPagoTipo } from '@/types'
 
 export type PosResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
@@ -66,11 +66,6 @@ function pagoPayload(p: PagoPos) {
   }
 }
 
-// Tasa a imprimir en el documento (Art. 11): la del primer pago en USD, si hubo.
-function tasaUsdDePagos(pagos: PagoPos[]): number | null {
-  return pagos.find(p => p.tipo === 'efectivo_usd' && p.tasa != null)?.tasa ?? null
-}
-
 export async function abrirSesion(
   cajaId: string,
   montoInicial: number,
@@ -90,7 +85,8 @@ export async function abrirSesion(
     if (error?.code === '23505' && error.message.includes('sesiones_caja_abierta_unica')) {
       return { ok: false, error: 'Esta caja ya tiene una sesión abierta.' }
     }
-    return { ok: false, error: error?.message ?? ERROR_GENERICO }
+    if (error) console.error('abrirSesion insert error:', error)
+    return { ok: false, error: 'No se pudo abrir la sesión. Intenta de nuevo.' }
   }
 
   revalidatePath('/admin/pos')
@@ -122,11 +118,24 @@ export async function cerrarSesion(
 
   if (documentosError) return { ok: false, error: ERROR_GENERICO }
 
-  const docs = (documentosRows ?? []).map(d => ({
+  // Sin tipos de Database generados, el cliente de Supabase infiere las
+  // relaciones embebidas como arreglo por defecto (no puede conocer la
+  // cardinalidad del FK). En runtime, PostgREST devuelve OBJETO para un
+  // embed to-one como documento_pagos → metodos_pago (metodo_id es FK simple,
+  // no hay muchos métodos por pago): se corrige el tipo aquí para reflejar
+  // la forma real, no la inferida.
+  interface DocumentoConPagos {
+    estado: string
+    total: number
+    documento_pagos: Array<{ monto: number; metodos_pago: { tipo: MetodoPagoTipo } | null }>
+  }
+  const documentos = (documentosRows ?? []) as unknown as DocumentoConPagos[]
+
+  const docs = documentos.map(d => ({
     estado: d.estado,
     total: Number(d.total),
-    pagos: (d.documento_pagos ?? []).map((dp: { monto: number; metodos_pago: { tipo: MetodoPagoTipo }[] }) => ({
-      tipo: dp.metodos_pago[0]?.tipo as MetodoPagoTipo,
+    pagos: d.documento_pagos.map(dp => ({
+      tipo: dp.metodos_pago?.tipo as MetodoPagoTipo,
       monto: Number(dp.monto),
     })),
   }))
@@ -187,8 +196,12 @@ export async function emitirVenta(input: {
 
   const [{ data: productosRows, error: productosError }, { data: variantesRows, error: variantesError }] =
     await Promise.all([
-      supabase.from('productos').select('id, nombre, isv, canal, activo').in('id', productoIds),
-      supabase.from('producto_variantes').select('id, producto_id, nombre').in('id', varianteIds).eq('activo', true),
+      productoIds.length
+        ? supabase.from('productos').select('id, nombre, isv, canal, activo').in('id', productoIds)
+        : Promise.resolve({ data: [], error: null }),
+      varianteIds.length
+        ? supabase.from('producto_variantes').select('id, producto_id, nombre').in('id', varianteIds).eq('activo', true)
+        : Promise.resolve({ data: [], error: null }),
     ])
 
   if (productosError || variantesError) return { ok: false, error: ERROR_GENERICO }
@@ -302,10 +315,9 @@ export async function emitirDesdePedido(input: {
   const productoIds = [...new Set(
     items.map((it: { producto_id: string | null }) => it.producto_id).filter((id): id is string => id !== null),
   )]
-  const { data: productosRows, error: productosError } = await supabase
-    .from('productos')
-    .select('id, isv')
-    .in('id', productoIds)
+  const { data: productosRows, error: productosError } = productoIds.length
+    ? await supabase.from('productos').select('id, isv').in('id', productoIds)
+    : { data: [], error: null }
 
   if (productosError) return { ok: false, error: ERROR_GENERICO }
 

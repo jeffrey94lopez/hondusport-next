@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { precioLineaPos, validarEmision, validarPagos, cambioPago, esperadoCaja, traducirErrorPos } from '../emision'
+import { precioLineaPos, validarEmision, validarPagos, cambioPago, esperadoCaja, traducirErrorPos, tasaUsdDePagos } from '../emision'
 import type { MetodoPagoTipo } from '@/types'
 
 describe('precioLineaPos', () => {
@@ -79,6 +79,22 @@ describe('esperadoCaja', () => {
     ])
     expect(r.efectivoEsperado).toBe(500 + 230 + 300 + 100)
     expect(r.porMetodo.tarjeta).toBe(200)
+  })
+})
+
+describe('tasaUsdDePagos', () => {
+  const ef = (monto: number) => ({ metodo_id: 'm1', tipo: 'efectivo_lps' as const, monto })
+  const usd = (monto: number, tasa: number | null) =>
+    ({ metodo_id: 'm3', tipo: 'efectivo_usd' as const, monto, tasa })
+
+  it('sin pago USD devuelve null', () => {
+    expect(tasaUsdDePagos([ef(100)])).toBeNull()
+  })
+  it('pago USD sin tasa devuelve null', () => {
+    expect(tasaUsdDePagos([usd(10, null)])).toBeNull()
+  })
+  it('toma la tasa del primer pago USD con tasa', () => {
+    expect(tasaUsdDePagos([ef(50), usd(10, 24.5)])).toBe(24.5)
   })
 })
 
