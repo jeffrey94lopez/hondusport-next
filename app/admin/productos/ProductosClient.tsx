@@ -67,7 +67,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
   const [isPending, startTransition] = useTransition()
   const [importing, setImporting] = useState(false)
   const [resultado, setResultado] = useState<
-    | { tipo: 'ok'; actualizados: number; creados: number; variantesActualizadas: number; variantesCreadas: number }
+    | { tipo: 'ok'; actualizados: number; creados: number; variantesActualizadas: number; variantesCreadas: number; movimientos: number }
     | { tipo: 'error'; mensaje: string; errores?: ImportError[] }
     | null
   >(null)
@@ -91,6 +91,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
         creados: json.creados,
         variantesActualizadas: json.variantesActualizadas ?? 0,
         variantesCreadas: json.variantesCreadas ?? 0,
+        movimientos: json.movimientos ?? 0,
       })
     } catch {
       setResultado({ tipo: 'error', mensaje: 'No se pudo importar (error de red o del servidor).' })
@@ -318,6 +319,9 @@ export default function ProductosClient({ productos, categorias, subcategorias }
               ✓ {resultado.actualizados} actualizados, {resultado.creados} creados.
               {(resultado.variantesActualizadas > 0 || resultado.variantesCreadas > 0) && (
                 <> {resultado.variantesActualizadas} variantes actualizadas, {resultado.variantesCreadas} creadas.</>
+              )}
+              {resultado.movimientos > 0 && (
+                <> {resultado.movimientos} movimiento{resultado.movimientos === 1 ? '' : 's'} de inventario registrado{resultado.movimientos === 1 ? '' : 's'}.</>
               )}
             </p>
           ) : (

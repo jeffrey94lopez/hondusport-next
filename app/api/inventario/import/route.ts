@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx'
 import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase-server'
 import { parseInventoryUpload } from '@/lib/store/inventoryRoundtrip'
-import type { InventoryRow, ParseContext, VarianteRow } from '@/lib/store/inventoryRoundtrip'
+import type { InventoryRow, ParseContext, VarianteRow, MovimientoImport } from '@/lib/store/inventoryRoundtrip'
 import type { Producto, ProductoVariante } from '@/types'
 
 function leerPestaña<T>(wb: XLSX.WorkBook, nombre: string): T[] {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     variantesExistentes: (variantesExistentes ?? []) as ProductoVariante[],
   }
 
-  const { updates, creates, errors, variantes: variantesResult } = parseInventoryUpload({ actualizar, nuevos, variantes }, ctx)
+  const { updates, creates, errors, variantes: variantesResult, movimientos } = parseInventoryUpload({ actualizar, nuevos, variantes }, ctx)
 
   if (errors.length > 0) {
     return NextResponse.json({ error: 'No se importó nada. Corrige los errores y vuelve a subir.', errores: errors }, { status: 422 })
@@ -56,16 +56,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'El archivo no tiene filas para actualizar ni crear.' }, { status: 400 })
   }
 
-  const p_productos = [
-    ...updates,
-    ...creates.map(c => ({ ...c, id: randomUUID() })),
-  ]
+  // Altas de producto: id generado aquí (round-trip); se indexa por slug para
+  // que los movimientos de kardex de esas mismas filas (productoSlugTemp) lo
+  // resuelvan antes de llamar la RPC. Las altas de variante en cambio quedan
+  // sin id (se resuelven dentro de la RPC por producto_id+orden — ver migración).
+  const idPorSlug = new Map<string, string>()
+  const creadosConId = creates.map(c => {
+    const id = randomUUID()
+    idPorSlug.set(c.slug, id)
+    return { ...c, id }
+  })
+  const p_productos = [...updates, ...creadosConId]
   const p_variantes = [
     ...variantesResult.updates,
     ...variantesResult.creates,
   ]
 
-  const { error } = await supabase.rpc('importar_productos_variantes', { p_productos, p_variantes })
+  const referencia = `import:${file.name}`
+  const p_movimientos: MovimientoImport[] = []
+  for (const m of movimientos) {
+    let producto_id = m.producto_id
+    if (!producto_id && m.productoSlugTemp) {
+      producto_id = idPorSlug.get(m.productoSlugTemp) ?? null
+      if (!producto_id) {
+        return NextResponse.json(
+          { error: `Error interno: no se pudo resolver el producto (slug "${m.productoSlugTemp}") para un movimiento de kardex.` },
+          { status: 500 },
+        )
+      }
+    }
+    p_movimientos.push({ ...m, producto_id, referencia })
+  }
+
+  const { error } = await supabase.rpc('importar_productos_variantes', { p_productos, p_variantes, p_movimientos })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({
@@ -74,5 +97,6 @@ export async function POST(request: NextRequest) {
     creados: creates.length,
     variantesActualizadas: variantesResult.updates.length,
     variantesCreadas: variantesResult.creates.length,
+    movimientos: p_movimientos.length,
   })
 }

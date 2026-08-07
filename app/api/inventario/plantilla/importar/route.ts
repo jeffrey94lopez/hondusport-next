@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx'
 import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase-server'
 import { agruparPorSku, parseExternalImport, validarMapeo, type Mapeo } from '@/lib/store/externalImport'
-import type { ParseContext } from '@/lib/store/inventoryRoundtrip'
+import type { ParseContext, MovimientoImport } from '@/lib/store/inventoryRoundtrip'
 import type { Producto, ProductoVariante } from '@/types'
 
 const CLAVE_MAPEO = 'import_plantilla_mapeo'
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { grupos, sinSku } = agruparPorSku(rows, mapeo)
-  const { updates, creates, errors, resumen, variantes } = parseExternalImport(grupos, ctx)
+  const { updates, creates, errors, resumen, variantes, movimientos } = parseExternalImport(grupos, ctx)
   const erroresSinSku = sinSku.map(fila => ({ sku: null, fila, motivo: 'la fila tiene datos pero no tiene SKU' }))
   const todos = [...erroresSinSku, ...errors]
   const conError = resumen.conError + erroresSinSku.length
@@ -124,7 +124,26 @@ export async function POST(request: NextRequest) {
   const p_productos = [...updates, ...creadosConId]
   const p_variantes = [...variantes.updates, ...variantesCreatesConId]
 
-  const { error } = await supabase.rpc('importar_productos_variantes', { p_productos, p_variantes })
+  // Movimientos de kardex: `productoSlugTemp` en el import externo es el sku
+  // del grupo (ver contrato en lib/store/inventoryRoundtrip.ts) — mismo mapa
+  // idPorSku que resolvió las altas de variante arriba.
+  const referencia = `import:${file.name}`
+  const p_movimientos: MovimientoImport[] = []
+  for (const m of movimientos) {
+    let producto_id = m.producto_id
+    if (!producto_id && m.productoSlugTemp) {
+      producto_id = idPorSku.get(m.productoSlugTemp) ?? null
+      if (!producto_id) {
+        return NextResponse.json(
+          { error: `Error interno: no se pudo resolver el producto (SKU "${m.productoSlugTemp}") para un movimiento de kardex.` },
+          { status: 500 },
+        )
+      }
+    }
+    p_movimientos.push({ ...m, producto_id, referencia })
+  }
+
+  const { error } = await supabase.rpc('importar_productos_variantes', { p_productos, p_variantes, p_movimientos })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await supabase.from('configuracion').upsert({ key: CLAVE_MAPEO, value: JSON.stringify(mapeo) }, { onConflict: 'key' })
@@ -135,5 +154,6 @@ export async function POST(request: NextRequest) {
     creados: creates.length,
     variantesActualizadas: variantes.updates.length,
     variantesCreadas: variantes.creates.length,
+    movimientos: p_movimientos.length,
   })
 }

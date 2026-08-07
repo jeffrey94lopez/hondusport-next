@@ -248,7 +248,7 @@ describe('parseExternalImport', () => {
     expect(u.stock).toBe(5)
     expect(u.tallas).toEqual(['40', '41'])
     expect(u.colores).toEqual(['Rojo']) // no venía en el grupo → conserva
-    expect(r.resumen).toEqual({ crear: 0, actualizar: 1, conError: 0, variantesCrear: 0, variantesActualizar: 0 })
+    expect(r.resumen).toEqual({ crear: 0, actualizar: 1, conError: 0, variantesCrear: 0, variantesActualizar: 0, movimientos: 1 })
   })
 
   it('crea cuando el SKU no existe (slug generado, defaults)', () => {

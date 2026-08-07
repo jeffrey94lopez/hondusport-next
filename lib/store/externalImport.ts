@@ -214,6 +214,7 @@ export interface Resumen {
   conError: number
   variantesCrear: number
   variantesActualizar: number
+  movimientos: number
 }
 export interface VarianteCreateExterna extends VarianteData {
   productoSku: string      // liga con el padre (existente o por crear); la ruta resuelve el producto_id
@@ -571,6 +572,7 @@ export function parseExternalImport(grupos: GrupoProducto[], ctx: ParseContext):
       conError,
       variantesCrear: varCreates.length,
       variantesActualizar: varUpdates.length,
+      movimientos: movimientos.length,
     },
     variantes: { updates: varUpdates, creates: varCreates },
     movimientos,

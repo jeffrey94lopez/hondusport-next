@@ -37,6 +37,8 @@ export const INSTRUCCIONES: string[] = [
   '- tallas y colores: separados por coma. Ejemplo: "S, M, L".',
   '- categoria y subcategoria: por nombre exacto. La subcategoría debe pertenecer a esa categoría.',
   '- personalizable y activo: VERDADERO o FALSO.',
+  '- canal: tienda, mostrador o ambas. isv: 15, 18 o exento. Vacío = no cambia (o el default en altas).',
+  '- costo_entrada: solo aplica si el stock aumenta; vacío = ajuste sin costo (no cambia el costo actual).',
   '',
   'Pestaña "Variantes": variantes de productos (stock y precio por variante).',
   '- NO modifiques producto_id ni variante_id: son las llaves.',
@@ -44,6 +46,7 @@ export const INSTRUCCIONES: string[] = [
   '- variante (nombre): obligatorio y único dentro del producto.',
   '- precio: vacío = no cambia (en filas nuevas = hereda el precio del padre).',
   '- stock: vacío = no cambia (en filas nuevas = ilimitado); 0 = agotada.',
+  '- costo: solo informativo (no se puede editar desde aquí); costo_entrada aplica igual que en "Actualizar"/"Nuevos".',
   '- Si un producto tiene variantes, su stock y tallas en "Actualizar" se ignoran.',
 ]
 

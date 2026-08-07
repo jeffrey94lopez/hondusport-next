@@ -9,7 +9,7 @@ type Paso = 'subir' | 'mapear' | 'preview'
 interface ErrItem { sku: string | null; fila: number | null; motivo: string }
 interface VarianteMuestra { nombre: string; precio: number | null; stock: number | null }
 interface PreviewData {
-  resumen: { crear: number; actualizar: number; conError: number; variantesCrear: number; variantesActualizar: number }
+  resumen: { crear: number; actualizar: number; conError: number; variantesCrear: number; variantesActualizar: number; movimientos: number }
   errores: ErrItem[]
   muestra: { sku: string; nombre?: string; precio?: string; stock?: string; tallas: string[]; colores: string[]; variantes: VarianteMuestra[] }[]
 }
@@ -124,6 +124,9 @@ export default function ImportarPlantilla() {
                 {(preview.resumen.variantesCrear > 0 || preview.resumen.variantesActualizar > 0) && (
                   <>{' '}(variantes: <b>{preview.resumen.variantesCrear}</b> a crear, <b>{preview.resumen.variantesActualizar}</b> a actualizar)</>
                 )}.</p>
+              {preview.resumen.movimientos > 0 && (
+                <p>Se registrarán <b>{preview.resumen.movimientos}</b> movimiento{preview.resumen.movimientos === 1 ? '' : 's'} de inventario en el kardex.</p>
+              )}
               {preview.errores.length > 0 && (
                 <div>
                   <p>Errores (no se aplicará nada hasta corregirlos):</p>
