@@ -186,6 +186,139 @@ create table if not exists banners (
   activo     boolean default true
 );
 
+-- ── CAJAS (POS P2) ──
+create table if not exists cajas (
+  id                uuid primary key default gen_random_uuid(),
+  nombre            text not null,
+  punto_emision     text not null default '001' check (punto_emision ~ '^[0-9]{3}$'),
+  formato_impresion text not null default '80mm' check (formato_impresion in ('80mm','carta')),
+  activo            boolean not null default true,
+  created_at        timestamptz default now(),
+  updated_at        timestamptz default now()
+);
+
+-- ── SESIONES_CAJA (POS P2) ──
+create table if not exists sesiones_caja (
+  id             uuid primary key default gen_random_uuid(),
+  caja_id        uuid not null references cajas(id) on delete restrict,
+  estado         text not null default 'abierta' check (estado in ('abierta','cerrada')),
+  monto_inicial  numeric not null check (monto_inicial >= 0),
+  abierta_at     timestamptz not null default now(),
+  cerrada_at     timestamptz,
+  monto_esperado numeric,
+  monto_contado  numeric,
+  diferencia     numeric,
+  notas          text,
+  usuario        text
+);
+create unique index if not exists sesiones_caja_abierta_unica
+  on sesiones_caja (caja_id) where estado = 'abierta';
+
+-- ── VENDEDORES (POS P2) ──
+create table if not exists vendedores (
+  id         uuid primary key default gen_random_uuid(),
+  nombre     text not null,
+  activo     boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- ── METODOS_PAGO (POS P2) ──
+create table if not exists metodos_pago (
+  id     uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  tipo   text not null check (tipo in ('efectivo_lps','efectivo_usd','tarjeta','transferencia','otro')),
+  activo boolean not null default true,
+  orden  integer not null default 0
+);
+
+-- ── COMPROBANTE_NUMERO_SEQ (POS P2) ──
+create sequence if not exists comprobante_numero_seq;
+
+-- ── DOCUMENTOS (POS P2) ──
+create table if not exists documentos (
+  id                   uuid primary key default gen_random_uuid(),
+  tipo                 text not null check (tipo in ('factura','comprobante')),
+  correlativo          text,
+  numero_comprobante   integer,
+  cai_id               uuid references cai_autorizaciones(id) on delete restrict,
+  caja_id              uuid not null references cajas(id) on delete restrict,
+  sesion_id            uuid references sesiones_caja(id) on delete restrict,
+  vendedor_id          uuid references vendedores(id) on delete restrict,
+  cliente_id           uuid references clientes(id) on delete restrict,
+  cliente_nombre       text not null default 'CONSUMIDOR FINAL',
+  cliente_rtn          text,
+  cliente_identidad    text,
+  exonerado            boolean not null default false,
+  orden_compra_exenta  text,
+  constancia_exonerado text,
+  registro_sag         text,
+  pedido_id            uuid references pedidos(id) on delete restrict,
+  total_exento         numeric not null default 0,
+  total_exonerado      numeric not null default 0,
+  total_gravado15      numeric not null default 0,
+  total_gravado18      numeric not null default 0,
+  isv15                numeric not null default 0,
+  isv18                numeric not null default 0,
+  descuento_total      numeric not null default 0,
+  total                numeric not null,
+  total_letras         text not null,
+  tasa_usd             numeric,
+  estado               text not null default 'emitido' check (estado in ('emitido','anulado')),
+  anulado_motivo       text,
+  anulado_at           timestamptz,
+  notas                text,
+  usuario              text,
+  created_at           timestamptz default now(),
+  constraint documentos_correlativo_chk check (
+    (tipo = 'factura' and correlativo is not null and cai_id is not null and numero_comprobante is null)
+    or (tipo = 'comprobante' and correlativo is null and cai_id is null and numero_comprobante is not null)
+  )
+);
+create unique index if not exists documentos_pedido_vigente
+  on documentos (pedido_id) where pedido_id is not null and estado = 'emitido';
+create unique index if not exists documentos_cai_correlativo
+  on documentos (cai_id, correlativo) where correlativo is not null;
+
+-- ── DOCUMENTO_ITEMS (POS P2) ──
+create table if not exists documento_items (
+  id              uuid primary key default gen_random_uuid(),
+  documento_id    uuid not null references documentos(id) on delete restrict,
+  producto_id     uuid references productos(id) on delete restrict,
+  variante_id     uuid references producto_variantes(id) on delete restrict,
+  descripcion     text not null,
+  cantidad        integer not null check (cantidad > 0),
+  precio_unitario numeric not null check (precio_unitario >= 0),
+  descuento       numeric not null default 0 check (descuento >= 0),
+  isv             text not null check (isv in ('15','18','exento')),
+  importe         numeric not null,
+  base            numeric not null,
+  isv_monto       numeric not null default 0
+);
+create index if not exists documento_items_documento on documento_items (documento_id);
+
+-- ── DOCUMENTO_PAGOS (POS P2) ──
+create table if not exists documento_pagos (
+  id           uuid primary key default gen_random_uuid(),
+  documento_id uuid not null references documentos(id) on delete restrict,
+  metodo_id    uuid not null references metodos_pago(id) on delete restrict,
+  monto        numeric not null check (monto > 0),
+  monto_usd    numeric,
+  tasa         numeric,
+  referencia   text,
+  created_at   timestamptz default now()
+);
+create index if not exists documento_pagos_documento on documento_pagos (documento_id);
+
+-- ── VENTAS_ESPERA (POS P2) ──
+create table if not exists ventas_espera (
+  id         uuid primary key default gen_random_uuid(),
+  caja_id    uuid not null references cajas(id) on delete cascade,
+  nombre     text not null,
+  payload    jsonb not null,
+  created_at timestamptz default now()
+);
+
 -- ── CONFIGURACION ──
 create table if not exists configuracion (
   key   text primary key,
@@ -220,8 +353,21 @@ insert into configuracion (key, value) values
   ('cupones_popup_activo', 'true'),
   ('promo_bar_activo', 'true'),
   ('promo_bar_texto', '🔥 Envío gratis desde L. 999'),
-  ('modo_mantenimiento', 'false')
+  ('modo_mantenimiento', 'false'),
+  ('pos_limite_consumidor_final', '10000')
 on conflict (key) do nothing;
+
+-- Seed de métodos de pago (idempotente por tipo)
+insert into metodos_pago (nombre, tipo, orden)
+select v.nombre, v.tipo, v.orden
+from (values
+  ('Efectivo L.', 'efectivo_lps', 0),
+  ('Tarjeta', 'tarjeta', 1),
+  ('Transferencia / Depósito', 'transferencia', 2),
+  ('Efectivo USD', 'efectivo_usd', 3)
+) as v(nombre, tipo, orden)
+where not exists (select 1 from metodos_pago m where m.tipo = v.tipo and m.nombre = v.nombre)
+on conflict do nothing;
 
 -- ── TRIGGER updated_at ──
 create or replace function update_updated_at()
@@ -260,6 +406,14 @@ create trigger pedidos_updated_at
   before update on pedidos
   for each row execute function update_updated_at();
 
+create trigger cajas_updated_at
+  before update on cajas
+  for each row execute function update_updated_at();
+
+create trigger vendedores_updated_at
+  before update on vendedores
+  for each row execute function update_updated_at();
+
 -- ── RLS ──
 alter table clientes enable row level security;
 alter table cai_autorizaciones enable row level security;
@@ -273,6 +427,14 @@ alter table envios enable row level security;
 alter table cupones enable row level security;
 alter table banners enable row level security;
 alter table configuracion enable row level security;
+alter table cajas enable row level security;
+alter table sesiones_caja enable row level security;
+alter table vendedores enable row level security;
+alter table metodos_pago enable row level security;
+alter table documentos enable row level security;
+alter table documento_items enable row level security;
+alter table documento_pagos enable row level security;
+alter table ventas_espera enable row level security;
 
 -- Lectura pública para la tienda
 create policy "public_read_productos" on productos for select using (activo = true);
@@ -305,6 +467,21 @@ create policy "admin_all_envios" on envios for all using (auth.role() = 'authent
 create policy "admin_all_cupones" on cupones for all using (auth.role() = 'authenticated');
 create policy "admin_all_banners" on banners for all using (auth.role() = 'authenticated');
 create policy "admin_all_config" on configuracion for all using (auth.role() = 'authenticated');
+
+-- POS P2: políticas para caja y documentos (todo es dato del admin)
+create policy "admin_all_cajas" on cajas for all using (auth.role() = 'authenticated');
+create policy "admin_all_sesiones" on sesiones_caja for all using (auth.role() = 'authenticated');
+create policy "admin_all_vendedores" on vendedores for all using (auth.role() = 'authenticated');
+create policy "admin_all_metodos_pago" on metodos_pago for all using (auth.role() = 'authenticated');
+-- documentos/items/pagos: inmutables — solo select e insert (sin update/delete genéricos)
+create policy "admin_select_documentos" on documentos for select using (auth.role() = 'authenticated');
+create policy "admin_insert_documentos" on documentos for insert with check (auth.role() = 'authenticated');
+create policy "admin_update_documentos" on documentos for update using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "admin_select_documento_items" on documento_items for select using (auth.role() = 'authenticated');
+create policy "admin_insert_documento_items" on documento_items for insert with check (auth.role() = 'authenticated');
+create policy "admin_select_documento_pagos" on documento_pagos for select using (auth.role() = 'authenticated');
+create policy "admin_insert_documento_pagos" on documento_pagos for insert with check (auth.role() = 'authenticated');
+create policy "admin_all_ventas_espera" on ventas_espera for all using (auth.role() = 'authenticated');
 
 -- Storage buckets (ejecutar después de crear los buckets en UI)
 -- Bucket: productos (público)
