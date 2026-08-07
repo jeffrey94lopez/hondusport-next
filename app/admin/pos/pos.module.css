@@ -503,6 +503,109 @@
   font-size: 0.95rem;
 }
 
+/* Modal de cobro */
+.cobroModal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tipoDocRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.tipoDocBtn {
+  padding: 0.9rem;
+  border-radius: var(--radius-card);
+  border: 2px solid var(--border-light);
+  background: var(--bg-hover);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+}
+.tipoDocBtn:hover:not(:disabled) { border-color: var(--accent); }
+.tipoDocBtn:disabled { cursor: not-allowed; opacity: 0.6; }
+.tipoDocBtnActive {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.identBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: var(--warning-bg);
+  border-radius: var(--radius-card);
+  padding: 0.85rem;
+}
+.identNota {
+  font-size: 0.8rem;
+  color: var(--warning-deep);
+  font-weight: 600;
+}
+
+.pagosSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.pagosHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.pagosList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.pagoRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.pagoRow select,
+.pagoRow input[type='number'],
+.pagoRow input[type='text'] {
+  flex: 1 1 120px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.82rem;
+}
+.pagoUsdGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 200px;
+}
+.pagoUsdGroup input { flex: 1; }
+.pagoUsdConversion {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.cobroResumen {
+  background: var(--bg-hover);
+  border-radius: var(--radius-card);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
 /* Modal: selector de variantes */
 .varianteList {
   display: flex;
