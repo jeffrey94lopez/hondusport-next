@@ -1,0 +1,191 @@
+/* Pantalla POS a pantalla completa: el layout padre (/admin) siempre renderiza
+   el Sidebar (ver layout.tsx de este directorio para la decisión). Este overlay
+   se posiciona fixed y por encima para cubrirlo sin tocar app/admin/layout.tsx. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.headerBack {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.headerBack:hover { color: var(--accent); }
+
+.headerCaja {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.headerSesion {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 0;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btnGhost {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.btnGhost:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+.btnGhost:disabled { color: var(--text-dim); cursor: not-allowed; }
+
+/* Selección de caja */
+.centerWrap {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+}
+
+.panel {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
+  padding: 1.75rem;
+}
+
+.panelTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.panelSubtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.cajaList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cajaCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.12s, background 0.12s;
+}
+.cajaCard:hover { border-color: var(--accent); background: var(--accent-dim); }
+
+.cajaNombre { font-weight: 700; color: var(--text); font-size: 0.92rem; }
+.cajaMeta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+.cajaBadgeOcupada {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--info);
+  background: var(--info-bg);
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+
+.empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: var(--bg-hover);
+  border-radius: var(--radius-card);
+}
+
+/* Apertura de sesión */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.formError {
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
+.btnCancel {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.btnCancel:hover { color: var(--text); }
+
+.btnSubmit { padding: 0.55rem 1.1rem; }
+
+/* Área de venta (placeholder Task 10) */
+.ventaPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 60px);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
