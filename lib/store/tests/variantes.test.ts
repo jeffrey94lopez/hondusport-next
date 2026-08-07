@@ -70,6 +70,20 @@ describe('validarCompra', () => {
     const r = validarCompra({ ...prod, activo: false }, [], undefined)
     expect(r.ok).toBe(false)
   })
+  it('canal mostrador se rechaza', () => {
+    const r = validarCompra({ ...prod, canal: 'mostrador' }, [], undefined)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.motivo).toBe('"Camisa" ya no está disponible')
+  })
+  it('canal tienda pasa', () => {
+    expect(validarCompra({ ...prod, canal: 'tienda' }, [], undefined)).toEqual({ ok: true, variante: null })
+  })
+  it('canal ambas pasa', () => {
+    expect(validarCompra({ ...prod, canal: 'ambas' }, [], undefined)).toEqual({ ok: true, variante: null })
+  })
+  it('canal undefined pasa (tolerante, default ambas)', () => {
+    expect(validarCompra({ ...prod, canal: undefined }, [], undefined)).toEqual({ ok: true, variante: null })
+  })
   it('plano sin variante pasa con variante null', () => {
     expect(validarCompra(prod, [], undefined)).toEqual({ ok: true, variante: null })
   })

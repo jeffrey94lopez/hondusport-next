@@ -52,7 +52,7 @@ export async function crearPedido(payload: CrearPedidoInput): Promise<CrearPedid
     await Promise.all([
       supabase
         .from('productos')
-        .select('id, nombre, precio, imagenes, activo, personalizable')
+        .select('id, nombre, precio, imagenes, activo, personalizable, canal')
         .in('id', productIds),
       supabase
         .from('producto_variantes')

@@ -43,11 +43,12 @@ export type ValidacionCompra =
 // Frontera de confianza: decide si un item del carrito puede comprarse.
 // `variantesActivas` deben venir ya filtradas a activas del producto.
 export function validarCompra(
-  producto: { id: string; nombre: string; activo: boolean },
+  producto: { id: string; nombre: string; activo: boolean; canal?: string },
   variantesActivas: ProductoVariante[],
   varianteId: string | undefined,
 ): ValidacionCompra {
   if (!producto.activo) return { ok: false, motivo: `"${producto.nombre}" ya no está disponible` }
+  if (producto.canal === 'mostrador') return { ok: false, motivo: `"${producto.nombre}" ya no está disponible` }
   if (!varianteId) {
     if (variantesActivas.length > 0) {
       return { ok: false, motivo: `Elige una variante de "${producto.nombre}"` }
