@@ -93,6 +93,117 @@
 
 .chevron { font-size: 0.7rem; color: var(--text-muted); }
 
+.verDocBtn {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-input);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.verDocBtn:hover { opacity: 0.85; }
+
+.emitirBtn {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.emitirBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Modal "Emitir documento" */
+.formEmitir { display: flex; flex-direction: column; gap: 0.9rem; }
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.formSelect {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.formSelect:focus { outline: none; border-color: var(--accent); }
+
+.clienteCombo { position: relative; }
+.clienteInput {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.clienteInput:focus { outline: none; border-color: var(--accent); }
+
+.clienteDropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.clienteOption {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.clienteOption:last-child { border-bottom: none; }
+.clienteOption:hover { background: var(--bg-hover); }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+
+.btnCancel {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.btnCancel:hover { color: var(--text); }
+
 .cardBody {
   border-top: 1px solid var(--border);
   padding: 0.75rem 1rem;
