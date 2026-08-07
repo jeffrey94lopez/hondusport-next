@@ -10,8 +10,19 @@ function esCaiSolapado(error: { code?: string; message: string }): boolean {
   return error.code === '23505' && error.message.includes('cai_activo_unico')
 }
 
+// Un check constraint (nombre variable, pero referencia correlativo_actual)
+// impide que el rango editado deje fuera al correlativo ya avanzado por
+// facturas emitidas. Postgres reporta esto como 23514; se traduce a un
+// mensaje accionable en vez del detalle crudo del constraint.
+function esRangoFueraDeCorrelativo(error: { code?: string; message: string }): boolean {
+  return error.code === '23514' && error.message.includes('correlativo_actual')
+}
+
 function mensajeError(error: { code?: string; message: string }): string {
   if (esCaiSolapado(error)) return 'Ya existe un CAI activo para ese establecimiento/punto/tipo'
+  if (esRangoFueraDeCorrelativo(error)) {
+    return 'El rango no puede dejar el correlativo actual fuera (ya se emitieron facturas de este CAI).'
+  }
   return error.message
 }
 
