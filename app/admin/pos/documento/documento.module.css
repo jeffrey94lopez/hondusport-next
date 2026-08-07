@@ -1,0 +1,176 @@
+.page { min-height: 100vh; }
+
+/* ---- Toolbar (no imprimible) ---- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.toolbarLeft, .toolbarRight { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+.backLink { font-size: 0.82rem; color: var(--text-muted); }
+.backLink:hover { color: var(--accent); }
+
+.toolbarTitulo { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+
+.badgeAnuladoToolbar {
+  background: var(--error-bg);
+  color: var(--danger);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+}
+
+.formatoGroup {
+  display: flex;
+  gap: 0.2rem;
+  background: var(--bg-hover);
+  border-radius: var(--radius-tag);
+  padding: 0.2rem;
+}
+
+.formatoBtn {
+  border: none;
+  background: none;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: var(--radius-tag);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.formatoBtnActive { background: var(--bg-card); color: var(--accent); box-shadow: var(--shadow-card); }
+
+/* ---- Fondo de pantalla detrás del "papel" (solo preview) ---- */
+.pageBg {
+  background: var(--bg);
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* ---- Papel: fondo blanco/tinta negra fijos a propósito (simulan papel
+   impreso real, no chrome de la app) — no deben seguir el tema oscuro. ---- */
+.hoja80,
+.hojaCarta {
+  position: relative;
+  background: #ffffff;
+  color: #0a0a0a;
+  box-shadow: var(--shadow-card);
+}
+
+.hoja80 {
+  width: 302px; /* ~80mm a 96dpi */
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.35;
+  padding: 12px 10px;
+}
+
+.hojaCarta {
+  width: 100%;
+  max-width: 700px;
+  font-family: var(--font-poppins), sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 36px 44px;
+}
+
+/* ---- Marca de agua ANULADO ---- */
+.watermark {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: rgba(145, 0, 34, 0.35);
+  border: 6px solid rgba(145, 0, 34, 0.35);
+  padding: 0.1em 0.5em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+.hoja80 .watermark { font-size: 1.15rem; border-width: 3px; letter-spacing: 2px; }
+
+/* ---- Contenido del documento ---- */
+.header { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.logo { max-width: 140px; max-height: 70px; object-fit: contain; }
+.emisor { font-size: 0.92em; }
+.emisorNombre { font-weight: 800; font-size: 1.15em; margin-bottom: 2px; }
+
+.docTitulo { text-align: center; margin: 10px 0; }
+.docTituloH1 { font-size: 1.3em; font-weight: 800; letter-spacing: 2px; margin: 0; }
+.subtitulo { font-size: 0.8em; font-weight: 600; color: #555; }
+.numero { font-weight: 700; font-size: 1.05em; margin-top: 2px; }
+
+.caiBlock {
+  border-top: 1px dashed #999;
+  border-bottom: 1px dashed #999;
+  padding: 6px 0;
+  margin-bottom: 8px;
+  font-size: 0.85em;
+}
+
+.copia { font-size: 0.8em; font-style: italic; text-align: center; margin-bottom: 8px; }
+
+.metaRow { font-size: 0.9em; margin-bottom: 6px; }
+
+.clienteBlock { font-size: 0.9em; margin-bottom: 10px; }
+.exoneradoBlock { margin-top: 4px; font-size: 0.95em; }
+
+.itemsTable { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 0.9em; }
+.itemsTable th {
+  text-align: left;
+  border-bottom: 1px solid #333;
+  padding: 3px 4px;
+  font-size: 0.85em;
+}
+.itemsTable td { padding: 3px 4px; border-bottom: 1px dotted #ccc; vertical-align: top; }
+.itemsTable th:last-child, .itemsTable td:last-child,
+.itemsTable th:nth-child(3), .itemsTable td:nth-child(3) { text-align: right; white-space: nowrap; }
+.itemsTable th:first-child, .itemsTable td:first-child { text-align: right; width: 2.4em; }
+
+.desglose { margin-bottom: 8px; font-size: 0.9em; }
+.desgloseRow { display: flex; justify-content: space-between; gap: 1em; padding: 1px 0; }
+.desgloseTotal { font-weight: 800; font-size: 1.15em; border-top: 1px solid #333; margin-top: 4px; padding-top: 4px; }
+
+.totalLetras { font-size: 0.85em; font-style: italic; margin-bottom: 8px; }
+
+.tasaUsd { font-size: 0.85em; margin-bottom: 8px; }
+
+.pagos { border-top: 1px dashed #999; padding-top: 6px; margin-bottom: 8px; font-size: 0.88em; }
+.pagosTitle { font-weight: 700; margin-bottom: 3px; }
+.pagoRow { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5em; padding: 1px 0; }
+.pagoRef { font-size: 0.9em; color: #555; flex-basis: 100%; text-align: right; }
+
+.leyenda { font-size: 0.82em; text-align: center; border-top: 1px solid #333; padding-top: 6px; margin-top: 6px; }
+
+.anuladoInfo {
+  margin-top: 10px;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #910022;
+  text-align: center;
+}
+
+/* ---- Impresión ---- */
+@media print {
+  .noPrint { display: none !important; }
+  .pageBg { padding: 0; background: none; min-height: auto; display: block; }
+  .hoja80, .hojaCarta { box-shadow: none; margin: 0 auto; }
+}

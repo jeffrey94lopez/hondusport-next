@@ -18,6 +18,7 @@ const NAV_GROUPS = [
     label: 'VENTAS',
     items: [
       { href: '/admin/pos', icon: '🧾', label: 'POS' },
+      { href: '/admin/pos/documentos', icon: '📄', label: 'Documentos' },
       { href: '/admin/pedidos', icon: '📋', label: 'Pedidos', badge: true },
       { href: '/admin/clientes', icon: '👥', label: 'Clientes' },
       { href: '/admin/cupones', icon: '🎟️', label: 'Cupones' },
@@ -34,8 +35,15 @@ export default function Sidebar({ pendingOrders }: Props) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
 
+  // "Documentos" (/admin/pos/documentos) anida bajo "POS" (/admin/pos): con un
+  // simple prefix-match ambos quedarían activos a la vez. Se elige el href más
+  // específico (más largo) entre los que matchean, para que solo uno resalte.
+  const ALL_HREFS = NAV_GROUPS.flatMap(g => g.items.map(i => i.href))
+
   function isActive(href: string) {
-    return pathname === href || pathname.startsWith(href + '/')
+    const matches = ALL_HREFS.filter(h => pathname === h || pathname.startsWith(h + '/'))
+    if (matches.length === 0) return pathname === href
+    return matches.reduce((a, b) => (b.length > a.length ? b : a)) === href
   }
 
   return (
