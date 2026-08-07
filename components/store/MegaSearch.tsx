@@ -26,7 +26,7 @@ export default function MegaSearch({ productos, categorias, isOpen, onClose, onO
 
   useEscapeKey(isOpen, onClose)
 
-  const popularTags = categorias.filter(c => c.tipo === 'cat').map(c => c.valor)
+  const popularTags = categorias.filter(c => c.tipo === 'cat')
   const results = searchProductos(productos, query)
 
   function handleSelect(id: string) {
@@ -57,9 +57,9 @@ export default function MegaSearch({ productos, categorias, isOpen, onClose, onO
             <div className={styles.suggestions}>
               <h4>BÚSQUEDAS POPULARES</h4>
               <div className={styles.popularTags}>
-                {popularTags.map(tag => (
-                  <button key={tag} onClick={() => setQuery(tag)}>
-                    {tag.toUpperCase()}
+                {popularTags.map(c => (
+                  <button key={c.id} onClick={() => setQuery(c.valor)}>
+                    {c.valor.toUpperCase()}
                   </button>
                 ))}
               </div>
