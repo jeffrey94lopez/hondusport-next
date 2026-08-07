@@ -73,7 +73,7 @@
 }
 
 .hoja80 {
-  width: 302px; /* ~80mm a 96dpi */
+  width: 80mm;
   font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
   line-height: 1.35;

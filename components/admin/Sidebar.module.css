@@ -15,6 +15,14 @@
 
 .collapsed { width: var(--sidebar-col); }
 
+/* El Sidebar se monta debajo del overlay fixed del POS incluso en la pantalla
+   del documento imprimible (ver app/admin/pos/pos.module.css .overlay); los
+   navegadores no imprimen fondos/backgrounds por defecto, así que sin esta
+   regla el nav puede colarse superpuesto al imprimir. */
+@media print {
+  .sidebar { display: none; }
+}
+
 .header {
   display: flex;
   align-items: center;

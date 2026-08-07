@@ -9,6 +9,22 @@
   overflow-y: auto;
 }
 
+/* El documento imprimible (app/admin/pos/documento/[id]) también vive bajo
+   este layout, así que hereda el overlay `fixed`. En paged media un `fixed`
+   NO fragmenta entre páginas — una factura con muchos ítems se truncaría a
+   una sola hoja — y el overflow:auto recortaría cualquier contenido que no
+   quepa en el viewport. Se neutraliza solo al imprimir: el documento pasa a
+   fluir en el flujo normal del documento, que sí pagina. */
+@media print {
+  .overlay {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    overflow: visible;
+    background: none;
+  }
+}
+
 .header {
   display: flex;
   align-items: center;

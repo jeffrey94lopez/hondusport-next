@@ -49,11 +49,14 @@ export default function DocumentoView({ documento, items, pagos, caja, cai, conf
     <div className={styles.page}>
       {/* @page es global (no puede scopearse a una clase CSS): se reescribe
           según el formato elegido. 80mm fuerza margen 0 (impresora térmica,
-          sin zona no imprimible); carta deja el margen de la impresora por
-          defecto y solo fija el tamaño de página. */}
+          sin zona no imprimible); el ancho de 80mm lo da el contenedor
+          `.hoja80` (width: 80mm), no `size` — "size: 80mm auto" no es una
+          combinación válida (una longitud no se mezcla con la palabra clave
+          `auto`) y el navegador descarta la regla completa. Carta deja el
+          margen de la impresora por defecto y solo fija el tamaño de página. */}
       <style>{
         formato === '80mm'
-          ? '@page { size: 80mm auto; margin: 0; }'
+          ? '@page { margin: 0; }'
           : '@page { size: letter; }'
       }</style>
 

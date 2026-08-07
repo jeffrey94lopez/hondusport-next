@@ -48,6 +48,11 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
   ])
 
   if (!caja) notFound()
+  // El CAI es garantía de la propia RPC `emitir_documento` (una factura nunca
+  // se emite sin uno vigente): si falta aquí es un problema de datos, no un
+  // caso normal — fallar duro en vez de imprimir en silencio una factura sin
+  // CAI/rango/fecha límite (documento fiscalmente inválido).
+  if (documento.tipo === 'factura' && !cai) notFound()
 
   const pagosConMetodo: PagoConMetodo[] = ((pagos ?? []) as unknown as DocumentoPagoConMetodo[]).map(
     ({ metodos_pago, ...p }) => ({
