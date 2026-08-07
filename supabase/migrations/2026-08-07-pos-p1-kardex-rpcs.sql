@@ -354,8 +354,15 @@ begin
     stock  = excluded.stock,
     precio_revendedor = excluded.precio_revendedor,
     activo = excluded.activo,
-    orden  = excluded.orden
-    -- costo: solo se asigna en INSERT de variante nueva (sin historial); después lo gobierna registrar_entrada
+    orden  = excluded.orden,
+    -- costo: editable mientras la variante no tenga movimientos (se trata
+    -- como "costo inicial", igual que al insertarla); después lo gobierna
+    -- registrar_entrada y este UPDATE deja de tocarlo.
+    costo = case
+      when not exists (select 1 from movimientos_inventario m where m.variante_id = producto_variantes.id)
+        then excluded.costo
+      else producto_variantes.costo
+    end
   where producto_variantes.producto_id = p_producto_id;
 end;
 $$;
