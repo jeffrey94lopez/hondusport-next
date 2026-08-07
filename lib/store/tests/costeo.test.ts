@@ -27,4 +27,6 @@ describe('margen', () => {
   it('calcula ganancia y porcentaje', () =>
     expect(margen(150, 100)).toEqual({ ganancia: 50, porcentaje: 50 }))
   it('sin costo devuelve null', () => expect(margen(150, null)).toBeNull())
+  it('con costo cero porcentaje es 100', () =>
+    expect(margen(150, 0)).toEqual({ ganancia: 150, porcentaje: 100 }))
 })

@@ -1,6 +1,9 @@
 export type MetodoCosteo = 'promedio' | 'ultimo'
 
 // Espejo exacto de la función SQL aplicar_costeo (misma matemática y casos borde).
+// Nota: SQL tiene rama `if p_costo_entrada is null then return p_costo_actual` antes de todo.
+// En TS es intencionalmente inalcanzable: firma non-nullable (callers validan antes).
+// Si algún día se acepta null, replicar esa rama: return costoActual ?? costoEntrada
 export function aplicarEntradaCosto(
   metodo: MetodoCosteo,
   stockActual: number | null,
