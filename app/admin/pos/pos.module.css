@@ -180,12 +180,349 @@
 
 .btnSubmit { padding: 0.55rem 1.1rem; }
 
-/* Área de venta (placeholder Task 10) */
-.ventaPlaceholder {
+/* Área de venta: banner CAI */
+.caiBanner {
+  padding: 0.55rem 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.caiBannerWarn { background: var(--warning-bg); color: var(--warning-deep); }
+.caiBannerError { background: var(--error-bg); color: var(--error-deep); }
+
+/* Área de venta: layout de dos columnas */
+.ventaGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(340px, 420px);
+  gap: 1px;
+  background: var(--border);
+  min-height: calc(100vh - 60px);
+}
+
+@media (max-width: 960px) {
+  .ventaGrid { grid-template-columns: 1fr; }
+}
+
+/* Columna izquierda: catálogo */
+.catalogo {
+  background: var(--bg);
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+.searchInput:focus { outline: none; border-color: var(--accent); }
+
+.catalogoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.prodCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 0.6rem;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  box-shadow: var(--shadow-card);
+}
+.prodCard:hover:not(:disabled) { border-color: var(--accent); }
+.prodCard:disabled { cursor: not-allowed; opacity: 0.55; }
+
+.prodImgWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-input);
+  overflow: hidden;
+  background: var(--bg-hover);
+}
+.prodImg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.prodImgPlaceholder { width: 100%; height: 100%; background: var(--bg-hover); }
+
+.prodBadgeAgotado {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--danger);
+  border-radius: var(--radius-tag);
+  padding: 0.15rem 0.5rem;
+}
+
+.prodNombre {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.prodPrecio { font-size: 0.82rem; font-weight: 800; color: var(--accent); }
+.prodStock { font-size: 0.7rem; color: var(--text-muted); }
+
+/* Columna derecha: carrito */
+.carritoCol {
+  background: var(--bg-card);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+}
+
+.lineasList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lineaRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.8rem;
+}
+
+.lineaDesc { color: var(--text); font-weight: 600; min-width: 0; word-break: break-word; }
+
+.lineaQty {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - 60px);
-  color: var(--text-dim);
-  font-size: 0.9rem;
+  gap: 0.25rem;
 }
+.qtyBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border-light);
+  background: var(--bg-hover);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.qtyBtn:hover { border-color: var(--accent); }
+.qtyInput {
+  width: 42px;
+  text-align: center;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 0.2rem;
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.lineaPrecio {
+  width: 72px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 0.2rem 0.35rem;
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.lineaDescuentoGroup {
+  display: flex;
+  gap: 0.2rem;
+}
+.lineaDescuento {
+  width: 60px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 0.2rem 0.35rem;
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+.descuentoModoSelect {
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.75rem;
+}
+
+.lineaSubtotal { font-weight: 700; color: var(--text); white-space: nowrap; }
+
+.btnQuitar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-hover);
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.btnQuitar:hover { background: var(--error-bg); }
+
+.btnItemLibre {
+  align-self: flex-start;
+  background: var(--bg-hover);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.btnItemLibre:hover { color: var(--accent); border-color: var(--accent); }
+
+.descuentoGlobalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.descuentoGlobalRow input {
+  width: 100px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 0.3rem 0.5rem;
+  background: var(--bg-input);
+  color: var(--text);
+  text-align: right;
+}
+
+.totalesPanel {
+  background: var(--bg-hover);
+  border-radius: var(--radius-card);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.totalesRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.totalesRowTotal {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  padding-top: 0.35rem;
+  margin-top: 0.15rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.clienteBlock, .vendedorBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  position: relative;
+}
+
+.clienteCombo { position: relative; }
+.clienteInput, .vendedorSelect {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.clienteInput:focus, .vendedorSelect:focus { outline: none; border-color: var(--accent); }
+
+.clienteDropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.clienteOption {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.clienteOption:last-child { border-bottom: none; }
+.clienteOption:hover { background: var(--bg-hover); }
+
+.badgeExonerado {
+  align-self: flex-start;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--success);
+  background: var(--success-bg);
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+}
+
+.btnCobrar {
+  margin-top: auto;
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+}
+
+/* Modal: selector de variantes */
+.varianteList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.varianteOption {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  text-align: left;
+}
+.varianteOption:hover:not(:disabled) { border-color: var(--accent); }
+.varianteOption:disabled { opacity: 0.5; cursor: not-allowed; }
