@@ -131,29 +131,37 @@ begin
     end loop;
   end if;
 
-  insert into documentos (
-    tipo, correlativo, numero_comprobante, cai_id, caja_id, sesion_id, vendedor_id,
-    cliente_id, cliente_nombre, cliente_rtn, cliente_identidad,
-    exonerado, orden_compra_exenta, constancia_exonerado, registro_sag,
-    pedido_id, total_exento, total_exonerado, total_gravado15, total_gravado18,
-    isv15, isv18, descuento_total, total, total_letras, tasa_usd, notas, usuario
-  ) values (
-    v_tipo, v_correlativo, v_numero_comp,
-    case when v_tipo = 'factura' then v_cai.id end,
-    v_caja.id, v_sesion_id, nullif(p->>'vendedor_id','')::uuid,
-    nullif(p->>'cliente_id','')::uuid,
-    coalesce(nullif(p->>'cliente_nombre',''), 'CONSUMIDOR FINAL'),
-    nullif(p->>'cliente_rtn',''), nullif(p->>'cliente_identidad',''),
-    coalesce((p->>'exonerado')::boolean, false),
-    nullif(p->>'orden_compra_exenta',''), nullif(p->>'constancia_exonerado',''),
-    nullif(p->>'registro_sag',''), v_pedido_id,
-    (p->'totales'->>'total_exento')::numeric, (p->'totales'->>'total_exonerado')::numeric,
-    (p->'totales'->>'total_gravado15')::numeric, (p->'totales'->>'total_gravado18')::numeric,
-    (p->'totales'->>'isv15')::numeric, (p->'totales'->>'isv18')::numeric,
-    (p->'totales'->>'descuento_total')::numeric, v_total,
-    p->'totales'->>'total_letras', nullif(p->>'tasa_usd','')::numeric,
-    nullif(p->>'notas',''), nullif(p->>'usuario','')
-  ) returning id into v_doc_id;
+  begin
+    insert into documentos (
+      tipo, correlativo, numero_comprobante, cai_id, caja_id, sesion_id, vendedor_id,
+      cliente_id, cliente_nombre, cliente_rtn, cliente_identidad,
+      exonerado, orden_compra_exenta, constancia_exonerado, registro_sag,
+      pedido_id, total_exento, total_exonerado, total_gravado15, total_gravado18,
+      isv15, isv18, descuento_total, total, total_letras, tasa_usd, notas, usuario
+    ) values (
+      v_tipo, v_correlativo, v_numero_comp,
+      case when v_tipo = 'factura' then v_cai.id end,
+      v_caja.id, v_sesion_id, nullif(p->>'vendedor_id','')::uuid,
+      nullif(p->>'cliente_id','')::uuid,
+      coalesce(nullif(p->>'cliente_nombre',''), 'CONSUMIDOR FINAL'),
+      nullif(p->>'cliente_rtn',''), nullif(p->>'cliente_identidad',''),
+      coalesce((p->>'exonerado')::boolean, false),
+      nullif(p->>'orden_compra_exenta',''), nullif(p->>'constancia_exonerado',''),
+      nullif(p->>'registro_sag',''), v_pedido_id,
+      (p->'totales'->>'total_exento')::numeric, (p->'totales'->>'total_exonerado')::numeric,
+      (p->'totales'->>'total_gravado15')::numeric, (p->'totales'->>'total_gravado18')::numeric,
+      (p->'totales'->>'isv15')::numeric, (p->'totales'->>'isv18')::numeric,
+      (p->'totales'->>'descuento_total')::numeric, v_total,
+      p->'totales'->>'total_letras', nullif(p->>'tasa_usd','')::numeric,
+      nullif(p->>'notas',''), nullif(p->>'usuario','')
+    ) returning id into v_doc_id;
+  exception when unique_violation then
+    if v_pedido_id is not null then
+      raise exception using message = 'HS_PEDIDO_DOC|' ||
+        (select numero::text from pedidos where id = v_pedido_id);
+    end if;
+    raise;
+  end;
 
   insert into documento_items (
     documento_id, producto_id, variante_id, descripcion, cantidad,
