@@ -14,7 +14,7 @@ function toPayload(form: ClienteForm) {
     tipo_cliente: form.tipo_cliente,
     exonerado: form.exonerado,
     constancia_exonerado: form.exonerado ? form.constancia_exonerado.trim() || null : null,
-    registro_sag: form.registro_sag.trim() || null,
+    registro_sag: form.exonerado ? form.registro_sag.trim() || null : null,
     direccion: form.direccion.trim() || null,
     telefono: form.telefono.trim() || null,
     correo: form.correo.trim() || null,

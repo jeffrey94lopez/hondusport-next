@@ -265,7 +265,11 @@ export default function ClientesClient({ clientes }: Props) {
             <div className={styles.formChecks}>
               <Toggle
                 checked={form.exonerado}
-                onChange={v => setForm(p => ({ ...p, exonerado: v }))}
+                onChange={v => setForm(p => (
+                  v
+                    ? { ...p, exonerado: v }
+                    : { ...p, exonerado: v, constancia_exonerado: '', registro_sag: '' }
+                ))}
                 label="Exonerado"
               />
             </div>
