@@ -4,8 +4,11 @@ import type { ConfigMap } from '@/types'
 
 export default async function ConfiguracionPage() {
   const supabase = await createClient()
-  const { data } = await supabase.from('configuracion').select('key, value')
+  const [{ data }, { data: cais }] = await Promise.all([
+    supabase.from('configuracion').select('key, value'),
+    supabase.from('cai_autorizaciones').select('*').order('created_at', { ascending: false }),
+  ])
   const config: ConfigMap = {}
   data?.forEach(({ key, value }) => { config[key] = value ?? '' })
-  return <ConfigClient config={config} />
+  return <ConfigClient config={config} cais={cais ?? []} />
 }

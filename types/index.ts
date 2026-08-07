@@ -45,6 +45,17 @@ export interface CaiAutorizacion {
   updated_at: string
 }
 
+export interface CaiForm {
+  cai: string
+  establecimiento: string
+  punto_emision: string
+  tipo_documento: string
+  rango_desde: number
+  rango_hasta: number
+  fecha_limite: string
+  activo: boolean
+}
+
 export interface Categoria {
   id: string
   tipo: 'cat' | 'subcat' | 'talla' | 'genero'
