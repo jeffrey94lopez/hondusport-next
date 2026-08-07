@@ -42,9 +42,6 @@ create table if not exists clientes (
   updated_at           timestamptz default now()
 );
 create unique index if not exists clientes_rtn_unico on clientes (rtn) where rtn is not null;
-drop trigger if exists clientes_updated_at on clientes;
-create trigger clientes_updated_at before update on clientes
-  for each row execute function update_updated_at();
 
 -- ── CAI_AUTORIZACIONES ──
 create table if not exists cai_autorizaciones (
@@ -65,9 +62,6 @@ create table if not exists cai_autorizaciones (
 );
 create unique index if not exists cai_activo_unico
   on cai_autorizaciones (establecimiento, punto_emision, tipo_documento) where activo = true;
-drop trigger if exists cai_autorizaciones_updated_at on cai_autorizaciones;
-create trigger cai_autorizaciones_updated_at before update on cai_autorizaciones
-  for each row execute function update_updated_at();
 
 -- ── PRODUCTOS ──
 create table if not exists productos (
@@ -245,6 +239,14 @@ create index if not exists producto_variantes_producto_id_idx
   on producto_variantes (producto_id);
 create unique index if not exists producto_variantes_sku_unico
   on producto_variantes (sku) where sku is not null;
+
+create trigger clientes_updated_at
+  before update on clientes
+  for each row execute function update_updated_at();
+
+create trigger cai_autorizaciones_updated_at
+  before update on cai_autorizaciones
+  for each row execute function update_updated_at();
 
 create trigger productos_updated_at
   before update on productos
