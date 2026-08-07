@@ -562,8 +562,21 @@ export default function PosClient({
     setEsperaAbierta(false)
     setEsperaError('')
 
+    // El carrito ya se cargó en el estado de arriba (síncrono): si el delete
+    // falla (red/BD), la fila de espera queda viva sin que el usuario se
+    // entere — la misma venta podría retomarse doble desde otra caja/pestaña.
+    // Se conserva el carrito ya cargado (no tiene sentido descartarlo) y se
+    // avisa para que la borre manualmente.
     startEsperaTransition(async () => {
-      await eliminarEspera(espera.id)
+      const result = await eliminarEspera(espera.id)
+      if (!result.ok) {
+        setAvisoRetomar(prev =>
+          [prev, 'La venta se retomó, pero no se pudo quitar de la lista de espera — descártala manualmente.']
+            .filter(Boolean)
+            .join(' '),
+        )
+        return
+      }
       router.refresh()
     })
   }
@@ -1534,8 +1547,12 @@ function EsperaModal({ esperas, carritoVacio, isPending, error, onGuardar, onRet
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    // No se limpia `nombre` aquí: si `onGuardar` falla, el modal permanece
+    // abierto (el padre solo actualiza `error`) y el usuario no debería tener
+    // que re-escribirlo. Si tiene éxito, el padre cierra este modal
+    // (`esperaAbierta` pasa a `false`), lo desmonta, y el estado local se
+    // descarta solo — no hace falta limpiarlo a mano.
     onGuardar(nombre)
-    setNombre('')
   }
 
   return (
