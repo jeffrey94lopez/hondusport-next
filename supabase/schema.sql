@@ -477,6 +477,26 @@ create policy "admin_all_metodos_pago" on metodos_pago for all using (auth.role(
 create policy "admin_select_documentos" on documentos for select using (auth.role() = 'authenticated');
 create policy "admin_insert_documentos" on documentos for insert with check (auth.role() = 'authenticated');
 create policy "admin_update_documentos" on documentos for update using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
+-- Inmutabilidad fiscal real (la policy de arriba solo controla RLS, no qué
+-- columnas cambian): un documento emitido no puede reescribirse; anular solo
+-- puede tocar estado/anulado_motivo/anulado_at.
+create or replace function documentos_bloquear_edicion()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if (to_jsonb(old) - 'estado' - 'anulado_motivo' - 'anulado_at')
+     <> (to_jsonb(new) - 'estado' - 'anulado_motivo' - 'anulado_at') then
+    raise exception using message = 'Los documentos emitidos son inmutables; solo se permite anular.';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists documentos_bloquear_edicion_trg on documentos;
+create trigger documentos_bloquear_edicion_trg before update on documentos
+  for each row execute function documentos_bloquear_edicion();
 create policy "admin_select_documento_items" on documento_items for select using (auth.role() = 'authenticated');
 create policy "admin_insert_documento_items" on documento_items for insert with check (auth.role() = 'authenticated');
 create policy "admin_select_documento_pagos" on documento_pagos for select using (auth.role() = 'authenticated');

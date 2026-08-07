@@ -158,6 +158,26 @@ do $$ begin
 do $$ begin
   create policy documentos_update on documentos for update to authenticated using (true) with check (true);
   exception when duplicate_object then null; end $$;
+
+-- Inmutabilidad fiscal real (la policy de arriba solo controla RLS, no qué
+-- columnas cambian): un documento emitido no puede reescribirse; anular solo
+-- puede tocar estado/anulado_motivo/anulado_at.
+create or replace function documentos_bloquear_edicion()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if (to_jsonb(old) - 'estado' - 'anulado_motivo' - 'anulado_at')
+     <> (to_jsonb(new) - 'estado' - 'anulado_motivo' - 'anulado_at') then
+    raise exception using message = 'Los documentos emitidos son inmutables; solo se permite anular.';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists documentos_bloquear_edicion_trg on documentos;
+create trigger documentos_bloquear_edicion_trg before update on documentos
+  for each row execute function documentos_bloquear_edicion();
 do $$ begin
   create policy documento_items_select on documento_items for select to authenticated using (true);
   exception when duplicate_object then null; end $$;
