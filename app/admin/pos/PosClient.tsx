@@ -1,5 +1,5 @@
 'use client'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import type { FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -50,6 +50,29 @@ export default function PosClient({ cajas, sesionesAbiertas }: Props) {
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
 
+  // Guard de montaje: aunque `leerCajaGuardada` usa un lazy initializer (sin
+  // setState dentro de un efecto), el componente SÍ se prerenderiza en el
+  // servidor. El SSR siempre resuelve a la rama "selección de caja" (no hay
+  // localStorage), pero en el cliente, durante la hidratación, el mismo
+  // render inicial ya tiene `window` disponible: si hay `pos_caja_id`
+  // guardado (el caso normal en visitas repetidas), el initializer decide
+  // otra rama completa (apertura de sesión o venta) en ese primer render,
+  // lo que produce un mismatch de árbol completo entre servidor y cliente
+  // (flash + error de hidratación en consola). Para evitarlo, la rama no se
+  // decide hasta después de montar: se renderiza un estado neutro (idéntico
+  // en servidor y en el primer render del cliente) y recién en el efecto se
+  // habilita mostrar la rama real ya calculada por el lazy initializer.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    // Diverge intencionalmente del árbol de SSR (ver comentario arriba): no
+    // es un caso de "sincronizar con un sistema externo" que dispare
+    // `react-hooks/set-state-in-effect` con un patrón corregible por
+    // lazy-init, porque lo que cambia no es un valor sino qué rama de JSX se
+    // pinta — se necesita el paso extra de "ya estamos en el cliente".
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true)
+  }, [])
+
   function seleccionarCaja(id: string) {
     window.localStorage.setItem(STORAGE_KEY, id)
     setCajaId(id)
@@ -86,6 +109,17 @@ export default function PosClient({ cajas, sesionesAbiertas }: Props) {
       // actualizado a este mismo componente (sin remount).
       router.refresh()
     })
+  }
+
+  // Estado neutro: idéntico en SSR y en el primer render del cliente (antes
+  // de montar) — evita el mismatch de árbol descrito arriba. Mismo fondo
+  // (--bg) que el resto de la pantalla para que no haya parpadeo visible.
+  if (!mounted) {
+    return (
+      <div className={styles.centerWrap}>
+        <div className={styles.empty}>Cargando caja…</div>
+      </div>
+    )
   }
 
   // Estado 1: selección de caja
