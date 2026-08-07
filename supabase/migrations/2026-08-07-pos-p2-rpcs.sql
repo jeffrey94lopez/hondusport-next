@@ -220,16 +220,29 @@ begin
   end if;
 
   -- Reponer stock solo si el documento descontó (mostrador, no pedido web).
+  -- Se agrega por producto/variante ANTES del update: un UPDATE ... FROM con
+  -- varias filas coincidentes por fila objetivo solo aplica una de ellas
+  -- (semántica de Postgres), así que dos líneas del mismo producto/variante
+  -- repondrían solo una si se hiciera el join directo contra documento_items.
   if v_doc.pedido_id is null then
     update producto_variantes pv
-      set stock = pv.stock + di.cantidad
-      from documento_items di
-      where di.documento_id = v_doc.id and di.variante_id = pv.id and pv.stock is not null;
+      set stock = pv.stock + agg.cantidad
+      from (
+        select variante_id, sum(cantidad) as cantidad
+        from documento_items
+        where documento_id = v_doc.id and variante_id is not null
+        group by variante_id
+      ) agg
+      where agg.variante_id = pv.id and pv.stock is not null;
     update productos pr
-      set stock = pr.stock + di.cantidad
-      from documento_items di
-      where di.documento_id = v_doc.id and di.variante_id is null
-        and di.producto_id = pr.id and pr.stock is not null;
+      set stock = pr.stock + agg.cantidad
+      from (
+        select producto_id, sum(cantidad) as cantidad
+        from documento_items
+        where documento_id = v_doc.id and variante_id is null and producto_id is not null
+        group by producto_id
+      ) agg
+      where agg.producto_id = pr.id and pr.stock is not null;
 
     insert into movimientos_inventario (producto_id, variante_id, tipo, cantidad, costo_resultante, referencia)
     select di.producto_id, di.variante_id, 'devolucion', di.cantidad,
