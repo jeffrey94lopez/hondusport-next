@@ -1,6 +1,7 @@
 import type { PagoPos, MetodoPagoTipo } from '@/types'
 import { precioParaCliente } from '@/lib/store/costeo'
 import { traducirErrorPedido } from '@/lib/store/variantes'
+import { formatPrice } from '@/lib/store/format'
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
@@ -35,7 +36,7 @@ export function validarEmision(args: {
   if (tipo === 'factura' && total > limite) {
     const esConsumidorFinal = clienteNombre.trim().toUpperCase() === 'CONSUMIDOR FINAL'
     if (esConsumidorFinal && !clienteRtn && !clienteIdentidad) {
-      return `El total supera L. ${limite}: se requiere RTN o identificación del cliente.`
+      return `El total supera ${formatPrice(limite)}: se requiere RTN o identificación del cliente.`
     }
   }
   return null
@@ -105,6 +106,7 @@ export function traducirErrorPos(message: string | null | undefined): string | n
   const [codigo, a, b] = message.split('|')
   switch (codigo) {
     case 'HS_CAJA':
+      if (a === 'caja no encontrada') return 'La caja no existe o está desactivada.'
       return `La caja "${a}" no tiene una sesión abierta.`
     case 'HS_CAI':
       if (a === 'vencido') return `El CAI de esta caja venció el ${b}.`

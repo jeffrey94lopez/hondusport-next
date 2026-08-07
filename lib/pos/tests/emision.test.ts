@@ -86,6 +86,9 @@ describe('traducirErrorPos', () => {
   it('HS_CAJA sin sesión abierta', () => {
     expect(traducirErrorPos('HS_CAJA|Caja 1')).toBe('La caja "Caja 1" no tiene una sesión abierta.')
   })
+  it('HS_CAJA caja no encontrada (lookup falla)', () => {
+    expect(traducirErrorPos('HS_CAJA|caja no encontrada')).toBe('La caja no existe o está desactivada.')
+  })
   it('HS_CAI vencido', () => {
     expect(traducirErrorPos('HS_CAI|vencido|2026-01-01')).toMatch(/venció/)
   })
