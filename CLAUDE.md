@@ -51,6 +51,10 @@ npx tsc --noEmit # typecheck (los Server Actions no están cubiertos por tests)
   Excepciones documentadas: cambio de modalidad (stock null↔número) y el alta
   manual de producto/variante (estado inicial) no generan movimiento.
 - **Variantes padre/hijo:** un producto con hijas activas en `producto_variantes` se vende POR variante (precio propio o heredado, stock propio). La RPC `crear_pedido` valida y **descuenta stock atómicamente** al crear el pedido — también para productos planos (stock null = ilimitado). Lógica pura en `lib/store/variantes.ts`.
+- **Documentos POS:** los documentos emitidos son inmutables (snapshot congelado +
+  trigger de BD); solo comprobantes se anulan vía `anular_comprobante`; la emisión
+  pasa SIEMPRE por la RPC `emitir_documento` (correlativo + stock + kardex atómicos).
+  Matemática fiscal en `lib/pos/` (el precio final incluye ISV; desglose hacia atrás).
 - **CSS Modules** por componente (`Componente.module.css`). La tienda scopea sus
   estilos globales bajo `.storeRoot` (ver `store-globals.css`).
 - **Design system Merlin:** los estilos usan los tokens semánticos de `app/merlin.css`
