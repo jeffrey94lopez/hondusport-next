@@ -109,12 +109,25 @@ export default function CaisSection({ cais }: Props) {
           <tbody>
             {cais.map(c => {
               const estado = estadoCai(c, HOY)
-              const badgeClass = !estado.vigente
-                ? styles.badgeVencido
-                : estado.alerta
-                  ? styles.badgeAlerta
-                  : styles.badgeVigente
-              const badgeLabel = !estado.vigente ? 'Vencido' : estado.alerta ? 'Por vencer' : 'Vigente'
+              // activo=false es una decisión del admin (el toggle de la fila), distinta
+              // de "vencido" (fecha/rango agotados). estadoCai() pliega ambas cosas en
+              // `vigente`, así que aquí se desarma para no mostrar "Vencido" en rojo a
+              // un CAI simplemente desactivado.
+              const badgeClass = !c.activo
+                ? styles.badgeInactivo
+                : !estado.vigente
+                  ? styles.badgeVencido
+                  : estado.alerta
+                    ? styles.badgeAlerta
+                    : styles.badgeVigente
+              const badgeLabel = !c.activo
+                ? 'Inactivo'
+                : !estado.vigente
+                  ? (estado.alerta ?? 'Vencido')
+                  : estado.alerta
+                    ? 'Por vencer'
+                    : 'Vigente'
+              const mostrarDetalle = c.activo && estado.vigente && estado.alerta
               return (
                 <tr key={c.id}>
                   <td className={styles.caiCode}>{c.cai}</td>
@@ -125,7 +138,7 @@ export default function CaisSection({ cais }: Props) {
                   <td>
                     <span className={badgeClass}>
                       {badgeLabel}
-                      {estado.alerta && <span className={styles.alertaDetalle}>{estado.alerta}</span>}
+                      {mostrarDetalle && <span className={styles.alertaDetalle}>{estado.alerta}</span>}
                     </span>
                   </td>
                   <td>

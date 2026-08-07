@@ -47,7 +47,8 @@
 
 .badgeVigente,
 .badgeAlerta,
-.badgeVencido {
+.badgeVencido,
+.badgeInactivo {
   display: inline-flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -60,6 +61,7 @@
 .badgeVigente { background: var(--success-bg); color: var(--success); }
 .badgeAlerta { background: var(--warning-bg); color: var(--warning); }
 .badgeVencido { background: var(--error-bg); color: var(--danger); }
+.badgeInactivo { background: var(--bg-hover); color: var(--text-muted); }
 .alertaDetalle { font-size: 0.68rem; font-weight: 600; opacity: 0.85; white-space: normal; }
 
 .rowActions { display: flex; gap: 0.4rem; }
