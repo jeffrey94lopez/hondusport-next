@@ -29,7 +29,7 @@ export default async function StorePage() {
       supabase.from('banners').select('id, titulo, subtitulo, btn_texto, btn_link, imagen, orden, activo').eq('activo', true).order('orden'),
       supabase.from('envios').select('id, nombre, descripcion, tipo, costo, descuento, activo').eq('activo', true),
       supabase.from('cupones').select('id, codigo, descuento, tipo, activo, created_at').eq('activo', true),
-      supabase.from('productos').select(PRODUCTO_SELECT).eq('activo', true),
+      supabase.from('productos').select(PRODUCTO_SELECT).eq('activo', true).in('canal', ['tienda', 'ambas']),
     ])
 
   const configMap = toConfigMap(config ?? [])

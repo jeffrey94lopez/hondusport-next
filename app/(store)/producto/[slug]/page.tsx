@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const columna = esUuid(slug) ? 'id' : 'slug'
   const [{ data: config }, { data: producto }] = await Promise.all([
     supabase.from('configuracion').select('key,value'),
-    supabase.from('productos').select('nombre, descripcion, imagenes').eq(columna, slug).eq('activo', true).maybeSingle(),
+    supabase.from('productos').select('nombre, descripcion, imagenes').eq(columna, slug).eq('activo', true).in('canal', ['tienda', 'ambas']).maybeSingle(),
   ])
 
   if (!producto) return {}
@@ -54,8 +54,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         .select('id, tipo, valor, slug, imagen, categorias_padre, orden, activo')
         .eq('activo', true)
         .order('orden'),
-      supabase.from('productos').select(PRODUCTO_SELECT).eq('slug', slug).eq('activo', true).maybeSingle(),
-      supabase.from('productos').select(PRODUCTO_SELECT).eq('activo', true),
+      supabase.from('productos').select(PRODUCTO_SELECT).eq('slug', slug).eq('activo', true).in('canal', ['tienda', 'ambas']).maybeSingle(),
+      supabase.from('productos').select(PRODUCTO_SELECT).eq('activo', true).in('canal', ['tienda', 'ambas']),
       supabase.from('envios').select('id, nombre, descripcion, tipo, costo, descuento, activo').eq('activo', true),
       supabase.from('cupones').select('id, codigo, descuento, tipo, activo, created_at').eq('activo', true),
     ])
@@ -67,11 +67,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
       .select('slug')
       .eq('id', slug)
       .eq('activo', true)
+      .in('canal', ['tienda', 'ambas'])
       .maybeSingle()
     if (porId?.slug) permanentRedirect(`/producto/${porId.slug}`)
   }
 
   if (!productoRow) notFound()
+  if (productoRow.canal === 'mostrador') notFound()
 
   const configMap = toConfigMap(config ?? [])
   const storeProducto = toStoreProducto(productoRow)
