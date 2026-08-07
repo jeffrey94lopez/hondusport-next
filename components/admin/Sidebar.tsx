@@ -18,6 +18,7 @@ const NAV_GROUPS = [
     label: 'VENTAS',
     items: [
       { href: '/admin/pedidos', icon: '📋', label: 'Pedidos', badge: true },
+      { href: '/admin/clientes', icon: '👥', label: 'Clientes' },
       { href: '/admin/cupones', icon: '🎟️', label: 'Cupones' },
       { href: '/admin/envios', icon: '🚚', label: 'Envíos' },
     ],

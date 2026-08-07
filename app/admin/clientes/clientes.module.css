@@ -1,0 +1,175 @@
+.page {
+  padding: 1.5rem;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search {
+  width: 240px;
+}
+
+/* Colores/tipografía/radio del CTA los da la clase global .btnMerlinPrimary
+   (compuesta en el JSX); aquí solo el layout propio del botón. */
+.btnPrimary {
+  padding: 0.55rem 1rem;
+  white-space: nowrap;
+}
+
+.tableWrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.855rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--bg-hover); }
+
+.clienteName { font-weight: 600; }
+.clienteMeta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+.badgeFinal,
+.badgeRevendedor,
+.badgeExonerado,
+.badgeNoExonerado {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+.badgeFinal { background: var(--accent-dim); color: var(--accent); }
+.badgeRevendedor { background: var(--info-bg); color: var(--info); }
+.badgeExonerado { background: var(--warning-bg); color: var(--warning); }
+.badgeNoExonerado { background: var(--bg-hover); color: var(--text-muted); }
+
+.rowActions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btnEdit,
+.btnDelete {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.btnEdit { color: var(--text-muted); }
+.btnEdit:hover { border-color: var(--accent); color: var(--accent); }
+.btnDelete { color: var(--danger); }
+.btnDelete:hover { border-color: var(--danger); opacity: 0.75; }
+
+.empty {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.formChecks {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.formError {
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+
+.btnCancel {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.btnCancel:hover { color: var(--text); }

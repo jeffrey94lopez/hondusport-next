@@ -16,6 +16,20 @@ export interface Cliente {
   updated_at: string
 }
 
+export interface ClienteForm {
+  nombre: string
+  rtn: string
+  identidad: string
+  tipo_cliente: 'final' | 'revendedor'
+  exonerado: boolean
+  constancia_exonerado: string
+  registro_sag: string
+  direccion: string
+  telefono: string
+  correo: string
+  notas: string
+}
+
 export interface CaiAutorizacion {
   id: string
   cai: string
