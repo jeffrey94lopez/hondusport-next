@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap } from '@/lib/store/adapters'
+import { obtenerCotizacionParaPos, type CotizacionPrefillPos } from '@/app/admin/cotizaciones/actions'
 import type { DocumentoParaArqueo, MetodoPagoTipo } from '@/types'
 import PosClient from './PosClient'
 
@@ -17,8 +18,24 @@ interface DocumentoConPagosEmbed {
   documento_pagos: Array<{ monto: number; metodos_pago: { tipo: MetodoPagoTipo } | null }>
 }
 
-export default async function PosPage() {
+export default async function PosPage({
+  searchParams,
+}: {
+  // Next 16: `searchParams` es async. Solo se usa `cotizacion` (id) para el
+  // flujo "Facturar desde cotización" (Task 8 de POS P3).
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const supabase = await createClient()
+
+  // Prefill de cotización: se carga en el server para no parpadear en cliente.
+  // Si el id no viene o la carga falla, se pasa null (el POS ignora el prefill).
+  const cotizacionParam = (await searchParams).cotizacion
+  const cotizacionId = typeof cotizacionParam === 'string' ? cotizacionParam : null
+  let cotizacionPrefill: CotizacionPrefillPos | null = null
+  if (cotizacionId) {
+    const r = await obtenerCotizacionParaPos(cotizacionId)
+    cotizacionPrefill = r.ok && r.data ? r.data : null
+  }
 
   const [
     { data: cajas },
@@ -95,6 +112,7 @@ export default async function PosPage() {
       sesionesCerradas={sesionesCerradas ?? []}
       documentosPorSesion={documentosPorSesion}
       categorias={categorias ?? []}
+      cotizacionPrefill={cotizacionPrefill}
     />
   )
 }

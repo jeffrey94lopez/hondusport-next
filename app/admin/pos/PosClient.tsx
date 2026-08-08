@@ -4,6 +4,7 @@ import type { FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { abrirSesion, guardarEspera, actualizarEspera, eliminarEspera } from './actions'
+import { marcarCotizacionFacturada, type CotizacionPrefillPos } from '@/app/admin/cotizaciones/actions'
 import { precioLineaPos } from '@/lib/pos/emision'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { estadoCai } from '@/lib/pos/fiscal'
@@ -63,6 +64,9 @@ interface Props {
   sesionesCerradas: SesionCaja[]
   documentosPorSesion: Record<string, DocumentoParaArqueo[]>
   categorias: Categoria[]
+  // Task 8 (POS P3): prefill al abrir /admin/pos?cotizacion=<id>. Opcional —
+  // el flujo normal del POS (sin query) lo recibe como null y lo ignora.
+  cotizacionPrefill?: CotizacionPrefillPos | null
 }
 
 // Contrato de carrito para Task 11 (cobro/emisión, consume) y Task 12
@@ -209,6 +213,7 @@ export default function PosClient({
   sesionesCerradas,
   documentosPorSesion,
   categorias,
+  cotizacionPrefill,
 }: Props) {
   const router = useRouter()
   const [cajaId, setCajaId] = useState<string | null>(() => leerCajaGuardada(cajas))
@@ -278,6 +283,14 @@ export default function PosClient({
 
   const nextKeyRef = useRef(0)
   const nextPestanaKeyRef = useRef(0)
+
+  // Task 8 (POS P3): mapa `pestanaId → cotizacionId` para recordar de qué
+  // cotización proviene cada pestaña sin tocar el tipo compartido
+  // `PestanaVenta` (lib/pos/carrito). Se consulta al emitir (handleEmitido)
+  // para ligar el documento a su cotización. `prefillProcesadoRef` es el guard
+  // que asegura que el prefill se procese una sola vez (efecto abajo).
+  const cotizacionPorPestanaRef = useRef<Record<string, string>>({})
+  const prefillProcesadoRef = useRef(false)
 
   // ---- Pestañas de ventas en curso (reemplaza el modal de espera de Task 12) ----
   // `lineas`/`descuentoGlobal`/`clienteId`/`vendedorId` (arriba) SIGUEN siendo
@@ -452,6 +465,20 @@ export default function PosClient({
   // documento.
   function handleEmitido(documentoId: string) {
     setCobroAbierto(false)
+    // Task 8 (POS P3): si la pestaña activa proviene de una cotización, ligar
+    // el documento recién emitido a esa cotización (la mueve a `ganada`). Corre
+    // en segundo plano (startEsperaTransition, sin bloquear la UI); la acción es
+    // idempotente. Se hace ANTES de finalizarPestanaEmitida (que resetea la
+    // pestaña) y se limpia la entrada del ref para no re-ligar en otra emisión.
+    if (pestanaActivaId) {
+      const cotizacionId = cotizacionPorPestanaRef.current[pestanaActivaId]
+      if (cotizacionId) {
+        delete cotizacionPorPestanaRef.current[pestanaActivaId]
+        startEsperaTransition(async () => {
+          await marcarCotizacionFacturada(cotizacionId, documentoId)
+        })
+      }
+    }
     finalizarPestanaEmitida()
     if (config.pos_documento_modal !== 'false') {
       setDocumentoModalId(documentoId)
@@ -550,6 +577,73 @@ export default function PosClient({
     setPestanasCajaId(caja.id)
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [caja, pestanasCajaId, esperas, productosPorId])
+
+  // Task 8 (POS P3): precarga desde una cotización (/admin/pos?cotizacion=<id>).
+  // Corre UNA sola vez (guard `prefillProcesadoRef`), solo en cliente y solo
+  // cuando ya estamos en la vista de venta con las pestañas hidratadas
+  // (`caja`, `sesion` y `pestanasCajaId === caja.id`) — así la pestaña de la
+  // cotización se abre ENCIMA de las que ya venían, sin perder ninguna. Si la
+  // cotización ya fue facturada, no se precarga: solo se avisa. Tras procesar,
+  // se limpia el query param con `router.replace` para que un refresh no vuelva
+  // a reprocesar la misma cotización.
+  useEffect(() => {
+    if (prefillProcesadoRef.current) return
+    if (!cotizacionPrefill) return
+    if (!caja || !sesion || pestanasCajaId !== caja.id) return
+
+    prefillProcesadoRef.current = true
+
+    if (cotizacionPrefill.yaFacturada) {
+      // Precarga guardada por `prefillProcesadoRef` (corre una sola vez), no es
+      // el caso de "sincronizar con un sistema externo" que el lint previene —
+      // mismo criterio que el efecto de hidratación de pestañas.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAvisoRetomar('Esta cotización ya fue facturada.')
+      router.replace('/admin/pos')
+      return
+    }
+
+    // Las cotizaciones no guardan modo de descuento por línea: se asume 'monto'
+    // (el editor de cotizaciones trabaja en monto), luego se revalida contra el
+    // catálogo vigente igual que una espera retomada.
+    const { lineas: lineasValidas, avisos } = revalidarLineasCatalogo(
+      cotizacionPrefill.lineas.map(l => ({ ...l, descuentoModo: 'monto' as DescuentoModo })),
+      'Cotización',
+      productosPorId,
+      nuevaKey,
+    )
+
+    // Abre una pestaña nueva como `crearPestana`: persiste la saliente si
+    // aplica y la deja como venta activa. Recuerda su cotización en el ref.
+    const saliente = pestanaActivaId ? datosPestana(pestanaActivaId) : undefined
+    const nueva: PestanaVenta = {
+      id: nuevaPestanaId(),
+      esperaId: null,
+      nombre: siguienteNombrePestana(pestanas.map(p => p.nombre)),
+      lineas: lineasValidas,
+      descuentoGlobal: clampDescuentoGlobal(lineasValidas, cotizacionPrefill.descuentoGlobal),
+      clienteId: cotizacionPrefill.clienteId,
+      vendedorId: null,
+    }
+    cotizacionPorPestanaRef.current[nueva.id] = cotizacionPrefill.cotizacionId
+
+    setPestanas(prev => [...prev.map(p => (saliente && p.id === saliente.id ? saliente : p)), nueva])
+    setLineas(nueva.lineas)
+    setDescuentoGlobal(nueva.descuentoGlobal)
+    setClienteId(nueva.clienteId)
+    setVendedorId(nueva.vendedorId)
+    setPestanaActivaId(nueva.id)
+    setAvisoRetomar(avisos.length > 0 ? avisos.join(' ') : '')
+
+    if (saliente) persistirPestana(caja.id, saliente)
+
+    router.replace('/admin/pos')
+    // `datosPestana`/`persistirPestana` se recrean cada render; el guard
+    // `prefillProcesadoRef` asegura que este efecto de precarga corra una sola
+    // vez, así que no se incluyen como dependencias (mismo criterio que el
+    // efecto de hidratación de pestañas de arriba).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cotizacionPrefill, caja, sesion, pestanasCajaId, productosPorId, pestanaActivaId, pestanas, router])
 
   // Snapshot "verdadero" de una pestaña por id: si es la activa, se arma con
   // el estado de edición en vivo (única fuente de verdad mientras se edita);
