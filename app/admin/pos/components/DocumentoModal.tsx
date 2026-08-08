@@ -88,14 +88,14 @@ export default function DocumentoModal({ documentoId, formatoDefault, onNuevaVen
               </div>
             )}
             {data && (
-              <button type="button" className="btnMerlinPrimary" onClick={() => window.print()}>
+              <button type="button" className={`btnMerlinPrimary ${styles.btnToolbar}`} onClick={() => window.print()}>
                 Imprimir
               </button>
             )}
-            <button type="button" className="btnMerlinSecondary" onClick={onNuevaVenta}>
+            <button type="button" className={`btnMerlinSecondary ${styles.btnToolbar}`} onClick={onNuevaVenta}>
               Nueva venta
             </button>
-            <button type="button" className="btnMerlinTertiary" onClick={onCerrar}>
+            <button type="button" className={`btnMerlinTertiary ${styles.btnToolbar}`} onClick={onCerrar}>
               Cerrar
             </button>
           </div>
@@ -111,7 +111,7 @@ export default function DocumentoModal({ documentoId, formatoDefault, onNuevaVen
                   si la carga del modal falla, no puede perderse de vista: se
                   ofrece el enlace directo a la página del documento. */}
               <p>El documento ya fue emitido. Puedes abrirlo directamente:</p>
-              <Link href={`/admin/pos/documento/${documentoId}`} className="btnMerlinPrimary">
+              <Link href={`/admin/pos/documento/${documentoId}`} className={`btnMerlinPrimary ${styles.btnToolbar}`}>
                 Abrir el documento
               </Link>
             </div>

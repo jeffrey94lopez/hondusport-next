@@ -15,6 +15,7 @@ import { toStoreVariantes, stockEfectivo } from '@/lib/store/variantes'
 import { variantesActivasDe, topeStock, parseMoneyInput } from './pos-helpers'
 import CatalogoPanel from './components/CatalogoPanel'
 import CarritoPanel from './components/CarritoPanel'
+import PestanasBar from './components/PestanasBar'
 import ClienteNuevoModal from './components/ClienteNuevoModal'
 import ItemLibreModal from './components/ItemLibreModal'
 import LineaEditorModal from './components/LineaEditorModal'
@@ -990,21 +991,32 @@ export default function PosClient({
       )}
 
       <div className={styles.ventaGrid}>
-        <CatalogoPanel
-          productos={productos}
-          categorias={categorias}
-          tipoCliente={tipoCliente}
-          onAgregar={agregarProducto}
-          onError={setAvisoRetomar}
-        />
+        {/* Columna izquierda: las pestañas de ventas viven ARRIBA del
+            catálogo (fuera de su scroll, siempre visibles); el catálogo
+            ocupa el resto y scrollea internamente. PestanasBar se renderiza
+            aquí (no dentro de CatalogoPanel) para no acoplar la lógica de
+            pestañas con la del catálogo — PosClient ya es dueño de ambas. */}
+        <div className={styles.catalogoCol}>
+          <PestanasBar
+            pestanas={pestanas}
+            activaId={pestanaActivaId}
+            conteoActiva={lineas.length}
+            onSeleccionar={seleccionarPestana}
+            onNueva={crearPestana}
+            onCerrar={cerrarPestana}
+            onRenombrar={renombrarPestana}
+          />
+          <CatalogoPanel
+            productos={productos}
+            categorias={categorias}
+            tipoCliente={tipoCliente}
+            onAgregar={agregarProducto}
+            onError={setAvisoRetomar}
+            onItemLibre={() => setLibreModal(true)}
+          />
+        </div>
 
         <CarritoPanel
-          pestanas={pestanas}
-          pestanaActivaId={pestanaActivaId}
-          onSeleccionarPestana={seleccionarPestana}
-          onNuevaPestana={crearPestana}
-          onCerrarPestana={cerrarPestana}
-          onRenombrarPestana={renombrarPestana}
           lineas={lineas}
           descuentoGlobal={descuentoGlobal}
           clientes={clientesLocal}
@@ -1021,7 +1033,6 @@ export default function PosClient({
           onCliente={seleccionarCliente}
           onNuevoCliente={() => setClienteNuevoAbierto(true)}
           onVendedor={setVendedorId}
-          onItemLibre={() => setLibreModal(true)}
           onCobrar={() => setCobroAbierto(true)}
         />
       </div>

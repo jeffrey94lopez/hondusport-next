@@ -253,23 +253,45 @@
   .ventaGrid { grid-template-columns: 1fr; }
 }
 
-/* Columna izquierda: catálogo */
+/* Columna izquierda: pestañas de ventas (fijas arriba) + catálogo (scroll).
+   Mismo patrón que .ventaRoot (header auto + contenido flex:1): la barra de
+   pestañas nunca scrollea con los productos. */
+.catalogoCol {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* Columna izquierda: catálogo. flex:1 para llenar lo que deja la barra de
+   pestañas de arriba y scrollear solo su contenido. */
 .catalogo {
+  flex: 1;
   background: var(--bg);
   padding: 1rem;
   overflow-y: auto;
   min-height: 0;
 }
 
+/* Barra de búsqueda + botón de ítem libre a su derecha. align-items:stretch
+   hace que el botón iguale el alto del input sin fijarlo a mano. */
+.searchRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
 .searchInput {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 0.65rem 0.9rem;
   border: 1px solid var(--border-input);
   border-radius: var(--radius-input);
   background: var(--bg-card);
   color: var(--text);
   font-size: 0.9rem;
-  margin-bottom: 1rem;
 }
 .searchInput:focus { outline: none; border-color: var(--accent); }
 
@@ -485,9 +507,20 @@
   color: var(--text);
 }
 
-/* Task 12: color/radio/tipografía vienen de btnMerlinSecondary; align-self
-   evita que se estire a lo ancho dentro de .lineasScroll (flex column). */
-.btnItemLibre { align-self: flex-start; }
+/* Color/radio/tipografía vienen de btnMerlinSecondary, que NO trae caja
+   propia (ver app/merlin.css): esta clase aporta padding + inline-flex para
+   que se vea como botón al lado del buscador (antes iba solo, sin padding, y
+   quedaba como texto). white-space:nowrap evita que "Ítem libre" se parta. */
+.btnItemLibre {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
 .pieCarrito {
   display: flex;
@@ -549,6 +582,15 @@
   flex-direction: column;
   gap: 0.35rem;
   position: relative;
+}
+
+/* Cliente en la fila superior del carrito (grid row "auto"): se separa de la
+   lista de líneas con un borde inferior, como hacían las pestañas cuando
+   ocupaban este lugar. */
+.clienteBlockTop {
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .clienteBlockHeader {
@@ -783,18 +825,21 @@
 }
 
 /* Pestañas de ventas en curso (reemplaza el antiguo modal de espera):
-   barra horizontal con scroll propio arriba de la columna del carrito — ver
-   PestanasBar.tsx. nowrap + overflow-x en vez de wrap para que se comporte
-   como pestañas de navegador (crecen a los lados, no hacia abajo) cuando hay
-   muchas ventas abiertas. */
+   barra horizontal con scroll propio ARRIBA de la columna del catálogo,
+   fuera de su scroll (siempre visible) — ver PestanasBar.tsx y catalogoCol.
+   nowrap + overflow-x en vez de wrap para que se comporte como pestañas de
+   navegador (crecen a los lados, no hacia abajo) cuando hay muchas ventas
+   abiertas. Trae su propio padding porque cuelga directo de .catalogoCol
+   (sin padding), no del .catalogo. */
 .pestanasBar {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   flex-wrap: nowrap;
   overflow-x: auto;
-  padding-bottom: 0.75rem;
-  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border);
 }
 

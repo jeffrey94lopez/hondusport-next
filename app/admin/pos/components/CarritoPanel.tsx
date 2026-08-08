@@ -1,11 +1,10 @@
 'use client'
 import { useState } from 'react'
 import { brutoLinea, brutoTotalLineas } from '@/lib/pos/carrito'
-import type { LineaVenta, PestanaVenta } from '@/lib/pos/carrito'
+import type { LineaVenta } from '@/lib/pos/carrito'
 import { formatPrice } from '@/lib/store/format'
 import { topeStock, parseMoneyInput, valorMostrado } from '../pos-helpers'
 import type { Cliente, Vendedor, Producto, TotalesDocumento } from '@/types'
-import PestanasBar from './PestanasBar'
 import styles from '../pos.module.css'
 
 // Contrato ajustado sobre el mínimo del brief (task-3-brief.md):
@@ -24,12 +23,6 @@ import styles from '../pos.module.css'
 //   conservan porque el brief de Task 7 solo pide eliminar de la fila los
 //   inputs de precio/descuento/modo, no el de cantidad.
 export interface CarritoPanelProps {
-  pestanas: PestanaVenta[]
-  pestanaActivaId: string | null
-  onSeleccionarPestana: (id: string) => void
-  onNuevaPestana: () => void
-  onCerrarPestana: (id: string) => void
-  onRenombrarPestana: (id: string, nombre: string) => void
   lineas: LineaVenta[]
   descuentoGlobal: number
   clientes: Cliente[]
@@ -46,7 +39,6 @@ export interface CarritoPanelProps {
   onCliente: (id: string | null) => void
   onNuevoCliente: () => void
   onVendedor: (id: string | null) => void
-  onItemLibre: () => void
   onCobrar: () => void
 }
 
@@ -62,12 +54,6 @@ function partesDescripcion(l: LineaVenta): { nombre: string; variante: string | 
 }
 
 export default function CarritoPanel({
-  pestanas,
-  pestanaActivaId,
-  onSeleccionarPestana,
-  onNuevaPestana,
-  onCerrarPestana,
-  onRenombrarPestana,
   lineas,
   descuentoGlobal,
   clientes,
@@ -84,7 +70,6 @@ export default function CarritoPanel({
   onCliente,
   onNuevoCliente,
   onVendedor,
-  onItemLibre,
   onCobrar,
 }: CarritoPanelProps) {
   // ---- Selector de cliente (búsqueda sobre precargados + CONSUMIDOR FINAL) ----
@@ -130,17 +115,50 @@ export default function CarritoPanel({
     setClienteOpen(false)
   }
 
+  const clienteSelector = (
+    <div className={styles.clienteCombo}>
+      <input
+        type="text"
+        className={styles.clienteInput}
+        value={clienteOpen ? clienteQuery : (clienteActual?.nombre ?? 'CONSUMIDOR FINAL')}
+        onFocus={() => {
+          setClienteOpen(true)
+          setClienteQuery('')
+        }}
+        onChange={e => setClienteQuery(e.target.value)}
+        onBlur={() => setTimeout(() => setClienteOpen(false), 120)}
+        placeholder="Buscar por nombre o RTN…"
+      />
+      {clienteOpen && (
+        <div className={styles.clienteDropdown} onMouseDown={e => e.preventDefault()}>
+          <button type="button" className={styles.clienteOption} onClick={() => seleccionarCliente(null)}>
+            CONSUMIDOR FINAL
+          </button>
+          {clientesFiltrados.map(c => (
+            <button key={c.id} type="button" className={styles.clienteOption} onClick={() => seleccionarCliente(c)}>
+              {c.nombre} {c.rtn ? `· ${c.rtn}` : ''}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <section className={styles.carritoCol}>
-      <PestanasBar
-        pestanas={pestanas}
-        activaId={pestanaActivaId}
-        conteoActiva={lineas.length}
-        onSeleccionar={onSeleccionarPestana}
-        onNueva={onNuevaPestana}
-        onCerrar={onCerrarPestana}
-        onRenombrar={onRenombrarPestana}
-      />
+      {/* Cliente arriba de todo (donde antes estaban las pestañas de ventas):
+          se elige a quién se le vende antes de armar el carrito. El resto del
+          "quién/cuánto" (vendedor, descuento, totales, cobrar) queda en el pie. */}
+      <div className={`${styles.clienteBlock} ${styles.clienteBlockTop}`}>
+        <div className={styles.clienteBlockHeader}>
+          <label className={styles.formLabel}>Cliente</label>
+          <button type="button" className={styles.btnNuevoCliente} onClick={onNuevoCliente}>
+            + Nuevo
+          </button>
+        </div>
+        {clienteSelector}
+        {exonerado && <span className={styles.badgeExonerado}>Exonerado</span>}
+      </div>
 
       <div className={styles.lineasScroll}>
         <div className={styles.lineasList}>
@@ -190,10 +208,6 @@ export default function CarritoPanel({
             })
           )}
         </div>
-
-        <button type="button" className={`btnMerlinSecondary ${styles.btnItemLibre}`} onClick={onItemLibre}>
-          + Ítem libre
-        </button>
       </div>
 
       <div className={styles.pieCarrito}>
@@ -233,42 +247,6 @@ export default function CarritoPanel({
             <div className={styles.totalesRow}><span>Descuento</span><span>-{formatPrice(totales.descuento_total)}</span></div>
           )}
           <div className={styles.totalesRowTotal}><span>Total</span><span>{formatPrice(totales.total)}</span></div>
-        </div>
-
-        <div className={styles.clienteBlock}>
-          <div className={styles.clienteBlockHeader}>
-            <label className={styles.formLabel}>Cliente</label>
-            <button type="button" className={styles.btnNuevoCliente} onClick={onNuevoCliente}>
-              + Nuevo
-            </button>
-          </div>
-          <div className={styles.clienteCombo}>
-            <input
-              type="text"
-              className={styles.clienteInput}
-              value={clienteOpen ? clienteQuery : (clienteActual?.nombre ?? 'CONSUMIDOR FINAL')}
-              onFocus={() => {
-                setClienteOpen(true)
-                setClienteQuery('')
-              }}
-              onChange={e => setClienteQuery(e.target.value)}
-              onBlur={() => setTimeout(() => setClienteOpen(false), 120)}
-              placeholder="Buscar por nombre o RTN…"
-            />
-            {clienteOpen && (
-              <div className={styles.clienteDropdown} onMouseDown={e => e.preventDefault()}>
-                <button type="button" className={styles.clienteOption} onClick={() => seleccionarCliente(null)}>
-                  CONSUMIDOR FINAL
-                </button>
-                {clientesFiltrados.map(c => (
-                  <button key={c.id} type="button" className={styles.clienteOption} onClick={() => seleccionarCliente(c)}>
-                    {c.nombre} {c.rtn ? `· ${c.rtn}` : ''}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {exonerado && <span className={styles.badgeExonerado}>Exonerado</span>}
         </div>
 
         <div className={styles.vendedorBlock}>

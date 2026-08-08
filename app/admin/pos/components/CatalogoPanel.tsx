@@ -27,6 +27,10 @@ export interface CatalogoPanelProps {
   // server action; el POS ya tiene un banner de avisos compartido en
   // `PosClient` (`avisoRetomar`) — se reutiliza ese, no se inventa otro.
   onError: (mensaje: string) => void
+  // El botón "+ Ítem libre" vive a la derecha de la barra de búsqueda (antes
+  // estaba en el carrito): agregar un ítem libre es una acción del catálogo,
+  // no del carrito, y queda a mano junto al buscador/escáner.
+  onItemLibre: () => void
 }
 
 // Predicado de búsqueda por texto (nombre / SKU del producto / SKU de
@@ -55,7 +59,7 @@ function buscarPorSkuExacto(
   return null
 }
 
-export default function CatalogoPanel({ productos, categorias, tipoCliente, onAgregar, onError }: CatalogoPanelProps) {
+export default function CatalogoPanel({ productos, categorias, tipoCliente, onAgregar, onError, onItemLibre }: CatalogoPanelProps) {
   const [busqueda, setBusqueda] = useState('')
   const [varianteModal, setVarianteModal] = useState<Producto | null>(null)
   const [catId, setCatId] = useState<string | null>(null)
@@ -226,16 +230,21 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
 
   return (
     <section className={styles.catalogo}>
-      <input
-        ref={searchRef}
-        type="text"
-        className={styles.searchInput}
-        placeholder="Buscar por nombre o escanear SKU…"
-        value={busqueda}
-        onChange={e => setBusqueda(e.target.value)}
-        onKeyDown={handleSearchKeyDown}
-        autoFocus
-      />
+      <div className={styles.searchRow}>
+        <input
+          ref={searchRef}
+          type="text"
+          className={styles.searchInput}
+          placeholder="Buscar por nombre o escanear SKU…"
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          autoFocus
+        />
+        <button type="button" className={`btnMerlinSecondary ${styles.btnItemLibre}`} onClick={onItemLibre}>
+          + Ítem libre
+        </button>
+      </div>
 
       {anclados.length > 0 && (
         <div className={styles.anclados}>

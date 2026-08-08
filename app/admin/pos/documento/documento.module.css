@@ -238,6 +238,23 @@
   flex-wrap: wrap;
 }
 
+/* Los botones Merlin primary/secondary/tertiary NO traen padding ni display
+   propios por diseño (ver app/merlin.css): se componen con una clase de
+   módulo que aporta la caja. En esta barra se usaban "sueltos"
+   (className="btnMerlinPrimary"), así que el fondo abrazaba el texto y
+   parecían texto plano, desalineados con los chips 80mm/Carta. `.btnToolbar`
+   les da la caja (padding, inline-flex, alto parejo) para que se vean y
+   alineen como botones de verdad. */
+.btnToolbar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.95rem;
+  min-height: 38px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 /* Un contenedor `position: fixed` no fragmenta en paged media (paginado):
    se imprimiría solo la primera página. Se neutraliza el modal Y su overlay
    para que el papel (DocumentoHoja, dentro de .pageBg dentro de .modalDocumentoBody)
