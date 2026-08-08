@@ -131,3 +131,14 @@ export function traducirErrorPos(message: string | null | undefined): string | n
       return traducirErrorPedido(message)
   }
 }
+
+// Regla de los chips de pago del POS: al seleccionar un método nuevo, ese
+// pago (el último de la lista) se llena con lo que falta para cubrir el
+// total; los ya capturados no se tocan. Con un solo método, toma el total.
+export function montosPagoAlAgregar(pagos: PagoPos[], total: number): PagoPos[] {
+  if (pagos.length === 0) return []
+  const previos = pagos.slice(0, -1)
+  const cubierto = round2(previos.reduce((s, p) => s + p.monto, 0))
+  const restante = Math.max(0, round2(total - cubierto))
+  return [...previos, { ...pagos[pagos.length - 1], monto: restante }]
+}

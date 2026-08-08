@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { precioLineaPos, validarEmision, validarPagos, cambioPago, esperadoCaja, traducirErrorPos, tasaUsdDePagos } from '../emision'
-import type { MetodoPagoTipo } from '@/types'
+import { precioLineaPos, validarEmision, validarPagos, cambioPago, esperadoCaja, traducirErrorPos, tasaUsdDePagos, montosPagoAlAgregar } from '../emision'
+import type { MetodoPagoTipo, PagoPos } from '@/types'
 
 describe('precioLineaPos', () => {
   it('final: siempre precio normal', () => {
@@ -134,5 +134,33 @@ describe('traducirErrorPos', () => {
   })
   it('delega códigos ajenos en traducirErrorPedido', () => {
     expect(traducirErrorPos('HS_STOCK|Camisa|3')).toMatch(/Solo quedan 3/)
+  })
+})
+
+const pago = (id: string, monto = 0): PagoPos =>
+  ({ metodo_id: id, tipo: 'efectivo_lps', monto })
+
+describe('montosPagoAlAgregar', () => {
+  it('un solo pago toma el total completo', () => {
+    expect(montosPagoAlAgregar([pago('m1')], 230)).toEqual([pago('m1', 230)])
+  })
+  it('el segundo pago toma el restante', () => {
+    const r = montosPagoAlAgregar([pago('m1', 100), pago('m2')], 230)
+    expect(r.map(p => p.monto)).toEqual([100, 130])
+  })
+  it('el tercero toma el restante y respeta los anteriores', () => {
+    const r = montosPagoAlAgregar([pago('m1', 100), pago('m2', 50), pago('m3')], 230)
+    expect(r.map(p => p.monto)).toEqual([100, 50, 80])
+  })
+  it('sin restante el último queda en 0 (no negativo)', () => {
+    const r = montosPagoAlAgregar([pago('m1', 300), pago('m2')], 230)
+    expect(r.map(p => p.monto)).toEqual([300, 0])
+  })
+  it('redondea a 2 decimales', () => {
+    const r = montosPagoAlAgregar([pago('m1', 100.005), pago('m2')], 230)
+    expect(r[1].monto).toBe(129.99)
+  })
+  it('lista vacía devuelve lista vacía', () => {
+    expect(montosPagoAlAgregar([], 230)).toEqual([])
   })
 })
