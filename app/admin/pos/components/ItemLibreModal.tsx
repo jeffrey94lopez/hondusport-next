@@ -1,0 +1,74 @@
+'use client'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
+import Modal from '@/components/admin/Modal'
+import type { IsvTipo } from '@/types'
+import styles from '../pos.module.css'
+
+interface ItemLibreModalProps {
+  onClose: () => void
+  onSave: (descripcion: string, cantidad: number, precio: number, isv: IsvTipo) => void
+}
+
+export default function ItemLibreModal({ onClose, onSave }: ItemLibreModalProps) {
+  const [descripcion, setDescripcion] = useState('')
+  const [cantidad, setCantidad] = useState('1')
+  const [precio, setPrecio] = useState('')
+  const [isv, setIsv] = useState<IsvTipo>('15')
+  const [formError, setFormError] = useState('')
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    const cantidadNum = Number(cantidad)
+    const precioNum = Number(precio)
+    if (!descripcion.trim()) {
+      setFormError('La descripción es requerida.')
+      return
+    }
+    if (!Number.isFinite(cantidadNum) || cantidadNum <= 0) {
+      setFormError('La cantidad debe ser mayor a 0.')
+      return
+    }
+    if (!Number.isFinite(precioNum) || precioNum < 0) {
+      setFormError('El precio debe ser un número válido.')
+      return
+    }
+    onSave(descripcion.trim(), cantidadNum, precioNum, isv)
+  }
+
+  // Reutiliza las clases del formulario de apertura de sesión (pos.module.css)
+  // para evitar duplicar estilos casi idénticos.
+  return (
+    <Modal title="Ítem libre" onClose={onClose}>
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <label className={styles.formLabel}>
+          Descripción
+          <input type="text" value={descripcion} onChange={e => setDescripcion(e.target.value)} autoFocus />
+        </label>
+        <label className={styles.formLabel}>
+          Cantidad
+          <input type="number" min="1" step="1" value={cantidad} onChange={e => setCantidad(e.target.value)} />
+        </label>
+        <label className={styles.formLabel}>
+          Precio (L.)
+          <input type="number" min="0" step="0.01" value={precio} onChange={e => setPrecio(e.target.value)} />
+        </label>
+        <label className={styles.formLabel}>
+          ISV
+          <select value={isv} onChange={e => setIsv(e.target.value as IsvTipo)}>
+            <option value="15">15%</option>
+            <option value="18">18%</option>
+            <option value="exento">Exento</option>
+          </select>
+        </label>
+
+        {formError && <div className={styles.formError}>{formError}</div>}
+
+        <div className={styles.formFooter}>
+          <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
+          <button type="submit" className={`btnMerlinPrimary ${styles.btnSubmit}`}>Agregar</button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
