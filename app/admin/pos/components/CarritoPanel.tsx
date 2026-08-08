@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { brutoLinea, brutoTotalLineas } from '@/lib/pos/carrito'
 import type { LineaVenta } from '@/lib/pos/carrito'
 import { formatPrice } from '@/lib/store/format'
-import { topeStock } from '../pos-helpers'
+import { topeStock, parseMoneyInput, valorMostrado } from '../pos-helpers'
 import type { Cliente, Vendedor, Producto, TotalesDocumento } from '@/types'
 import styles from '../pos.module.css'
 
@@ -82,6 +82,27 @@ export default function CarritoPanel({
   const exonerado = clienteActual?.exonerado ?? false
   const brutoTotalActual = brutoTotalLineas(lineas)
 
+  // Descuento global: input de dinero en texto plano, sin cero forzado (ver
+  // spec de UX de mostrador). El estado numérico (`descuentoGlobal`) sigue
+  // viviendo en PosClient — este componente solo agrega el string crudo que
+  // se muestra MIENTRAS el campo tiene foco; fuera de eso (al montar, al
+  // perder foco, o si el descuento se reclampa desde fuera al quitar una
+  // línea) se muestra el valor canónico derivado del prop (0 = vacío).
+  const [descuentoTexto, setDescuentoTexto] = useState('')
+  const [editandoDescuento, setEditandoDescuento] = useState(false)
+  const descuentoMostrado = editandoDescuento ? descuentoTexto : valorMostrado(descuentoGlobal)
+
+  function handleDescuentoFocus() {
+    setDescuentoTexto(valorMostrado(descuentoGlobal))
+    setEditandoDescuento(true)
+  }
+
+  function handleDescuentoChange(texto: string) {
+    setDescuentoTexto(texto)
+    const n = parseMoneyInput(texto)
+    onDescuentoGlobal(Math.min(Math.max(0, n), brutoTotalActual))
+  }
+
   const clientesFiltrados =
     clienteQuery.trim() === ''
       ? clientes
@@ -156,12 +177,13 @@ export default function CarritoPanel({
         <div className={styles.descuentoGlobalRow}>
           <label>Descuento global (L.)</label>
           <input
-            type="number"
-            min={0}
-            max={brutoTotalActual}
-            step="0.01"
-            value={descuentoGlobal}
-            onChange={e => onDescuentoGlobal(Math.min(Math.max(0, Number(e.target.value) || 0), brutoTotalActual))}
+            type="text"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={descuentoMostrado}
+            onFocus={handleDescuentoFocus}
+            onChange={e => handleDescuentoChange(e.target.value)}
+            onBlur={() => setEditandoDescuento(false)}
           />
         </div>
 

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import Modal from '@/components/admin/Modal'
+import { parseMoneyInput } from '../pos-helpers'
 import type { IsvTipo } from '@/types'
 import styles from '../pos.module.css'
 
@@ -20,7 +21,7 @@ export default function ItemLibreModal({ onClose, onSave }: ItemLibreModalProps)
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const cantidadNum = Number(cantidad)
-    const precioNum = Number(precio)
+    const precioNum = parseMoneyInput(precio)
     if (!descripcion.trim()) {
       setFormError('La descripción es requerida.')
       return
@@ -51,7 +52,13 @@ export default function ItemLibreModal({ onClose, onSave }: ItemLibreModalProps)
         </label>
         <label className={styles.formLabel}>
           Precio (L.)
-          <input type="number" min="0" step="0.01" value={precio} onChange={e => setPrecio(e.target.value)} />
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={precio}
+            onChange={e => setPrecio(e.target.value)}
+          />
         </label>
         <label className={styles.formLabel}>
           ISV

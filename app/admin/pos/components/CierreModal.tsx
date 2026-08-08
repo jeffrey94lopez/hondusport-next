@@ -4,7 +4,7 @@ import Modal from '@/components/admin/Modal'
 import { cerrarSesion } from '../actions'
 import { esperadoCaja } from '@/lib/pos/emision'
 import { formatPrice } from '@/lib/store/format'
-import { round2 } from '../pos-helpers'
+import { round2, parseMoneyInput } from '../pos-helpers'
 import type { SesionCaja, DocumentoParaArqueo, MetodoPagoTipo } from '@/types'
 import styles from '../pos.module.css'
 
@@ -33,8 +33,8 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
   // Resumen previo (no persiste nada): la misma pura que usa `cerrarSesion`
   // en el server para el cálculo definitivo al confirmar.
   const { efectivoEsperado, porMetodo } = esperadoCaja(Number(sesion.monto_inicial), documentos)
-  const contadoNum = Number(montoContado)
-  const contadoValido = montoContado.trim() !== '' && Number.isFinite(contadoNum) && contadoNum >= 0
+  const contadoNum = parseMoneyInput(montoContado)
+  const contadoValido = montoContado.trim() !== '' && contadoNum >= 0
   const diferencia = contadoValido ? round2(contadoNum - efectivoEsperado) : null
 
   function handleCerrar() {
@@ -83,9 +83,9 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
         <label className={styles.formLabel}>
           Monto contado en efectivo (L.)
           <input
-            type="number"
-            min="0"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
+            placeholder="0.00"
             value={montoContado}
             onChange={e => setMontoContado(e.target.value)}
             autoFocus

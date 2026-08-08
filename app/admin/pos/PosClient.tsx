@@ -9,7 +9,7 @@ import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/l
 import { estadoCai } from '@/lib/pos/fiscal'
 import { clampDescuentoLinea, clampDescuentoGlobal, type LineaVenta, type DescuentoModo } from '@/lib/pos/carrito'
 import { toStoreVariantes, stockEfectivo } from '@/lib/store/variantes'
-import { variantesActivasDe, topeStock } from './pos-helpers'
+import { variantesActivasDe, topeStock, parseMoneyInput } from './pos-helpers'
 import CatalogoPanel from './components/CatalogoPanel'
 import CarritoPanel from './components/CarritoPanel'
 import ClienteNuevoModal from './components/ClienteNuevoModal'
@@ -569,7 +569,7 @@ export default function PosClient({
     e.preventDefault()
     if (!caja) return
 
-    const monto = Number(montoInicial)
+    const monto = parseMoneyInput(montoInicial)
     if (!Number.isFinite(monto) || monto < 0) {
       setError('Ingresa un monto inicial válido.')
       return
@@ -655,9 +655,9 @@ export default function PosClient({
             <label className={styles.formLabel}>
               Monto inicial (L.)
               <input
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
                 value={montoInicial}
                 onChange={e => setMontoInicial(e.target.value)}
                 autoFocus

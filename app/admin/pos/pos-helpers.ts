@@ -10,6 +10,24 @@ import type { Producto, ProductoVariante } from '@/types'
 
 export const round2 = (n: number) => Math.round(n * 100) / 100
 
+// Puras de los inputs de dinero en texto plano (nunca `type="number"`, ver
+// spec de UX de mostrador): el estado de cada campo es el STRING crudo que
+// tecleó el cajero — `parseMoneyInput` solo se usa al derivar el número para
+// calcular/validar, nunca para reescribir lo que el usuario está tecleando
+// (evita que un input controlado le "corrija" el texto a medio escribir,
+// p.ej. al borrar el punto decimal). `valorMostrado` es el criterio inverso:
+// cómo se pinta un monto que NO se está editando en este momento (al montar,
+// al perder foco, o cuando lo asigna el sistema vía chip) — 0 siempre se
+// pinta vacío (con el placeholder "0.00" del input) para que el cajero nunca
+// tenga que borrar un cero forzado antes de teclear.
+export function parseMoneyInput(texto: string): number {
+  return Number(texto.replace(',', '.')) || 0
+}
+
+export function valorMostrado(n: number): string {
+  return n === 0 ? '' : String(n)
+}
+
 export function variantesActivasDe(producto: Producto): ProductoVariante[] {
   return (producto.producto_variantes ?? []).filter(v => v.activo).sort((a, b) => a.orden - b.orden)
 }
