@@ -643,7 +643,7 @@ export default function PosClient({
   const estadoCaiActivo = caiActivo ? estadoCai(caiActivo, new Date()) : null
 
   return (
-    <div>
+    <div className={styles.ventaRoot}>
       <header className={styles.header}>
         <Link href="/admin" className={styles.headerBack}>← Admin</Link>
         <span className={styles.headerCaja}>{caja.nombre}</span>
