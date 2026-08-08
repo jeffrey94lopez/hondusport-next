@@ -7,12 +7,13 @@ import { abrirSesion, guardarEspera, eliminarEspera } from './actions'
 import { precioLineaPos } from '@/lib/pos/emision'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { estadoCai } from '@/lib/pos/fiscal'
-import { brutoLinea, clampDescuentoLinea, clampDescuentoGlobal, type LineaVenta, type DescuentoModo } from '@/lib/pos/carrito'
+import { clampDescuentoLinea, clampDescuentoGlobal, type LineaVenta, type DescuentoModo } from '@/lib/pos/carrito'
 import { toStoreVariantes, stockEfectivo } from '@/lib/store/variantes'
-import { variantesActivasDe, topeStock, round2 } from './pos-helpers'
+import { variantesActivasDe, topeStock } from './pos-helpers'
 import CatalogoPanel from './components/CatalogoPanel'
 import CarritoPanel from './components/CarritoPanel'
 import ItemLibreModal from './components/ItemLibreModal'
+import LineaEditorModal from './components/LineaEditorModal'
 import CobroModal from './components/CobroModal'
 import EsperaModal from './components/EsperaModal'
 import CierreModal from './components/CierreModal'
@@ -210,6 +211,8 @@ export default function PosClient({
 
   const [libreModal, setLibreModal] = useState(false)
   const [cobroAbierto, setCobroAbierto] = useState(false)
+  // Task 7: key de la línea que edita LineaEditorModal (null = cerrado).
+  const [lineaEditando, setLineaEditando] = useState<string | null>(null)
 
   const nextKeyRef = useRef(0)
 
@@ -296,32 +299,15 @@ export default function PosClient({
     setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
   }
 
-  function cambiarPrecio(key: string, valor: string) {
-    const n = Number(valor)
-    if (!Number.isFinite(n)) return
-    const next = lineas.map(l =>
-      l.key === key ? clampDescuentoLinea({ ...l, precio_unitario: Math.max(0, n), precioManual: true }) : l,
-    )
+  // Task 7: reemplaza la línea completa editada en LineaEditorModal (que ya
+  // aplicó sus propios clamps de cantidad/precio/descuento) y reclampa el
+  // descuento global — mismo criterio que el resto de mutadores de arriba,
+  // ver el comentario de esa nota más arriba.
+  function guardarLineaEditada(editada: LineaVenta) {
+    const next = lineas.map(l => (l.key === editada.key ? editada : l))
     setLineas(next)
     setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
-  }
-
-  function cambiarModoDescuento(key: string, modo: DescuentoModo) {
-    setLineas(prev => prev.map(l => (l.key === key ? { ...l, descuentoModo: modo } : l)))
-  }
-
-  function cambiarDescuento(key: string, valor: string) {
-    const n = Number(valor)
-    if (!Number.isFinite(n) || n < 0) return
-    const next = lineas.map(l => {
-      if (l.key !== key) return l
-      const brutoBase = brutoLinea(l)
-      if (l.descuentoModo === 'monto') return { ...l, descuento: Math.min(n, brutoBase) }
-      const pct = Math.min(n, 100)
-      return { ...l, descuento: brutoBase > 0 ? round2((brutoBase * pct) / 100) : 0 }
-    })
-    setLineas(next)
-    setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
+    setLineaEditando(null)
   }
 
   function agregarItemLibre(descripcion: string, cantidad: number, precio: number, isv: IsvTipo) {
@@ -720,9 +706,7 @@ export default function PosClient({
           totales={totales}
           onCantidad={cambiarCantidadDelta}
           onCantidadInput={cambiarCantidadInput}
-          onPrecio={cambiarPrecio}
-          onDescuento={cambiarDescuento}
-          onDescuentoModo={cambiarModoDescuento}
+          onEditarLinea={setLineaEditando}
           onQuitarLinea={quitarLinea}
           onDescuentoGlobal={setDescuentoGlobal}
           onCliente={seleccionarCliente}
@@ -733,6 +717,19 @@ export default function PosClient({
       </div>
 
       {libreModal && <ItemLibreModal onClose={() => setLibreModal(false)} onSave={agregarItemLibre} />}
+
+      {lineaEditando && (() => {
+        const linea = lineas.find(l => l.key === lineaEditando)
+        if (!linea) return null
+        return (
+          <LineaEditorModal
+            linea={linea}
+            stockDisponible={topeStock(linea, productosPorId)}
+            onGuardar={guardarLineaEditada}
+            onCerrar={() => setLineaEditando(null)}
+          />
+        )
+      })()}
 
       {cobroAbierto && (
         <CobroModal

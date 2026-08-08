@@ -1,9 +1,9 @@
 'use client'
 import { useState } from 'react'
-import { brutoTotalLineas } from '@/lib/pos/carrito'
-import type { LineaVenta, DescuentoModo } from '@/lib/pos/carrito'
+import { brutoLinea, brutoTotalLineas } from '@/lib/pos/carrito'
+import type { LineaVenta } from '@/lib/pos/carrito'
 import { formatPrice } from '@/lib/store/format'
-import { round2, topeStock } from '../pos-helpers'
+import { topeStock } from '../pos-helpers'
 import type { Cliente, Vendedor, Producto, TotalesDocumento } from '@/types'
 import styles from '../pos.module.css'
 
@@ -14,10 +14,14 @@ import styles from '../pos.module.css'
 //   totales y la etiqueta del botón Cobrar; recalcularlos aquí duplicaría
 //   la lógica de negocio del checkout, que debe vivir en un solo lugar
 //   (PosClient, que ya la necesita para CobroModal).
-// - `onEditarLinea(key)` del brief se reemplazó por los cuatro mutadores
-//   concretos que ya existían en PosClient (`onCantidadInput`, `onPrecio`,
-//   `onDescuento`, `onDescuentoModo`): no hay un único "editar" en la UI
-//   actual, sino inputs independientes por campo de la línea.
+// - Task 7 introdujo `onEditarLinea(key)` (el brief original de Task 3 lo
+//   proponía, pero en ese momento la UI no tenía un concepto de "editar
+//   línea"). Los antiguos `onPrecio`/`onDescuento`/`onDescuentoModo` se
+//   quitaron de este contrato: precio y descuento ahora se editan en
+//   `LineaEditorModal` (ver PosClient), que aplica el resultado completo
+//   con un solo callback (`onGuardar`). `onCantidad`/`onCantidadInput` se
+//   conservan porque el brief de Task 7 solo pide eliminar de la fila los
+//   inputs de precio/descuento/modo, no el de cantidad.
 export interface CarritoPanelProps {
   lineas: LineaVenta[]
   descuentoGlobal: number
@@ -29,15 +33,24 @@ export interface CarritoPanelProps {
   totales: TotalesDocumento
   onCantidad: (key: string, delta: number) => void
   onCantidadInput: (key: string, valor: string) => void
-  onPrecio: (key: string, valor: string) => void
-  onDescuento: (key: string, valor: string) => void
-  onDescuentoModo: (key: string, modo: DescuentoModo) => void
+  onEditarLinea: (key: string) => void
   onQuitarLinea: (key: string) => void
   onDescuentoGlobal: (monto: number) => void
   onCliente: (id: string | null) => void
   onVendedor: (id: string | null) => void
   onItemLibre: () => void
   onCobrar: () => void
+}
+
+// La descripción de una línea con variante se compone en PosClient como
+// "{nombre} ({variante})" (ver agregarProducto en PosClient.tsx). Se separa
+// aquí solo para mostrar nombre y variante en líneas distintas — no cambia
+// el dato persistido (`descripcion`), solo cómo se presenta en la fila. Los
+// ítems libres nunca tienen `variante_id`, así que nunca entran a este split.
+function partesDescripcion(l: LineaVenta): { nombre: string; variante: string | null } {
+  if (!l.variante_id) return { nombre: l.descripcion, variante: null }
+  const m = l.descripcion.match(/^(.*) \(([^)]+)\)$/)
+  return m ? { nombre: m[1], variante: m[2] } : { nombre: l.descripcion, variante: null }
 }
 
 export default function CarritoPanel({
@@ -51,9 +64,7 @@ export default function CarritoPanel({
   totales,
   onCantidad,
   onCantidadInput,
-  onPrecio,
-  onDescuento,
-  onDescuentoModo,
+  onEditarLinea,
   onQuitarLinea,
   onDescuentoGlobal,
   onCliente,
@@ -91,14 +102,19 @@ export default function CarritoPanel({
         ) : (
           lineas.map(l => {
             const tope = topeStock(l, productosPorId)
-            const brutoBase = l.cantidad * l.precio_unitario
-            const pctValue = brutoBase > 0 ? round2((l.descuento / brutoBase) * 100) : 0
-            const subtotal = round2(brutoBase - l.descuento)
+            const subtotal = brutoLinea(l) - l.descuento
+            const { nombre, variante } = partesDescripcion(l)
             return (
               <div key={l.key} className={styles.lineaRow}>
-                <div className={styles.lineaDesc}>{l.descripcion}</div>
+                <div className={styles.lineaDesc}>
+                  <div className={styles.lineaNombre}>{nombre}</div>
+                  {variante && <div className={styles.lineaVariante}>{variante}</div>}
+                  {l.descuento > 0 && (
+                    <div className={styles.lineaDescuentoTag}>−{formatPrice(l.descuento)}</div>
+                  )}
+                </div>
                 <div className={styles.lineaQty}>
-                  <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, -1)}>
+                  <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, -1)} aria-label="Restar cantidad">
                     −
                   </button>
                   <input
@@ -109,40 +125,19 @@ export default function CarritoPanel({
                     max={tope ?? undefined}
                     onChange={e => onCantidadInput(l.key, e.target.value)}
                   />
-                  <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, 1)}>
+                  <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, 1)} aria-label="Sumar cantidad">
                     +
                   </button>
                 </div>
-                <input
-                  type="number"
-                  className={styles.lineaPrecio}
-                  min={0}
-                  step="0.01"
-                  value={l.precio_unitario}
-                  onChange={e => onPrecio(l.key, e.target.value)}
-                />
-                <div className={styles.lineaDescuentoGroup}>
-                  <input
-                    type="number"
-                    className={styles.lineaDescuento}
-                    min={0}
-                    step="0.01"
-                    value={l.descuentoModo === 'monto' ? l.descuento : pctValue}
-                    onChange={e => onDescuento(l.key, e.target.value)}
-                  />
-                  <select
-                    className={styles.descuentoModoSelect}
-                    value={l.descuentoModo}
-                    onChange={e => onDescuentoModo(l.key, e.target.value as DescuentoModo)}
-                  >
-                    <option value="monto">L.</option>
-                    <option value="porcentaje">%</option>
-                  </select>
-                </div>
                 <div className={styles.lineaSubtotal}>{formatPrice(subtotal)}</div>
-                <button type="button" className={styles.btnQuitar} onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
-                  ×
-                </button>
+                <div className={styles.lineaAcciones}>
+                  <button type="button" className={styles.btnEditarLinea} onClick={() => onEditarLinea(l.key)} aria-label="Editar línea">
+                    ✎
+                  </button>
+                  <button type="button" className={styles.btnQuitar} onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
+                    ×
+                  </button>
+                </div>
               </div>
             )
           })

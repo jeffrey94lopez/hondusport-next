@@ -374,82 +374,76 @@
   gap: 0.5rem;
 }
 
+/* Task 7: fila de 4 columnas (descripción / cantidad / subtotal / acciones)
+   — precio, descuento y modo de descuento ya no se editan en la fila, se
+   movieron a LineaEditorModal (botón Editar). */
 .lineaRow {
   display: grid;
-  grid-template-columns: 1fr auto auto auto auto auto;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
   border-bottom: 1px solid var(--border-light);
   font-size: 0.8rem;
 }
 
-.lineaDesc { color: var(--text); font-weight: 600; min-width: 0; word-break: break-word; }
+.lineaDesc { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.lineaNombre { color: var(--text); font-weight: 600; word-break: break-word; }
+.lineaVariante { color: var(--text-muted); font-size: 0.72rem; }
+.lineaDescuentoTag { color: var(--danger); font-size: 0.7rem; font-weight: 700; }
 
 .lineaQty {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.3rem;
 }
 .qtyBtn {
-  width: 22px;
-  height: 22px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--border-light);
   background: var(--bg-hover);
   color: var(--text);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   line-height: 1;
 }
 .qtyBtn:hover { border-color: var(--accent); }
 .qtyInput {
-  width: 42px;
+  width: 48px;
   text-align: center;
   border: 1px solid var(--border-input);
   border-radius: var(--radius-input);
-  padding: 0.2rem;
+  padding: 0.3rem;
   background: var(--bg-input);
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 
-.lineaPrecio {
-  width: 72px;
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-input);
-  padding: 0.2rem 0.35rem;
-  background: var(--bg-input);
-  color: var(--text);
-  font-size: 0.8rem;
-}
+.lineaSubtotal { font-weight: 700; font-size: 0.95rem; color: var(--text); white-space: nowrap; }
 
-.lineaDescuentoGroup {
+.lineaAcciones {
   display: flex;
-  gap: 0.2rem;
-}
-.lineaDescuento {
-  width: 60px;
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-input);
-  padding: 0.2rem 0.35rem;
-  background: var(--bg-input);
-  color: var(--text);
-  font-size: 0.8rem;
-}
-.descuentoModoSelect {
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-input);
-  background: var(--bg-input);
-  color: var(--text);
-  font-size: 0.75rem;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.lineaSubtotal { font-weight: 700; color: var(--text); white-space: nowrap; }
+.btnEditarLinea {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.btnEditarLinea:hover { color: var(--accent); }
 
 .btnQuitar {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: none;
   background: var(--bg-hover);
@@ -459,6 +453,22 @@
   line-height: 1;
 }
 .btnQuitar:hover { background: var(--error-bg); }
+
+/* LineaEditorModal: campos a ancho completo (heredado de .formLabel, que es
+   un flex column sin align-items — los hijos se estiran solos). El grupo de
+   descuento necesita su propia fila porque combina input + selector L./%. */
+.editorDescuentoRow {
+  display: flex;
+  gap: 0.5rem;
+}
+.editorDescuentoInput { flex: 1; min-width: 0; }
+.editorModoSelect { width: 90px; flex-shrink: 0; }
+
+.editorSubtotal {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
 
 .btnItemLibre {
   align-self: flex-start;
