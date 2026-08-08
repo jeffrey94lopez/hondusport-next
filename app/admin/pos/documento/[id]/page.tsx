@@ -1,19 +1,14 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap } from '@/lib/store/adapters'
-import type { Documento, DocumentoItem, DocumentoPago, Caja, CaiAutorizacion, MetodoPagoTipo } from '@/types'
+import type { Documento, DocumentoItem, DocumentoPago, Caja, CaiAutorizacion, MetodoPagoTipo, DocumentoPagoConMetodo } from '@/types'
 import DocumentoView from './DocumentoView'
 
 // Embed real de documento_pagos → metodos_pago: FK simple (to-one), PostgREST
 // devuelve un OBJETO por fila (mismo caso documentado en app/admin/pos/page.tsx
 // y en cerrarSesion, app/admin/pos/actions.ts).
-interface DocumentoPagoConMetodo extends DocumentoPago {
+interface DocumentoPagoEmbed extends DocumentoPago {
   metodos_pago: { nombre: string; tipo: MetodoPagoTipo } | null
-}
-
-export interface PagoConMetodo extends DocumentoPago {
-  metodo_nombre: string
-  metodo_tipo: MetodoPagoTipo
 }
 
 interface Props {
@@ -54,7 +49,7 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
   // CAI/rango/fecha límite (documento fiscalmente inválido).
   if (documento.tipo === 'factura' && !cai) notFound()
 
-  const pagosConMetodo: PagoConMetodo[] = ((pagos ?? []) as unknown as DocumentoPagoConMetodo[]).map(
+  const pagosConMetodo: DocumentoPagoConMetodo[] = ((pagos ?? []) as unknown as DocumentoPagoEmbed[]).map(
     ({ metodos_pago, ...p }) => ({
       ...p,
       metodo_nombre: metodos_pago?.nombre ?? 'Otro',

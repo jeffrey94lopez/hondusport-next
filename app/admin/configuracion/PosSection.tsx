@@ -17,6 +17,7 @@ interface Props {
   vendedores: Vendedor[]
   metodos: MetodoPago[]
   limiteConsumidorFinal: string
+  documentoModal: string
 }
 
 const TIPO_LABEL: Record<MetodoPagoTipo, string> = {
@@ -40,13 +41,62 @@ function EstadoCell({ activo, onToggle, disabled }: { activo: boolean; onToggle:
   )
 }
 
-export default function PosSection({ cajas, vendedores, metodos, limiteConsumidorFinal }: Props) {
+export default function PosSection({ cajas, vendedores, metodos, limiteConsumidorFinal, documentoModal }: Props) {
   return (
     <div className={styles.wrap}>
       <LimiteConsumidorFinal inicial={limiteConsumidorFinal} />
+      <DocumentoModalToggle inicial={documentoModal !== 'false'} />
       <CajasBlock cajas={cajas} />
       <VendedoresBlock vendedores={vendedores} />
       <MetodosBlock metodos={metodos} />
+    </div>
+  )
+}
+
+// Task 11: interruptor de `pos_documento_modal`. Mismo criterio de "ausente
+// = activo" que usa PosClient al leerlo (config.pos_documento_modal !==
+// 'false') — la clave puede no existir aún en `configuracion` si la
+// migración de la Task 4 no se ha aplicado.
+function DocumentoModalToggle({ inicial }: { inicial: boolean }) {
+  const [activo, setActivo] = useState(inicial)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  function handleChange(valor: boolean) {
+    setActivo(valor)
+    setError('')
+    startTransition(async () => {
+      const result = await saveConfig({ pos_documento_modal: valor ? 'true' : 'false' })
+      if (result.error) {
+        setError(result.error)
+        setActivo(!valor)
+        return
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    })
+  }
+
+  return (
+    <div className={styles.block}>
+      <div className={styles.head}>
+        <div>
+          <h2 className={styles.title}>Documento tras cobrar</h2>
+          <p className={styles.subtitle}>
+            Al emitir una venta, muestra la factura o comprobante en una ventana sobre el punto de
+            venta en vez de navegar a una página aparte.
+          </p>
+        </div>
+      </div>
+      <Toggle
+        checked={activo}
+        onChange={handleChange}
+        disabled={isPending}
+        label="Abrir el documento en modal tras cobrar"
+      />
+      {saved && <p className={styles.helpText}>Guardado.</p>}
+      {error && <p className={styles.formError}>{error}</p>}
     </div>
   )
 }

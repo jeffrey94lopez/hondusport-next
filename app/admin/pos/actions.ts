@@ -7,7 +7,21 @@ import type { LineaConColumna } from '@/lib/pos/desglose'
 import { numeroALetras } from '@/lib/pos/letras'
 import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos } from '@/lib/pos/emision'
 import { validarRtn } from '@/lib/pos/fiscal'
-import type { LineaPos, PagoPos, TotalesDocumento, MetodoPagoTipo, Cliente, ClienteForm } from '@/types'
+import type {
+  LineaPos,
+  PagoPos,
+  TotalesDocumento,
+  MetodoPagoTipo,
+  Cliente,
+  ClienteForm,
+  Documento,
+  DocumentoItem,
+  DocumentoPago,
+  Caja,
+  CaiAutorizacion,
+  ConfigMap,
+  DocumentoPagoConMetodo,
+} from '@/types'
 
 export type PosResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
 
@@ -567,4 +581,75 @@ export async function crearClienteDesdePos(form: ClienteForm): Promise<PosResult
 
   revalidatePath('/admin/pos')
   return { ok: true, data: { cliente: data as Cliente } }
+}
+
+// Embed real de documento_pagos → metodos_pago: FK simple (to-one), PostgREST
+// devuelve un OBJETO por fila, no un arreglo (mismo caso documentado en
+// documento/[id]/page.tsx y en cerrarSesion más arriba en este archivo).
+interface DocumentoPagoEmbed extends DocumentoPago {
+  metodos_pago: { nombre: string; tipo: MetodoPagoTipo } | null
+}
+
+// Mismas queries que documento/[id]/page.tsx, extraídas para que
+// DocumentoModal (Task 11: documento en modal tras cobrar) pueda cargar el
+// documento recién emitido sin navegar. A propósito NO comparte estado de
+// servidor con la página: cada uno hace su propio fetch e independiente
+// mapeo de pagos, así que un cambio en uno no puede romper al otro en
+// silencio.
+export async function obtenerDocumento(documentoId: string): Promise<PosResult<{
+  documento: Documento
+  items: DocumentoItem[]
+  pagos: DocumentoPagoConMetodo[]
+  cai: CaiAutorizacion | null
+  caja: Caja
+  config: ConfigMap
+}>> {
+  const supabase = await createClient()
+
+  const [
+    { data: documento },
+    { data: items },
+    { data: pagos },
+    { data: config },
+  ] = await Promise.all([
+    supabase.from('documentos').select('*').eq('id', documentoId).maybeSingle(),
+    supabase.from('documento_items').select('*').eq('documento_id', documentoId),
+    supabase.from('documento_pagos').select('*, metodos_pago(nombre, tipo)').eq('documento_id', documentoId),
+    supabase.from('configuracion').select('key, value'),
+  ])
+
+  if (!documento) return { ok: false, error: 'El documento ya no existe.' }
+
+  const [{ data: caja }, { data: cai }] = await Promise.all([
+    supabase.from('cajas').select('*').eq('id', documento.caja_id).maybeSingle(),
+    documento.cai_id
+      ? supabase.from('cai_autorizaciones').select('*').eq('id', documento.cai_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
+  if (!caja) return { ok: false, error: ERROR_GENERICO }
+  // Misma garantía que en la página: una factura nunca se emite sin CAI
+  // vigente (RPC emitir_documento la exige) — si falta aquí es un problema
+  // de datos, no un caso normal.
+  if (documento.tipo === 'factura' && !cai) return { ok: false, error: ERROR_GENERICO }
+
+  const pagosConMetodo: DocumentoPagoConMetodo[] = ((pagos ?? []) as unknown as DocumentoPagoEmbed[]).map(
+    ({ metodos_pago, ...p }) => ({
+      ...p,
+      metodo_nombre: metodos_pago?.nombre ?? 'Otro',
+      metodo_tipo: metodos_pago?.tipo ?? 'otro',
+    }),
+  )
+
+  return {
+    ok: true,
+    data: {
+      documento: documento as Documento,
+      items: (items ?? []) as DocumentoItem[],
+      pagos: pagosConMetodo,
+      cai: (cai ?? null) as CaiAutorizacion | null,
+      caja: caja as Caja,
+      config: toConfigMap(config ?? []),
+    },
+  }
 }

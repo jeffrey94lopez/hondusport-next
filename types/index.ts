@@ -400,6 +400,17 @@ export interface DocumentoPago {
   created_at: string
 }
 
+// Pago de documento con el nombre/tipo de método ya resuelto (join a
+// metodos_pago). Lo consume DocumentoHoja (papel imprimible, Task 11); dos
+// fuentes lo producen de forma independiente con el mismo mapeo — cada una
+// hace su propio fetch (documento/[id]/page.tsx y la server action
+// obtenerDocumento para el modal) — a propósito, ver nota de esa tarea sobre
+// no compartir estado de servidor entre la página y el modal.
+export interface DocumentoPagoConMetodo extends DocumentoPago {
+  metodo_nombre: string
+  metodo_tipo: MetodoPagoTipo
+}
+
 // Ventas en espera (para pausar y reanudar transacciones)
 export interface VentaEspera {
   id: string

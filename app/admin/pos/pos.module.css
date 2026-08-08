@@ -34,6 +34,19 @@
   overflow: hidden;
 }
 
+/* Task 11: cuando el documento se abre en modal tras cobrar, DocumentoModal
+   se renderiza como hermano de este contenedor (no dentro) para no heredar
+   su `overflow: hidden; height: 100%`, que en impresión truncaría el papel
+   igual que el `fixed` de `.overlay` de arriba. Esta clase solo existe para
+   ocultar el POS de fondo al imprimir — en pantalla no cambia nada. */
+.ventaWrap {}
+
+@media print {
+  .ventaWrap {
+    display: none;
+  }
+}
+
 .header {
   display: flex;
   align-items: center;

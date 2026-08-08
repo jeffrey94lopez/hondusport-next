@@ -19,6 +19,7 @@ import CobroModal from './components/CobroModal'
 import EsperaModal from './components/EsperaModal'
 import CierreModal from './components/CierreModal'
 import HistorialModal from './components/HistorialModal'
+import DocumentoModal from './components/DocumentoModal'
 import type {
   Caja,
   SesionCaja,
@@ -214,6 +215,10 @@ export default function PosClient({
   const [cobroAbierto, setCobroAbierto] = useState(false)
   // Task 7: key de la línea que edita LineaEditorModal (null = cerrado).
   const [lineaEditando, setLineaEditando] = useState<string | null>(null)
+  // Task 11: id del documento recién emitido cuando `pos_documento_modal` está
+  // activo (null = modal cerrado). El carrito NO se limpia al abrir el modal
+  // (ver handleEmitido) — solo al confirmar "Nueva venta" desde el modal.
+  const [documentoModalId, setDocumentoModalId] = useState<string | null>(null)
 
   // Task 10: lista de clientes propia del componente, seedeada con la que
   // llega del server component. Un cliente creado desde el POS (ClienteNuevoModal)
@@ -371,16 +376,36 @@ export default function PosClient({
     setClienteNuevoAbierto(false)
   }
 
-  // Emisión exitosa (llamada por CobroModal): limpia el carrito completo y
-  // navega al documento recién creado. La página del documento es Task 13
-  // (aún no existe); el 404 temporal es esperado.
+  // Emisión exitosa (llamada por CobroModal). Task 11: si el interruptor
+  // `pos_documento_modal` está activo (ausente = activo, ver brief), el
+  // documento se abre en un modal SOBRE el POS sin navegar — el carrito se
+  // deja intacto hasta que el usuario confirme "Nueva venta" en el modal
+  // (handleNuevaVentaDesdeModal). Si está apagado, se conserva el
+  // comportamiento anterior: limpiar y navegar de una vez a la página del
+  // documento.
   function handleEmitido(documentoId: string) {
+    setCobroAbierto(false)
+    if (config.pos_documento_modal !== 'false') {
+      setDocumentoModalId(documentoId)
+      return
+    }
     setLineas([])
     setDescuentoGlobal(0)
     setClienteId(null)
     setVendedorId(null)
-    setCobroAbierto(false)
     router.push(`/admin/pos/documento/${documentoId}?volver=pos`)
+  }
+
+  function handleNuevaVentaDesdeModal() {
+    setLineas([])
+    setDescuentoGlobal(0)
+    setClienteId(null)
+    setVendedorId(null)
+    setDocumentoModalId(null)
+  }
+
+  function handleCerrarDocumentoModal() {
+    setDocumentoModalId(null)
   }
 
   // ---- Espera (Task 12) ----
@@ -667,7 +692,17 @@ export default function PosClient({
   const estadoCaiActivo = caiActivo ? estadoCai(caiActivo, new Date()) : null
 
   return (
-    <div className={styles.ventaRoot}>
+    <>
+      {/* Task 11: `.ventaWrap` se oculta en impresión (`display: none`) para
+          que solo el papel del DocumentoModal se imprima. DocumentoModal se
+          renderiza FUERA de este contenedor (no dentro), a propósito:
+          `.ventaRoot` es `overflow: hidden; height: 100%` y en impresión un
+          descendiente `position: static` (el modal neutralizado, ver
+          documento.module.css) quedaría igual de truncado que el `fixed`
+          original — la misma trampa que ya mordió a `.overlay` en P2.
+          Sacándolo de este árbol, cuelga directo de `.overlay`
+          (pos.module.css), que ya se neutraliza en print. */}
+      <div className={`${styles.ventaRoot} ${styles.ventaWrap}`}>
       <header className={styles.header}>
         <Link href="/admin" className={styles.headerBack}>← Admin</Link>
         <span className={styles.headerCaja}>{caja.nombre}</span>
@@ -808,6 +843,16 @@ export default function PosClient({
       {historialAbierto && (
         <HistorialModal sesiones={sesionesCerradasCaja} onClose={() => setHistorialAbierto(false)} />
       )}
-    </div>
+      </div>
+
+      {documentoModalId && (
+        <DocumentoModal
+          documentoId={documentoModalId}
+          formatoDefault={caja.formato_impresion}
+          onNuevaVenta={handleNuevaVentaDesdeModal}
+          onCerrar={handleCerrarDocumentoModal}
+        />
+      )}
+    </>
   )
 }
