@@ -396,15 +396,28 @@ export default function PosClient({
     router.push(`/admin/pos/documento/${documentoId}?volver=pos`)
   }
 
-  function handleNuevaVentaDesdeModal() {
+  // Fix round 1 (revisión Task 11): al momento de abrir el modal, la venta ya
+  // quedó EMITIDA (emitirVenta ya corrió la RPC y descontó stock/correlativo).
+  // Las líneas que siguen en el carrito son solo el eco visual de esa venta
+  // ya cobrada — dejarlas vivas y permitir volver a tocar "Cobrar" emitiría
+  // un SEGUNDO documento fiscal (otro correlativo, doble descuento de stock).
+  // Por eso "Cerrar" limpia el carrito exactamente igual que "Nueva venta":
+  // la única diferencia entre ambos botones es de intención/copy, no de
+  // efecto sobre el carrito.
+  function limpiarCarritoCobrado() {
     setLineas([])
     setDescuentoGlobal(0)
     setClienteId(null)
     setVendedorId(null)
+  }
+
+  function handleNuevaVentaDesdeModal() {
+    limpiarCarritoCobrado()
     setDocumentoModalId(null)
   }
 
   function handleCerrarDocumentoModal() {
+    limpiarCarritoCobrado()
     setDocumentoModalId(null)
   }
 
