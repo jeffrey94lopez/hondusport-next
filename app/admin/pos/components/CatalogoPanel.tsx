@@ -1,12 +1,13 @@
 'use client'
-import { useMemo, useRef, useState } from 'react'
-import type { KeyboardEvent } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import Modal from '@/components/admin/Modal'
 import { precioLineaPos } from '@/lib/pos/emision'
 import { toStoreVariantes, stockEfectivo, estaAgotado } from '@/lib/store/variantes'
 import { formatPrice } from '@/lib/store/format'
 import { filtrarInventario } from '@/lib/store/inventoryFilters'
 import { variantesActivasDe, preciosCatalogo } from '../pos-helpers'
+import { toggleFavoritoPos } from '../actions'
 import type { Categoria, Producto, ProductoVariante } from '@/types'
 import styles from '../pos.module.css'
 
@@ -22,6 +23,10 @@ export interface CatalogoPanelProps {
   categorias: Categoria[]
   tipoCliente: 'final' | 'revendedor'
   onAgregar: (producto: Producto, variante: ProductoVariante | null) => void
+  // Task 6: la sección "Anclados" agrega/quita `favorito_pos` con su propia
+  // server action; el POS ya tiene un banner de avisos compartido en
+  // `PosClient` (`avisoRetomar`) — se reutiliza ese, no se inventa otro.
+  onError: (mensaje: string) => void
 }
 
 // Predicado de búsqueda por texto (nombre / SKU del producto / SKU de
@@ -50,12 +55,38 @@ function buscarPorSkuExacto(
   return null
 }
 
-export default function CatalogoPanel({ productos, categorias, tipoCliente, onAgregar }: CatalogoPanelProps) {
+export default function CatalogoPanel({ productos, categorias, tipoCliente, onAgregar, onError }: CatalogoPanelProps) {
   const [busqueda, setBusqueda] = useState('')
   const [varianteModal, setVarianteModal] = useState<Producto | null>(null)
   const [catId, setCatId] = useState<string | null>(null)
   const [subcatId, setSubcatId] = useState<string | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+  const [, startFavoritoTransition] = useTransition()
+
+  // `favorito_pos` llega en la prop `productos` (releída del servidor solo
+  // tras un `router.refresh()`, que esta pantalla no dispara al alternar un
+  // ancla). Para que la estrella y la sección "Anclados" respondan al
+  // instante, se guarda un override local por producto que gana sobre el
+  // valor de la prop hasta que llega uno nuevo; si la action falla, se
+  // revierte el override y se avisa por el banner del POS.
+  const [favoritoOverrides, setFavoritoOverrides] = useState<Record<string, boolean>>({})
+
+  function esFavorito(producto: Producto): boolean {
+    return favoritoOverrides[producto.id] ?? producto.favorito_pos
+  }
+
+  function alternarFavorito(producto: Producto, e: MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation()
+    const nuevoValor = !esFavorito(producto)
+    setFavoritoOverrides(prev => ({ ...prev, [producto.id]: nuevoValor }))
+    startFavoritoTransition(async () => {
+      const result = await toggleFavoritoPos(producto.id, nuevoValor)
+      if (!result.ok) {
+        setFavoritoOverrides(prev => ({ ...prev, [producto.id]: !nuevoValor }))
+        onError(result.error)
+      }
+    })
+  }
 
   const cats = useMemo(() => categorias.filter(c => c.tipo === 'cat'), [categorias])
   const subcats = useMemo(
@@ -110,6 +141,60 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
     return base.filter(p => coincideBusqueda(p, busqueda))
   }, [productos, catId, subcatId, busqueda])
 
+  // Anclados: respetan el buscador pero IGNORAN los chips de categoría (por
+  // eso parten de `productos`, no de `productosFiltrados`/`filtrarInventario`).
+  // La sección es visible mientras exista al menos un producto anclado, aun
+  // si el buscador no deja ninguno tras filtrar.
+  const anclados = useMemo(
+    () => productos.filter(p => favoritoOverrides[p.id] ?? p.favorito_pos),
+    [productos, favoritoOverrides],
+  )
+  const ancladosFiltrados = useMemo(() => anclados.filter(p => coincideBusqueda(p, busqueda)), [anclados, busqueda])
+
+  function renderCard(p: Producto) {
+    const variantes = toStoreVariantes(p.precio, p.producto_variantes ?? [])
+    const stock = stockEfectivo(p.stock, variantes)
+    const agotado = estaAgotado(p.stock, variantes)
+    const precios = preciosCatalogo(p, tipoCliente)
+    const min = Math.min(...precios)
+    const varia = min !== Math.max(...precios)
+    const imagen = p.imagenes?.[0]
+    const favorito = esFavorito(p)
+
+    return (
+      <button
+        key={p.id}
+        type="button"
+        className={styles.prodCard}
+        disabled={agotado}
+        onClick={() => handleProductoClick(p)}
+      >
+        <button
+          type="button"
+          className={favorito ? `${styles.estrella} ${styles.estrellaActiva}` : styles.estrella}
+          aria-label={favorito ? 'Quitar de anclados' : 'Anclar al POS'}
+          onClick={e => alternarFavorito(p, e)}
+        >
+          {favorito ? '★' : '☆'}
+        </button>
+        <div className={styles.prodImgWrap}>
+          {imagen ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imagen} alt={p.nombre} className={styles.prodImg} />
+          ) : (
+            <div className={styles.prodImgPlaceholder} />
+          )}
+          {agotado && <span className={styles.prodBadgeAgotado}>AGOTADO</span>}
+        </div>
+        <div className={styles.prodNombre}>{p.nombre}</div>
+        <div className={styles.prodPrecio}>{varia ? `Desde ${formatPrice(min)}` : formatPrice(min)}</div>
+        {!agotado && stock != null && (
+          <div className={styles.prodStock}>Stock: {stock}</div>
+        )}
+      </button>
+    )
+  }
+
   return (
     <section className={styles.catalogo}>
       <input
@@ -122,6 +207,13 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
         onKeyDown={handleSearchKeyDown}
         autoFocus
       />
+
+      {anclados.length > 0 && (
+        <div className={styles.anclados}>
+          <div className={styles.ancladosTitulo}>Anclados</div>
+          <div className={styles.catalogoGrid}>{ancladosFiltrados.map(p => renderCard(p))}</div>
+        </div>
+      )}
 
       {cats.length > 0 && (
         <div className={styles.chipsRow}>
@@ -168,42 +260,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
           {productos.length === 0 ? 'No hay productos disponibles para mostrador.' : 'Sin resultados.'}
         </div>
       ) : (
-        <div className={styles.catalogoGrid}>
-          {productosFiltrados.map(p => {
-            const variantes = toStoreVariantes(p.precio, p.producto_variantes ?? [])
-            const stock = stockEfectivo(p.stock, variantes)
-            const agotado = estaAgotado(p.stock, variantes)
-            const precios = preciosCatalogo(p, tipoCliente)
-            const min = Math.min(...precios)
-            const varia = min !== Math.max(...precios)
-            const imagen = p.imagenes?.[0]
-
-            return (
-              <button
-                key={p.id}
-                type="button"
-                className={styles.prodCard}
-                disabled={agotado}
-                onClick={() => handleProductoClick(p)}
-              >
-                <div className={styles.prodImgWrap}>
-                  {imagen ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={imagen} alt={p.nombre} className={styles.prodImg} />
-                  ) : (
-                    <div className={styles.prodImgPlaceholder} />
-                  )}
-                  {agotado && <span className={styles.prodBadgeAgotado}>AGOTADO</span>}
-                </div>
-                <div className={styles.prodNombre}>{p.nombre}</div>
-                <div className={styles.prodPrecio}>{varia ? `Desde ${formatPrice(min)}` : formatPrice(min)}</div>
-                {!agotado && stock != null && (
-                  <div className={styles.prodStock}>Stock: {stock}</div>
-                )}
-              </button>
-            )
-          })}
-        </div>
+        <div className={styles.catalogoGrid}>{productosFiltrados.map(p => renderCard(p))}</div>
       )}
 
       {varianteModal && (

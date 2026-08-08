@@ -706,6 +706,7 @@ export default function PosClient({
           categorias={categorias}
           tipoCliente={tipoCliente}
           onAgregar={agregarProducto}
+          onError={setAvisoRetomar}
         />
 
         <CarritoPanel

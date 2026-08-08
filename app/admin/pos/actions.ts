@@ -503,3 +503,15 @@ export async function eliminarEspera(id: string): Promise<PosResult> {
   revalidatePath('/admin/pos')
   return { ok: true }
 }
+
+export async function toggleFavoritoPos(productoId: string, favorito: boolean): Promise<PosResult> {
+  const supabase = await createClient()
+  const { error } = await supabase.from('productos')
+    .update({ favorito_pos: favorito }).eq('id', productoId)
+  if (error) {
+    console.error('toggleFavoritoPos:', error)
+    return { ok: false, error: 'No se pudo cambiar el anclaje del producto.' }
+  }
+  revalidatePath('/admin/pos')
+  return { ok: true }
+}
