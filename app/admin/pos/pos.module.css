@@ -387,25 +387,43 @@
   gap: 0.5rem;
 }
 
-/* Task 7: fila de 4 columnas (descripción / cantidad / subtotal / acciones)
-   — precio, descuento y modo de descuento ya no se editan en la fila, se
-   movieron a LineaEditorModal (botón Editar). */
+/* Task 7 (revisión POS defecto 1): la columna de la carta era 1fr auto auto
+   auto — con nombres largos, el 1fr se comprimía casi a 0 (los 3 `auto`
+   suman ~330px: botones de cantidad btnMerlinIcon de 40px + input 48px,
+   subtotal y 2 botones de acción) y `word-break: break-word` envolvía
+   letra por letra, disparando la altura de la fila. Se pasa a
+   `grid-template-areas` con la descripción en su PROPIA fila a ancho
+   completo — nunca compite por espacio con los controles numéricos — y
+   cantidad/subtotal/acciones bajan a una segunda fila. El nombre completo
+   se conserva legible con un clamp de 2 líneas + ellipsis. */
 .lineaRow {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    "desc desc desc"
+    "qty subtotal acciones";
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.4rem 0.6rem;
   padding: 0.6rem 0;
   border-bottom: 1px solid var(--border-light);
   font-size: 0.8rem;
 }
 
-.lineaDesc { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
-.lineaNombre { color: var(--text); font-weight: 600; word-break: break-word; }
+.lineaDesc { grid-area: desc; display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.lineaNombre {
+  color: var(--text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .lineaVariante { color: var(--text-muted); font-size: 0.72rem; }
 .lineaDescuentoTag { color: var(--danger); font-size: 0.7rem; font-weight: 700; }
 
 .lineaQty {
+  grid-area: qty;
   display: flex;
   align-items: center;
   gap: 0.3rem;
@@ -421,9 +439,18 @@
   font-size: 1rem;
 }
 
-.lineaSubtotal { font-weight: 700; font-size: 0.95rem; color: var(--text); white-space: nowrap; }
+.lineaSubtotal {
+  grid-area: subtotal;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+  white-space: nowrap;
+  text-align: right;
+  padding-right: 0.5rem;
+}
 
 .lineaAcciones {
+  grid-area: acciones;
   display: flex;
   align-items: center;
   gap: 0.35rem;
