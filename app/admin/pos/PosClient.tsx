@@ -8,6 +8,7 @@ import Modal from '@/components/admin/Modal'
 import { precioLineaPos, validarPagos, cambioPago, validarEmision, esperadoCaja } from '@/lib/pos/emision'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { estadoCai } from '@/lib/pos/fiscal'
+import { brutoLinea, clampDescuentoLinea, brutoTotalLineas, clampDescuentoGlobal, type LineaVenta, type DescuentoModo } from '@/lib/pos/carrito'
 import { toStoreVariantes, stockEfectivo, estaAgotado } from '@/lib/store/variantes'
 import { formatPrice } from '@/lib/store/format'
 import type {
@@ -61,21 +62,6 @@ export interface CarritoPos {
   descuentoGlobal: number
   clienteId: string | null
   vendedorId: string | null
-}
-
-type DescuentoModo = 'monto' | 'porcentaje'
-
-// Línea de venta de la UI: extiende LineaPos con campos que NUNCA viajan al
-// server. `precioManual` marca que el precio de esta línea fue editado a
-// mano (o es un ítem libre): al cambiar de cliente (final/revendedor) esas
-// líneas NO se recalculan, solo las de inventario sin override. `key` es el
-// id estable de React (no existe en LineaPos). `descuentoModo` solo decide
-// cómo se muestra/edita el descuento (monto L. o %); el valor persistido
-// (`descuento`) siempre es un monto en Lempiras, igual que en LineaPos.
-interface LineaVenta extends LineaPos {
-  key: string
-  precioManual: boolean
-  descuentoModo: DescuentoModo
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100
@@ -155,30 +141,6 @@ function preciosCatalogo(producto: Producto, tipoCliente: 'final' | 'revendedor'
   const activas = variantesActivasDe(producto)
   if (activas.length === 0) return [precioLineaPos(tipoCliente, producto, null)]
   return activas.map(v => precioLineaPos(tipoCliente, producto, v))
-}
-
-function brutoLinea(l: LineaVenta): number {
-  return l.cantidad * l.precio_unitario
-}
-
-// Nunca deja que el descuento de una línea supere su propio bruto (cantidad
-// × precio_unitario) — evita que emitirVenta (que NO relee precio/descuento,
-// el override es intencional) reciba un total negativo en un documento
-// fiscal cuando cantidad o precio bajan después de haber puesto un descuento.
-function clampDescuentoLinea(l: LineaVenta): LineaVenta {
-  const bruto = brutoLinea(l)
-  return { ...l, descuento: Math.min(Math.max(l.descuento, 0), bruto) }
-}
-
-// Bruto disponible para el descuento global: suma de cada línea ya neta de
-// su propio descuento (mismo criterio que usa `prorratearDescuentoGlobal`
-// para repartirlo). El descuento global nunca puede superar esto.
-function brutoTotalLineas(ls: LineaVenta[]): number {
-  return round2(ls.reduce((s, l) => s + (brutoLinea(l) - l.descuento), 0))
-}
-
-function clampDescuentoGlobal(next: LineaVenta[], descuentoGlobal: number): number {
-  return Math.min(Math.max(descuentoGlobal, 0), brutoTotalLineas(next))
 }
 
 // Tope de cantidad para una línea de inventario: null = ilimitado (mismo
