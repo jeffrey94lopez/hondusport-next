@@ -94,10 +94,6 @@ export default function CobroModal({
     setPagos(prev => prev.map(p => (p.metodo_id === metodoId ? { ...p, referencia: valor } : p)))
   }
 
-  function montoLps(p: PagoPos): number {
-    return p.tipo === 'efectivo_usd' ? round2((p.monto_usd ?? 0) * tasaCambioUsd) : p.monto
-  }
-
   // Normaliza la referencia (recorte a null) recién al momento de calcular
   // totales/validar/emitir — el estado de edición conserva el string crudo.
   const pagosParaEnvio: PagoPos[] = pagos.map(p => ({ ...p, referencia: (p.referencia ?? '').trim() || null }))
@@ -300,7 +296,7 @@ export default function CobroModal({
                                   disabled={isPending}
                                 />
                               </label>
-                              <span className={styles.pagoUsdConversion}>≈ {formatPrice(montoLps(p))}</span>
+                              <span className={styles.pagoUsdConversion}>≈ {formatPrice(p.monto)}</span>
                             </div>
                           </>
                         ) : (
