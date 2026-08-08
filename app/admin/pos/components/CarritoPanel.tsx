@@ -137,7 +137,7 @@ export default function CarritoPanel({
                     <button type="button" className={styles.btnEditarLinea} onClick={() => onEditarLinea(l.key)} aria-label="Editar línea">
                       ✎
                     </button>
-                    <button type="button" className="btnMerlinIcon" onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
+                    <button type="button" className="btnMerlinIcon btnMerlinIconDanger" onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
                       ×
                     </button>
                   </div>

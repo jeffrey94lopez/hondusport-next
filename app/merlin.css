@@ -97,6 +97,14 @@
 .btnMerlinIcon[aria-pressed="true"] { color: var(--cta); }
 .btnMerlinIcon:disabled { opacity: .5; cursor: not-allowed; }
 
+/* Fix round 1 (revisión de Task 12): modificador para acciones destructivas
+   (quitar línea) — hereda tamaño/fondo/radio de btnMerlinIcon y solo cambia
+   el color a --error, el token real de peligro de este archivo (la capa
+   semántica de globals.css lo expone como --danger, valor idéntico). Uso:
+   className="btnMerlinIcon btnMerlinIconDanger". */
+.btnMerlinIconDanger { color: var(--error); border-color: var(--error); }
+.btnMerlinIconDanger:hover:not(:disabled) { background: var(--error-bg); }
+
 /* Pastilla con estado: chips de categoría, métodos de pago, tipo de
    documento, formato de impresión. El estado activo se marca con
    aria-pressed="true" para que el estilo siga al estado accesible. */

@@ -168,7 +168,19 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
     // /admin/pos), además de controles interactivos anidados (accesibilidad).
     // Ahora es un <div role="button"> con su propio manejo de teclado; la
     // estrella queda como botón HERMANO dentro de la tarjeta.
+    //
+    // Fix round 1 (revisión de este mismo fix): el keydown de la estrella
+    // burbujea hasta este div (React solo tiene delegación, no captura por
+    // target real), así que sin el guard de abajo, Tab hasta la estrella +
+    // Enter/Espacio activaba TAMBIÉN el onKeyDown de la tarjeta — abría la
+    // ficha del producto y de paso el preventDefault() de aquí suprimía la
+    // activación nativa del <button> de la estrella (el favorito nunca se
+    // alternaba por teclado). Se ignora cualquier evento que no se haya
+    // originado en la propia tarjeta (e.target !== e.currentTarget): la
+    // estrella maneja su propia activación de teclado de forma nativa, al
+    // ser un <button>.
     function handleCardKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+      if (e.target !== e.currentTarget) return
       if (agotado) return
       if (e.key !== 'Enter' && e.key !== ' ') return
       e.preventDefault()
