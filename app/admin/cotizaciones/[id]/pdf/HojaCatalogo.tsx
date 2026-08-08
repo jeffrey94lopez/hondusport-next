@@ -86,15 +86,12 @@ export default function HojaCatalogo({ cotizacion, totales, empresa, config, ven
             </div>
           </div>
 
-          {condiciones && (
-            <div className={styles.notas}>
-              {condiciones}
-              <div className={styles.validez}>
-                {vencida ? 'Cotización vencida el ' : 'Válida hasta el '}
-                {fechaLarga(cotizacion.valido_hasta)}
-              </div>
-            </div>
-          )}
+          {condiciones && <div className={styles.notas}>{condiciones}</div>}
+
+          <div className={`${styles.validez} ${vencida ? styles.validezVencida : ''}`}>
+            {vencida ? 'Cotización vencida el ' : 'Válida hasta el '}
+            {fechaLarga(cotizacion.valido_hasta)}
+          </div>
         </div>
       </div>
     </>
