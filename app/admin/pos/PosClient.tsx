@@ -12,6 +12,7 @@ import { toStoreVariantes, stockEfectivo } from '@/lib/store/variantes'
 import { variantesActivasDe, topeStock } from './pos-helpers'
 import CatalogoPanel from './components/CatalogoPanel'
 import CarritoPanel from './components/CarritoPanel'
+import ClienteNuevoModal from './components/ClienteNuevoModal'
 import ItemLibreModal from './components/ItemLibreModal'
 import LineaEditorModal from './components/LineaEditorModal'
 import CobroModal from './components/CobroModal'
@@ -214,6 +215,13 @@ export default function PosClient({
   // Task 7: key de la línea que edita LineaEditorModal (null = cerrado).
   const [lineaEditando, setLineaEditando] = useState<string | null>(null)
 
+  // Task 10: lista de clientes propia del componente, seedeada con la que
+  // llega del server component. Un cliente creado desde el POS (ClienteNuevoModal)
+  // se agrega aquí para aparecer de inmediato en el selector, sin esperar a
+  // que `clientes` (prop del server component) se refresque.
+  const [clientesLocal, setClientesLocal] = useState<Cliente[]>(clientes)
+  const [clienteNuevoAbierto, setClienteNuevoAbierto] = useState(false)
+
   const nextKeyRef = useRef(0)
 
   // ---- Espera / cierre de caja (Task 12) ----
@@ -228,7 +236,7 @@ export default function PosClient({
   const limiteConsumidorFinal = parseLimiteConsumidorFinal(config)
 
   const productosPorId = useMemo(() => new Map(productos.map(p => [p.id, p])), [productos])
-  const clienteActual = clienteId ? (clientes.find(c => c.id === clienteId) ?? null) : null
+  const clienteActual = clienteId ? (clientesLocal.find(c => c.id === clienteId) ?? null) : null
   const tipoCliente: 'final' | 'revendedor' = clienteActual?.tipo_cliente ?? 'final'
   const exonerado = clienteActual?.exonerado ?? false
 
@@ -329,13 +337,15 @@ export default function PosClient({
     setLibreModal(false)
   }
 
-  function seleccionarCliente(id: string | null) {
-    const cliente = id ? (clientes.find(c => c.id === id) ?? null) : null
+  // Recalcula precios de línea para el cliente dado (p.ej. tarifa de
+  // revendedor) sin tocar líneas con precioManual, y reclampa el descuento
+  // global — el nuevo precio puede ser menor al anterior. Se separa de
+  // `seleccionarCliente` para que `handleClienteCreado` pueda aplicar el
+  // cliente recién insertado sin depender de que `clientesLocal` ya lo
+  // contenga en este mismo render (el setState de la lista es asíncrono).
+  function aplicarCliente(cliente: Cliente | null) {
     setClienteId(cliente?.id ?? null)
     const tipo = cliente?.tipo_cliente ?? 'final'
-    // El nuevo precio (p.ej. revendedor) puede ser menor al anterior: se
-    // reclampa el descuento de cada línea recalculada, igual que en
-    // cambiarPrecio, para no dejar un descuento mayor que el nuevo bruto.
     const next = lineas.map(l => {
       if (!l.producto_id || l.precioManual) return l
       const producto = productosPorId.get(l.producto_id)
@@ -345,6 +355,20 @@ export default function PosClient({
     })
     setLineas(next)
     setDescuentoGlobal(dg => clampDescuentoGlobal(next, dg))
+  }
+
+  function seleccionarCliente(id: string | null) {
+    const cliente = id ? (clientesLocal.find(c => c.id === id) ?? null) : null
+    aplicarCliente(cliente)
+  }
+
+  // Task 10: alta de cliente desde el POS — se agrega a la lista local y
+  // queda seleccionado de inmediato (dispara el mismo recálculo de precios
+  // que seleccionarCliente).
+  function handleClienteCreado(cliente: Cliente) {
+    setClientesLocal(prev => [...prev, cliente])
+    aplicarCliente(cliente)
+    setClienteNuevoAbierto(false)
   }
 
   // Emisión exitosa (llamada por CobroModal): limpia el carrito completo y
@@ -698,7 +722,7 @@ export default function PosClient({
         <CarritoPanel
           lineas={lineas}
           descuentoGlobal={descuentoGlobal}
-          clientes={clientes}
+          clientes={clientesLocal}
           vendedores={vendedores}
           clienteId={clienteId}
           vendedorId={vendedorId}
@@ -710,11 +734,19 @@ export default function PosClient({
           onQuitarLinea={quitarLinea}
           onDescuentoGlobal={setDescuentoGlobal}
           onCliente={seleccionarCliente}
+          onNuevoCliente={() => setClienteNuevoAbierto(true)}
           onVendedor={setVendedorId}
           onItemLibre={() => setLibreModal(true)}
           onCobrar={() => setCobroAbierto(true)}
         />
       </div>
+
+      {clienteNuevoAbierto && (
+        <ClienteNuevoModal
+          onCreado={handleClienteCreado}
+          onCerrar={() => setClienteNuevoAbierto(false)}
+        />
+      )}
 
       {libreModal && <ItemLibreModal onClose={() => setLibreModal(false)} onSave={agregarItemLibre} />}
 

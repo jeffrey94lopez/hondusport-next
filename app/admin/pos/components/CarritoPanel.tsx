@@ -37,6 +37,7 @@ export interface CarritoPanelProps {
   onQuitarLinea: (key: string) => void
   onDescuentoGlobal: (monto: number) => void
   onCliente: (id: string | null) => void
+  onNuevoCliente: () => void
   onVendedor: (id: string | null) => void
   onItemLibre: () => void
   onCobrar: () => void
@@ -68,6 +69,7 @@ export default function CarritoPanel({
   onQuitarLinea,
   onDescuentoGlobal,
   onCliente,
+  onNuevoCliente,
   onVendedor,
   onItemLibre,
   onCobrar,
@@ -189,7 +191,12 @@ export default function CarritoPanel({
         </div>
 
         <div className={styles.clienteBlock}>
-          <label className={styles.formLabel}>Cliente</label>
+          <div className={styles.clienteBlockHeader}>
+            <label className={styles.formLabel}>Cliente</label>
+            <button type="button" className={styles.btnNuevoCliente} onClick={onNuevoCliente}>
+              + Nuevo
+            </button>
+          </div>
           <div className={styles.clienteCombo}>
             <input
               type="text"

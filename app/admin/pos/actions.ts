@@ -6,7 +6,8 @@ import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/l
 import type { LineaConColumna } from '@/lib/pos/desglose'
 import { numeroALetras } from '@/lib/pos/letras'
 import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos } from '@/lib/pos/emision'
-import type { LineaPos, PagoPos, TotalesDocumento, MetodoPagoTipo } from '@/types'
+import { validarRtn } from '@/lib/pos/fiscal'
+import type { LineaPos, PagoPos, TotalesDocumento, MetodoPagoTipo, Cliente, ClienteForm } from '@/types'
 
 export type PosResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
 
@@ -514,4 +515,56 @@ export async function toggleFavoritoPos(productoId: string, favorito: boolean): 
   }
   revalidatePath('/admin/pos')
   return { ok: true }
+}
+
+// Igual que toPayload en app/admin/clientes/actions.ts: los campos de
+// exonerado NUNCA se persisten si el checkbox viene desmarcado (bug de P1).
+function clienteFormPayload(form: ClienteForm) {
+  return {
+    nombre: form.nombre.trim(),
+    rtn: form.rtn.trim() || null,
+    identidad: form.identidad.trim() || null,
+    tipo_cliente: form.tipo_cliente,
+    exonerado: form.exonerado,
+    constancia_exonerado: form.exonerado ? form.constancia_exonerado.trim() || null : null,
+    registro_sag: form.exonerado ? form.registro_sag.trim() || null : null,
+    direccion: form.direccion.trim() || null,
+    telefono: form.telefono.trim() || null,
+    correo: form.correo.trim() || null,
+    notas: form.notas.trim() || null,
+  }
+}
+
+// createCliente (app/admin/clientes/actions.ts) devuelve solo ActionResult
+// (ok/error), sin el registro insertado. El POS necesita el `id` del cliente
+// recién creado para seleccionarlo de inmediato en la venta, así que esta
+// action inserta con `.select().single()` y lo devuelve — misma validación
+// (nombre requerido, validarRtn) y mismo manejo de RTN duplicado (23505 sobre
+// clientes_rtn_unico) que el módulo de clientes.
+export async function crearClienteDesdePos(form: ClienteForm): Promise<PosResult<{ cliente: Cliente }>> {
+  if (!form.nombre.trim()) return { ok: false, error: 'El nombre es requerido.' }
+  const rtn = form.rtn.trim()
+  if (rtn) {
+    const rtnError = validarRtn(rtn)
+    if (rtnError) return { ok: false, error: rtnError }
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('clientes')
+    .insert(clienteFormPayload(form))
+    .select()
+    .single()
+
+  if (error || !data) {
+    if (error?.code === '23505' && error.message.includes('clientes_rtn_unico')) {
+      const { data: existente } = await supabase.from('clientes').select('nombre').eq('rtn', rtn).maybeSingle()
+      return { ok: false, error: `El RTN ya pertenece a "${existente?.nombre ?? 'otro cliente'}"` }
+    }
+    if (error) console.error('crearClienteDesdePos insert error:', error)
+    return { ok: false, error: ERROR_GENERICO }
+  }
+
+  revalidatePath('/admin/pos')
+  return { ok: true, data: { cliente: data as Cliente } }
 }
