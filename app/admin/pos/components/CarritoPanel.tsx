@@ -96,148 +96,152 @@ export default function CarritoPanel({
 
   return (
     <section className={styles.carritoCol}>
-      <div className={styles.lineasList}>
-        {lineas.length === 0 ? (
-          <div className={styles.empty}>Agrega productos desde el catálogo.</div>
-        ) : (
-          lineas.map(l => {
-            const tope = topeStock(l, productosPorId)
-            const subtotal = brutoLinea(l) - l.descuento
-            const { nombre, variante } = partesDescripcion(l)
-            return (
-              <div key={l.key} className={styles.lineaRow}>
-                <div className={styles.lineaDesc}>
-                  <div className={styles.lineaNombre}>{nombre}</div>
-                  {variante && <div className={styles.lineaVariante}>{variante}</div>}
-                  {l.descuento > 0 && (
-                    <div className={styles.lineaDescuentoTag}>−{formatPrice(l.descuento)}</div>
-                  )}
+      <div className={styles.lineasScroll}>
+        <div className={styles.lineasList}>
+          {lineas.length === 0 ? (
+            <div className={styles.empty}>Agrega productos desde el catálogo.</div>
+          ) : (
+            lineas.map(l => {
+              const tope = topeStock(l, productosPorId)
+              const subtotal = brutoLinea(l) - l.descuento
+              const { nombre, variante } = partesDescripcion(l)
+              return (
+                <div key={l.key} className={styles.lineaRow}>
+                  <div className={styles.lineaDesc}>
+                    <div className={styles.lineaNombre}>{nombre}</div>
+                    {variante && <div className={styles.lineaVariante}>{variante}</div>}
+                    {l.descuento > 0 && (
+                      <div className={styles.lineaDescuentoTag}>−{formatPrice(l.descuento)}</div>
+                    )}
+                  </div>
+                  <div className={styles.lineaQty}>
+                    <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, -1)} aria-label="Restar cantidad">
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      className={styles.qtyInput}
+                      value={l.cantidad}
+                      min={1}
+                      max={tope ?? undefined}
+                      onChange={e => onCantidadInput(l.key, e.target.value)}
+                    />
+                    <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, 1)} aria-label="Sumar cantidad">
+                      +
+                    </button>
+                  </div>
+                  <div className={styles.lineaSubtotal}>{formatPrice(subtotal)}</div>
+                  <div className={styles.lineaAcciones}>
+                    <button type="button" className={styles.btnEditarLinea} onClick={() => onEditarLinea(l.key)} aria-label="Editar línea">
+                      ✎
+                    </button>
+                    <button type="button" className={styles.btnQuitar} onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
+                      ×
+                    </button>
+                  </div>
                 </div>
-                <div className={styles.lineaQty}>
-                  <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, -1)} aria-label="Restar cantidad">
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    className={styles.qtyInput}
-                    value={l.cantidad}
-                    min={1}
-                    max={tope ?? undefined}
-                    onChange={e => onCantidadInput(l.key, e.target.value)}
-                  />
-                  <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, 1)} aria-label="Sumar cantidad">
-                    +
-                  </button>
-                </div>
-                <div className={styles.lineaSubtotal}>{formatPrice(subtotal)}</div>
-                <div className={styles.lineaAcciones}>
-                  <button type="button" className={styles.btnEditarLinea} onClick={() => onEditarLinea(l.key)} aria-label="Editar línea">
-                    ✎
-                  </button>
-                  <button type="button" className={styles.btnQuitar} onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
-                    ×
-                  </button>
-                </div>
-              </div>
-            )
-          })
-        )}
-      </div>
-
-      <button type="button" className={styles.btnItemLibre} onClick={onItemLibre}>
-        + Ítem libre
-      </button>
-
-      <div className={styles.descuentoGlobalRow}>
-        <label>Descuento global (L.)</label>
-        <input
-          type="number"
-          min={0}
-          max={brutoTotalActual}
-          step="0.01"
-          value={descuentoGlobal}
-          onChange={e => onDescuentoGlobal(Math.min(Math.max(0, Number(e.target.value) || 0), brutoTotalActual))}
-        />
-      </div>
-
-      <div className={styles.totalesPanel}>
-        {totales.total_exento > 0 && (
-          <div className={styles.totalesRow}><span>Exento</span><span>{formatPrice(totales.total_exento)}</span></div>
-        )}
-        {totales.total_exonerado > 0 && (
-          <div className={styles.totalesRow}><span>Exonerado</span><span>{formatPrice(totales.total_exonerado)}</span></div>
-        )}
-        {totales.total_gravado15 > 0 && (
-          <div className={styles.totalesRow}><span>Gravado 15%</span><span>{formatPrice(totales.total_gravado15)}</span></div>
-        )}
-        {totales.total_gravado18 > 0 && (
-          <div className={styles.totalesRow}><span>Gravado 18%</span><span>{formatPrice(totales.total_gravado18)}</span></div>
-        )}
-        {totales.isv15 > 0 && (
-          <div className={styles.totalesRow}><span>ISV 15%</span><span>{formatPrice(totales.isv15)}</span></div>
-        )}
-        {totales.isv18 > 0 && (
-          <div className={styles.totalesRow}><span>ISV 18%</span><span>{formatPrice(totales.isv18)}</span></div>
-        )}
-        {totales.descuento_total > 0 && (
-          <div className={styles.totalesRow}><span>Descuento</span><span>-{formatPrice(totales.descuento_total)}</span></div>
-        )}
-        <div className={styles.totalesRowTotal}><span>Total</span><span>{formatPrice(totales.total)}</span></div>
-      </div>
-
-      <div className={styles.clienteBlock}>
-        <label className={styles.formLabel}>Cliente</label>
-        <div className={styles.clienteCombo}>
-          <input
-            type="text"
-            className={styles.clienteInput}
-            value={clienteOpen ? clienteQuery : (clienteActual?.nombre ?? 'CONSUMIDOR FINAL')}
-            onFocus={() => {
-              setClienteOpen(true)
-              setClienteQuery('')
-            }}
-            onChange={e => setClienteQuery(e.target.value)}
-            onBlur={() => setTimeout(() => setClienteOpen(false), 120)}
-            placeholder="Buscar por nombre o RTN…"
-          />
-          {clienteOpen && (
-            <div className={styles.clienteDropdown} onMouseDown={e => e.preventDefault()}>
-              <button type="button" className={styles.clienteOption} onClick={() => seleccionarCliente(null)}>
-                CONSUMIDOR FINAL
-              </button>
-              {clientesFiltrados.map(c => (
-                <button key={c.id} type="button" className={styles.clienteOption} onClick={() => seleccionarCliente(c)}>
-                  {c.nombre} {c.rtn ? `· ${c.rtn}` : ''}
-                </button>
-              ))}
-            </div>
+              )
+            })
           )}
         </div>
-        {exonerado && <span className={styles.badgeExonerado}>Exonerado</span>}
+
+        <button type="button" className={styles.btnItemLibre} onClick={onItemLibre}>
+          + Ítem libre
+        </button>
       </div>
 
-      <div className={styles.vendedorBlock}>
-        <label className={styles.formLabel}>Vendedor</label>
-        <select
-          className={styles.vendedorSelect}
-          value={vendedorId ?? ''}
-          onChange={e => onVendedor(e.target.value || null)}
+      <div className={styles.pieCarrito}>
+        <div className={styles.descuentoGlobalRow}>
+          <label>Descuento global (L.)</label>
+          <input
+            type="number"
+            min={0}
+            max={brutoTotalActual}
+            step="0.01"
+            value={descuentoGlobal}
+            onChange={e => onDescuentoGlobal(Math.min(Math.max(0, Number(e.target.value) || 0), brutoTotalActual))}
+          />
+        </div>
+
+        <div className={styles.totalesPanel}>
+          {totales.total_exento > 0 && (
+            <div className={styles.totalesRow}><span>Exento</span><span>{formatPrice(totales.total_exento)}</span></div>
+          )}
+          {totales.total_exonerado > 0 && (
+            <div className={styles.totalesRow}><span>Exonerado</span><span>{formatPrice(totales.total_exonerado)}</span></div>
+          )}
+          {totales.total_gravado15 > 0 && (
+            <div className={styles.totalesRow}><span>Gravado 15%</span><span>{formatPrice(totales.total_gravado15)}</span></div>
+          )}
+          {totales.total_gravado18 > 0 && (
+            <div className={styles.totalesRow}><span>Gravado 18%</span><span>{formatPrice(totales.total_gravado18)}</span></div>
+          )}
+          {totales.isv15 > 0 && (
+            <div className={styles.totalesRow}><span>ISV 15%</span><span>{formatPrice(totales.isv15)}</span></div>
+          )}
+          {totales.isv18 > 0 && (
+            <div className={styles.totalesRow}><span>ISV 18%</span><span>{formatPrice(totales.isv18)}</span></div>
+          )}
+          {totales.descuento_total > 0 && (
+            <div className={styles.totalesRow}><span>Descuento</span><span>-{formatPrice(totales.descuento_total)}</span></div>
+          )}
+          <div className={styles.totalesRowTotal}><span>Total</span><span>{formatPrice(totales.total)}</span></div>
+        </div>
+
+        <div className={styles.clienteBlock}>
+          <label className={styles.formLabel}>Cliente</label>
+          <div className={styles.clienteCombo}>
+            <input
+              type="text"
+              className={styles.clienteInput}
+              value={clienteOpen ? clienteQuery : (clienteActual?.nombre ?? 'CONSUMIDOR FINAL')}
+              onFocus={() => {
+                setClienteOpen(true)
+                setClienteQuery('')
+              }}
+              onChange={e => setClienteQuery(e.target.value)}
+              onBlur={() => setTimeout(() => setClienteOpen(false), 120)}
+              placeholder="Buscar por nombre o RTN…"
+            />
+            {clienteOpen && (
+              <div className={styles.clienteDropdown} onMouseDown={e => e.preventDefault()}>
+                <button type="button" className={styles.clienteOption} onClick={() => seleccionarCliente(null)}>
+                  CONSUMIDOR FINAL
+                </button>
+                {clientesFiltrados.map(c => (
+                  <button key={c.id} type="button" className={styles.clienteOption} onClick={() => seleccionarCliente(c)}>
+                    {c.nombre} {c.rtn ? `· ${c.rtn}` : ''}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {exonerado && <span className={styles.badgeExonerado}>Exonerado</span>}
+        </div>
+
+        <div className={styles.vendedorBlock}>
+          <label className={styles.formLabel}>Vendedor</label>
+          <select
+            className={styles.vendedorSelect}
+            value={vendedorId ?? ''}
+            onChange={e => onVendedor(e.target.value || null)}
+          >
+            <option value="">Sin vendedor</option>
+            {vendedores.map(v => (
+              <option key={v.id} value={v.id}>{v.nombre}</option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          type="button"
+          className={`btnMerlinPrimary ${styles.btnCobrar}`}
+          disabled={lineas.length === 0}
+          onClick={onCobrar}
         >
-          <option value="">Sin vendedor</option>
-          {vendedores.map(v => (
-            <option key={v.id} value={v.id}>{v.nombre}</option>
-          ))}
-        </select>
+          Cobrar {formatPrice(totales.total)}
+        </button>
       </div>
-
-      <button
-        type="button"
-        className={`btnMerlinPrimary ${styles.btnCobrar}`}
-        disabled={lineas.length === 0}
-        onClick={onCobrar}
-      >
-        Cobrar {formatPrice(totales.total)}
-      </button>
     </section>
   )
 }
