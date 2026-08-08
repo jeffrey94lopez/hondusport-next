@@ -467,15 +467,23 @@ export default function PosClient({
     setCobroAbierto(false)
     // Task 8 (POS P3): si la pestaña activa proviene de una cotización, ligar
     // el documento recién emitido a esa cotización (la mueve a `ganada`). Corre
-    // en segundo plano (startEsperaTransition, sin bloquear la UI); la acción es
-    // idempotente. Se hace ANTES de finalizarPestanaEmitida (que resetea la
-    // pestaña) y se limpia la entrada del ref para no re-ligar en otra emisión.
+    // en segundo plano (startEsperaTransition, sin bloquear la UI de venta); la
+    // acción es idempotente. Se hace ANTES de finalizarPestanaEmitida (que
+    // resetea la pestaña). El documento YA se emitió: si el ligado falla (red),
+    // NO se puede volver a facturar la cotización (emitiría un segundo documento
+    // fiscal) — por eso la entrada del ref se limpia solo si el ligado tuvo
+    // éxito, y el fallo se surfacéa por el banner con una instrucción explícita.
     if (pestanaActivaId) {
-      const cotizacionId = cotizacionPorPestanaRef.current[pestanaActivaId]
+      const pestId = pestanaActivaId
+      const cotizacionId = cotizacionPorPestanaRef.current[pestId]
       if (cotizacionId) {
-        delete cotizacionPorPestanaRef.current[pestanaActivaId]
         startEsperaTransition(async () => {
-          await marcarCotizacionFacturada(cotizacionId, documentoId)
+          const res = await marcarCotizacionFacturada(cotizacionId, documentoId)
+          if (res.ok) {
+            delete cotizacionPorPestanaRef.current[pestId]
+          } else {
+            setAvisoRetomar(prev => [prev, 'El documento se emitió, pero no se pudo ligar la cotización. NO vuelvas a facturarla (evita un documento duplicado); actualiza el tablero de cotizaciones.'].filter(Boolean).join(' '))
+          }
         })
       }
     }
@@ -633,7 +641,9 @@ export default function PosClient({
     setClienteId(nueva.clienteId)
     setVendedorId(nueva.vendedorId)
     setPestanaActivaId(nueva.id)
-    setAvisoRetomar(avisos.length > 0 ? avisos.join(' ') : '')
+    // Concatena (no reemplaza) por si el efecto de hidratación acaba de dejar un
+    // aviso (p.ej. una espera con formato corrupto) que no se debe pisar.
+    if (avisos.length > 0) setAvisoRetomar(prev => [prev, avisos.join(' ')].filter(Boolean).join(' '))
 
     if (saliente) persistirPestana(caja.id, saliente)
 
@@ -781,6 +791,10 @@ export default function PosClient({
       )
       if (!confirmado) return
     }
+
+    // Task 8 (POS P3): si la pestaña venía de una cotización sin facturar, se
+    // descarta su vínculo — evita basura acumulada en el ref por sesión.
+    delete cotizacionPorPestanaRef.current[id]
 
     if (pestana.esperaId) {
       const idEliminar = pestana.esperaId
