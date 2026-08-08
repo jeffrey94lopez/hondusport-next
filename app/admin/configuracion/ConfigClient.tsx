@@ -3,9 +3,10 @@ import { useState, useTransition } from 'react'
 import ImageUpload from '@/components/admin/ImageUpload'
 import Toggle from '@/components/admin/Toggle'
 import { validarRtn } from '@/lib/pos/fiscal'
-import type { CaiAutorizacion, Caja, ConfigMap, MetodoPago, Vendedor } from '@/types'
+import type { CaiAutorizacion, Caja, ConfigMap, CotizacionEtapa, MetodoPago, Vendedor } from '@/types'
 import { saveConfig } from './actions'
 import CaisSection from './CaisSection'
+import EtapasSection from './EtapasSection'
 import PosSection from './PosSection'
 import styles from './config.module.css'
 
@@ -15,6 +16,7 @@ interface Props {
   cajas: Caja[]
   vendedores: Vendedor[]
   metodos: MetodoPago[]
+  etapas: CotizacionEtapa[]
 }
 
 const GRUPOS = [
@@ -45,7 +47,7 @@ const DEFAULTS: ConfigMap = {
   fiscal_leyenda: 'LA FACTURA ES BENEFICIO DE TODOS, EXÍJALA',
 }
 
-export default function ConfigClient({ config: initial, cais, cajas, vendedores, metodos }: Props) {
+export default function ConfigClient({ config: initial, cais, cajas, vendedores, metodos, etapas }: Props) {
   const [grupo, setGrupo] = useState<GrupoId>('empresa')
   const [tab, setTab] = useState<SectionId>('identidad')
   const [cfg, setCfg] = useState<ConfigMap>({ ...DEFAULTS, ...initial })
@@ -372,13 +374,16 @@ export default function ConfigClient({ config: initial, cais, cajas, vendedores,
 
       {grupo === 'facturador' && <CaisSection cais={cais} />}
       {grupo === 'pos' && (
-        <PosSection
-          cajas={cajas}
-          vendedores={vendedores}
-          metodos={metodos}
-          limiteConsumidorFinal={initial.pos_limite_consumidor_final ?? '10000'}
-          documentoModal={initial.pos_documento_modal ?? 'true'}
-        />
+        <>
+          <PosSection
+            cajas={cajas}
+            vendedores={vendedores}
+            metodos={metodos}
+            limiteConsumidorFinal={initial.pos_limite_consumidor_final ?? '10000'}
+            documentoModal={initial.pos_documento_modal ?? 'true'}
+          />
+          <EtapasSection etapas={etapas} />
+        </>
       )}
     </div>
   )

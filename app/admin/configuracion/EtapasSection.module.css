@@ -1,0 +1,107 @@
+.block { display: flex; flex-direction: column; }
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.title { font-size: 1rem; font-weight: 800; color: var(--text); }
+.subtitle { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+.tableWrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+
+.table th {
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.table td {
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--bg-hover); }
+
+.mono { font-variant-numeric: tabular-nums; }
+
+.colorDot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--border-light);
+}
+
+.rowActions { display: flex; gap: 0.4rem; }
+
+/* Combinado con btnMerlinIcon (app/merlin.css): esta clase solo reduce el
+   tamaño de 40px a algo más compacto para encajar en la celda de la tabla. */
+.btnOrden { width: 1.9rem; height: 1.9rem; font-size: 0.75rem; }
+
+.btnEdit {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.btnEdit:hover { border-color: var(--accent); color: var(--accent); }
+
+.empty {
+  padding: 2.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.form { display: flex; flex-direction: column; gap: 0.9rem; }
+.formLabel { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+
+.colorRow { display: flex; gap: 0.5rem; align-items: center; }
+.colorPicker { width: 40px; height: 34px; border: 1px solid var(--border-input); border-radius: var(--radius-input); padding: 2px; background: var(--bg-input); cursor: pointer; flex-shrink: 0; }
+.colorText { flex: 1; }
+
+.formError { font-size: 0.8rem; color: var(--danger); }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+
+.btnCancel {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.btnCancel:hover { color: var(--text); }
