@@ -1,0 +1,545 @@
+/* Editor de cotización. Vive dentro del layout de /admin (con Sidebar), como
+   el tablero kanban — no es un overlay a pantalla completa como el POS. Dos
+   zonas: catálogo/buscador (izquierda) y el documento en construcción
+   (derecha). Estilos Merlin (tokens de app/merlin.css); patrones visuales
+   copiados de pos.module.css (no se importa ese módulo). */
+
+.root {
+  padding: 1.5rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.title { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+
+.badgeFacturada {
+  display: inline-block;
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--success);
+  background: var(--success-bg);
+  border-radius: var(--radius-tag);
+  padding: 0.15rem 0.55rem;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btnAccion { padding: 0.55rem 1.1rem; white-space: nowrap; }
+
+/* Dropdown de estilos del PDF */
+.pdfWrap { position: relative; }
+.pdfMenu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  min-width: 160px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pdfMenuItem {
+  text-align: left;
+  padding: 0.55rem 0.85rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.pdfMenuItem:last-child { border-bottom: none; }
+.pdfMenuItem:hover { background: var(--bg-hover); }
+
+.errorBanner {
+  background: var(--error-bg);
+  color: var(--error-deep);
+  border-radius: var(--radius-card);
+  padding: 0.65rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Dos columnas: catálogo (fluido) + documento (ancho fijo). En pantallas
+   angostas se apilan. */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(340px, 440px);
+  gap: 1.25rem;
+  align-items: start;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 960px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* ---- Catálogo ---- */
+.catalogoCol {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.searchRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.searchInput:focus { outline: none; border-color: var(--accent); }
+
+.btnItemLibre {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.catalogoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.prodCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 0.6rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+.prodCard:hover:not([aria-disabled="true"]) { border-color: var(--accent); }
+.prodCard[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
+
+.prodImgWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-input);
+  overflow: hidden;
+  background: var(--bg-hover);
+}
+.prodImg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.prodImgPlaceholder { width: 100%; height: 100%; background: var(--bg-hover); }
+
+.prodBadgeAgotado {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--danger);
+  border-radius: var(--radius-tag);
+  padding: 0.15rem 0.5rem;
+}
+
+.prodNombre {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.prodPrecio { font-size: 0.82rem; font-weight: 800; color: var(--accent); }
+.prodStock { font-size: 0.7rem; color: var(--text-muted); }
+
+/* ---- Documento ---- */
+.docCol {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.clienteBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  position: relative;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+.clienteBlockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.btnNuevoCliente {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+}
+.btnNuevoCliente:hover { text-decoration: underline; }
+
+.clienteCombo { position: relative; }
+.clienteInput {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.clienteInput:focus { outline: none; border-color: var(--accent); }
+
+.clienteDropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+.clienteOption {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.clienteOption:last-child { border-bottom: none; }
+.clienteOption:hover { background: var(--bg-hover); }
+
+.badgeExonerado {
+  align-self: flex-start;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--success);
+  background: var(--success-bg);
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+}
+
+/* Líneas */
+.lineasList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 42vh;
+  overflow-y: auto;
+}
+
+.lineaRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    "desc desc desc"
+    "qty subtotal acciones";
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.8rem;
+}
+
+.lineaDesc { grid-area: desc; display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.lineaNombre {
+  color: var(--text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.lineaDescuentoTag { color: var(--danger); font-size: 0.7rem; font-weight: 700; }
+
+.lineaQty {
+  grid-area: qty;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.qtyInput {
+  width: 48px;
+  text-align: center;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 0.3rem;
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.lineaSubtotal {
+  grid-area: subtotal;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+  white-space: nowrap;
+  text-align: right;
+  padding-right: 0.5rem;
+}
+
+.lineaAcciones {
+  grid-area: acciones;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btnEditarLinea {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.btnEditarLinea:hover { color: var(--accent); }
+
+/* Descuento global + totales */
+.descuentoGlobalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.descuentoGlobalRow input {
+  width: 100px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 0.3rem 0.5rem;
+  background: var(--bg-input);
+  color: var(--text);
+  text-align: right;
+}
+
+.totalesPanel {
+  background: var(--bg-hover);
+  border-radius: var(--radius-card);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.totalesRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+.totalesRowTotal {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+  padding-top: 0.35rem;
+  margin-top: 0.15rem;
+  border-top: 1px solid var(--border-light);
+}
+
+/* Cabecera (etapa/vendedor/validez/condiciones/notas) */
+.cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.cabeceraRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.cabecera select,
+.cabecera input,
+.cabecera textarea {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+.cabecera textarea { resize: vertical; }
+.cabecera select:focus,
+.cabecera input:focus,
+.cabecera textarea:focus { outline: none; border-color: var(--accent); }
+
+/* Formularios de modal (ítem libre / editar línea) */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.form input,
+.form select,
+.form textarea {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+.form input:focus,
+.form select:focus,
+.form textarea:focus { outline: none; border-color: var(--accent); }
+
+.editorDescuentoRow {
+  display: flex;
+  gap: 0.5rem;
+}
+.editorDescuentoInput { flex: 1; min-width: 0; }
+.editorModoSelect { width: 90px; flex-shrink: 0; }
+
+.editorSubtotal {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.formError { font-size: 0.8rem; color: var(--danger); }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+.btnCancel { padding: 0.55rem 1rem; }
+.btnSubmit { padding: 0.55rem 1.1rem; }
+
+/* Modal: selector de variantes */
+.varianteList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.varianteOption {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  text-align: left;
+}
+.varianteOption:hover:not(:disabled) { border-color: var(--accent); }
+.varianteOption:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Estado vacío */
+.empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: var(--bg-hover);
+  border-radius: var(--radius-card);
+}
+
+/* Inputs de dinero sin spinner (consistencia con el POS, P2.1) */
+.form input[type="number"]::-webkit-outer-spin-button,
+.form input[type="number"]::-webkit-inner-spin-button,
+.qtyInput::-webkit-outer-spin-button,
+.qtyInput::-webkit-inner-spin-button,
+.cabecera input[type="number"]::-webkit-outer-spin-button,
+.cabecera input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.form input[type="number"],
+.qtyInput,
+.cabecera input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
