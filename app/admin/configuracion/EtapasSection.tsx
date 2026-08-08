@@ -1,8 +1,9 @@
 'use client'
 import { useState, useTransition } from 'react'
 import Modal from '@/components/admin/Modal'
+import Toggle from '@/components/admin/Toggle'
 import type { CotizacionEtapa, CotizacionEtapaTipo, EtapaForm } from '@/types'
-import { actualizarEtapa, crearEtapa, eliminarEtapa, reordenarEtapas } from './etapasActions'
+import { actualizarEtapa, crearEtapa, eliminarEtapa, reordenarEtapas, toggleEtapaActivo } from './etapasActions'
 import styles from './EtapasSection.module.css'
 
 interface Props {
@@ -16,6 +17,17 @@ const TIPO_LABEL: Record<CotizacionEtapaTipo, string> = {
 }
 
 const EMPTY_ETAPA: EtapaForm = { nombre: '', tipo: 'abierta', color: '#c9a84c' }
+
+// Mismo patrón que EstadoCell de PosSection.tsx (badge + Toggle) para
+// mantener consistencia visual entre secciones de Configuración.
+function EstadoCell({ activo, onToggle, disabled }: { activo: boolean; onToggle: (v: boolean) => void; disabled: boolean }) {
+  return (
+    <div className={styles.estadoCell}>
+      <span className={activo ? styles.badgeActivo : styles.badgeInactivo}>{activo ? 'Activa' : 'Oculta'}</span>
+      <Toggle checked={activo} onChange={onToggle} disabled={disabled} />
+    </div>
+  )
+}
 
 export default function EtapasSection({ etapas }: Props) {
   const [modal, setModal] = useState<'create' | 'edit' | null>(null)
@@ -84,6 +96,14 @@ export default function EtapasSection({ etapas }: Props) {
     })
   }
 
+  function handleToggle(etapa: CotizacionEtapa, activo: boolean) {
+    setListError('')
+    startTransition(async () => {
+      const result = await toggleEtapaActivo(etapa.id, activo)
+      if (!result.ok) setListError(result.error)
+    })
+  }
+
   return (
     <div className={styles.block}>
       <div className={styles.head}>
@@ -104,12 +124,13 @@ export default function EtapasSection({ etapas }: Props) {
               <th>Nombre</th>
               <th>Tipo</th>
               <th>Orden</th>
+              <th>Estado</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {ordenadas.map((etapa, idx) => (
-              <tr key={etapa.id}>
+              <tr key={etapa.id} className={etapa.activo ? undefined : styles.rowInactiva}>
                 <td>
                   <span className={styles.colorDot} style={{ background: etapa.color }} />
                 </td>
@@ -136,6 +157,9 @@ export default function EtapasSection({ etapas }: Props) {
                       ↓
                     </button>
                   </div>
+                </td>
+                <td>
+                  <EstadoCell activo={etapa.activo} onToggle={v => handleToggle(etapa, v)} disabled={isPending} />
                 </td>
                 <td>
                   <div className={styles.rowActions}>

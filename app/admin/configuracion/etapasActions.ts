@@ -93,3 +93,26 @@ export async function eliminarEtapa(id: string): Promise<CotizacionResult> {
   revalidar()
   return { ok: true }
 }
+
+// Desactivar una etapa la saca del tablero (agruparPorEtapa filtra por activo):
+// si tuviera cotizaciones, esas tarjetas desaparecerían del kanban (orfanadas).
+// Por eso solo se puede DESACTIVAR una etapa vacía; muévelas primero.
+export async function toggleEtapaActivo(id: string, activo: boolean): Promise<CotizacionResult> {
+  const supabase = await createClient()
+
+  if (!activo) {
+    const { count } = await supabase
+      .from('cotizaciones')
+      .select('id', { count: 'exact', head: true })
+      .eq('etapa_id', id)
+    if ((count ?? 0) > 0) {
+      return { ok: false, error: 'La etapa tiene cotizaciones. Muévelas a otra etapa antes de ocultarla.' }
+    }
+  }
+
+  const { error } = await supabase.from('cotizacion_etapas').update({ activo }).eq('id', id)
+  if (error) return { ok: false, error: ERROR_GENERICO }
+
+  revalidar()
+  return { ok: true }
+}

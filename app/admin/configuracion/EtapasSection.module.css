@@ -44,6 +44,24 @@
 
 .mono { font-variant-numeric: tabular-nums; }
 
+/* Fila de una etapa oculta (activo = false): se atenúa pero sigue editable
+   y reactivable — no se oculta de esta tabla, solo del tablero kanban. */
+.rowInactiva { opacity: 0.55; }
+
+.estadoCell { display: flex; align-items: center; gap: 0.6rem; }
+
+.badgeActivo,
+.badgeInactivo {
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+.badgeActivo { background: var(--success-bg); color: var(--success); }
+.badgeInactivo { background: var(--bg-hover); color: var(--text-muted); }
+
 .colorDot {
   display: inline-block;
   width: 14px;
