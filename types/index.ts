@@ -419,3 +419,59 @@ export interface VentaEspera {
   payload: unknown
   created_at: string
 }
+
+// POS P3: Cotizaciones CRM
+export type CotizacionEtapaTipo = 'abierta' | 'ganada' | 'perdida'
+
+export interface CotizacionEtapa {
+  id: string
+  nombre: string
+  tipo: CotizacionEtapaTipo
+  color: string
+  orden: number
+  activo: boolean
+}
+
+export interface CotizacionItem {
+  id: string
+  cotizacion_id: string
+  producto_id: string | null
+  variante_id: string | null
+  descripcion: string
+  cantidad: number
+  precio_unitario: number
+  descuento: number
+  isv: IsvTipo
+  orden: number
+}
+
+export interface Cotizacion {
+  id: string
+  numero: string
+  etapa_id: string
+  cliente_id: string | null
+  cliente_nombre: string | null
+  cliente_rtn: string | null
+  vendedor_id: string | null
+  descuento_global: number
+  validez_dias: number
+  valido_hasta: string
+  condiciones: string | null
+  notas: string | null
+  total: number
+  documento_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+// Cotización con sus líneas y relaciones resueltas (para editor y PDF)
+export interface CotizacionConDatos extends Cotizacion {
+  items: CotizacionItem[]
+  etapa: CotizacionEtapa | null
+}
+
+export interface EtapaForm {
+  nombre: string
+  tipo: CotizacionEtapaTipo
+  color: string
+}
