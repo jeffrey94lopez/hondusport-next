@@ -84,7 +84,7 @@ function prod(overrides: Partial<Producto> = {}): Producto {
     precio: 250, precio_original: null, categoria_id: 'c1', subcategoria_id: null,
     stock: 10, genero: 'Hombre', badge: null, tallas: ['S', 'M'], colores: ['Rojo'],
     imagenes: null, marca: 'Nike', sku: 'SKU1', personalizable: false,
-    canal: 'ambas', isv: '15', costo: null, precio_revendedor: null, stock_minimo: null,
+    canal: 'ambas', isv: '15', costo: null, precio_revendedor: null, stock_minimo: null, favorito_pos: false,
     oferta_fin: null, activo: true, rating: 5, created_at: '', updated_at: '',
     ...overrides,
   }

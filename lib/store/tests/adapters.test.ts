@@ -25,6 +25,7 @@ const BASE_PRODUCTO: Producto = {
   costo: null,
   precio_revendedor: null,
   stock_minimo: null,
+  favorito_pos: false,
   oferta_fin: null,
   activo: true,
   rating: 5,

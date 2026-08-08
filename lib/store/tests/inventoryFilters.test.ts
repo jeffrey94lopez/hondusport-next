@@ -14,7 +14,7 @@ function producto(overrides: Partial<Producto> = {}): Producto {
     stock: 10, genero: null, badge: null,
     tallas: null, colores: null, imagenes: ['http://x/img.jpg'],
     marca: null, sku: 'SKU1', personalizable: false,
-    canal: 'ambas', isv: '15', costo: null, precio_revendedor: null, stock_minimo: null,
+    canal: 'ambas', isv: '15', costo: null, precio_revendedor: null, stock_minimo: null, favorito_pos: false,
     oferta_fin: null, activo: true, rating: 5,
     created_at: '', updated_at: '',
     ...overrides,

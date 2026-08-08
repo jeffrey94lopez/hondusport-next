@@ -202,7 +202,7 @@ function prod(o: Partial<Producto> = {}): Producto {
     id: 'p1', nombre: 'Viejo', slug: 'viejo', descripcion: 'd', precio: 100, precio_original: null,
     categoria_id: 'c1', subcategoria_id: null, stock: 4, genero: null, badge: null,
     tallas: ['S'], colores: ['Rojo'], imagenes: null, marca: 'M', sku: 'A10',
-    personalizable: false, canal: 'ambas', isv: '15', costo: null, precio_revendedor: null, stock_minimo: null,
+    personalizable: false, canal: 'ambas', isv: '15', costo: null, precio_revendedor: null, stock_minimo: null, favorito_pos: false,
     oferta_fin: null, activo: true, rating: 5, created_at: '', updated_at: '', ...o,
   }
 }

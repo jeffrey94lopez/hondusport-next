@@ -91,6 +91,7 @@ export interface Producto {
   costo: number | null
   precio_revendedor: number | null
   stock_minimo: number | null
+  favorito_pos: boolean
   activo: boolean
   rating: number
   created_at: string

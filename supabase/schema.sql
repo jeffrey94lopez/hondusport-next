@@ -89,6 +89,7 @@ create table if not exists productos (
   costo            numeric check (costo is null or costo >= 0),
   precio_revendedor numeric check (precio_revendedor is null or precio_revendedor > 0),
   stock_minimo     integer check (stock_minimo is null or stock_minimo >= 0),
+  favorito_pos     boolean not null default false,
   created_at       timestamptz default now(),
   updated_at       timestamptz default now()
 );
@@ -354,7 +355,8 @@ insert into configuracion (key, value) values
   ('promo_bar_activo', 'true'),
   ('promo_bar_texto', '🔥 Envío gratis desde L. 999'),
   ('modo_mantenimiento', 'false'),
-  ('pos_limite_consumidor_final', '10000')
+  ('pos_limite_consumidor_final', '10000'),
+  ('pos_documento_modal', 'true')
 on conflict (key) do nothing;
 
 -- Seed de métodos de pago (idempotente por tipo)
@@ -380,6 +382,9 @@ $$ language plpgsql;
 
 create index if not exists productos_subcategoria_id_idx
   on productos (subcategoria_id);
+
+create index if not exists productos_favorito_pos
+  on productos (favorito_pos) where favorito_pos;
 
 create index if not exists producto_variantes_producto_id_idx
   on producto_variantes (producto_id);
