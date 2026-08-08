@@ -220,11 +220,19 @@ export default function PosClient({
   // (ver handleEmitido) — solo al confirmar "Nueva venta" desde el modal.
   const [documentoModalId, setDocumentoModalId] = useState<string | null>(null)
 
-  // Task 10: lista de clientes propia del componente, seedeada con la que
-  // llega del server component. Un cliente creado desde el POS (ClienteNuevoModal)
-  // se agrega aquí para aparecer de inmediato en el selector, sin esperar a
-  // que `clientes` (prop del server component) se refresque.
-  const [clientesLocal, setClientesLocal] = useState<Cliente[]>(clientes)
+  // Task 10 (Fix final review): clientes creados desde el POS (ClienteNuevoModal)
+  // que aún no llegaron en `clientes` (prop del server component). No se
+  // espeja `clientes` en un useState — eso congelaba la lista al montar y un
+  // cliente creado/corregido desde otra pantalla no aparecía hasta recargar
+  // toda la página. `clientesLocal` combina la prop fresca (que gana siempre
+  // que ya trae el registro) con los creados localmente que todavía no están
+  // en ella, para que el recién creado no desaparezca antes de que
+  // `router.refresh()` la traiga del servidor.
+  const [clientesCreados, setClientesCreados] = useState<Cliente[]>([])
+  const clientesLocal = useMemo(() => {
+    const ids = new Set(clientes.map(c => c.id))
+    return [...clientes, ...clientesCreados.filter(c => !ids.has(c.id))]
+  }, [clientes, clientesCreados])
   const [clienteNuevoAbierto, setClienteNuevoAbierto] = useState(false)
 
   const nextKeyRef = useRef(0)
@@ -371,7 +379,7 @@ export default function PosClient({
   // queda seleccionado de inmediato (dispara el mismo recálculo de precios
   // que seleccionarCliente).
   function handleClienteCreado(cliente: Cliente) {
-    setClientesLocal(prev => [...prev, cliente])
+    setClientesCreados(prev => [...prev, cliente])
     aplicarCliente(cliente)
     setClienteNuevoAbierto(false)
   }
