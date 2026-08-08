@@ -3,10 +3,29 @@ import { useState, useTransition } from 'react'
 import Modal from '@/components/admin/Modal'
 import { emitirVenta } from '../actions'
 import { validarPagos, cambioPago, validarEmision, montosPagoAlAgregar } from '@/lib/pos/emision'
+import { sugerenciasEfectivo } from '@/lib/pos/carrito'
 import { formatPrice } from '@/lib/store/format'
-import { round2 } from '../pos-helpers'
+import { round2, parseMoneyInput, valorMostrado } from '../pos-helpers'
 import type { LineaPos, PagoPos, MetodoPago, Cliente } from '@/types'
 import styles from '../pos.module.css'
+
+// Pago de la UI: extiende PagoPos con el texto crudo de los inputs de monto
+// (dinero en texto plano, sin cero forzado — ver spec de UX de mostrador).
+// `monto`/`monto_usd` (PagoPos) siguen siendo la verdad numérica que usan
+// sumaPagos/restante/cambio/validarPagos; `montoTexto`/`montoUsdTexto` son
+// solo lo que se pinta en el input y se actualizan en el mismo gesto que el
+// número derivado (tecleo del cajero o chip de sugerencia) — no hace falta
+// distinguir "editando" aquí porque nada más reescribe estos campos por su
+// cuenta (a diferencia del % de descuento en LineaEditorModal).
+interface PagoUi extends PagoPos {
+  montoTexto: string
+  montoUsdTexto: string
+}
+
+interface ChipSugerencia {
+  label: string
+  onClick: () => void
+}
 
 interface CobroModalProps {
   total: number
@@ -41,7 +60,7 @@ export default function CobroModal({
   // que metodo_id sirve de key. `referencia` se guarda tal cual se teclea;
   // se recorta a null solo al armar `pagosParaEnvio` para no interferir con
   // el usuario mientras escribe.
-  const [pagos, setPagos] = useState<PagoPos[]>([])
+  const [pagos, setPagos] = useState<PagoUi[]>([])
   const [identNombre, setIdentNombre] = useState('')
   const [identIdentidad, setIdentIdentidad] = useState('')
   const [error, setError] = useState('')
@@ -58,35 +77,47 @@ export default function CobroModal({
       return
     }
 
-    const nuevoPago: PagoPos = {
+    const nuevoPago: PagoUi = {
       metodo_id: m.id,
       tipo: m.tipo,
       monto: 0,
       monto_usd: m.tipo === 'efectivo_usd' ? 0 : null,
       tasa: m.tipo === 'efectivo_usd' ? tasaCambioUsd : null,
       referencia: null,
+      montoTexto: '',
+      montoUsdTexto: '',
     }
     setPagos(prev => {
-      const actualizados = montosPagoAlAgregar([...prev, nuevoPago], total)
-      if (m.tipo !== 'efectivo_usd') return actualizados
+      const actualizados = montosPagoAlAgregar([...prev, nuevoPago], total) as PagoUi[]
       // El monto en L. que asignó montosPagoAlAgregar es la verdad y NO se
       // recalcula (recalcularlo desplaza el total, ver Fix round 1 en el
-      // reporte). Solo se deriva monto_usd = monto / tasa para poblar el
-      // input visible; el monto en L. queda intacto.
-      return actualizados.map(p =>
-        p.metodo_id === m.id ? { ...p, monto_usd: round2(p.monto / tasaCambioUsd) } : p,
-      )
+      // reporte). Es un valor asignado por el sistema (no un cero forzado),
+      // así que SÍ se muestra — se refleja en el texto del input nuevo.
+      return actualizados.map(p => {
+        if (p.metodo_id !== m.id) return p
+        if (m.tipo !== 'efectivo_usd') return { ...p, montoTexto: valorMostrado(p.monto) }
+        // Solo se deriva monto_usd = monto / tasa para poblar el input
+        // visible; el monto en L. queda intacto.
+        const usd = round2(p.monto / tasaCambioUsd)
+        return { ...p, monto_usd: usd, montoUsdTexto: valorMostrado(usd) }
+      })
     })
   }
 
-  function cambiarMonto(metodoId: string, valor: string) {
-    setPagos(prev => prev.map(p => (p.metodo_id === metodoId ? { ...p, monto: Number(valor) || 0 } : p)))
+  function cambiarMonto(metodoId: string, texto: string) {
+    setPagos(prev =>
+      prev.map(p => (p.metodo_id === metodoId ? { ...p, montoTexto: texto, monto: parseMoneyInput(texto) } : p)),
+    )
   }
 
-  function cambiarMontoUsd(metodoId: string, valor: string) {
-    const usd = Number(valor) || 0
+  function cambiarMontoUsd(metodoId: string, texto: string) {
+    const usd = parseMoneyInput(texto)
     setPagos(prev =>
-      prev.map(p => (p.metodo_id === metodoId ? { ...p, monto_usd: usd, monto: round2(usd * tasaCambioUsd) } : p)),
+      prev.map(p =>
+        p.metodo_id === metodoId
+          ? { ...p, montoUsdTexto: texto, monto_usd: usd, monto: round2(usd * tasaCambioUsd) }
+          : p,
+      ),
     )
   }
 
@@ -94,9 +125,73 @@ export default function CobroModal({
     setPagos(prev => prev.map(p => (p.metodo_id === metodoId ? { ...p, referencia: valor } : p)))
   }
 
+  // Monto (L.) que le falta cubrir a ESTE método si se lo tratara como recién
+  // agregado, es decir total menos lo que ya aportan los DEMÁS pagos — es la
+  // misma cuenta que hace montosPagoAlAgregar al agregar un pago. Con un solo
+  // pago, esto es siempre el total completo (no hay "demás" que restar).
+  // Base tanto del chip "Restante" como de las denominaciones de efectivo.
+  function pendienteParaFila(metodoId: string): number {
+    const otros = pagos.filter(p => p.metodo_id !== metodoId)
+    const sumaOtros = round2(otros.reduce((s, p) => s + p.monto, 0))
+    return Math.max(0, round2(total - sumaOtros))
+  }
+
+  // Chips de sugerencia de valor (Total/Restante/denominaciones de efectivo):
+  // fijan el monto de un pago de un clic, calculando siempre contra el
+  // estado actual — nunca contra un valor "congelado" al momento de pintar
+  // los chips. El monto en L. es la verdad; para efectivo_usd se deriva el
+  // equivalente en USD con la misma tasa que usa el resto del formulario.
+  function fijarPagoLps(metodoId: string, valorLps: number) {
+    setPagos(prev =>
+      prev.map(p => (p.metodo_id === metodoId ? { ...p, monto: valorLps, montoTexto: valorMostrado(valorLps) } : p)),
+    )
+  }
+
+  function fijarPagoUsd(metodoId: string, valorLps: number) {
+    const usd = round2(valorLps / tasaCambioUsd)
+    setPagos(prev =>
+      prev.map(p =>
+        p.metodo_id === metodoId
+          ? { ...p, monto: valorLps, monto_usd: usd, montoUsdTexto: valorMostrado(usd) }
+          : p,
+      ),
+    )
+  }
+
+  function chipsSugerencia(p: PagoUi): ChipSugerencia[] {
+    const pendiente = pendienteParaFila(p.metodo_id)
+    // "Restante" solo aporta algo distinto de "Total" cuando hay más de un
+    // pago (con uno solo, lo que falta cubrir ES el total completo).
+    const mostrarRestante = pagos.length > 1 || pendiente !== total
+
+    if (p.tipo === 'efectivo_usd') {
+      const chips: ChipSugerencia[] = [{ label: 'Total', onClick: () => fijarPagoUsd(p.metodo_id, total) }]
+      if (mostrarRestante) chips.push({ label: 'Restante', onClick: () => fijarPagoUsd(p.metodo_id, pendiente) })
+      return chips
+    }
+
+    const chips: ChipSugerencia[] = [{ label: 'Total', onClick: () => fijarPagoLps(p.metodo_id, total) }]
+    if (mostrarRestante) chips.push({ label: 'Restante', onClick: () => fijarPagoLps(p.metodo_id, pendiente) })
+    if (p.tipo === 'efectivo_lps') {
+      for (const denom of sugerenciasEfectivo(pendiente)) {
+        chips.push({ label: formatPrice(denom), onClick: () => fijarPagoLps(p.metodo_id, denom) })
+      }
+    }
+    return chips
+  }
+
   // Normaliza la referencia (recorte a null) recién al momento de calcular
   // totales/validar/emitir — el estado de edición conserva el string crudo.
-  const pagosParaEnvio: PagoPos[] = pagos.map(p => ({ ...p, referencia: (p.referencia ?? '').trim() || null }))
+  // Se arma explícito (sin spread de PagoUi) para no mandarle al server los
+  // campos de solo-UI (montoTexto/montoUsdTexto).
+  const pagosParaEnvio: PagoPos[] = pagos.map(p => ({
+    metodo_id: p.metodo_id,
+    tipo: p.tipo,
+    monto: p.monto,
+    monto_usd: p.monto_usd,
+    tasa: p.tasa,
+    referencia: (p.referencia ?? '').trim() || null,
+  }))
 
   const sumaPagos = round2(pagosParaEnvio.reduce((s, p) => s + p.monto, 0))
   const restante = Math.max(0, round2(total - sumaPagos))
@@ -287,11 +382,11 @@ export default function CobroModal({
                               <label className={styles.formLabel}>
                                 Monto (USD)
                                 <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
+                                  type="text"
+                                  inputMode="decimal"
+                                  placeholder="0.00"
                                   className={styles.pagoMontoInput}
-                                  value={p.monto_usd ?? 0}
+                                  value={p.montoUsdTexto}
                                   onChange={e => cambiarMontoUsd(p.metodo_id, e.target.value)}
                                   disabled={isPending}
                                 />
@@ -303,16 +398,30 @@ export default function CobroModal({
                           <label className={styles.formLabel}>
                             Monto
                             <input
-                              type="number"
-                              min="0"
-                              step="0.01"
+                              type="text"
+                              inputMode="decimal"
+                              placeholder="0.00"
                               className={styles.pagoMontoInput}
-                              value={p.monto}
+                              value={p.montoTexto}
                               onChange={e => cambiarMonto(p.metodo_id, e.target.value)}
                               disabled={isPending}
                             />
                           </label>
                         )}
+
+                        <div className={styles.pagoChipsRow}>
+                          {chipsSugerencia(p).map(chip => (
+                            <button
+                              key={chip.label}
+                              type="button"
+                              className="btnMerlinChip"
+                              onClick={chip.onClick}
+                              disabled={isPending}
+                            >
+                              {chip.label}
+                            </button>
+                          ))}
+                        </div>
 
                         {(p.tipo === 'tarjeta' || p.tipo === 'transferencia') && (
                           <label className={styles.formLabel}>

@@ -710,6 +710,19 @@
   padding-bottom: 0.55rem;
 }
 
+/* Chips de sugerencia de valor (Total/Restante/denominaciones de efectivo)
+   por pago — más compactos que .chipsRow (métodos de pago) porque conviven
+   dentro de .pagoCard, ya angosta. */
+.pagoChipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.pagoChipsRow .btnMerlinChip {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+}
+
 .cobroResumen {
   background: var(--bg-hover);
   border-radius: var(--radius-card);

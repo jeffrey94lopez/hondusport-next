@@ -53,3 +53,14 @@ export function topeCantidad(stockDisponible: number | null, cantidadActual: num
   if (stockDisponible == null) return Infinity
   return Math.max(stockDisponible, cantidadActual)
 }
+
+// Denominaciones de billete/moneda en circulación que ofrece el chip de
+// sugerencia de efectivo (L.) del modal de cobro — "el cliente paga con un
+// billete de 500 y el cambio sale solo". Se muestran las 3 primeras
+// MAYORES al monto pendiente (nunca una igual o menor, que no ahorraría el
+// vuelto ni cubriría el pago).
+const DENOMINACIONES_LPS = [20, 50, 100, 200, 500, 1000]
+
+export function sugerenciasEfectivo(pendiente: number): number[] {
+  return DENOMINACIONES_LPS.filter(d => d > pendiente).slice(0, 3)
+}

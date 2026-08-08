@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   brutoLinea, clampDescuentoLinea, brutoTotalLineas, clampDescuentoGlobal,
-  descuentoDesdePorcentaje, topeCantidad, type LineaVenta,
+  descuentoDesdePorcentaje, topeCantidad, sugerenciasEfectivo, type LineaVenta,
 } from '../carrito'
 
 const linea = (over: Partial<LineaVenta> = {}): LineaVenta => ({
@@ -57,4 +57,17 @@ describe('topeCantidad', () => {
     expect(topeCantidad(5, 2)).toBe(5))
   it('nunca baja de la cantidad ya en el carrito', () =>
     expect(topeCantidad(1, 3)).toBe(3))
+})
+
+describe('sugerenciasEfectivo', () => {
+  it('pendiente L.230 → 500 y 1000 (200 no alcanza)', () =>
+    expect(sugerenciasEfectivo(230)).toEqual([500, 1000]))
+  it('pendiente L.85 → 100, 200, 500 (las 3 primeras mayores)', () =>
+    expect(sugerenciasEfectivo(85)).toEqual([100, 200, 500]))
+  it('pendiente 0 → las 3 denominaciones más chicas', () =>
+    expect(sugerenciasEfectivo(0)).toEqual([20, 50, 100]))
+  it('pendiente mayor a la denominación más alta → sin sugerencias', () =>
+    expect(sugerenciasEfectivo(1500)).toEqual([]))
+  it('nunca sugiere una denominación igual al pendiente exacto', () =>
+    expect(sugerenciasEfectivo(500)).toEqual([1000]))
 })
