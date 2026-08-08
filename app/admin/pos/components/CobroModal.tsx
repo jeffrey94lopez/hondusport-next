@@ -69,15 +69,13 @@ export default function CobroModal({
     setPagos(prev => {
       const actualizados = montosPagoAlAgregar([...prev, nuevoPago], total)
       if (m.tipo !== 'efectivo_usd') return actualizados
-      // El monto en L. que asignó montosPagoAlAgregar es lo que hay que
-      // cobrar; se refleja también en el campo USD visible (redondeado) para
-      // que el input no quede en 0 mientras el resto de los pagos sí muestran
-      // su monto sugerido.
-      return actualizados.map(p => {
-        if (p.metodo_id !== m.id) return p
-        const usd = round2(p.monto / tasaCambioUsd)
-        return { ...p, monto_usd: usd, monto: round2(usd * tasaCambioUsd) }
-      })
+      // El monto en L. que asignó montosPagoAlAgregar es la verdad y NO se
+      // recalcula (recalcularlo desplaza el total, ver Fix round 1 en el
+      // reporte). Solo se deriva monto_usd = monto / tasa para poblar el
+      // input visible; el monto en L. queda intacto.
+      return actualizados.map(p =>
+        p.metodo_id === m.id ? { ...p, monto_usd: round2(p.monto / tasaCambioUsd) } : p,
+      )
     })
   }
 
