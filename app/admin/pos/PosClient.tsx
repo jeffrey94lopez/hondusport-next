@@ -856,6 +856,12 @@ export default function PosClient({
   function finalizarPestanaEmitida() {
     if (!pestanaActivaId) return
     const activa = pestanas.find(p => p.id === pestanaActivaId)
+    // Si el ligado a cotización (handleEmitido) falló, la entrada de esta
+    // pestaña en el ref se queda apuntando a la cotización vieja. Se limpia
+    // aquí siempre (haya o no fallado) para que, si el cajero reutiliza la
+    // misma pestaña para una venta nueva, esa venta no herede una
+    // cotizacionId ajena y termine ligando el documento equivocado.
+    delete cotizacionPorPestanaRef.current[pestanaActivaId]
     if (activa?.esperaId) {
       const idEliminar = activa.esperaId
       startEsperaTransition(async () => {

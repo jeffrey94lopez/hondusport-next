@@ -17,7 +17,7 @@ import type { DescuentoModo, LineaVenta } from '@/lib/pos/carrito'
 import { toStoreVariantes, stockEfectivo, estaAgotado } from '@/lib/store/variantes'
 import { formatPrice } from '@/lib/store/format'
 import { parseMoneyInput, preciosCatalogo, round2, topeStock, valorMostrado, variantesActivasDe } from '@/app/admin/pos/pos-helpers'
-import { guardarCotizacion } from '../actions'
+import { duplicarCotizacion, guardarCotizacion } from '../actions'
 import type { GuardarCotizacionInput } from '../actions'
 import type {
   Cliente,
@@ -103,6 +103,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
   const [dirty, setDirty] = useState(false)
   const [error, setError] = useState('')
   const [guardando, startGuardar] = useTransition()
+  const [duplicando, startDuplicar] = useTransition()
 
   // ---- Estado de UI (modales / buscador / dropdowns) ----
   const [busqueda, setBusqueda] = useState('')
@@ -133,6 +134,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
   const hayLineas = lineas.length > 0
   const puedePdf = cotizacionId !== null && !dirty && hayLineas
   const puedeFacturar = cotizacionId !== null && !dirty && documentoId === null && hayLineas
+  const puedeDuplicar = cotizacionId !== null && !dirty && !duplicando
 
   function marcarSucio() {
     setDirty(true)
@@ -327,6 +329,21 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
     router.push('/admin/pos?cotizacion=' + cotizacionId)
   }
 
+  // Ofrece una copia editable de la cotización (sin documento_id), útil sobre
+  // todo cuando ya fue facturada y "Facturar" está deshabilitado.
+  function duplicar() {
+    if (!cotizacionId) return
+    setError('')
+    startDuplicar(async () => {
+      const r = await duplicarCotizacion(cotizacionId)
+      if (!r.ok || !r.data) {
+        setError(r.ok ? ERROR_GENERICO : r.error)
+        return
+      }
+      router.push('/admin/cotizaciones/' + r.data.id)
+    })
+  }
+
   // ---- Buscador de catálogo ----
   const productosFiltrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
@@ -418,6 +435,16 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
           >
             Facturar
           </button>
+          {cotizacion !== null && (
+            <button
+              type="button"
+              className={`btnMerlinSecondary ${styles.btnAccion}`}
+              disabled={!puedeDuplicar}
+              onClick={duplicar}
+            >
+              {duplicando ? 'Duplicando…' : 'Duplicar'}
+            </button>
+          )}
           <button
             type="button"
             className={`btnMerlinPrimary ${styles.btnAccion}`}

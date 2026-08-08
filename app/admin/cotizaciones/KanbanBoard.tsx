@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { agruparPorEtapa, estaVencida } from '@/lib/cotizaciones/cotizaciones'
 import { formatPrice } from '@/lib/store/format'
 import type { CotizacionEtapa, Vendedor } from '@/types'
-import { moverEtapaCotizacion, eliminarCotizacion } from './actions'
+import { duplicarCotizacion, moverEtapaCotizacion, eliminarCotizacion } from './actions'
 import type { CotizacionKanbanItem } from './page'
 import styles from './cotizaciones.module.css'
 
@@ -76,6 +76,18 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
       return
     }
     router.refresh()
+  }
+
+  // Copia editable de la cotización (sin documento_id) — útil sobre todo
+  // cuando ya fue facturada y "Facturar" está deshabilitado en el editor.
+  async function duplicar(id: string) {
+    setMenuAbierto(null)
+    const res = await duplicarCotizacion(id)
+    if (!res.ok || !res.data) {
+      alert(res.ok ? 'No se pudo duplicar.' : res.error)
+      return
+    }
+    router.push('/admin/cotizaciones/' + res.data.id)
   }
 
   function onDragStart(e: React.DragEvent, id: string) {
@@ -166,6 +178,12 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
                               </button>
                             ))}
                             <div className={styles.menuDivider} />
+                            <button
+                              className={styles.menuItem}
+                              onClick={() => duplicar(c.id)}
+                            >
+                              Duplicar
+                            </button>
                             <button
                               className={`${styles.menuItem} ${styles.menuItemDanger}`}
                               onClick={() => eliminar(c.id, c.numero)}
