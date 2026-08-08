@@ -59,8 +59,8 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
         {cartLineasPendientes > 0 && (
           <div className={styles.identBlock}>
             <div className={styles.identNota}>
-              Tienes {cartLineasPendientes} línea(s) sin cobrar en el carrito actual; se perderán al cerrar la caja
-              si no las guardas en espera antes.
+              Tienes {cartLineasPendientes} línea(s) sin cobrar en la venta actual. No se pierden al cerrar la
+              caja: seguirán disponibles en su pestaña la próxima vez que abras esta caja.
             </div>
           </div>
         )}

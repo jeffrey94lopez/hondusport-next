@@ -1,10 +1,11 @@
 'use client'
 import { useState } from 'react'
 import { brutoLinea, brutoTotalLineas } from '@/lib/pos/carrito'
-import type { LineaVenta } from '@/lib/pos/carrito'
+import type { LineaVenta, PestanaVenta } from '@/lib/pos/carrito'
 import { formatPrice } from '@/lib/store/format'
 import { topeStock, parseMoneyInput, valorMostrado } from '../pos-helpers'
 import type { Cliente, Vendedor, Producto, TotalesDocumento } from '@/types'
+import PestanasBar from './PestanasBar'
 import styles from '../pos.module.css'
 
 // Contrato ajustado sobre el mínimo del brief (task-3-brief.md):
@@ -23,6 +24,12 @@ import styles from '../pos.module.css'
 //   conservan porque el brief de Task 7 solo pide eliminar de la fila los
 //   inputs de precio/descuento/modo, no el de cantidad.
 export interface CarritoPanelProps {
+  pestanas: PestanaVenta[]
+  pestanaActivaId: string | null
+  onSeleccionarPestana: (id: string) => void
+  onNuevaPestana: () => void
+  onCerrarPestana: (id: string) => void
+  onRenombrarPestana: (id: string, nombre: string) => void
   lineas: LineaVenta[]
   descuentoGlobal: number
   clientes: Cliente[]
@@ -55,6 +62,12 @@ function partesDescripcion(l: LineaVenta): { nombre: string; variante: string | 
 }
 
 export default function CarritoPanel({
+  pestanas,
+  pestanaActivaId,
+  onSeleccionarPestana,
+  onNuevaPestana,
+  onCerrarPestana,
+  onRenombrarPestana,
   lineas,
   descuentoGlobal,
   clientes,
@@ -119,6 +132,16 @@ export default function CarritoPanel({
 
   return (
     <section className={styles.carritoCol}>
+      <PestanasBar
+        pestanas={pestanas}
+        activaId={pestanaActivaId}
+        conteoActiva={lineas.length}
+        onSeleccionar={onSeleccionarPestana}
+        onNueva={onNuevaPestana}
+        onCerrar={onCerrarPestana}
+        onRenombrar={onRenombrarPestana}
+      />
+
       <div className={styles.lineasScroll}>
         <div className={styles.lineasList}>
           {lineas.length === 0 ? (

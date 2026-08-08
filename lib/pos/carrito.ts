@@ -64,3 +64,60 @@ const DENOMINACIONES_LPS = [20, 50, 100, 200, 500, 1000]
 export function sugerenciasEfectivo(pendiente: number): number[] {
   return DENOMINACIONES_LPS.filter(d => d > pendiente).slice(0, 3)
 }
+
+// ---- Pestañas de ventas en curso ----
+// Una venta abierta en el POS, ya sea que viva solo en memoria (recién creada
+// con "+", nunca se le agregó nada) o que además tenga una fila espejo en
+// `ventas_espera` (`esperaId`). `id` es un identificador de React/UI, ajeno
+// a la BD — no confundir con `esperaId` (ver PosClient, que genera ambos con
+// contadores separados).
+export interface PestanaVenta {
+  id: string
+  esperaId: string | null
+  nombre: string
+  lineas: LineaVenta[]
+  descuentoGlobal: number
+  clienteId: string | null
+  vendedorId: string | null
+}
+
+export function pestanaVacia(p: Pick<PestanaVenta, 'lineas'>): boolean {
+  return p.lineas.length === 0
+}
+
+// Nombre por defecto de una pestaña nueva: "Venta N" con el primer N libre
+// entre los nombres ya usados (no necesariamente todos con ese patrón — una
+// pestaña renombrada a mano, p.ej. "señora del vestido azul", simplemente no
+// participa del conteo). No reutiliza huecos dejados por pestañas cerradas
+// más allá de tomar el primer entero libre, para no repetir un nombre que
+// pueda seguir siendo reconocible por el cajero como "esa otra venta".
+export function siguienteNombrePestana(nombresExistentes: string[]): string {
+  const usados = new Set(
+    nombresExistentes
+      .map(n => /^Venta (\d+)$/.exec(n.trim()))
+      .filter((m): m is RegExpExecArray => m !== null)
+      .map(m => Number(m[1])),
+  )
+  let n = 1
+  while (usados.has(n)) n++
+  return `Venta ${n}`
+}
+
+// Qué hacer con la fila de `ventas_espera` de una pestaña en el momento en
+// que deja de estar activa (se cambia de pestaña, se cierra, o se emite la
+// venta): nunca se persiste una pestaña vacía (evita filas basura), y una
+// pestaña con líneas siempre queda reflejada en BD — se crea si es la
+// primera vez, se actualiza si ya tenía fila. `esperaId` es la única señal
+// de si ya existe fila: no depende de si hubo cambios desde el último guardado
+// (actualizar sobre datos iguales es barato e idempotente).
+export type AccionPersistenciaPestana =
+  | { tipo: 'ninguna' }
+  | { tipo: 'eliminar'; esperaId: string }
+  | { tipo: 'crear' }
+  | { tipo: 'actualizar'; esperaId: string }
+
+export function accionPersistencia(p: Pick<PestanaVenta, 'esperaId' | 'lineas'>): AccionPersistenciaPestana {
+  const vacia = pestanaVacia(p)
+  if (vacia) return p.esperaId ? { tipo: 'eliminar', esperaId: p.esperaId } : { tipo: 'ninguna' }
+  return p.esperaId ? { tipo: 'actualizar', esperaId: p.esperaId } : { tipo: 'crear' }
+}

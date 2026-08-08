@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   brutoLinea, clampDescuentoLinea, brutoTotalLineas, clampDescuentoGlobal,
-  descuentoDesdePorcentaje, topeCantidad, sugerenciasEfectivo, type LineaVenta,
+  descuentoDesdePorcentaje, topeCantidad, sugerenciasEfectivo,
+  pestanaVacia, siguienteNombrePestana, accionPersistencia,
+  type LineaVenta, type PestanaVenta,
 } from '../carrito'
 
 const linea = (over: Partial<LineaVenta> = {}): LineaVenta => ({
@@ -70,4 +72,39 @@ describe('sugerenciasEfectivo', () => {
     expect(sugerenciasEfectivo(1500)).toEqual([]))
   it('nunca sugiere una denominación igual al pendiente exacto', () =>
     expect(sugerenciasEfectivo(500)).toEqual([1000]))
+})
+
+const pestana = (over: Partial<PestanaVenta> = {}): PestanaVenta => ({
+  id: 't1', esperaId: null, nombre: 'Venta 1', lineas: [], descuentoGlobal: 0,
+  clienteId: null, vendedorId: null, ...over,
+})
+
+describe('pestanaVacia', () => {
+  it('true sin líneas', () => expect(pestanaVacia(pestana())).toBe(true))
+  it('false con al menos una línea', () =>
+    expect(pestanaVacia(pestana({ lineas: [linea()] }))).toBe(false))
+})
+
+describe('siguienteNombrePestana', () => {
+  it('Venta 1 cuando no hay ninguna', () => expect(siguienteNombrePestana([])).toBe('Venta 1'))
+  it('siguiente correlativo', () =>
+    expect(siguienteNombrePestana(['Venta 1', 'Venta 2'])).toBe('Venta 3'))
+  it('rellena el primer hueco libre', () =>
+    expect(siguienteNombrePestana(['Venta 1', 'Venta 3'])).toBe('Venta 2'))
+  it('ignora nombres renombrados a mano', () =>
+    expect(siguienteNombrePestana(['señora del vestido azul', 'Venta 1'])).toBe('Venta 2'))
+  it('no se confunde con nombres parecidos pero distintos', () =>
+    expect(siguienteNombrePestana(['Venta 1 (extra)', 'Venta1'])).toBe('Venta 1'))
+})
+
+describe('accionPersistencia', () => {
+  it('pestaña vacía sin espera → ninguna', () =>
+    expect(accionPersistencia(pestana())).toEqual({ tipo: 'ninguna' }))
+  it('pestaña vacía con espera → eliminar', () =>
+    expect(accionPersistencia(pestana({ esperaId: 'e1' }))).toEqual({ tipo: 'eliminar', esperaId: 'e1' }))
+  it('pestaña con líneas sin espera → crear', () =>
+    expect(accionPersistencia(pestana({ lineas: [linea()] }))).toEqual({ tipo: 'crear' }))
+  it('pestaña con líneas y espera → actualizar', () =>
+    expect(accionPersistencia(pestana({ lineas: [linea()], esperaId: 'e1' })))
+      .toEqual({ tipo: 'actualizar', esperaId: 'e1' }))
 })

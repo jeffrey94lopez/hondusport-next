@@ -3,11 +3,14 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import type { FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { abrirSesion, guardarEspera, eliminarEspera } from './actions'
+import { abrirSesion, guardarEspera, actualizarEspera, eliminarEspera } from './actions'
 import { precioLineaPos } from '@/lib/pos/emision'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { estadoCai } from '@/lib/pos/fiscal'
-import { clampDescuentoLinea, clampDescuentoGlobal, type LineaVenta, type DescuentoModo } from '@/lib/pos/carrito'
+import {
+  clampDescuentoLinea, clampDescuentoGlobal, siguienteNombrePestana, accionPersistencia,
+  type LineaVenta, type DescuentoModo, type PestanaVenta,
+} from '@/lib/pos/carrito'
 import { toStoreVariantes, stockEfectivo } from '@/lib/store/variantes'
 import { variantesActivasDe, topeStock, parseMoneyInput } from './pos-helpers'
 import CatalogoPanel from './components/CatalogoPanel'
@@ -16,7 +19,6 @@ import ClienteNuevoModal from './components/ClienteNuevoModal'
 import ItemLibreModal from './components/ItemLibreModal'
 import LineaEditorModal from './components/LineaEditorModal'
 import CobroModal from './components/CobroModal'
-import EsperaModal from './components/EsperaModal'
 import CierreModal from './components/CierreModal'
 import HistorialModal from './components/HistorialModal'
 import DocumentoModal from './components/DocumentoModal'
@@ -138,6 +140,37 @@ function parseEsperaPayload(raw: unknown): EsperaPayload | null {
   }
 }
 
+// Revalida las líneas de una pestaña (al hidratarla desde `ventas_espera` o
+// al cargarla en el editor al cambiar de pestaña/cerrar otra) contra el
+// catálogo VIGENTE: si el producto ya no existe, está inactivo, o la
+// variante ya no está activa, la línea se quita y se agrega un aviso — mismo
+// criterio que ya aplicaba el antiguo "Retomar" de EsperaModal, generalizado
+// para que corra en cualquier punto donde una pestaña pasa a ser la que se
+// edita. Función module-level (no closure sobre estado del componente) para
+// no arrastrar problemas de dependencias inestables en los efectos que la
+// usan — recibe `productosPorId` y el generador de `key` como parámetros.
+function revalidarLineasCatalogo(
+  entrada: ReadonlyArray<LineaPos & { precioManual: boolean; descuentoModo: DescuentoModo }>,
+  nombreOrigen: string,
+  productosPorId: Map<string, Producto>,
+  nuevaKey: () => string,
+): { lineas: LineaVenta[]; avisos: string[] } {
+  const avisos: string[] = []
+  const lineas: LineaVenta[] = []
+  for (const l of entrada) {
+    if (l.producto_id) {
+      const producto = productosPorId.get(l.producto_id)
+      const varianteOk = !l.variante_id || (producto ? variantesActivasDe(producto).some(v => v.id === l.variante_id) : false)
+      if (!producto || !producto.activo || !varianteOk) {
+        avisos.push(`"${l.descripcion}" ya no está disponible y se quitó de "${nombreOrigen}".`)
+        continue
+      }
+    }
+    lineas.push({ ...l, key: nuevaKey() })
+  }
+  return { lineas, avisos }
+}
+
 // Lazy initializer de useState (patrón ya usado en CartProvider/WishlistProvider
 // para localStorage): en el servidor `window` no existe y se devuelve `null`;
 // en el cliente se lee una sola vez al montar. Evita el nuevo lint
@@ -181,6 +214,13 @@ export default function PosClient({
   const [montoInicial, setMontoInicial] = useState('')
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
+
+  // Se calculan aquí (antes que el resto de estado/efectos) porque el efecto
+  // de hidratación de pestañas más abajo los necesita disponibles en su
+  // cuerpo — son solo derivaciones de props + `cajaId`, no hooks, así que
+  // adelantarlos no cambia el orden de hooks de React.
+  const caja = cajaId ? (cajas.find(c => c.id === cajaId) ?? null) : null
+  const sesion = caja ? (sesionesAbiertas.find(s => s.caja_id === caja.id) ?? null) : null
 
   // Guard de montaje: aunque `leerCajaGuardada` usa un lazy initializer (sin
   // setState dentro de un efecto), el componente SÍ se prerenderiza en el
@@ -236,11 +276,24 @@ export default function PosClient({
   const [clienteNuevoAbierto, setClienteNuevoAbierto] = useState(false)
 
   const nextKeyRef = useRef(0)
+  const nextPestanaKeyRef = useRef(0)
 
-  // ---- Espera / cierre de caja (Task 12) ----
-  const [esperaAbierta, setEsperaAbierta] = useState(false)
-  const [esperaError, setEsperaError] = useState('')
-  const [esperaPending, startEsperaTransition] = useTransition()
+  // ---- Pestañas de ventas en curso (reemplaza el modal de espera de Task 12) ----
+  // `lineas`/`descuentoGlobal`/`clienteId`/`vendedorId` (arriba) SIGUEN siendo
+  // la única fuente de verdad de la pestaña ACTIVA mientras se edita —
+  // `pestanas` guarda el resto (inactivas) más metadatos (nombre, esperaId)
+  // de TODAS, incluida la activa, pero su entrada para la activa solo se
+  // sincroniza en los puntos de cambio (ver datosPestana/seleccionarPestana
+  // más abajo), nunca en cada tecleo. Así se evita una segunda fuente de
+  // verdad para el contenido de la venta que se está editando.
+  const [pestanas, setPestanas] = useState<PestanaVenta[]>([])
+  const [pestanaActivaId, setPestanaActivaId] = useState<string | null>(null)
+  // Caja para la que ya se hidrataron `pestanas` desde `esperas` — evita
+  // reconstruirlas en cada render y permite reinicializar solo cuando el
+  // cajero cambia de caja (ver el efecto de hidratación más abajo).
+  const [pestanasCajaId, setPestanasCajaId] = useState<string | null>(null)
+  const [, startEsperaTransition] = useTransition()
+
   const [cierreAbierto, setCierreAbierto] = useState(false)
   const [historialAbierto, setHistorialAbierto] = useState(false)
   const [avisoRetomar, setAvisoRetomar] = useState('')
@@ -256,6 +309,11 @@ export default function PosClient({
   function nuevaKey(): string {
     nextKeyRef.current += 1
     return `l${nextKeyRef.current}`
+  }
+
+  function nuevaPestanaId(): string {
+    nextPestanaKeyRef.current += 1
+    return `t${nextPestanaKeyRef.current}`
   }
 
   function agregarProducto(producto: Producto, variante: ProductoVariante | null) {
@@ -393,14 +451,12 @@ export default function PosClient({
   // documento.
   function handleEmitido(documentoId: string) {
     setCobroAbierto(false)
+    finalizarPestanaEmitida()
     if (config.pos_documento_modal !== 'false') {
       setDocumentoModalId(documentoId)
       return
     }
-    setLineas([])
-    setDescuentoGlobal(0)
-    setClienteId(null)
-    setVendedorId(null)
+    limpiarCarritoCobrado()
     router.push(`/admin/pos/documento/${documentoId}?volver=pos`)
   }
 
@@ -429,123 +485,296 @@ export default function PosClient({
     setDocumentoModalId(null)
   }
 
-  // ---- Espera (Task 12) ----
+  // ---- Pestañas de ventas en curso ----
 
-  function handleGuardarEspera(cajaIdActual: string, nombre: string) {
-    if (!nombre.trim()) {
-      setEsperaError('El nombre es requerido.')
-      return
-    }
-    if (lineas.length === 0) {
-      setEsperaError('Agrega productos antes de guardar en espera.')
-      return
-    }
-    setEsperaError('')
-    const payload: EsperaPayload = {
-      version: 1,
-      lineas: lineas.map(toLineaEsperaGuardada),
-      descuentoGlobal,
-      clienteId,
-      vendedorId,
-    }
-    startEsperaTransition(async () => {
-      const result = await guardarEspera(cajaIdActual, nombre.trim(), payload)
-      if (!result.ok) {
-        setEsperaError(result.error)
-        return
-      }
-      setLineas([])
-      setDescuentoGlobal(0)
-      setClienteId(null)
-      setVendedorId(null)
-      setEsperaAbierta(false)
-      router.refresh()
-    })
-  }
+  // Hidrata `pestanas` desde las esperas de ESTA caja la primera vez que se
+  // conoce (y de nuevo si el cajero cambia de caja, ver `pestanasCajaId` en
+  // la declaración de estado): cada espera se abre como una pestaña, ninguna
+  // se pierde. Si la caja no tiene esperas, arranca con una pestaña vacía —
+  // siempre hay exactamente una pestaña activa, nunca cero. Orden ascendente
+  // por fecha de creación (la prop llega en orden descendente desde
+  // page.tsx) para que la pestaña más antigua quede primera, como al abrir
+  // pestañas de navegador en el orden en que se crearon.
+  useEffect(() => {
+    if (!caja || pestanasCajaId === caja.id) return
 
-  function handleDescartarEspera(id: string) {
-    setEsperaError('')
-    startEsperaTransition(async () => {
-      const result = await eliminarEspera(id)
-      if (!result.ok) {
-        setEsperaError(result.error)
-        return
-      }
-      router.refresh()
-    })
-  }
-
-  // Al retomar: revalida cada línea contra el catálogo actual (producto
-  // inexistente/inactivo, o variante que ya no está activa → se quita con
-  // aviso, tal como pide el brief); si el carrito actual tiene líneas, pide
-  // confirmación antes de reemplazarlas. La fila de espera se elimina siempre
-  // que se retome (con o sin avisos), igual que si el usuario la descartara.
-  function handleRetomarEspera(espera: VentaEspera) {
-    if (lineas.length > 0) {
-      const confirmado = window.confirm(
-        'Ya tienes productos en el carrito actual. Retomar esta venta en espera reemplazará el carrito. ¿Continuar?',
-      )
-      if (!confirmado) return
-    }
-
-    const payload = parseEsperaPayload(espera.payload)
-    if (!payload) {
-      setEsperaError('Esta venta en espera tiene un formato inválido y no se puede retomar.')
-      return
-    }
+    const esperasCaja = esperas
+      .filter(e => e.caja_id === caja.id)
+      .slice()
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))
 
     const avisos: string[] = []
-    const lineasRestauradas: LineaVenta[] = []
-    for (const l of payload.lineas) {
-      if (l.producto_id) {
-        const producto = productosPorId.get(l.producto_id)
-        if (!producto || !producto.activo) {
-          avisos.push(`"${l.descripcion}" ya no está disponible y se quitó de la venta.`)
-          continue
-        }
-        if (l.variante_id && !variantesActivasDe(producto).some(v => v.id === l.variante_id)) {
-          avisos.push(`"${l.descripcion}" ya no está disponible y se quitó de la venta.`)
-          continue
-        }
+    const construidas: PestanaVenta[] = []
+    for (const espera of esperasCaja) {
+      const payload = parseEsperaPayload(espera.payload)
+      if (!payload) {
+        avisos.push(`"${espera.nombre}" tiene un formato inválido y no se pudo abrir como pestaña.`)
+        continue
       }
-      lineasRestauradas.push({ ...l, key: nuevaKey() })
+      const { lineas: lineasValidas, avisos: avisosLinea } =
+        revalidarLineasCatalogo(payload.lineas, espera.nombre, productosPorId, nuevaKey)
+      avisos.push(...avisosLinea)
+      construidas.push({
+        id: nuevaPestanaId(),
+        esperaId: espera.id,
+        nombre: espera.nombre,
+        lineas: lineasValidas,
+        descuentoGlobal: clampDescuentoGlobal(lineasValidas, payload.descuentoGlobal),
+        clienteId: payload.clienteId,
+        vendedorId: payload.vendedorId,
+      })
     }
 
-    setLineas(lineasRestauradas)
-    setDescuentoGlobal(clampDescuentoGlobal(lineasRestauradas, payload.descuentoGlobal))
-    setClienteId(payload.clienteId)
-    setVendedorId(payload.vendedorId)
-    setAvisoRetomar(avisos.length > 0 ? avisos.join(' ') : '')
-    setEsperaAbierta(false)
-    setEsperaError('')
+    if (construidas.length === 0) {
+      construidas.push({
+        id: nuevaPestanaId(), esperaId: null, nombre: siguienteNombrePestana([]),
+        lineas: [], descuentoGlobal: 0, clienteId: null, vendedorId: null,
+      })
+    }
 
-    // El carrito ya se cargó en el estado de arriba (síncrono): si el delete
-    // falla (red/BD), la fila de espera queda viva sin que el usuario se
-    // entere — la misma venta podría retomarse doble desde otra caja/pestaña.
-    // Se conserva el carrito ya cargado (no tiene sentido descartarlo) y se
-    // avisa para que la borre manualmente.
+    const activa = construidas[0]
+    // Hidratación deliberada de estado derivado de props (esperas/productos)
+    // una sola vez por caja (guardada por `pestanasCajaId`, ver el guard de
+    // arriba) — no es el caso "sincronizar con un sistema externo en cada
+    // cambio" que el lint intenta prevenir, mismo criterio que el guard de
+    // `mounted` más arriba.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setPestanas(construidas)
+    setPestanaActivaId(activa.id)
+    setLineas(activa.lineas)
+    setDescuentoGlobal(activa.descuentoGlobal)
+    setClienteId(activa.clienteId)
+    setVendedorId(activa.vendedorId)
+    if (avisos.length > 0) setAvisoRetomar(avisos.join(' '))
+    setPestanasCajaId(caja.id)
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [caja, pestanasCajaId, esperas, productosPorId])
+
+  // Snapshot "verdadero" de una pestaña por id: si es la activa, se arma con
+  // el estado de edición en vivo (única fuente de verdad mientras se edita);
+  // si es otra, con lo último que quedó guardado en `pestanas` la última vez
+  // que se cambió de pestaña. Centraliza esta regla para que
+  // seleccionar/crear/cerrar/renombrar pestaña no la reimplementen cada uno.
+  function datosPestana(id: string): PestanaVenta | undefined {
+    const base = pestanas.find(p => p.id === id)
+    if (!base) return undefined
+    return id === pestanaActivaId ? { ...base, lineas, descuentoGlobal, clienteId, vendedorId } : base
+  }
+
+  // Carga una pestaña en el estado de edición (revalidando sus líneas contra
+  // el catálogo vigente) y la marca activa. Devuelve las líneas ya validadas
+  // porque el llamador también necesita escribirlas de vuelta en `pestanas`.
+  function cargarPestanaEnEdicion(pestana: PestanaVenta): LineaVenta[] {
+    const { lineas: lineasValidas, avisos } = revalidarLineasCatalogo(pestana.lineas, pestana.nombre, productosPorId, nuevaKey)
+    setLineas(lineasValidas)
+    setDescuentoGlobal(clampDescuentoGlobal(lineasValidas, pestana.descuentoGlobal))
+    setClienteId(pestana.clienteId)
+    setVendedorId(pestana.vendedorId)
+    setPestanaActivaId(pestana.id)
+    setAvisoRetomar(avisos.length > 0 ? avisos.join(' ') : '')
+    return lineasValidas
+  }
+
+  // Decide qué hacer en BD con una pestaña que deja de estar activa
+  // (accionPersistencia, lib/pos/carrito.ts) y lo ejecuta: crea la fila la
+  // primera vez que la pestaña tiene líneas, la actualiza si ya existía, o la
+  // elimina si quedó vacía — nunca dos pestañas comparten fila. Corre en
+  // segundo plano (no bloquea el cambio de pestaña, ya aplicado de forma
+  // optimista por el llamador) — mismo patrón que ya usaban
+  // guardarEspera/eliminarEspera antes de esta tarea.
+  function persistirPestana(cajaIdActual: string, pestana: PestanaVenta) {
+    const accion = accionPersistencia(pestana)
+    if (accion.tipo === 'ninguna') return
+
+    const payload: EsperaPayload = {
+      version: 1,
+      lineas: pestana.lineas.map(toLineaEsperaGuardada),
+      descuentoGlobal: pestana.descuentoGlobal,
+      clienteId: pestana.clienteId,
+      vendedorId: pestana.vendedorId,
+    }
+
     startEsperaTransition(async () => {
-      const result = await eliminarEspera(espera.id)
-      if (!result.ok) {
-        setAvisoRetomar(prev =>
-          [prev, 'La venta se retomó, pero no se pudo quitar de la lista de espera — descártala manualmente.']
-            .filter(Boolean)
-            .join(' '),
-        )
+      if (accion.tipo === 'eliminar') {
+        const result = await eliminarEspera(accion.esperaId)
+        if (result.ok) {
+          setPestanas(prev => prev.map(p => (p.id === pestana.id ? { ...p, esperaId: null } : p)))
+          router.refresh()
+        } else {
+          setAvisoRetomar(prev => [prev, `No se pudo actualizar "${pestana.nombre}": ${result.error}`].filter(Boolean).join(' '))
+        }
         return
       }
-      router.refresh()
+      if (accion.tipo === 'crear') {
+        const result = await guardarEspera(cajaIdActual, pestana.nombre, payload)
+        if (result.ok && result.data) {
+          const esperaId = result.data.id
+          setPestanas(prev => prev.map(p => (p.id === pestana.id ? { ...p, esperaId } : p)))
+          router.refresh()
+        } else if (!result.ok) {
+          setAvisoRetomar(prev => [prev, `No se pudo guardar "${pestana.nombre}": ${result.error}`].filter(Boolean).join(' '))
+        }
+        return
+      }
+      const result = await actualizarEspera(accion.esperaId, pestana.nombre, payload)
+      if (result.ok) {
+        router.refresh()
+      } else {
+        setAvisoRetomar(prev => [prev, `No se pudo actualizar "${pestana.nombre}": ${result.error}`].filter(Boolean).join(' '))
+      }
     })
   }
 
-  // ---- Cierre de caja (Task 12) ----
+  // Cambiar de pestaña con un clic: la saliente se persiste en segundo plano
+  // (crea/actualiza/elimina su fila según corresponda) y la entrante se carga
+  // de inmediato — nunca hay que esperar a la red para ver el cambio.
+  function seleccionarPestana(id: string) {
+    if (id === pestanaActivaId || !caja) return
+    const entrante = pestanas.find(p => p.id === id)
+    if (!entrante) return
 
-  function handleCierreCerrado() {
+    const saliente = pestanaActivaId ? datosPestana(pestanaActivaId) : undefined
+    const lineasEntrante = cargarPestanaEnEdicion(entrante)
+
+    setPestanas(prev => prev.map(p => {
+      if (saliente && p.id === saliente.id) return saliente
+      if (p.id === id) return { ...p, lineas: lineasEntrante }
+      return p
+    }))
+
+    if (saliente) persistirPestana(caja.id, saliente)
+  }
+
+  // Botón "+": persiste la saliente igual que un cambio de pestaña y abre una
+  // venta nueva vacía (no se persiste hasta que tenga líneas, ver
+  // accionPersistencia).
+  function crearPestana() {
+    if (!caja) return
+    const saliente = pestanaActivaId ? datosPestana(pestanaActivaId) : undefined
+    const nueva: PestanaVenta = {
+      id: nuevaPestanaId(),
+      esperaId: null,
+      nombre: siguienteNombrePestana(pestanas.map(p => p.nombre)),
+      lineas: [],
+      descuentoGlobal: 0,
+      clienteId: null,
+      vendedorId: null,
+    }
+
+    setPestanas(prev => [...prev.map(p => (saliente && p.id === saliente.id ? saliente : p)), nueva])
     setLineas([])
     setDescuentoGlobal(0)
     setClienteId(null)
     setVendedorId(null)
+    setPestanaActivaId(nueva.id)
     setAvisoRetomar('')
+
+    if (saliente) persistirPestana(caja.id, saliente)
+  }
+
+  // Cierra una pestaña (×): confirma si tiene líneas (mismo patrón que ya
+  // usaba el descarte de esperas), elimina su fila si tenía, y si era la
+  // activa elige otra (la vecina de la izquierda) o abre una nueva vacía si
+  // era la única — nunca se queda sin pestaña activa.
+  function cerrarPestana(id: string) {
+    const pestana = datosPestana(id)
+    if (!pestana) return
+
+    if (pestana.lineas.length > 0) {
+      const confirmado = window.confirm(
+        `"${pestana.nombre}" tiene ${pestana.lineas.length} línea(s) sin cobrar. ¿Cerrarla de todas formas?`,
+      )
+      if (!confirmado) return
+    }
+
+    if (pestana.esperaId) {
+      const idEliminar = pestana.esperaId
+      startEsperaTransition(async () => {
+        const result = await eliminarEspera(idEliminar)
+        if (result.ok) {
+          router.refresh()
+        } else {
+          setAvisoRetomar(prev => [prev, `No se pudo eliminar la venta en espera de "${pestana.nombre}".`].filter(Boolean).join(' '))
+        }
+      })
+    }
+
+    const restantes = pestanas.filter(p => p.id !== id)
+
+    if (id !== pestanaActivaId) {
+      setPestanas(restantes)
+      return
+    }
+
+    if (restantes.length === 0) {
+      const nueva: PestanaVenta = {
+        id: nuevaPestanaId(), esperaId: null, nombre: siguienteNombrePestana([]),
+        lineas: [], descuentoGlobal: 0, clienteId: null, vendedorId: null,
+      }
+      setPestanas([nueva])
+      cargarPestanaEnEdicion(nueva)
+      return
+    }
+
+    const indiceCerrada = pestanas.findIndex(p => p.id === id)
+    const siguiente = restantes[Math.max(0, indiceCerrada - 1)]
+    const lineasSiguiente = cargarPestanaEnEdicion(siguiente)
+    setPestanas(restantes.map(p => (p.id === siguiente.id ? { ...p, lineas: lineasSiguiente } : p)))
+  }
+
+  // Doble clic o botón ✎ (PestanasBar): renombra en memoria de inmediato y,
+  // si la pestaña ya tiene fila en `ventas_espera`, persiste el nombre nuevo
+  // sin esperar al próximo cambio de pestaña — evita que una recarga
+  // inmediata después de renombrar revierta el nombre.
+  function renombrarPestana(id: string, nombreCrudo: string) {
+    const nombre = nombreCrudo.trim()
+    if (!nombre) return
+    setPestanas(prev => prev.map(p => (p.id === id ? { ...p, nombre } : p)))
+
+    if (!caja) return
+    const pestana = datosPestana(id)
+    if (pestana?.esperaId) persistirPestana(caja.id, { ...pestana, nombre })
+  }
+
+  // Al emitir, la venta de la pestaña activa ya quedó cobrada (emitirVenta
+  // corrió la RPC) — su fila de espera (si tenía) ya no representa nada
+  // pendiente y se elimina de inmediato, sin esperar a que el cajero cierre
+  // el modal del documento. Decisión: la pestaña NO se cierra, se resetea a
+  // venta nueva vacía con un nombre por defecto (no conserva el nombre del
+  // cliente ya facturado) y queda abierta en el mismo lugar de la barra —
+  // más predecible que decidir caso a caso si cerrarla, y evita reordenar el
+  // resto de pestañas justo cuando el cajero acaba de cobrar.
+  function finalizarPestanaEmitida() {
+    if (!pestanaActivaId) return
+    const activa = pestanas.find(p => p.id === pestanaActivaId)
+    if (activa?.esperaId) {
+      const idEliminar = activa.esperaId
+      startEsperaTransition(async () => {
+        const result = await eliminarEspera(idEliminar)
+        if (result.ok) {
+          router.refresh()
+        } else {
+          setAvisoRetomar(prev => [prev, 'No se pudo limpiar la venta en espera asociada a esta pestaña.'].filter(Boolean).join(' '))
+        }
+      })
+    }
+    setPestanas(prev => {
+      const otrosNombres = prev.filter(p => p.id !== pestanaActivaId).map(p => p.nombre)
+      return prev.map(p => (p.id === pestanaActivaId
+        ? { ...p, esperaId: null, nombre: siguienteNombrePestana(otrosNombres), lineas: [], descuentoGlobal: 0, clienteId: null, vendedorId: null }
+        : p))
+    })
+  }
+
+  // ---- Cierre de caja (Task 12) ----
+  // Decisión: cerrar caja YA NO limpia la pestaña activa (antes vaciaba el
+  // carrito sin persistir nada). Las esperas sobreviven al cierre de caja
+  // por diseño (ver brief); forzar el reset aquí sin persistir podía borrar
+  // en memoria contenido que sí tenía fila guardada, dejando una fila
+  // "fantasma" desactualizada o, peor, provocando que el próximo cambio de
+  // pestaña la interpretara como vacía y la eliminara. Cerrar caja no debe
+  // tocar el contenido de ninguna pestaña.
+  function handleCierreCerrado() {
     setCierreAbierto(false)
     router.refresh()
   }
@@ -561,9 +790,6 @@ export default function PosClient({
     setCajaId(null)
     setError('')
   }
-
-  const caja = cajaId ? (cajas.find(c => c.id === cajaId) ?? null) : null
-  const sesion = caja ? (sesionesAbiertas.find(s => s.caja_id === caja.id) ?? null) : null
 
   function handleAbrirSesion(e: FormEvent) {
     e.preventDefault()
@@ -703,9 +929,9 @@ export default function PosClient({
   const lineasDesglosadas = lineasProrrateadas.map(l => desglosarLinea(l, exonerado))
   const totales = totalesDocumento(lineasDesglosadas, descuentoGlobal, '')
 
-  // Esperas/sesiones llegan sin filtrar por caja desde page.tsx (ver Props):
-  // se filtran aquí, una vez que se conoce `caja.id`.
-  const esperasCaja = esperas.filter(e => e.caja_id === caja.id)
+  // Sesiones cerradas llegan sin filtrar por caja desde page.tsx (ver Props):
+  // se filtran aquí, una vez que se conoce `caja.id`. (Las esperas se filtran
+  // y se convierten en pestañas en el efecto de hidratación más arriba.)
   const sesionesCerradasCaja = sesionesCerradas.filter(s => s.caja_id === caja.id)
   const documentosSesionActual = documentosPorSesion[sesion.id] ?? []
 
@@ -731,9 +957,6 @@ export default function PosClient({
         <div className={styles.headerActions}>
           <button type="button" className={`btnMerlinTertiary ${styles.btnGhost}`} onClick={() => setHistorialAbierto(true)}>
             Sesiones
-          </button>
-          <button type="button" className={`btnMerlinTertiary ${styles.btnGhost}`} onClick={() => setEsperaAbierta(true)}>
-            Espera{esperasCaja.length > 0 ? ` (${esperasCaja.length})` : ''}
           </button>
           <button type="button" className={`btnMerlinTertiary ${styles.btnGhost}`} onClick={() => setCierreAbierto(true)}>
             Cerrar caja
@@ -776,6 +999,12 @@ export default function PosClient({
         />
 
         <CarritoPanel
+          pestanas={pestanas}
+          pestanaActivaId={pestanaActivaId}
+          onSeleccionarPestana={seleccionarPestana}
+          onNuevaPestana={crearPestana}
+          onCerrarPestana={cerrarPestana}
+          onRenombrarPestana={renombrarPestana}
           lineas={lineas}
           descuentoGlobal={descuentoGlobal}
           clientes={clientesLocal}
@@ -832,22 +1061,6 @@ export default function PosClient({
           limite={limiteConsumidorFinal}
           onClose={() => setCobroAbierto(false)}
           onEmitido={handleEmitido}
-        />
-      )}
-
-      {esperaAbierta && (
-        <EsperaModal
-          esperas={esperasCaja}
-          carritoVacio={lineas.length === 0}
-          isPending={esperaPending}
-          error={esperaError}
-          onGuardar={nombre => handleGuardarEspera(caja.id, nombre)}
-          onRetomar={handleRetomarEspera}
-          onDescartar={handleDescartarEspera}
-          onClose={() => {
-            setEsperaAbierta(false)
-            setEsperaError('')
-          }}
         />
       )}
 

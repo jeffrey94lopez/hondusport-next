@@ -496,13 +496,39 @@ export async function anularDocumento(documentoId: string, motivo: string): Prom
   return { ok: true }
 }
 
-export async function guardarEspera(cajaId: string, nombre: string, payload: unknown): Promise<PosResult> {
+// Devuelve el `id` insertado: las pestañas de venta (PosClient) lo necesitan
+// para poder actualizar esta misma fila en el siguiente cambio de pestaña en
+// vez de duplicarla (ver actualizarEspera más abajo).
+export async function guardarEspera(cajaId: string, nombre: string, payload: unknown): Promise<PosResult<{ id: string }>> {
+  if (!nombre.trim()) return { ok: false, error: 'El nombre es requerido.' }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('ventas_espera')
+    .insert({ caja_id: cajaId, nombre: nombre.trim(), payload })
+    .select('id')
+    .single()
+
+  if (error || !data) return { ok: false, error: ERROR_GENERICO }
+
+  revalidatePath('/admin/pos')
+  return { ok: true, data: { id: data.id } }
+}
+
+// Actualiza en el lugar una fila de `ventas_espera` ya existente (misma
+// pestaña que se guardó antes con guardarEspera) — se eligió una action
+// separada en vez de convertir guardarEspera en upsert porque el llamador
+// (PosClient) siempre sabe de antemano si la pestaña ya tiene `esperaId`
+// (crear vs. actualizar es una decisión pura, ver accionPersistencia en
+// lib/pos/carrito.ts) y así cada action mapea 1:1 con una sola operación SQL.
+export async function actualizarEspera(id: string, nombre: string, payload: unknown): Promise<PosResult> {
   if (!nombre.trim()) return { ok: false, error: 'El nombre es requerido.' }
 
   const supabase = await createClient()
   const { error } = await supabase
     .from('ventas_espera')
-    .insert({ caja_id: cajaId, nombre: nombre.trim(), payload })
+    .update({ nombre: nombre.trim(), payload })
+    .eq('id', id)
 
   if (error) return { ok: false, error: ERROR_GENERICO }
 

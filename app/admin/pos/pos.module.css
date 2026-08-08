@@ -369,7 +369,7 @@
   background: var(--bg-card);
   padding: 1rem;
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: auto 1fr auto;
   min-height: 0;
 }
 
@@ -782,42 +782,60 @@
   flex-shrink: 0;
 }
 
-/* Modal de espera */
-.esperaModal {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-.esperaListTitle {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.6rem;
-}
-.esperaList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 280px;
-  overflow-y: auto;
-}
-.esperaRow {
+/* Pestañas de ventas en curso (reemplaza el antiguo modal de espera):
+   barra horizontal con scroll propio arriba de la columna del carrito — ver
+   PestanasBar.tsx. nowrap + overflow-x en vez de wrap para que se comporte
+   como pestañas de navegador (crecen a los lados, no hacia abajo) cuando hay
+   muchas ventas abiertas. */
+.pestanasBar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-card);
-  padding: 0.6rem 0.75rem;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
 }
-.esperaNombre { font-weight: 700; color: var(--text); font-size: 0.85rem; }
-.esperaFecha { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem; }
-.esperaAcciones {
+
+.pestanaItem {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.1rem;
   flex-shrink: 0;
+}
+
+.pestanaTab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pestanaNombre {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pestanaContador {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--bg-hover);
+  border-radius: var(--radius-tag);
+  padding: 0.05rem 0.45rem;
+  min-width: 1.1rem;
+  text-align: center;
+}
+
+.pestanaNombreInput {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-tag);
+  background: var(--bg-card);
+  color: var(--text);
+  width: 8.5rem;
 }
 
 /* Modal de cierre de caja */
