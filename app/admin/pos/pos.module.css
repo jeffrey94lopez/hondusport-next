@@ -1,12 +1,15 @@
 /* Pantalla POS a pantalla completa: el layout padre (/admin) siempre renderiza
    el Sidebar (ver layout.tsx de este directorio para la decisión). Este overlay
-   se posiciona fixed y por encima para cubrirlo sin tocar app/admin/layout.tsx. */
+   se posiciona fixed y por encima para cubrirlo sin tocar app/admin/layout.tsx.
+   Flex column para acomodar header + banners + ventaGrid sin pixel mágico. */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
   background: var(--bg);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* El documento imprimible (app/admin/pos/documento/[id]) también vive bajo
@@ -22,7 +25,16 @@
     z-index: auto;
     overflow: visible;
     background: none;
+    display: block;
   }
+}
+
+/* Root de PosClient (div directo de .overlay): flex para acomodar hijos. */
+.overlay > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .header {
@@ -205,13 +217,16 @@
 .caiBannerWarn { background: var(--warning-bg); color: var(--warning-deep); }
 .caiBannerError { background: var(--error-bg); color: var(--error-deep); }
 
-/* Área de venta: layout de dos columnas */
+/* Área de venta: layout de dos columnas.
+   flex: 1 hace que ocupe el espacio restante tras header + banners.
+   min-height: 0 es crítico en flex para que hijos con min-height: 0 scrolleen. */
 .ventaGrid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(340px, 420px);
   gap: 1px;
   background: var(--border);
-  height: calc(100vh - 60px);
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
