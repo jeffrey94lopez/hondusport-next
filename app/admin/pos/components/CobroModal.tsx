@@ -1,27 +1,12 @@
 'use client'
-import { useRef, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import Modal from '@/components/admin/Modal'
 import { emitirVenta } from '../actions'
-import { validarPagos, cambioPago, validarEmision } from '@/lib/pos/emision'
+import { validarPagos, cambioPago, validarEmision, montosPagoAlAgregar } from '@/lib/pos/emision'
 import { formatPrice } from '@/lib/store/format'
 import { round2 } from '../pos-helpers'
-import type { LineaPos, PagoPos, MetodoPago, MetodoPagoTipo, Cliente } from '@/types'
+import type { LineaPos, PagoPos, MetodoPago, Cliente } from '@/types'
 import styles from '../pos.module.css'
-
-// Línea de UI de un pago: `monto` es el string editado a mano para métodos
-// que no son efectivo_usd; `montoUsd` es el string editado a mano SOLO para
-// efectivo_usd (el monto en L. se deriva multiplicando por la tasa, nunca se
-// edita directo). `referencia` solo se envía si el método es tarjeta o
-// transferencia (el resto la ignora, pero se limpia igual al cambiar de
-// método para no arrastrar datos de otro tipo de pago).
-interface PagoRow {
-  key: string
-  metodoId: string
-  tipo: MetodoPagoTipo
-  monto: string
-  montoUsd: string
-  referencia: string
-}
 
 interface CobroModalProps {
   total: number
@@ -51,76 +36,77 @@ export default function CobroModal({
   onEmitido,
 }: CobroModalProps) {
   const [tipo, setTipo] = useState<'factura' | 'comprobante'>('factura')
-  const [pagos, setPagos] = useState<PagoRow[]>([])
+  // Cada pago vive en la forma que consume la RPC (PagoPos) — a lo sumo un
+  // pago por método (el chip del método es lo que agrega/quita filas), así
+  // que metodo_id sirve de key. `referencia` se guarda tal cual se teclea;
+  // se recorta a null solo al armar `pagosParaEnvio` para no interferir con
+  // el usuario mientras escribe.
+  const [pagos, setPagos] = useState<PagoPos[]>([])
   const [identNombre, setIdentNombre] = useState('')
   const [identIdentidad, setIdentIdentidad] = useState('')
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
-  const nextPagoKeyRef = useRef(0)
 
-  function nuevaPagoKey(): string {
-    nextPagoKeyRef.current += 1
-    return `p${nextPagoKeyRef.current}`
-  }
+  function alternarMetodo(m: MetodoPago) {
+    if (isPending) return
+    if (m.tipo === 'efectivo_usd' && tasaCambioUsd <= 0) return
 
-  // Primer método sin usar efectivo_usd sin tasa configurada, para preseleccionar
-  // al agregar una fila nueva.
-  const metodoDisponible = metodos.find(m => !(m.tipo === 'efectivo_usd' && tasaCambioUsd <= 0)) ?? null
-
-  function agregarPago() {
-    if (!metodoDisponible) return
-    setPagos(prev => [
-      ...prev,
-      { key: nuevaPagoKey(), metodoId: metodoDisponible.id, tipo: metodoDisponible.tipo, monto: '', montoUsd: '', referencia: '' },
-    ])
-  }
-
-  function cambiarMetodoPago(key: string, metodoId: string) {
-    const m = metodos.find(x => x.id === metodoId)
-    if (!m) return
-    // Los campos monto/montoUsd/referencia dependen del tipo de método: se
-    // limpian al cambiar para no arrastrar un valor con el sentido equivocado
-    // (p.ej. un monto en USD quedando como si fuera Lempiras).
-    setPagos(prev => prev.map(p => (p.key === key ? { key, metodoId: m.id, tipo: m.tipo, monto: '', montoUsd: '', referencia: '' } : p)))
-  }
-
-  function cambiarMontoPago(key: string, valor: string) {
-    setPagos(prev => prev.map(p => (p.key === key ? { ...p, monto: valor } : p)))
-  }
-
-  function cambiarMontoUsdPago(key: string, valor: string) {
-    setPagos(prev => prev.map(p => (p.key === key ? { ...p, montoUsd: valor } : p)))
-  }
-
-  function cambiarReferenciaPago(key: string, valor: string) {
-    setPagos(prev => prev.map(p => (p.key === key ? { ...p, referencia: valor } : p)))
-  }
-
-  function quitarPago(key: string) {
-    setPagos(prev => prev.filter(p => p.key !== key))
-  }
-
-  function montoLps(p: PagoRow): number {
-    if (p.tipo === 'efectivo_usd') {
-      const usd = Number(p.montoUsd)
-      return Number.isFinite(usd) ? round2(usd * tasaCambioUsd) : 0
+    const yaSeleccionado = pagos.some(p => p.metodo_id === m.id)
+    if (yaSeleccionado) {
+      // Quitar un pago no recalcula los demás: solo se elimina esa fila.
+      setPagos(prev => prev.filter(p => p.metodo_id !== m.id))
+      return
     }
-    const n = Number(p.monto)
-    return Number.isFinite(n) ? n : 0
+
+    const nuevoPago: PagoPos = {
+      metodo_id: m.id,
+      tipo: m.tipo,
+      monto: 0,
+      monto_usd: m.tipo === 'efectivo_usd' ? 0 : null,
+      tasa: m.tipo === 'efectivo_usd' ? tasaCambioUsd : null,
+      referencia: null,
+    }
+    setPagos(prev => {
+      const actualizados = montosPagoAlAgregar([...prev, nuevoPago], total)
+      if (m.tipo !== 'efectivo_usd') return actualizados
+      // El monto en L. que asignó montosPagoAlAgregar es lo que hay que
+      // cobrar; se refleja también en el campo USD visible (redondeado) para
+      // que el input no quede en 0 mientras el resto de los pagos sí muestran
+      // su monto sugerido.
+      return actualizados.map(p => {
+        if (p.metodo_id !== m.id) return p
+        const usd = round2(p.monto / tasaCambioUsd)
+        return { ...p, monto_usd: usd, monto: round2(usd * tasaCambioUsd) }
+      })
+    })
   }
 
-  const pagosPos: PagoPos[] = pagos.map(p => ({
-    metodo_id: p.metodoId,
-    tipo: p.tipo,
-    monto: montoLps(p),
-    monto_usd: p.tipo === 'efectivo_usd' ? (Number.isFinite(Number(p.montoUsd)) ? Number(p.montoUsd) : 0) : null,
-    tasa: p.tipo === 'efectivo_usd' ? tasaCambioUsd : null,
-    referencia: p.referencia.trim() || null,
-  }))
+  function cambiarMonto(metodoId: string, valor: string) {
+    setPagos(prev => prev.map(p => (p.metodo_id === metodoId ? { ...p, monto: Number(valor) || 0 } : p)))
+  }
 
-  const sumaPagos = round2(pagosPos.reduce((s, p) => s + p.monto, 0))
+  function cambiarMontoUsd(metodoId: string, valor: string) {
+    const usd = Number(valor) || 0
+    setPagos(prev =>
+      prev.map(p => (p.metodo_id === metodoId ? { ...p, monto_usd: usd, monto: round2(usd * tasaCambioUsd) } : p)),
+    )
+  }
+
+  function cambiarReferencia(metodoId: string, valor: string) {
+    setPagos(prev => prev.map(p => (p.metodo_id === metodoId ? { ...p, referencia: valor } : p)))
+  }
+
+  function montoLps(p: PagoPos): number {
+    return p.tipo === 'efectivo_usd' ? round2((p.monto_usd ?? 0) * tasaCambioUsd) : p.monto
+  }
+
+  // Normaliza la referencia (recorte a null) recién al momento de calcular
+  // totales/validar/emitir — el estado de edición conserva el string crudo.
+  const pagosParaEnvio: PagoPos[] = pagos.map(p => ({ ...p, referencia: (p.referencia ?? '').trim() || null }))
+
+  const sumaPagos = round2(pagosParaEnvio.reduce((s, p) => s + p.monto, 0))
   const restante = Math.max(0, round2(total - sumaPagos))
-  const cambio = cambioPago(pagosPos, total)
+  const cambio = cambioPago(pagosParaEnvio, total)
 
   // Art. 11: cualquier factura que supere el límite exige RTN o identidad,
   // sin importar el nombre — aplica igual a CONSUMIDOR FINAL (clienteActual
@@ -191,7 +177,7 @@ export default function CobroModal({
       return
     }
 
-    const errorPagos = validarPagos(pagosPos, total)
+    const errorPagos = validarPagos(pagosParaEnvio, total)
     if (errorPagos) {
       setError(errorPagos)
       return
@@ -205,7 +191,7 @@ export default function CobroModal({
         cliente,
         lineas,
         descuentoGlobal,
-        pagos: pagosPos,
+        pagos: pagosParaEnvio,
         notas: null,
       })
       if (!result.ok || !result.data) {
@@ -259,86 +245,110 @@ export default function CobroModal({
         <div className={styles.pagosSection}>
           <div className={styles.pagosHeader}>
             <span>Pagos</span>
-            <button type="button" className={styles.btnItemLibre} onClick={agregarPago} disabled={isPending || !metodoDisponible}>
-              + Agregar pago
-            </button>
           </div>
 
           {metodos.length === 0 ? (
             <div className={styles.empty}>No hay métodos de pago activos configurados.</div>
-          ) : pagos.length === 0 ? (
-            <div className={styles.empty}>Agrega al menos un método de pago.</div>
           ) : (
-            <div className={styles.pagosList}>
-              {pagos.map(p => (
-                <div key={p.key} className={styles.pagoRow}>
-                  <select value={p.metodoId} onChange={e => cambiarMetodoPago(p.key, e.target.value)} disabled={isPending}>
-                    {metodos.map(m => (
-                      <option key={m.id} value={m.id} disabled={m.tipo === 'efectivo_usd' && tasaCambioUsd <= 0}>
-                        {m.nombre}
-                        {m.tipo === 'efectivo_usd' && tasaCambioUsd <= 0 ? ' (sin tasa configurada)' : ''}
-                      </option>
-                    ))}
-                  </select>
+            <>
+              <div className={styles.chipsRow}>
+                {metodos.map(m => {
+                  const seleccionado = pagos.some(p => p.metodo_id === m.id)
+                  const sinTasa = m.tipo === 'efectivo_usd' && tasaCambioUsd <= 0
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={seleccionado ? styles.chipActivo : styles.chip}
+                      onClick={() => alternarMetodo(m)}
+                      disabled={isPending || sinTasa}
+                      title={sinTasa ? 'Sin tasa de cambio configurada' : undefined}
+                    >
+                      {m.nombre}
+                      {sinTasa ? ' (sin tasa)' : ''}
+                    </button>
+                  )
+                })}
+              </div>
 
-                  {p.tipo === 'efectivo_usd' ? (
-                    <div className={styles.pagoUsdGroup}>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="USD"
-                        value={p.montoUsd}
-                        onChange={e => cambiarMontoUsdPago(p.key, e.target.value)}
-                        disabled={isPending}
-                      />
-                      <span className={styles.pagoUsdConversion}>≈ {formatPrice(montoLps(p))}</span>
-                    </div>
-                  ) : (
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Monto (L.)"
-                      value={p.monto}
-                      onChange={e => cambiarMontoPago(p.key, e.target.value)}
-                      disabled={isPending}
-                    />
-                  )}
+              {pagos.length === 0 ? (
+                <div className={styles.empty}>Selecciona al menos un método de pago.</div>
+              ) : (
+                <div className={styles.pagosList}>
+                  {pagos.map(p => {
+                    const metodo = metodos.find(m => m.id === p.metodo_id)
+                    return (
+                      <div key={p.metodo_id} className={styles.pagoCard}>
+                        <div className={styles.pagoCardNombre}>{metodo?.nombre ?? ''}</div>
 
-                  {(p.tipo === 'tarjeta' || p.tipo === 'transferencia') && (
-                    <input
-                      type="text"
-                      placeholder="Referencia (opcional)"
-                      value={p.referencia}
-                      onChange={e => cambiarReferenciaPago(p.key, e.target.value)}
-                      disabled={isPending}
-                    />
-                  )}
+                        {p.tipo === 'efectivo_usd' ? (
+                          <>
+                            <div className={styles.pagoTasaLinea}>
+                              Tasa: {formatPrice(tasaCambioUsd)} × USD 1.00
+                            </div>
+                            <div className={styles.pagoUsdRow}>
+                              <label className={styles.formLabel}>
+                                Monto (USD)
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  className={styles.pagoMontoInput}
+                                  value={p.monto_usd ?? 0}
+                                  onChange={e => cambiarMontoUsd(p.metodo_id, e.target.value)}
+                                  disabled={isPending}
+                                />
+                              </label>
+                              <span className={styles.pagoUsdConversion}>≈ {formatPrice(montoLps(p))}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <label className={styles.formLabel}>
+                            Monto
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              className={styles.pagoMontoInput}
+                              value={p.monto}
+                              onChange={e => cambiarMonto(p.metodo_id, e.target.value)}
+                              disabled={isPending}
+                            />
+                          </label>
+                        )}
 
-                  <button
-                    type="button"
-                    className={styles.btnQuitar}
-                    onClick={() => quitarPago(p.key)}
-                    aria-label="Quitar pago"
-                    disabled={isPending}
-                  >
-                    ×
-                  </button>
+                        {(p.tipo === 'tarjeta' || p.tipo === 'transferencia') && (
+                          <label className={styles.formLabel}>
+                            Referencia
+                            <input
+                              type="text"
+                              value={p.referencia ?? ''}
+                              onChange={e => cambiarReferencia(p.metodo_id, e.target.value)}
+                              disabled={isPending}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
 
         <div className={styles.cobroResumen}>
-          <div className={styles.totalesRow}><span>Total</span><span>{formatPrice(total)}</span></div>
+          <div className={styles.resumenDestacado}><span>Total</span><span>{formatPrice(total)}</span></div>
           <div className={styles.totalesRow}><span>Pagado</span><span>{formatPrice(sumaPagos)}</span></div>
           {restante > 0 && (
-            <div className={styles.totalesRow}><span>Restante</span><span>{formatPrice(restante)}</span></div>
+            <div className={`${styles.resumenDestacado} ${styles.resumenRestante}`}>
+              <span>Restante</span><span>{formatPrice(restante)}</span>
+            </div>
           )}
           {cambio > 0 && (
-            <div className={styles.totalesRowTotal}><span>Cambio</span><span>{formatPrice(cambio)}</span></div>
+            <div className={`${styles.resumenDestacado} ${styles.resumenCambio}`}>
+              <span>Cambio</span><span>{formatPrice(cambio)}</span>
+            </div>
           )}
         </div>
 

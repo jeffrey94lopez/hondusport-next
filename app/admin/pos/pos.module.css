@@ -278,6 +278,12 @@
   cursor: pointer;
 }
 
+.chip:disabled,
+.chipActivo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .anclados {
   margin-bottom: 0.9rem;
 }
@@ -688,34 +694,39 @@
   flex-direction: column;
   gap: 0.5rem;
 }
-.pagoRow {
+.pagoCard {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 0.75rem 0.9rem;
 }
-.pagoRow select,
-.pagoRow input[type='number'],
-.pagoRow input[type='text'] {
-  flex: 1 1 120px;
-  padding: 0.4rem 0.5rem;
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-input);
-  background: var(--bg-input);
+.pagoCardNombre {
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--text);
-  font-size: 0.82rem;
 }
-.pagoUsdGroup {
+.pagoMontoInput {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.pagoTasaLinea {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.pagoUsdRow {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex: 1 1 200px;
+  align-items: flex-end;
+  gap: 0.6rem;
 }
-.pagoUsdGroup input { flex: 1; }
+.pagoUsdRow .formLabel { flex: 1; }
 .pagoUsdConversion {
   font-size: 0.78rem;
   color: var(--text-muted);
   white-space: nowrap;
+  padding-bottom: 0.55rem;
 }
 
 .cobroResumen {
@@ -726,6 +737,15 @@
   flex-direction: column;
   gap: 0.3rem;
 }
+.resumenDestacado {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.resumenRestante { color: var(--danger); }
+.resumenCambio { color: var(--success); }
 
 /* Modal: selector de variantes */
 .varianteList {
