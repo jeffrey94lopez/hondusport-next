@@ -52,9 +52,12 @@ create table if not exists cotizacion_items (
   precio_unitario numeric(12,2) not null check (precio_unitario >= 0),
   descuento      numeric(12,2) not null default 0 check (descuento >= 0),
   isv            text not null check (isv in ('15','18','exento')),
+  precio_manual  boolean not null default false,
   orden          int not null default 0
 );
 create index if not exists cotizacion_items_cotizacion_idx on cotizacion_items (cotizacion_id);
+-- Idempotente por si la tabla ya existiera de un despliegue previo sin esta columna.
+alter table cotizacion_items add column if not exists precio_manual boolean not null default false;
 
 -- RLS: todo es dato del admin (patrón de P1/P2)
 alter table cotizacion_etapas enable row level security;

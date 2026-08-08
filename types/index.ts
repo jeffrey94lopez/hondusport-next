@@ -442,6 +442,7 @@ export interface CotizacionItem {
   precio_unitario: number
   descuento: number
   isv: IsvTipo
+  precio_manual: boolean
   orden: number
 }
 

@@ -33,11 +33,17 @@ export interface GuardarCotizacionInput {
   lineas: LineaCotizacionInput[]
 }
 
+// El POS necesita saber qué líneas venían con precio manual (override) para
+// no volver a releerlo de BD al facturar desde una cotización.
+export interface PrefillLineaPos extends LineaPos {
+  precioManual: boolean
+}
+
 export interface CotizacionPrefillPos {
   cotizacionId: string
   clienteId: string | null
   descuentoGlobal: number
-  lineas: LineaPos[]
+  lineas: PrefillLineaPos[]
   yaFacturada: boolean
 }
 
@@ -170,10 +176,13 @@ export async function guardarCotizacion(input: GuardarCotizacionInput): Promise<
 
     if (lineasPos.length > 0) {
       const { error: itemsErr } = await supabase.from('cotizacion_items').insert(
+        // lineasPos conserva el orden e índice de input.lineas 1:1: se toma de
+        // ahí el flag precioManual, que no viaja en LineaPos (frontera de
+        // confianza pura), para persistirlo tal cual lo mandó el editor.
         lineasPos.map((l, i) => ({
           cotizacion_id: id, producto_id: l.producto_id, variante_id: l.variante_id,
           descripcion: l.descripcion, cantidad: l.cantidad, precio_unitario: l.precio_unitario,
-          descuento: l.descuento, isv: l.isv, orden: i,
+          descuento: l.descuento, isv: l.isv, precio_manual: input.lineas[i].precioManual, orden: i,
         })),
       )
       if (itemsErr) return { ok: false, error: ERROR_GENERICO }
@@ -228,7 +237,7 @@ export async function duplicarCotizacion(id: string): Promise<CotizacionResult<{
     condiciones: c.condiciones, notas: c.notas,
     lineas: c.items.map(i => ({
       producto_id: i.producto_id, variante_id: i.variante_id, descripcion: i.descripcion,
-      cantidad: i.cantidad, precio_unitario: i.precio_unitario, precioManual: i.producto_id === null,
+      cantidad: i.cantidad, precio_unitario: i.precio_unitario, precioManual: i.precio_manual,
       descuento: i.descuento, isv: i.isv,
     })),
   })
@@ -248,6 +257,7 @@ export async function obtenerCotizacionParaPos(id: string): Promise<CotizacionRe
       lineas: c.items.map(i => ({
         producto_id: i.producto_id, variante_id: i.variante_id, descripcion: i.descripcion,
         cantidad: i.cantidad, precio_unitario: i.precio_unitario, descuento: i.descuento, isv: i.isv,
+        precioManual: i.precio_manual,
       })),
     },
   }
