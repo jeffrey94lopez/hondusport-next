@@ -1,0 +1,300 @@
+/* PDF de cotización — patrón "HTML + CSS de impresión" (sin librería de PDF),
+   mismo criterio que app/admin/pos/documento/documento.module.css: barra de
+   acciones que se oculta al imprimir y una "hoja" carta con fondo blanco/tinta
+   fija (NO sigue el tema oscuro, simula papel impreso real). La paleta dentro
+   de la hoja usa los valores Merlin como literales (dorado #c9a84c / negro
+   #0a0a0a / líneas #e7e7e7), no var(), porque el papel es independiente del
+   tema — mismo enfoque que los #333/#910022 literales del papel fiscal. */
+
+.page { min-height: 100vh; }
+
+/* ---- Barra (no imprimible) — usa la capa semántica (globals) para seguir el
+   tema del panel ---- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.toolbarLeft, .toolbarRight { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.toolbarTitulo { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.badgeVencida {
+  background: var(--error-bg);
+  color: var(--danger);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+}
+.estiloGroup { display: flex; gap: 0.4rem; }
+
+/* Los btnMerlinPrimary/Secondary/Tertiary NO traen padding/display propios
+   (ver app/merlin.css): se componen con una clase de módulo con caja. */
+.btnToolbar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.95rem;
+  min-height: 38px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* ---- Fondo detrás del papel (solo preview) ---- */
+.pageBg {
+  background: var(--bg);
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* ---- Hoja carta: fondo blanco/tinta fija a propósito ---- */
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  background: #ffffff;
+  color: #1e1e1e;
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-poppins), sans-serif;
+  padding: 40px 44px;
+  box-sizing: border-box;
+}
+
+/* ---- Sello VENCIDA (común a las 3 hojas) ---- */
+.watermark {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-24deg);
+  font-size: 4rem;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: rgba(145, 0, 34, 0.16);
+  border: 7px solid rgba(145, 0, 34, 0.16);
+  padding: 0.08em 0.4em;
+  border-radius: 10px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+.badgeSelloVencida {
+  display: inline-block;
+  border: 2px solid #910022;
+  color: #910022;
+  font-weight: 800;
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  transform: rotate(-2deg);
+}
+
+/* ================= EJECUTIVO ================= */
+.ejeSheet { font-size: 13px; line-height: 1.55; }
+.ejeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  border-bottom: 3px solid #0a0a0a;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+.ejeMarca { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.ejeLogo { max-width: 120px; max-height: 64px; object-fit: contain; }
+.ejeEmpresaNombre { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.3px; line-height: 1.1; }
+.ejeEmpresaSub { font-size: 0.78rem; color: #606060; margin-top: 2px; }
+.ejeMeta { text-align: right; white-space: nowrap; }
+.ejeMetaLabel { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1.5px; color: #606060; font-weight: 700; }
+.ejeMetaNumero { font-size: 1.15rem; font-weight: 800; color: #0a0a0a; }
+.ejeMetaFecha { font-size: 0.8rem; color: #1e1e1e; }
+
+.ejeBarra {
+  background: #0a0a0a;
+  color: #ffffff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 6px 12px;
+  border-radius: 5px;
+  margin: 16px 0 10px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.ejeBarraDorada { border-left: 4px solid #c9a84c; }
+
+.ejeDatosGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 6px; }
+.ejeDatoBloque { font-size: 0.85rem; }
+.ejeDatoTitulo { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; color: #606060; font-weight: 700; margin-bottom: 3px; }
+.ejeDatoLinea { color: #1e1e1e; }
+.ejeDatoNombre { font-weight: 700; font-size: 0.95rem; }
+
+.ejeTabla { width: 100%; border-collapse: collapse; margin-bottom: 4px; font-size: 0.85rem; }
+.ejeTabla thead th {
+  text-align: left;
+  background: #faf6ed;
+  color: #0a0a0a;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 7px 8px;
+  border-bottom: 2px solid #c9a84c;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.ejeTabla td { padding: 7px 8px; border-bottom: 1px solid #e7e7e7; vertical-align: top; }
+.ejeTabla tbody tr:nth-child(even) td { background: #faf9f6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.colNum { text-align: right; white-space: nowrap; width: 3em; }
+.colMoney { text-align: right; white-space: nowrap; width: 7em; }
+.itemDesc { font-weight: 600; }
+.itemIsv { font-size: 0.72rem; color: #606060; }
+
+.ejeFooterGrid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; margin-top: 16px; align-items: start; }
+
+.totalesBox { font-size: 0.9rem; }
+.totalRow { display: flex; justify-content: space-between; gap: 1em; padding: 4px 0; }
+.totalRowMuted { color: #606060; font-size: 0.85rem; }
+.totalGran {
+  display: flex; justify-content: space-between; gap: 1em;
+  border-top: 2px solid #0a0a0a;
+  margin-top: 6px; padding-top: 8px;
+  font-weight: 800; font-size: 1.15rem;
+}
+
+.condiciones { font-size: 0.8rem; color: #1e1e1e; }
+.condTitulo { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; color: #606060; font-weight: 700; margin-bottom: 4px; }
+.condTexto { white-space: pre-wrap; line-height: 1.5; }
+.validez { margin-top: 12px; font-size: 0.82rem; font-weight: 700; }
+.validezVencida { color: #910022; }
+.notas { margin-top: 14px; font-size: 0.78rem; color: #606060; border-top: 1px solid #e7e7e7; padding-top: 8px; white-space: pre-wrap; }
+
+/* ================= MINIMALISTA ================= */
+.minSheet { font-size: 12.5px; line-height: 1.5; color: #0a0a0a; }
+.minHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #0a0a0a;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+.minLogo { max-width: 110px; max-height: 56px; object-fit: contain; filter: grayscale(1); }
+.minEmpresaNombre { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; }
+.minEmpresaSub { font-size: 0.75rem; color: #444; }
+.minMeta { text-align: right; }
+.minTitulo { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 3px; color: #444; }
+.minNumero { font-size: 1.05rem; font-weight: 700; }
+.minFecha { font-size: 0.78rem; color: #444; }
+
+.minDatos { display: flex; justify-content: space-between; gap: 16px; font-size: 0.82rem; margin-bottom: 14px; }
+.minCliente { font-weight: 700; }
+
+.minTabla { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 4px; }
+.minTabla thead th {
+  text-align: left;
+  border-bottom: 1px solid #0a0a0a;
+  padding: 5px 6px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #333;
+}
+.minTabla td { padding: 5px 6px; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+
+.minTotales { margin-left: auto; width: 55%; max-width: 300px; margin-top: 10px; font-size: 0.85rem; }
+.minTotalGran {
+  display: flex; justify-content: space-between;
+  border-top: 2px solid #0a0a0a; margin-top: 4px; padding-top: 6px;
+  font-weight: 800; font-size: 1.05rem;
+}
+.minPie { margin-top: 18px; font-size: 0.76rem; color: #333; }
+.minValidez { font-weight: 700; margin-top: 8px; }
+
+/* ================= CATÁLOGO ================= */
+.catSheet { font-size: 13px; line-height: 1.5; }
+.catHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+.catLogo { max-width: 120px; max-height: 60px; object-fit: contain; }
+.catEmpresaNombre { font-size: 1.35rem; font-weight: 800; }
+.catEmpresaSub { font-size: 0.78rem; color: #606060; }
+.catMeta { text-align: right; }
+.catBanner {
+  background: #c9a84c;
+  color: #0a0a0a;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  padding: 7px 12px;
+  border-radius: 5px;
+  margin: 12px 0 16px;
+  display: flex;
+  justify-content: space-between;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.catCliente { font-size: 0.85rem; margin-bottom: 14px; }
+.catClienteNombre { font-weight: 700; font-size: 0.95rem; }
+
+.catItem {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e7e7e7;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.catThumb {
+  width: 72px; height: 72px; flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e7e7e7;
+  background: #faf9f6;
+}
+.catThumbPlaceholder {
+  width: 72px; height: 72px; flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid #e7e7e7;
+  background: #faf6ed;
+  display: flex; align-items: center; justify-content: center;
+  color: #c9a84c; font-size: 1.6rem; font-weight: 800;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.catItemBody { flex: 1; min-width: 0; }
+.catItemDesc { font-weight: 700; font-size: 0.95rem; }
+.catItemMeta { font-size: 0.78rem; color: #606060; }
+.catItemPrecio { text-align: right; white-space: nowrap; }
+.catItemImporte { font-weight: 800; font-size: 1rem; }
+.catItemUnit { font-size: 0.76rem; color: #606060; }
+
+.catTotales { margin-left: auto; width: 60%; max-width: 320px; margin-top: 16px; font-size: 0.9rem; }
+.catTotalGran {
+  display: flex; justify-content: space-between;
+  border-top: 2px solid #0a0a0a; margin-top: 6px; padding-top: 8px;
+  font-weight: 800; font-size: 1.2rem;
+}
+
+/* ---- Impresión: solo el papel ---- */
+@media print {
+  .noPrint { display: none !important; }
+  .pageBg { padding: 0; background: none; min-height: auto; display: block; }
+  .sheet { box-shadow: none; margin: 0 auto; max-width: none; width: auto; }
+}
