@@ -1,12 +1,13 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import Modal from '@/components/admin/Modal'
 import { precioLineaPos } from '@/lib/pos/emision'
 import { toStoreVariantes, stockEfectivo, estaAgotado } from '@/lib/store/variantes'
 import { formatPrice } from '@/lib/store/format'
+import { filtrarInventario } from '@/lib/store/inventoryFilters'
 import { variantesActivasDe, preciosCatalogo } from '../pos-helpers'
-import type { Producto, ProductoVariante } from '@/types'
+import type { Categoria, Producto, ProductoVariante } from '@/types'
 import styles from '../pos.module.css'
 
 // Contrato ajustado sobre el mínimo del brief (task-3-brief.md): se agregó
@@ -14,11 +15,25 @@ import styles from '../pos.module.css'
 // variante depende del tipo de cliente (revendedor puede tener precio propio
 // por variante) — sin este dato el panel no podría calcular el precio que
 // hoy calcula PosClient, y el catálogo mostraría precios incorrectos al
-// elegir un cliente revendedor.
+// elegir un cliente revendedor. `categorias` se agregó en Task 5 para los
+// chips de categoría/subcategoría (brief task-5).
 export interface CatalogoPanelProps {
   productos: Producto[]
+  categorias: Categoria[]
   tipoCliente: 'final' | 'revendedor'
   onAgregar: (producto: Producto, variante: ProductoVariante | null) => void
+}
+
+// Predicado de búsqueda por texto (nombre / SKU del producto / SKU de
+// variante, case-insensitive) — extraído del `.filter()` inline original sin
+// cambiar su comportamiento, para poder combinarlo con el filtro de
+// categoría/subcategoría en `productosFiltrados`.
+function coincideBusqueda(producto: Producto, texto: string): boolean {
+  const query = texto.trim().toLowerCase()
+  if (query === '') return true
+  if (producto.nombre.toLowerCase().includes(query)) return true
+  if (producto.sku && producto.sku.trim().toLowerCase() === query) return true
+  return variantesActivasDe(producto).some(v => v.sku && v.sku.trim().toLowerCase() === query)
 }
 
 function buscarPorSkuExacto(
@@ -35,10 +50,23 @@ function buscarPorSkuExacto(
   return null
 }
 
-export default function CatalogoPanel({ productos, tipoCliente, onAgregar }: CatalogoPanelProps) {
+export default function CatalogoPanel({ productos, categorias, tipoCliente, onAgregar }: CatalogoPanelProps) {
   const [busqueda, setBusqueda] = useState('')
   const [varianteModal, setVarianteModal] = useState<Producto | null>(null)
+  const [catId, setCatId] = useState<string | null>(null)
+  const [subcatId, setSubcatId] = useState<string | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+
+  const cats = useMemo(() => categorias.filter(c => c.tipo === 'cat'), [categorias])
+  const subcats = useMemo(
+    () => (catId ? categorias.filter(c => c.tipo === 'subcat' && (c.categorias_padre ?? []).includes(catId)) : []),
+    [categorias, catId],
+  )
+
+  function elegirCategoria(id: string | null) {
+    setCatId(id)
+    setSubcatId(null)
+  }
 
   // El foco de vuelta al buscador (para flujo de escáner de código de barras)
   // vivía dentro de `agregarProducto` en PosClient porque ese componente era
@@ -74,15 +102,13 @@ export default function CatalogoPanel({ productos, tipoCliente, onAgregar }: Cat
     setVarianteModal(null)
   }
 
-  const query = busqueda.trim().toLowerCase()
-  const productosFiltrados =
-    query === ''
-      ? productos
-      : productos.filter(p => {
-          if (p.nombre.toLowerCase().includes(query)) return true
-          if (p.sku && p.sku.trim().toLowerCase() === query) return true
-          return variantesActivasDe(p).some(v => v.sku && v.sku.trim().toLowerCase() === query)
-        })
+  const productosFiltrados = useMemo(() => {
+    const base = filtrarInventario(productos, {
+      categoriaIds: catId ? [catId] : undefined,
+      subcategoriaIds: subcatId ? [subcatId] : undefined,
+    })
+    return base.filter(p => coincideBusqueda(p, busqueda))
+  }, [productos, catId, subcatId, busqueda])
 
   return (
     <section className={styles.catalogo}>
@@ -96,6 +122,46 @@ export default function CatalogoPanel({ productos, tipoCliente, onAgregar }: Cat
         onKeyDown={handleSearchKeyDown}
         autoFocus
       />
+
+      {cats.length > 0 && (
+        <div className={styles.chipsRow}>
+          <button
+            type="button"
+            className={catId === null ? styles.chipActivo : styles.chip}
+            aria-pressed={catId === null}
+            onClick={() => elegirCategoria(null)}
+          >
+            Todos
+          </button>
+          {cats.map(c => (
+            <button
+              key={c.id}
+              type="button"
+              className={catId === c.id ? styles.chipActivo : styles.chip}
+              aria-pressed={catId === c.id}
+              onClick={() => elegirCategoria(c.id)}
+            >
+              {c.valor}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {catId !== null && subcats.length > 0 && (
+        <div className={styles.chipsRow}>
+          {subcats.map(sc => (
+            <button
+              key={sc.id}
+              type="button"
+              className={subcatId === sc.id ? styles.chipActivo : styles.chip}
+              aria-pressed={subcatId === sc.id}
+              onClick={() => setSubcatId(sc.id)}
+            >
+              {sc.valor}
+            </button>
+          ))}
+        </div>
+      )}
 
       {productosFiltrados.length === 0 ? (
         <div className={styles.empty}>

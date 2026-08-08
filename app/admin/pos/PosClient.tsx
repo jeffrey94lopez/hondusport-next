@@ -31,6 +31,7 @@ import type {
   IsvTipo,
   VentaEspera,
   DocumentoParaArqueo,
+  Categoria,
 } from '@/types'
 import styles from './pos.module.css'
 
@@ -55,6 +56,7 @@ interface Props {
   esperas: VentaEspera[]
   sesionesCerradas: SesionCaja[]
   documentosPorSesion: Record<string, DocumentoParaArqueo[]>
+  categorias: Categoria[]
 }
 
 // Contrato de carrito para Task 11 (cobro/emisión, consume) y Task 12
@@ -169,6 +171,7 @@ export default function PosClient({
   esperas,
   sesionesCerradas,
   documentosPorSesion,
+  categorias,
 }: Props) {
   const router = useRouter()
   const [cajaId, setCajaId] = useState<string | null>(() => leerCajaGuardada(cajas))
@@ -698,7 +701,12 @@ export default function PosClient({
       )}
 
       <div className={styles.ventaGrid}>
-        <CatalogoPanel productos={productos} tipoCliente={tipoCliente} onAgregar={agregarProducto} />
+        <CatalogoPanel
+          productos={productos}
+          categorias={categorias}
+          tipoCliente={tipoCliente}
+          onAgregar={agregarProducto}
+        />
 
         <CarritoPanel
           lineas={lineas}

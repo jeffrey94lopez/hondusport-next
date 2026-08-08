@@ -35,6 +35,7 @@ export default async function PosPage() {
     // criterio para las dos consultas.
     { data: esperas },
     { data: sesionesCerradas },
+    { data: categorias },
   ] = await Promise.all([
     supabase.from('cajas').select('*').eq('activo', true).order('nombre'),
     supabase.from('sesiones_caja').select('*').eq('estado', 'abierta'),
@@ -46,6 +47,12 @@ export default async function PosPage() {
     supabase.from('configuracion').select('key, value'),
     supabase.from('ventas_espera').select('*').order('created_at', { ascending: false }),
     supabase.from('sesiones_caja').select('*').eq('estado', 'cerrada').order('cerrada_at', { ascending: false }).limit(30),
+    supabase
+      .from('categorias')
+      .select('id, tipo, valor, slug, imagen, categorias_padre, orden, activo')
+      .eq('activo', true)
+      .in('tipo', ['cat', 'subcat'])
+      .order('orden'),
   ])
 
   // Documentos de las sesiones actualmente abiertas (todas las cajas), con sus
@@ -87,6 +94,7 @@ export default async function PosPage() {
       esperas={esperas ?? []}
       sesionesCerradas={sesionesCerradas ?? []}
       documentosPorSesion={documentosPorSesion}
+      categorias={categorias ?? []}
     />
   )
 }

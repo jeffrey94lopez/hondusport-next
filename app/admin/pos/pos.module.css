@@ -237,6 +237,33 @@
 }
 .searchInput:focus { outline: none; border-color: var(--accent); }
 
+.chipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.chip {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-btn);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.chipActivo {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--cta);
+  border-radius: var(--radius-btn);
+  background: var(--cta);
+  color: var(--text-on-accent);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 .catalogoGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
