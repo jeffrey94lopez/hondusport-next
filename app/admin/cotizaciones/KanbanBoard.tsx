@@ -1,0 +1,198 @@
+'use client'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { agruparPorEtapa, estaVencida } from '@/lib/cotizaciones/cotizaciones'
+import { formatPrice } from '@/lib/store/format'
+import type { CotizacionEtapa, Vendedor } from '@/types'
+import { moverEtapaCotizacion, eliminarCotizacion } from './actions'
+import type { CotizacionKanbanItem } from './page'
+import styles from './cotizaciones.module.css'
+
+interface Props {
+  etapas: CotizacionEtapa[]
+  cotizaciones: CotizacionKanbanItem[]
+  vendedores: Vendedor[]
+}
+
+function fechaCorta(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-HN', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
+export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props) {
+  const router = useRouter()
+  const hoy = useMemo(() => new Date(), [])
+
+  // Estado local para el movimiento optimista entre columnas: se resincroniza
+  // cuando la prop cambia (tras router.refresh()). Ajustar estado durante el
+  // render (en vez de en un efecto) evita el render en cascada que marca
+  // react-hooks/set-state-in-effect — patrón recomendado por React para
+  // "resetear" estado derivado cuando cambia una prop.
+  const [cotizacionesProp, setCotizacionesProp] = useState(cotizaciones)
+  const [cotizacionesLocal, setCotizacionesLocal] = useState(cotizaciones)
+  if (cotizaciones !== cotizacionesProp) {
+    setCotizacionesProp(cotizaciones)
+    setCotizacionesLocal(cotizaciones)
+  }
+
+  const [filtroVendedor, setFiltroVendedor] = useState('todos')
+  const [menuAbierto, setMenuAbierto] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!menuAbierto) return
+    const cerrar = () => setMenuAbierto(null)
+    window.addEventListener('click', cerrar)
+    return () => window.removeEventListener('click', cerrar)
+  }, [menuAbierto])
+
+  const filtradas = useMemo(
+    () => (filtroVendedor === 'todos' ? cotizacionesLocal : cotizacionesLocal.filter(c => c.vendedor_id === filtroVendedor)),
+    [cotizacionesLocal, filtroVendedor],
+  )
+
+  const columnas = useMemo(() => agruparPorEtapa(filtradas, etapas), [filtradas, etapas])
+
+  async function mover(id: string, etapaId: string) {
+    setMenuAbierto(null)
+    const previo = cotizacionesLocal
+    setCotizacionesLocal(prev => prev.map(c => (c.id === id ? { ...c, etapa_id: etapaId } : c)))
+    const res = await moverEtapaCotizacion(id, etapaId)
+    if (!res.ok) {
+      setCotizacionesLocal(previo)
+      alert(res.error)
+      return
+    }
+    router.refresh()
+  }
+
+  async function eliminar(id: string, numero: string) {
+    setMenuAbierto(null)
+    if (!window.confirm(`¿Eliminar la cotización ${numero}? Esta acción no se puede deshacer.`)) return
+    const previo = cotizacionesLocal
+    setCotizacionesLocal(prev => prev.filter(c => c.id !== id))
+    const res = await eliminarCotizacion(id)
+    if (!res.ok) {
+      setCotizacionesLocal(previo)
+      alert(res.error)
+      return
+    }
+    router.refresh()
+  }
+
+  function onDragStart(e: React.DragEvent, id: string) {
+    e.dataTransfer.setData('text/plain', id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  function onDrop(e: React.DragEvent, etapaId: string) {
+    e.preventDefault()
+    const id = e.dataTransfer.getData('text/plain')
+    if (id) mover(id, etapaId)
+  }
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.topbar}>
+        <div>
+          <h1 className={styles.title}>Cotizaciones</h1>
+          <p className={styles.subtitle}>{filtradas.length} de {cotizacionesLocal.length} cotizaciones</p>
+        </div>
+        <div className={styles.topbarActions}>
+          <select
+            className={styles.filtroVendedor}
+            value={filtroVendedor}
+            onChange={e => setFiltroVendedor(e.target.value)}
+          >
+            <option value="todos">Todos los vendedores</option>
+            {vendedores.map(v => (
+              <option key={v.id} value={v.id}>{v.nombre}</option>
+            ))}
+          </select>
+          <button
+            className={`${styles.btnNueva} btnMerlinPrimary`}
+            onClick={() => router.push('/admin/cotizaciones/nueva')}
+          >
+            + Nueva cotización
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.board}>
+        {columnas.map(({ etapa, items }) => (
+          <div
+            key={etapa.id}
+            className={styles.column}
+            style={{ borderTopColor: etapa.color }}
+            onDragOver={e => e.preventDefault()}
+            onDrop={e => onDrop(e, etapa.id)}
+          >
+            <div className={styles.columnHeader}>
+              <span className={styles.columnNombre}>{etapa.nombre}</span>
+              <span className={styles.columnCount}>{items.length}</span>
+            </div>
+
+            <div className={styles.columnBody}>
+              {items.length === 0 && <p className={styles.columnEmpty}>Sin cotizaciones</p>}
+              {items.map(c => {
+                const vencida = estaVencida(new Date(c.valido_hasta), hoy)
+                return (
+                  <div
+                    key={c.id}
+                    className={styles.card}
+                    draggable
+                    onDragStart={e => onDragStart(e, c.id)}
+                    onClick={() => router.push(`/admin/cotizaciones/${c.id}`)}
+                  >
+                    <div className={styles.cardHeader}>
+                      <span className={styles.cardNumero}>{c.numero}</span>
+                      <div className={styles.cardMenuWrap} onClick={e => e.stopPropagation()}>
+                        <button
+                          className={`${styles.menuBtn} btnMerlinIcon`}
+                          aria-label="Más acciones"
+                          onClick={() => setMenuAbierto(menuAbierto === c.id ? null : c.id)}
+                        >
+                          ⋮
+                        </button>
+                        {menuAbierto === c.id && (
+                          <div className={styles.menu}>
+                            <span className={styles.menuLabel}>Mover a…</span>
+                            {etapas.filter(e => e.activo).map(e => (
+                              <button
+                                key={e.id}
+                                className={styles.menuItem}
+                                disabled={e.id === c.etapa_id}
+                                onClick={() => mover(c.id, e.id)}
+                              >
+                                {e.nombre}
+                              </button>
+                            ))}
+                            <div className={styles.menuDivider} />
+                            <button
+                              className={`${styles.menuItem} ${styles.menuItemDanger}`}
+                              onClick={() => eliminar(c.id, c.numero)}
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className={styles.cardCliente}>{c.cliente_display}</p>
+                    <p className={styles.cardTotal}>{formatPrice(c.total)}</p>
+
+                    <div className={styles.cardFooter}>
+                      <span className={styles.cardVendedor}>{c.vendedor_nombre ?? 'Sin vendedor'}</span>
+                      <span className={styles.cardFecha}>{fechaCorta(c.updated_at)}</span>
+                    </div>
+
+                    {vencida && <span className={styles.badgeVencida}>Vencida</span>}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

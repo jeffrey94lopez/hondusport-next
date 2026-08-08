@@ -19,6 +19,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/admin/pos', icon: '🧾', label: 'POS' },
       { href: '/admin/pos/documentos', icon: '📄', label: 'Documentos' },
+      { href: '/admin/cotizaciones', icon: '📝', label: 'Cotizaciones' },
       { href: '/admin/pedidos', icon: '📋', label: 'Pedidos', badge: true },
       { href: '/admin/clientes', icon: '👥', label: 'Clientes' },
       { href: '/admin/cupones', icon: '🎟️', label: 'Cupones' },
