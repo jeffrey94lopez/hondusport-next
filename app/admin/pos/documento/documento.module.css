@@ -195,6 +195,49 @@
   gap: 0.85rem;
 }
 
+/* Defecto 3 (revisión POS P2.1): DocumentoModal reusaba .toolbar/.toolbarLeft
+   /.toolbarRight — pensadas para la barra de ancho completo de la PÁGINA del
+   documento (space-between, flex-wrap libre) — dentro del modal, mucho más
+   angosto (max-width: 780px). Con el título + 2 chips de formato + 3 botones
+   Merlin, el ancho no alcanza: `justify-content: space-between` fuerza al
+   grupo de acciones a otra línea y, una vez envuelto, esa línea queda
+   alineada a la IZQUIERDA (space-between solo reparte en una sola línea),
+   separada del título sin ningún criterio — de ahí que los botones se vean
+   "desencajados". Esta barra propia del modal fija el título arriba y las
+   acciones SIEMPRE alineadas a la derecha, con o sin wrap. */
+.modalDocumentoToolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.modalDocumentoToolbarTop {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.modalDocumentoToolbarTitulo {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.modalDocumentoToolbarAcciones {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 /* Un contenedor `position: fixed` no fragmenta en paged media (paginado):
    se imprimiría solo la primera página. Se neutraliza el modal Y su overlay
    para que el papel (DocumentoHoja, dentro de .pageBg dentro de .modalDocumentoBody)

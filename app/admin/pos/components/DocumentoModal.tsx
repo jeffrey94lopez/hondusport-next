@@ -62,11 +62,11 @@ export default function DocumentoModal({ documentoId, formatoDefault, onNuevaVen
   return (
     <div className={styles.modalDocumentoOverlay}>
       <div className={styles.modalDocumento}>
-        <div className={`${styles.toolbar} ${styles.noPrint}`}>
-          <div className={styles.toolbarLeft}>
-            <span className={styles.toolbarTitulo}>{titulo} emitido</span>
+        <div className={`${styles.modalDocumentoToolbar} ${styles.noPrint}`}>
+          <div className={styles.modalDocumentoToolbarTop}>
+            <span className={styles.modalDocumentoToolbarTitulo}>{titulo} emitido</span>
           </div>
-          <div className={styles.toolbarRight}>
+          <div className={styles.modalDocumentoToolbarAcciones}>
             {data && (
               <div className={styles.formatoGroup}>
                 <button
