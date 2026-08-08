@@ -161,17 +161,34 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
     const imagen = p.imagenes?.[0]
     const favorito = esFavorito(p)
 
+    // Fix arrastrado de Task 6 (revisión): esta tarjeta era un <button> con
+    // la estrella (otro botón) anidada dentro — HTML inválido que el parser
+    // de SSR corta antes de tiempo y React descarta/re-renderiza al
+    // hidratar (parpadeo + warning de validateDOMNesting en cada carga de
+    // /admin/pos), además de controles interactivos anidados (accesibilidad).
+    // Ahora es un <div role="button"> con su propio manejo de teclado; la
+    // estrella queda como botón HERMANO dentro de la tarjeta.
+    function handleCardKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+      if (agotado) return
+      if (e.key !== 'Enter' && e.key !== ' ') return
+      e.preventDefault()
+      handleProductoClick(p)
+    }
+
     return (
-      <button
+      <div
         key={p.id}
-        type="button"
+        role="button"
+        tabIndex={0}
         className={styles.prodCard}
-        disabled={agotado}
-        onClick={() => handleProductoClick(p)}
+        aria-disabled={agotado}
+        onClick={() => { if (!agotado) handleProductoClick(p) }}
+        onKeyDown={handleCardKeyDown}
       >
         <button
           type="button"
-          className={favorito ? `${styles.estrella} ${styles.estrellaActiva}` : styles.estrella}
+          className={`btnMerlinIcon ${styles.estrella}`}
+          aria-pressed={favorito}
           aria-label={favorito ? 'Quitar de anclados' : 'Anclar al POS'}
           onClick={e => alternarFavorito(p, e)}
         >
@@ -191,7 +208,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
         {!agotado && stock != null && (
           <div className={styles.prodStock}>Stock: {stock}</div>
         )}
-      </button>
+      </div>
     )
   }
 
@@ -219,7 +236,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
         <div className={styles.chipsRow}>
           <button
             type="button"
-            className={catId === null ? styles.chipActivo : styles.chip}
+            className="btnMerlinChip"
             aria-pressed={catId === null}
             onClick={() => elegirCategoria(null)}
           >
@@ -229,7 +246,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
             <button
               key={c.id}
               type="button"
-              className={catId === c.id ? styles.chipActivo : styles.chip}
+              className="btnMerlinChip"
               aria-pressed={catId === c.id}
               onClick={() => elegirCategoria(c.id)}
             >
@@ -245,7 +262,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
             <button
               key={sc.id}
               type="button"
-              className={subcatId === sc.id ? styles.chipActivo : styles.chip}
+              className="btnMerlinChip"
               aria-pressed={subcatId === sc.id}
               onClick={() => setSubcatId(sc.id)}
             >

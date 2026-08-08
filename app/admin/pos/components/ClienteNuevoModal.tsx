@@ -193,7 +193,7 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
         {error && <div className={styles.formError}>{error}</div>}
 
         <div className={styles.formFooter}>
-          <button type="button" className={styles.btnCancel} onClick={onCerrar} disabled={isPending}>
+          <button type="button" className={`btnMerlinTertiary ${styles.btnCancel}`} onClick={onCerrar} disabled={isPending}>
             Cancelar
           </button>
           <button type="submit" className={`btnMerlinPrimary ${styles.btnSubmit}`} disabled={isPending}>

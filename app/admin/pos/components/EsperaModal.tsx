@@ -79,12 +79,12 @@ export default function EsperaModal({ esperas, carritoVacio, isPending, error, o
                     </div>
                   </div>
                   <div className={styles.esperaAcciones}>
-                    <button type="button" className={styles.btnCancel} onClick={() => onRetomar(e)} disabled={isPending}>
+                    <button type="button" className={`btnMerlinTertiary ${styles.btnCancel}`} onClick={() => onRetomar(e)} disabled={isPending}>
                       Retomar
                     </button>
                     <button
                       type="button"
-                      className={styles.btnQuitar}
+                      className="btnMerlinIcon"
                       onClick={() => onDescartar(e.id)}
                       disabled={isPending}
                       aria-label="Descartar espera"

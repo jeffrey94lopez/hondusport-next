@@ -17,9 +17,6 @@
 
 .toolbarLeft, .toolbarRight { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 
-.backLink { font-size: 0.82rem; color: var(--text-muted); }
-.backLink:hover { color: var(--accent); }
-
 .toolbarTitulo { font-weight: 700; font-size: 0.9rem; color: var(--text); }
 
 .badgeAnuladoToolbar {
@@ -32,26 +29,12 @@
   padding: 0.2rem 0.6rem;
 }
 
+/* Task 12: los botones pasan a btnMerlinChip (con su propio borde/fondo), así
+   que este contenedor ya no necesita simular una píldora — solo agrupa. */
 .formatoGroup {
   display: flex;
-  gap: 0.2rem;
-  background: var(--bg-hover);
-  border-radius: var(--radius-tag);
-  padding: 0.2rem;
+  gap: 0.4rem;
 }
-
-.formatoBtn {
-  border: none;
-  background: none;
-  padding: 0.35rem 0.85rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  border-radius: var(--radius-tag);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.formatoBtnActive { background: var(--bg-card); color: var(--accent); box-shadow: var(--shadow-card); }
 
 /* ---- Fondo de pantalla detrás del "papel" (solo preview) ---- */
 .pageBg {

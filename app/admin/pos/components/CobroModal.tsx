@@ -206,7 +206,8 @@ export default function CobroModal({
         <div className={styles.tipoDocRow}>
           <button
             type="button"
-            className={`${styles.tipoDocBtn} ${tipo === 'factura' ? styles.tipoDocBtnActive : ''}`}
+            className={`btnMerlinChip ${styles.tipoDocBtn}`}
+            aria-pressed={tipo === 'factura'}
             onClick={() => setTipo('factura')}
             disabled={isPending}
           >
@@ -214,7 +215,8 @@ export default function CobroModal({
           </button>
           <button
             type="button"
-            className={`${styles.tipoDocBtn} ${tipo === 'comprobante' ? styles.tipoDocBtnActive : ''}`}
+            className={`btnMerlinChip ${styles.tipoDocBtn}`}
+            aria-pressed={tipo === 'comprobante'}
             onClick={() => setTipo('comprobante')}
             disabled={isPending}
           >
@@ -257,7 +259,8 @@ export default function CobroModal({
                     <button
                       key={m.id}
                       type="button"
-                      className={seleccionado ? styles.chipActivo : styles.chip}
+                      className="btnMerlinChip"
+                      aria-pressed={seleccionado}
                       onClick={() => alternarMetodo(m)}
                       disabled={isPending || sinTasa}
                       title={sinTasa ? 'Sin tasa de cambio configurada' : undefined}
@@ -353,7 +356,7 @@ export default function CobroModal({
         {error && <div className={styles.formError}>{error}</div>}
 
         <div className={styles.formFooter}>
-          <button type="button" className={styles.btnCancel} onClick={onClose} disabled={isPending}>
+          <button type="button" className={`btnMerlinTertiary ${styles.btnCancel}`} onClick={onClose} disabled={isPending}>
             Cancelar
           </button>
           <button type="button" className={`btnMerlinPrimary ${styles.btnSubmit}`} onClick={handleEmitir} disabled={isPending}>

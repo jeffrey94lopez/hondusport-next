@@ -147,7 +147,7 @@ export default function LineaEditorModal({ linea, stockDisponible, onGuardar, on
         {formError && <div className={styles.formError}>{formError}</div>}
 
         <div className={styles.formFooter}>
-          <button type="button" className={styles.btnCancel} onClick={onCerrar}>Cancelar</button>
+          <button type="button" className={`btnMerlinTertiary ${styles.btnCancel}`} onClick={onCerrar}>Cancelar</button>
           <button type="submit" className={`btnMerlinPrimary ${styles.btnSubmit}`}>Guardar</button>
         </div>
       </form>

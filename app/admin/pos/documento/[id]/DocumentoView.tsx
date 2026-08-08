@@ -27,7 +27,7 @@ export default function DocumentoView({ documento, items, pagos, caja, cai, conf
     <div className={styles.page}>
       <div className={`${styles.toolbar} ${styles.noPrint}`}>
         <div className={styles.toolbarLeft}>
-          <Link href="/admin/pos/documentos" className={styles.backLink}>← Documentos</Link>
+          <Link href="/admin/pos/documentos" className="btnMerlinTertiary">← Documentos</Link>
           <span className={styles.toolbarTitulo}>
             {esFactura ? 'Factura' : 'Comprobante'} {numeroDocumento(documento)}
           </span>
@@ -37,14 +37,16 @@ export default function DocumentoView({ documento, items, pagos, caja, cai, conf
           <div className={styles.formatoGroup}>
             <button
               type="button"
-              className={`${styles.formatoBtn} ${formato === '80mm' ? styles.formatoBtnActive : ''}`}
+              className="btnMerlinChip"
+              aria-pressed={formato === '80mm'}
               onClick={() => setFormato('80mm')}
             >
               80mm
             </button>
             <button
               type="button"
-              className={`${styles.formatoBtn} ${formato === 'carta' ? styles.formatoBtnActive : ''}`}
+              className="btnMerlinChip"
+              aria-pressed={formato === 'carta'}
               onClick={() => setFormato('carta')}
             >
               Carta

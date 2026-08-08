@@ -117,7 +117,7 @@ export default function CarritoPanel({
                     )}
                   </div>
                   <div className={styles.lineaQty}>
-                    <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, -1)} aria-label="Restar cantidad">
+                    <button type="button" className="btnMerlinIcon" onClick={() => onCantidad(l.key, -1)} aria-label="Restar cantidad">
                       −
                     </button>
                     <input
@@ -128,7 +128,7 @@ export default function CarritoPanel({
                       max={tope ?? undefined}
                       onChange={e => onCantidadInput(l.key, e.target.value)}
                     />
-                    <button type="button" className={styles.qtyBtn} onClick={() => onCantidad(l.key, 1)} aria-label="Sumar cantidad">
+                    <button type="button" className="btnMerlinIcon" onClick={() => onCantidad(l.key, 1)} aria-label="Sumar cantidad">
                       +
                     </button>
                   </div>
@@ -137,7 +137,7 @@ export default function CarritoPanel({
                     <button type="button" className={styles.btnEditarLinea} onClick={() => onEditarLinea(l.key)} aria-label="Editar línea">
                       ✎
                     </button>
-                    <button type="button" className={styles.btnQuitar} onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
+                    <button type="button" className="btnMerlinIcon" onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
                       ×
                     </button>
                   </div>
@@ -147,7 +147,7 @@ export default function CarritoPanel({
           )}
         </div>
 
-        <button type="button" className={styles.btnItemLibre} onClick={onItemLibre}>
+        <button type="button" className={`btnMerlinSecondary ${styles.btnItemLibre}`} onClick={onItemLibre}>
           + Ítem libre
         </button>
       </div>

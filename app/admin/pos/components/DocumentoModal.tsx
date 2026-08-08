@@ -71,14 +71,16 @@ export default function DocumentoModal({ documentoId, formatoDefault, onNuevaVen
               <div className={styles.formatoGroup}>
                 <button
                   type="button"
-                  className={`${styles.formatoBtn} ${formato === '80mm' ? styles.formatoBtnActive : ''}`}
+                  className="btnMerlinChip"
+                  aria-pressed={formato === '80mm'}
                   onClick={() => setFormato('80mm')}
                 >
                   80mm
                 </button>
                 <button
                   type="button"
-                  className={`${styles.formatoBtn} ${formato === 'carta' ? styles.formatoBtnActive : ''}`}
+                  className="btnMerlinChip"
+                  aria-pressed={formato === 'carta'}
                   onClick={() => setFormato('carta')}
                 >
                   Carta

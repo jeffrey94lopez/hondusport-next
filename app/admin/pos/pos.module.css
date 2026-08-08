@@ -88,18 +88,9 @@
   flex-shrink: 0;
 }
 
-.btnGhost {
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-input);
-  padding: 0.45rem 0.85rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.btnGhost:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
-.btnGhost:disabled { color: var(--text-dim); cursor: not-allowed; }
+/* Task 12: color/radio/tipografía vienen de btnMerlinTertiary; solo se
+   conserva el tamaño compacto que necesita el header. */
+.btnGhost { padding: 0.45rem 0.85rem; }
 
 /* Selección de caja */
 .centerWrap {
@@ -230,16 +221,9 @@
   padding-top: 0.5rem;
 }
 
-.btnCancel {
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-input);
-  padding: 0.55rem 1rem;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.btnCancel:hover { color: var(--text); }
+/* Task 12: color/radio/tipografía vienen de btnMerlinTertiary; solo se
+   conserva el padding compacto que ya tenía. */
+.btnCancel { padding: 0.55rem 1rem; }
 
 .btnSubmit { padding: 0.55rem 1.1rem; }
 
@@ -296,32 +280,6 @@
   margin-bottom: 0.75rem;
 }
 
-.chip {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-btn);
-  background: var(--bg-card);
-  color: var(--text);
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.chipActivo {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--cta);
-  border-radius: var(--radius-btn);
-  background: var(--cta);
-  color: var(--text-on-accent);
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.chip:disabled,
-.chipActivo:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .anclados {
   margin-bottom: 0.9rem;
 }
@@ -341,6 +299,11 @@
   gap: 0.75rem;
 }
 
+/* Fix arrastrado de Task 6: era un <button>, con la estrella (otro botón)
+   anidada dentro — HTML inválido (validateDOMNesting) que el parser de SSR
+   cierra antes de tiempo y React descarta/re-renderiza al hidratar. Ahora es
+   un <div role="button"> con su propio manejo de teclado; la estrella queda
+   como botón HERMANO (ver CatalogoPanel.tsx). */
 .prodCard {
   position: relative;
   display: flex;
@@ -351,34 +314,19 @@
   border-radius: var(--radius-card);
   padding: 0.6rem;
   cursor: pointer;
-  text-align: left;
-  font-family: inherit;
   box-shadow: var(--shadow-card);
 }
-.prodCard:hover:not(:disabled) { border-color: var(--accent); }
-.prodCard:disabled { cursor: not-allowed; opacity: 0.55; }
+.prodCard:hover:not([aria-disabled="true"]) { border-color: var(--accent); }
+.prodCard[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
 
-/* Task 12 la sustituirá por btnMerlinIcon. */
+/* Color/radio/tamaño de ícono vienen de btnMerlinIcon; solo se conserva la
+   posición sobre la esquina de la tarjeta. */
 .estrella {
   position: absolute;
   top: 0.35rem;
   right: 0.35rem;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  border: none;
-  border-radius: 50%;
-  background: var(--bg-card);
-  color: var(--border-input);
-  font-size: 0.95rem;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: var(--shadow-card);
 }
-.estrellaActiva { color: var(--cta); }
 
 .prodImgWrap {
   position: relative;
@@ -462,18 +410,6 @@
   align-items: center;
   gap: 0.3rem;
 }
-.qtyBtn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1px solid var(--border-light);
-  background: var(--bg-hover);
-  color: var(--text);
-  cursor: pointer;
-  font-size: 1.1rem;
-  line-height: 1;
-}
-.qtyBtn:hover { border-color: var(--accent); }
 .qtyInput {
   width: 48px;
   text-align: center;
@@ -506,19 +442,6 @@
 }
 .btnEditarLinea:hover { color: var(--accent); }
 
-.btnQuitar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: var(--bg-hover);
-  color: var(--danger);
-  cursor: pointer;
-  font-size: 0.9rem;
-  line-height: 1;
-}
-.btnQuitar:hover { background: var(--error-bg); }
-
 /* LineaEditorModal: campos a ancho completo (heredado de .formLabel, que es
    un flex column sin align-items — los hijos se estiran solos). El grupo de
    descuento necesita su propia fila porque combina input + selector L./%. */
@@ -535,18 +458,9 @@
   color: var(--text);
 }
 
-.btnItemLibre {
-  align-self: flex-start;
-  background: var(--bg-hover);
-  border: 1px dashed var(--border-light);
-  border-radius: var(--radius-input);
-  padding: 0.45rem 0.85rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.btnItemLibre:hover { color: var(--accent); border-color: var(--accent); }
+/* Task 12: color/radio/tipografía vienen de btnMerlinSecondary; align-self
+   evita que se estire a lo ancho dentro de .lineasScroll (flex column). */
+.btnItemLibre { align-self: flex-start; }
 
 .pieCarrito {
   display: flex;
@@ -698,25 +612,9 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
 }
-.tipoDocBtn {
-  padding: 0.9rem;
-  border-radius: var(--radius-card);
-  border: 2px solid var(--border-light);
-  background: var(--bg-hover);
-  color: var(--text);
-  font-size: 0.95rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-align: center;
-  font-family: inherit;
-}
-.tipoDocBtn:hover:not(:disabled) { border-color: var(--accent); }
-.tipoDocBtn:disabled { cursor: not-allowed; opacity: 0.6; }
-.tipoDocBtnActive {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  color: var(--accent);
-}
+/* Task 12: color/radio/tipografía vienen de btnMerlinChip; se conserva que
+   cada botón llene su celda del grid de 2 columnas, con el texto centrado. */
+.tipoDocBtn { width: 100%; justify-content: center; }
 
 .identBlock {
   display: flex;

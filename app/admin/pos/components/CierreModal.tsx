@@ -117,7 +117,7 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
         {error && <div className={styles.formError}>{error}</div>}
 
         <div className={styles.formFooter}>
-          <button type="button" className={styles.btnCancel} onClick={onClose} disabled={isPending}>
+          <button type="button" className={`btnMerlinTertiary ${styles.btnCancel}`} onClick={onClose} disabled={isPending}>
             Cancelar
           </button>
           <button

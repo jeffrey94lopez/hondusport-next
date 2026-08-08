@@ -81,3 +81,38 @@
 .btnMerlinTertiary:hover:not(:disabled) { background: var(--line); }
 .btnMerlinSecondary:disabled,
 .btnMerlinTertiary:disabled { color: var(--ink-disabled); cursor: not-allowed; }
+
+/* Botón compacto de ícono: −/+ de cantidad, quitar línea, estrella de
+   anclado. `aria-pressed="true"` marca el estado activo (p.ej. la estrella
+   anclada) reutilizando --cta, igual que btnMerlinChip. */
+.btnMerlinIcon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; padding: 0;
+  font-size: 1rem; font-weight: 700; line-height: 1;
+  color: var(--ink); background: var(--hover-input);
+  border: 1px solid var(--line); border-radius: var(--radius-btn);
+  cursor: pointer; transition: background .15s, border-color .15s, color .15s;
+}
+.btnMerlinIcon:hover:not(:disabled) { background: var(--line); }
+.btnMerlinIcon[aria-pressed="true"] { color: var(--cta); }
+.btnMerlinIcon:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Pastilla con estado: chips de categoría, métodos de pago, tipo de
+   documento, formato de impresión. El estado activo se marca con
+   aria-pressed="true" para que el estilo siga al estado accesible. */
+.btnMerlinChip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; font-size: .9rem; font-weight: 600;
+  color: var(--ink); background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--radius-btn);
+  cursor: pointer; white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.btnMerlinChip:hover:not(:disabled) { background: var(--hover-input); }
+.btnMerlinChip[aria-pressed="true"] {
+  /* Merlin no define un token "texto sobre acento": btnMerlinPrimary ya
+     resuelve el mismo caso (texto sobre --cta) con #ffffff literal en vez
+     de var(); se repite ese mismo criterio aquí. */
+  color: #ffffff; background: var(--cta); border-color: var(--cta);
+}
+.btnMerlinChip:disabled { opacity: .5; cursor: not-allowed; }

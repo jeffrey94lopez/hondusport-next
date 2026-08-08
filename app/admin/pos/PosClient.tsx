@@ -662,7 +662,7 @@ export default function PosClient({
             <div className={styles.formFooter}>
               <button
                 type="button"
-                className={styles.btnCancel}
+                className={`btnMerlinTertiary ${styles.btnCancel}`}
                 onClick={cambiarCaja}
                 disabled={isPending}
               >
@@ -721,13 +721,13 @@ export default function PosClient({
         <span className={styles.headerCaja}>{caja.nombre}</span>
         <span className={styles.headerSesion}>Sesión abierta desde {abiertaDesde}</span>
         <div className={styles.headerActions}>
-          <button type="button" className={styles.btnGhost} onClick={() => setHistorialAbierto(true)}>
+          <button type="button" className={`btnMerlinTertiary ${styles.btnGhost}`} onClick={() => setHistorialAbierto(true)}>
             Sesiones
           </button>
-          <button type="button" className={styles.btnGhost} onClick={() => setEsperaAbierta(true)}>
+          <button type="button" className={`btnMerlinTertiary ${styles.btnGhost}`} onClick={() => setEsperaAbierta(true)}>
             Espera{esperasCaja.length > 0 ? ` (${esperasCaja.length})` : ''}
           </button>
-          <button type="button" className={styles.btnGhost} onClick={() => setCierreAbierto(true)}>
+          <button type="button" className={`btnMerlinTertiary ${styles.btnGhost}`} onClick={() => setCierreAbierto(true)}>
             Cerrar caja
           </button>
         </div>

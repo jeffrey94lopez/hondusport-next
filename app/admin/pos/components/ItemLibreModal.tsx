@@ -65,7 +65,7 @@ export default function ItemLibreModal({ onClose, onSave }: ItemLibreModalProps)
         {formError && <div className={styles.formError}>{formError}</div>}
 
         <div className={styles.formFooter}>
-          <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
+          <button type="button" className={`btnMerlinTertiary ${styles.btnCancel}`} onClick={onClose}>Cancelar</button>
           <button type="submit" className={`btnMerlinPrimary ${styles.btnSubmit}`}>Agregar</button>
         </div>
       </form>
