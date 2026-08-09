@@ -258,6 +258,19 @@ export async function agregarLineaPorSku(
       .limit(1)
     const producto = productos?.[0]
     if (!producto) return { ok: true, data: { noEncontrado: true } }
+
+    // Simétrico a `materializarLineas`: un producto con variantes activas se
+    // vende POR variante, así que `productos.stock` es un campo fantasma que
+    // el resto del sistema ignora. No se crea línea del padre; se trata igual
+    // que "no rastreado" (la UI debe pedir escanear el sku de la variante).
+    const { data: variantesActivas } = await supabase
+      .from('producto_variantes')
+      .select('id')
+      .eq('producto_id', producto.id)
+      .eq('activo', true)
+      .limit(1)
+    if (variantesActivas && variantesActivas.length > 0) return { ok: true, data: { noRastreado: true } }
+
     productoId = producto.id
     nombreLinea = producto.nombre
     stockActual = producto.stock
