@@ -12,6 +12,10 @@ export interface Cliente {
   correo: string | null
   notas: string | null
   activo: boolean
+  es_cliente: boolean
+  es_proveedor: boolean
+  contacto: string | null
+  dias_credito: number
   created_at: string
   updated_at: string
 }
@@ -28,6 +32,10 @@ export interface ClienteForm {
   telefono: string
   correo: string
   notas: string
+  es_cliente: boolean
+  es_proveedor: boolean
+  contacto: string
+  dias_credito: number
 }
 
 export interface CaiAutorizacion {
@@ -475,4 +483,56 @@ export interface EtapaForm {
   nombre: string
   tipo: CotizacionEtapaTipo
   color: string
+}
+
+// POS P4a: Compras y proveedores
+export type CompraEstado = 'borrador' | 'ordenada' | 'parcial' | 'recibida' | 'anulada'
+export type CompraMoneda = 'L' | 'USD'
+export type CondicionPago = 'contado' | 'credito'
+
+export interface CompraItem {
+  id: string
+  compra_id: string
+  producto_id: string
+  variante_id: string | null
+  descripcion: string
+  cantidad_ordenada: number
+  cantidad_recibida: number
+  costo_unitario: number
+  orden: number
+}
+
+export interface Compra {
+  id: string
+  numero: string
+  proveedor_id: string
+  estado: CompraEstado
+  moneda: CompraMoneda
+  tasa_cambio: number | null
+  factura_proveedor: string | null
+  condicion_pago: CondicionPago
+  dias_credito: number
+  fecha: string
+  fecha_vencimiento: string | null
+  notas: string | null
+  total: number
+  anulado_motivo: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CompraConDatos extends Compra {
+  items: CompraItem[]
+  proveedor: Cliente | null   // el proveedor es un Cliente con es_proveedor=true
+}
+
+// Línea sugerida de reorden (producto o variante bajo mínimo)
+export interface ReordenLinea {
+  producto_id: string
+  variante_id: string | null
+  descripcion: string
+  stock: number
+  stock_minimo: number
+  cantidad_sugerida: number
+  costo: number | null
 }

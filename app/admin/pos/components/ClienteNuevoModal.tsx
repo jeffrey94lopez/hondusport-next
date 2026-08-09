@@ -24,6 +24,10 @@ const FORM_INICIAL: ClienteForm = {
   telefono: '',
   correo: '',
   notas: '',
+  es_cliente: true,
+  es_proveedor: false,
+  contacto: '',
+  dias_credito: 0,
 }
 
 export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoModalProps) {

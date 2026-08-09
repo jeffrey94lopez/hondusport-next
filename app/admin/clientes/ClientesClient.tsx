@@ -27,6 +27,10 @@ const EMPTY_FORM: ClienteForm = {
   telefono: '',
   correo: '',
   notas: '',
+  es_cliente: true,
+  es_proveedor: false,
+  contacto: '',
+  dias_credito: 0,
 }
 
 function clienteAForm(c: Cliente): ClienteForm {
@@ -42,6 +46,10 @@ function clienteAForm(c: Cliente): ClienteForm {
     telefono: c.telefono ?? '',
     correo: c.correo ?? '',
     notas: c.notas ?? '',
+    es_cliente: c.es_cliente,
+    es_proveedor: c.es_proveedor,
+    contacto: c.contacto ?? '',
+    dias_credito: c.dias_credito,
   }
 }
 
