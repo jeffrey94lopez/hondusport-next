@@ -27,8 +27,9 @@ Migración P4c: `supabase/migrations/2026-08-09-pos-p4c-cuentas-por-cobrar.sql`.
 ### Cambios en tablas existentes
 
 - **`clientes`** → `limite_credito numeric null` (null = sin límite).
-- **`documentos`** → `fecha_vencimiento date null`. Se setea en el INSERT (dentro de `emitir_documento`) = fecha de emisión + `cliente.dias_credito` cuando el documento lleva algún pago de tipo `credito`; null si no hay crédito. Respeta la inmutabilidad (se fija al crear, no se edita después).
 - **`metodos_pago`** → el check de `tipo` gana `'credito'`; seed idempotente de un método activo "Crédito" (`tipo='credito'`). El enum `MetodoPagoTipo` en `types/index.ts` gana `'credito'`.
+
+**No se toca la RPC fiscal `emitir_documento` ni la tabla `documentos`.** El crédito fluye por la emisión existente como un pago más (con el `metodo_id` del método "Crédito"). El **vencimiento se calcula en la vista** `documento_saldos` como `created_at::date + cliente.dias_credito` (join a `clientes`) — no se persiste una columna `fecha_vencimiento` en `documentos` (evita modificar el RPC fiscal y su trigger de inmutabilidad). Contrapartida menor: si el `dias_credito` de un cliente cambiara, el vencimiento de sus documentos previos se recalcula con el valor nuevo — impacto cosmético en la antigüedad, aceptable.
 - **Config:** clave `cxc_bloquear_limite` (`'true'`/`'false'`, default `'false'` = avisa, no bloquea).
 
 ### Tabla `cobros` (encabezado)
@@ -67,20 +68,22 @@ create or replace view documento_saldos as
 select
   d.id                                              as documento_id,
   d.cliente_id,
+  cl.nombre                                         as cliente_nombre,
   d.tipo, d.correlativo, d.numero_comprobante,
   d.created_at::date                                as fecha,
-  d.fecha_vencimiento,
+  (d.created_at::date + (coalesce(cl.dias_credito, 0) || ' days')::interval)::date as fecha_vencimiento,
   coalesce(sum(dp.monto) filter (where m.tipo = 'credito'), 0) as credito_total,
   coalesce(max(ca.cobrado), 0)                      as cobrado,
   coalesce(sum(dp.monto) filter (where m.tipo = 'credito'), 0) - coalesce(max(ca.cobrado), 0) as saldo
 from documentos d
+join clientes cl on cl.id = d.cliente_id
 join documento_pagos dp on dp.documento_id = d.id
 join metodos_pago m on m.id = dp.metodo_id
 left join (
   select documento_id, sum(monto) as cobrado from cobro_aplicaciones group by documento_id
 ) ca on ca.documento_id = d.id
 where d.estado <> 'anulado'
-group by d.id, ca.cobrado
+group by d.id, cl.nombre, cl.dias_credito, ca.cobrado
 having coalesce(sum(dp.monto) filter (where m.tipo = 'credito'), 0) > 0;
 ```
 
@@ -102,7 +105,7 @@ having coalesce(sum(dp.monto) filter (where m.tipo = 'credito'), 0) > 0;
 - **`MetodoPagoTipo`** gana `'credito'`. El `CobroModal` muestra "Crédito" como método; y cuando el `restante > 0` y hay un cliente registrado seleccionado, ofrece **"Dejar el restante a crédito (L. X)"** que agrega un pago de crédito por el restante. `validarPagos` no cambia (el crédito suma como cualquier pago para cubrir el total; no es efectivo, así que la regla de "exceso solo en efectivo" lo excluye naturalmente).
 - **Validación de cliente:** si hay un pago de crédito, el documento debe tener un cliente registrado (no CONSUMIDOR FINAL). Se valida en la Server Action `emitirVenta` y en la UI.
 - **Límite de crédito:** en `emitirVenta`, si hay crédito y el cliente tiene `limite_credito`, se calcula `saldo actual del cliente (Σ saldo de sus documento_saldos) + credito_nuevo`; con `excedeLimite`. Según `cxc_bloquear_limite`: si `true` y excede → error `El cliente supera su límite de crédito.`; si `false` → se emite y el resultado incluye un aviso del excedente (mostrado en el `CobroModal`).
-- **`emitir_documento` / `emitirVenta`:** al persistir el documento, se setea `fecha_vencimiento` = fecha + `cliente.dias_credito` cuando hay crédito. El pago de crédito se guarda en `documento_pagos` como cualquier pago (con `metodo_id` del método "Crédito"). El descuento de stock y el kardex no cambian (una venta al crédito igual entrega mercadería).
+- **`emitirVenta` (sin tocar la RPC fiscal):** el pago de crédito se guarda en `documento_pagos` como cualquier pago (con `metodo_id` del método "Crédito"), por el flujo de emisión existente. El descuento de stock y el kardex no cambian (una venta al crédito igual entrega mercadería). El vencimiento no se persiste; lo calcula la vista. La acción solo agrega la validación de cliente y de límite (abajo).
 
 ### Arqueo / cierre (aditivo)
 
