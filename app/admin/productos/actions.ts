@@ -59,10 +59,9 @@ export async function obtenerHistorialCosto(
 }
 
 // Aplica un cambio de `stock` de producto o variante contra el valor guardado
-// en BD: si es cambio de modalidad (null <-> número) escribe directo sin
-// kardex; si es un delta real, pasa por registrar_entrada (que hace su propio
-// SELECT...FOR UPDATE atómico, así que es seguro aunque el `stockActual` que
-// usamos para calcular el delta se haya leído unos milisegundos antes).
+// en BD: enruta SIEMPRE por fijar_stock (delta o cambio de modalidad), que
+// reclasifica en SQL y deja el movimiento correspondiente en el kardex —
+// nunca escribe la modalidad directo ni usa registrar_entrada desde aquí.
 async function aplicarCambioStock(
   supabase: SupabaseServerClient,
   opts: {
@@ -76,24 +75,15 @@ async function aplicarCambioStock(
 ): Promise<string | null> {
   const cambio = calcularCambioStock(opts.stockActual, opts.stockForm)
   if (cambio.tipo === 'sin_cambio') return null
-
-  if (cambio.tipo === 'modalidad') {
-    const table = opts.varianteId ? 'producto_variantes' : 'productos'
-    const matchId = opts.varianteId ?? opts.productoId
-    const { error } = await supabase.from(table).update({ stock: cambio.valor }).eq('id', matchId)
-    return error ? error.message : null
-  }
-
-  // delta: una salida/ajuste negativo nunca lleva costo (la RPC lo rechaza).
-  const costo = cambio.delta > 0 ? (opts.costoEntrada ?? null) : null
-  const { error } = await supabase.rpc('registrar_entrada', {
+  const esIlimitado = opts.stockForm == null
+  const { error } = await supabase.rpc('fijar_stock', {
     p_producto_id: opts.productoId,
     p_variante_id: opts.varianteId,
-    p_cantidad: cambio.delta,
-    p_costo: costo,
+    p_stock_nuevo: esIlimitado ? 0 : opts.stockForm,
+    p_es_ilimitado: esIlimitado,
+    p_costo: opts.costoEntrada ?? null,
     p_referencia: 'manual',
     p_usuario: opts.usuario,
-    p_notas: null,
   })
   return error ? error.message : null
 }
@@ -202,7 +192,7 @@ export async function createProducto(form: ProductoForm): Promise<ActionResult> 
     precio_original: form.precio_original || null,
     categoria_id: form.categoria_id || null,
     subcategoria_id: form.subcategoria_id || null,
-    stock: form.stock ?? null,
+    stock: null,
     genero: form.genero || null,
     badge: form.badge || null,
     tallas: form.tallas ? form.tallas.split(',').map(s => s.trim()).filter(Boolean) : null,
@@ -220,6 +210,17 @@ export async function createProducto(form: ProductoForm): Promise<ActionResult> 
   }).select('id').single()
   if (error) return { error: error.message }
 
+  // [P4d] El stock inicial entra por fijar_stock (asiento 'inicial'), nunca directo.
+  const esIlimitado = form.stock == null
+  if (!esIlimitado) {
+    const { error: aperturaError } = await supabase.rpc('fijar_stock', {
+      p_producto_id: data.id, p_variante_id: null,
+      p_stock_nuevo: form.stock, p_es_ilimitado: false,
+      p_costo: form.costo ?? null, p_referencia: 'alta', p_usuario: null,
+    })
+    if (aperturaError) return { error: `El producto se creó, pero el stock inicial falló: ${aperturaError.message}` }
+  }
+
   // Producto nuevo: no hay stock/historial previo que proteger, se sincroniza
   // directo (sin deltas ni registrar_entrada). Si esto falla, el producto YA
   // quedó creado (sin variantes) — se lo decimos al usuario en vez de dejarlo
@@ -236,8 +237,8 @@ export async function createProducto(form: ProductoForm): Promise<ActionResult> 
 //   1. SELECT de stock/costo/variantes actuales en BD (no del form).
 //   2. UPDATE de `productos` con todo excepto `stock` (y `costo` protegido
 //      si el producto ya tiene historial propio).
-//   3. Cambio de stock del producto (delta vía registrar_entrada, o directo
-//      si es modalidad).
+//   3. Cambio de stock del producto (delta o modalidad, ambos vía fijar_stock;
+//      ver aplicarCambioStock).
 //   4. syncVariantes: upsert atómico de variantes + cambios de stock/avisos
 //      de costo por variante.
 // Si (2) tuvo éxito y (3) o (4) fallan, los datos generales SÍ quedaron
@@ -288,9 +289,9 @@ export async function updateProducto(id: string, form: ProductoForm): Promise<Ac
     precio_revendedor: form.precio_revendedor ?? null,
     stock_minimo: form.stock_minimo ?? null,
     activo: form.activo,
-    // stock: NO se escribe aquí. Ver aplicarCambioStock abajo: pasa por
-    // registrar_entrada (delta kardexable) o se escribe directo solo si es
-    // un cambio de modalidad ilimitado<->número (no es un movimiento real).
+    // stock: NO se escribe aquí. Ver aplicarCambioStock abajo: tanto el
+    // delta como el cambio de modalidad ilimitado<->número pasan por
+    // fijar_stock (siempre generan movimiento, sin excepciones).
   }).eq('id', id)
   if (error) return { error: error.message }
 
