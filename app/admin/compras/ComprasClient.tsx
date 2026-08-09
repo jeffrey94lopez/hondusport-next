@@ -57,6 +57,12 @@ export default function ComprasClient({ compras, proveedores }: Props) {
         </div>
         <div className={styles.actions}>
           <button
+            className={`${styles.btnPrimary} btnMerlinSecondary`}
+            onClick={() => router.push('/admin/compras/reorden')}
+          >
+            Reorden
+          </button>
+          <button
             className={`${styles.btnPrimary} btnMerlinPrimary`}
             onClick={() => router.push('/admin/compras/nueva')}
           >

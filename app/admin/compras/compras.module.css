@@ -121,6 +121,16 @@
   font-size: 0.88rem;
 }
 
+/* Pie del panel de reorden: selector de proveedor + botón de crear orden */
+.reordenFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
 /* ============================ EDITOR ============================ */
 .root {
   padding: 1.5rem;
