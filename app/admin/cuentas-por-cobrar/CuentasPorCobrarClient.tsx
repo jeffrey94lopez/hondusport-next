@@ -93,6 +93,12 @@ export default function CuentasPorCobrarClient({ filas, clientes, sesiones, caja
         </div>
         <div className={styles.actions}>
           <button
+            className={`${styles.btnAccion} btnMerlinSecondary`}
+            onClick={() => router.push('/admin/cuentas-por-cobrar/cobros')}
+          >
+            Historial de cobros
+          </button>
+          <button
             className={`${styles.btnAccion} btnMerlinPrimary`}
             onClick={() => setModal({ modo: 'global' })}
           >

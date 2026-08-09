@@ -1,0 +1,203 @@
+/* Estado de cuenta por cliente (POS P4c, Task 7). Dos modos en el mismo
+   módulo: la vista en pantalla (sigue el tema oscuro, tokens de app/merlin.css,
+   mismos patrones que ../../cxc.module.css) y la hoja imprimible (fondo blanco/
+   tinta fija, copiada de app/admin/cuentas-por-pagar/proveedor/[id]/estado.module.css
+   — CxP, espejo — que a su vez viene de app/admin/pos/documento/documento.module.css).
+   `.page` es compartido por ambos modos (nunca se montan a la vez:
+   EstadoCuentaClienteView decide cuál renderizar). */
+
+.page { padding: 1.5rem; min-height: 100vh; }
+
+/* ============================ PANTALLA ============================ */
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.title { font-size: 1.25rem; font-weight: 800; color: var(--text); }
+.subtitle { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+.actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.btnAccion { padding: 0.55rem 1rem; white-space: nowrap; }
+
+.clienteCard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.clienteDato { color: var(--text-muted); }
+
+.totalCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+}
+.totalLabel { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+.totalMonto { font-size: 1.3rem; font-weight: 800; color: var(--text); }
+
+.sectionTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.6rem;
+}
+
+.tableWrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+.table { width: 100%; border-collapse: collapse; font-size: 0.855rem; }
+.table th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  white-space: nowrap;
+}
+.table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+
+.numero { font-weight: 700; white-space: nowrap; }
+.num { text-align: right; white-space: nowrap; }
+.saldoCol { font-weight: 700; }
+.fechaCol { white-space: nowrap; color: var(--text-muted); }
+
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+.badgeGris { background: var(--bg-hover); color: var(--text-muted); }
+.badgeAmbar { background: var(--warning-bg); color: var(--warning); }
+.badgeVerde { background: var(--success-bg); color: var(--success); }
+.badgeRojo { background: var(--error-bg); color: var(--danger); }
+
+.empty { padding: 3rem; text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+
+/* ============================ HOJA IMPRIMIBLE ============================ */
+/* ---- Toolbar (no imprimible) ---- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.toolbarLeft, .toolbarRight { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.toolbarTitulo { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+
+/* Los botones Merlin primary/secondary/tertiary no traen padding ni display
+   propios (ver app/merlin.css): se componen con esta clase para que se vean
+   y alineen como botones de verdad en la barra (mismo criterio documentado en
+   app/admin/pos/documento/documento.module.css). */
+.btnToolbar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.95rem;
+  min-height: 38px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* ---- Fondo de pantalla detrás del "papel" (solo preview) ---- */
+.pageBg {
+  background: var(--bg);
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* ---- Papel: fondo blanco/tinta negra fijos a propósito (simulan papel
+   impreso real, no chrome de la app) — no deben seguir el tema oscuro. ---- */
+.hojaCarta {
+  position: relative;
+  background: #ffffff;
+  color: #0a0a0a;
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  max-width: 700px;
+  font-family: var(--font-poppins), sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 36px 44px;
+}
+
+/* ---- Contenido de la hoja ---- */
+.header { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.logo { max-width: 140px; max-height: 70px; object-fit: contain; }
+.emisor { font-size: 0.92em; }
+.emisorNombre { font-weight: 800; font-size: 1.15em; margin-bottom: 2px; }
+
+.docTitulo { text-align: center; margin: 10px 0; }
+.docTituloH1 { font-size: 1.3em; font-weight: 800; letter-spacing: 2px; margin: 0; }
+
+.metaRow { font-size: 0.9em; margin-bottom: 6px; }
+
+.clienteBlock { font-size: 0.9em; margin-bottom: 10px; }
+
+.hojaSectionTitle { font-weight: 700; font-size: 0.95em; margin: 12px 0 4px; }
+
+.itemsTable { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 0.9em; }
+.itemsTable th {
+  text-align: left;
+  border-bottom: 1px solid #333;
+  padding: 3px 4px;
+  font-size: 0.85em;
+}
+.itemsTable td { padding: 3px 4px; border-bottom: 1px dotted #ccc; vertical-align: top; }
+.itemsTable th:nth-child(n+2), .itemsTable td:nth-child(n+2) { text-align: right; white-space: nowrap; }
+.itemsTable th:first-child, .itemsTable td:first-child { text-align: left; }
+
+.hojaEmpty { font-size: 0.88em; color: #555; margin-bottom: 10px; }
+
+.desglose { margin-top: 8px; margin-bottom: 8px; font-size: 0.95em; }
+.desgloseRow { display: flex; justify-content: space-between; gap: 1em; padding: 1px 0; }
+.desgloseTotal { font-weight: 800; font-size: 1.15em; border-top: 1px solid #333; margin-top: 4px; padding-top: 4px; }
+
+/* ---- Impresión ---- */
+@media print {
+  .noPrint { display: none !important; }
+  .pageBg { padding: 0; background: none; min-height: auto; display: block; }
+  .hojaCarta { box-shadow: none; margin: 0 auto; }
+}
