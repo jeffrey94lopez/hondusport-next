@@ -226,7 +226,7 @@ export default function DocumentosClient({ documentos, sesiones, cajas }: Props)
           sesiones={sesiones}
           cajas={cajas}
           onClose={() => setDevolviendo(null)}
-          onEmitida={() => { setDevolviendo(null); router.refresh() }}
+          onEmitida={() => router.refresh()}
         />
       )}
     </div>

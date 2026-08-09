@@ -3,8 +3,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import DevolucionModal from '../../components/DevolucionModal'
-import { puedeDevolverDocumento, type EstadoDevolucionDocumento } from '@/lib/pos/devoluciones'
-import type { Documento, DocumentoItem, Caja, CaiAutorizacion, ConfigMap, DocumentoPagoConMetodo, SesionCaja } from '@/types'
+import NotaCreditoHoja from '../../components/NotaCreditoHoja'
+import { puedeDevolverDocumento, numeroDocumentoDevolucion, type EstadoDevolucionDocumento } from '@/lib/pos/devoluciones'
+import type { Documento, DocumentoItem, Caja, CaiAutorizacion, ConfigMap, DocumentoPagoConMetodo, SesionCaja, NotaCreditoReembolso } from '@/types'
 import DocumentoHoja, { numeroDocumento } from './DocumentoHoja'
 import styles from '../documento.module.css'
 
@@ -21,6 +22,10 @@ interface Props {
   estadoDevolucion: EstadoDevolucionDocumento
   sesiones: SesionCaja[]
   cajas: Caja[]
+  // POS P5a Task 5: solo se llenan cuando `documento.tipo` es nota_credito/
+  // devolucion (ver page.tsx) — la hoja de venta (DocumentoHoja) no los usa.
+  reembolsos: NotaCreditoReembolso[]
+  origen: Pick<Documento, 'tipo' | 'correlativo' | 'numero_comprobante'> | null
 }
 
 export default function DocumentoView({
@@ -34,12 +39,15 @@ export default function DocumentoView({
   estadoDevolucion,
   sesiones,
   cajas,
+  reembolsos,
+  origen,
 }: Props) {
   const router = useRouter()
   const [formato, setFormato] = useState<Formato>(caja.formato_impresion)
   const [devolviendo, setDevolviendo] = useState(false)
 
   const esFactura = documento.tipo === 'factura'
+  const esDevolucionDoc = documento.tipo === 'nota_credito' || documento.tipo === 'devolucion'
   const anulado = documento.estado === 'anulado'
 
   return (
@@ -48,7 +56,9 @@ export default function DocumentoView({
         <div className={styles.toolbarLeft}>
           <Link href="/admin/pos/documentos" className="btnMerlinTertiary">← Documentos</Link>
           <span className={styles.toolbarTitulo}>
-            {esFactura ? 'Factura' : 'Comprobante'} {numeroDocumento(documento)}
+            {esDevolucionDoc
+              ? `${documento.tipo === 'nota_credito' ? 'Nota de crédito' : 'Devolución'} ${numeroDocumentoDevolucion(documento)}`
+              : `${esFactura ? 'Factura' : 'Comprobante'} ${numeroDocumento(documento)}`}
           </span>
           {anulado && <span className={styles.badgeAnuladoToolbar}>ANULADO</span>}
           {estadoDevolucion !== 'ninguna' && (
@@ -96,7 +106,19 @@ export default function DocumentoView({
         </div>
       </div>
 
-      <DocumentoHoja documento={documento} items={items} pagos={pagos} cai={cai} config={config} formato={formato} />
+      {esDevolucionDoc ? (
+        <NotaCreditoHoja
+          documento={documento}
+          items={items}
+          reembolsos={reembolsos}
+          origen={origen}
+          cai={cai}
+          config={config}
+          formato={formato}
+        />
+      ) : (
+        <DocumentoHoja documento={documento} items={items} pagos={pagos} cai={cai} config={config} formato={formato} />
+      )}
 
       {devolviendo && (
         <DevolucionModal
@@ -104,7 +126,7 @@ export default function DocumentoView({
           sesiones={sesiones}
           cajas={cajas}
           onClose={() => setDevolviendo(false)}
-          onEmitida={() => { setDevolviendo(false); router.refresh() }}
+          onEmitida={() => router.refresh()}
         />
       )}
     </div>

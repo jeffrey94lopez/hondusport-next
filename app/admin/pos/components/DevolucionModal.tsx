@@ -1,17 +1,43 @@
 'use client'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import Modal from '@/components/admin/Modal'
-import { obtenerDevolvible, emitirNotaCredito } from '../actions'
+import NotaCreditoHoja from './NotaCreditoHoja'
+import { obtenerDevolvible, emitirNotaCredito, obtenerNotaCredito } from '../actions'
 import {
   cantidadDevolvible,
   recalcularLineaDevuelta,
   totalNotaCredito,
   validarReembolsos,
+  LABEL_REEMBOLSO,
 } from '@/lib/pos/devoluciones'
 import { formatPrice } from '@/lib/store/format'
 import { parseMoneyInput, valorMostrado, round2 } from '../pos-helpers'
-import type { LineaOriginalDoc, ReembolsoDevolucion, ReembolsoTipo, Caja, SesionCaja } from '@/types'
+import type {
+  LineaOriginalDoc,
+  ReembolsoDevolucion,
+  ReembolsoTipo,
+  Caja,
+  SesionCaja,
+  Documento,
+  DocumentoItem,
+  NotaCreditoReembolso,
+  CaiAutorizacion,
+  ConfigMap,
+} from '@/types'
 import styles from './DevolucionModal.module.css'
+import impStyles from '../documento/documento.module.css'
+
+type Formato = '80mm' | 'carta'
+
+interface NotaCreditoData {
+  documento: Documento
+  items: DocumentoItem[]
+  reembolsos: NotaCreditoReembolso[]
+  origen: Pick<Documento, 'tipo' | 'correlativo' | 'numero_comprobante'> | null
+  cai: CaiAutorizacion | null
+  caja: Caja
+  config: ConfigMap
+}
 
 interface DevolvibleData {
   documento: {
@@ -41,19 +67,15 @@ interface ReembolsoUi {
   montoTexto: string
 }
 
-const LABEL_REEMBOLSO: Record<ReembolsoTipo, string> = {
-  efectivo: 'Efectivo',
-  saldo_favor: 'Saldo a favor',
-  cxc: 'Abono a cuenta por cobrar',
-}
-
 interface Props {
   documentoId: string
   sesiones: SesionCaja[]
   cajas: Caja[]
   onClose: () => void
-  // Task 5 mostrará la nota de crédito/devolución emitida (recibe su id);
-  // por ahora el punto de montaje solo dispara el refresh del listado/detalle.
+  // El propio modal muestra la NC/devolución impresa tras emitir (ver el
+  // branch `notaCreditoId` más abajo); el consumidor solo necesita refrescar
+  // el listado/detalle en segundo plano — no debe cerrar el modal aquí (eso
+  // lo hace `onClose`, disparado desde el botón "Cerrar" de esa pantalla).
   onEmitida: (notaCreditoId: string) => void
 }
 
@@ -79,6 +101,35 @@ export default function DevolucionModal({ documentoId, sesiones, cajas, onClose,
   const [sesionId, setSesionId] = useState<string | null>(sesiones.length === 1 ? sesiones[0].id : null)
   const [errorSubmit, setErrorSubmit] = useState('')
   const [isPending, startTransition] = useTransition()
+
+  // Task 5: tras emitir con éxito, el modal deja de mostrar el formulario y
+  // pasa a mostrar la NC/devolución impresa (mismo criterio que DocumentoModal
+  // para la venta) — `onClose` sigue siendo quien cierra todo el flujo, ahora
+  // disparado desde el botón "Cerrar" de esa pantalla en vez de al emitir.
+  const [notaCreditoId, setNotaCreditoId] = useState<string | null>(null)
+  const [ncData, setNcData] = useState<NotaCreditoData | null>(null)
+  const [ncFormato, setNcFormato] = useState<Formato>('80mm')
+  const [ncCargando, setNcCargando] = useState(false)
+  const [ncError, setNcError] = useState('')
+
+  useEffect(() => {
+    if (!notaCreditoId) return
+    let cancelado = false
+    obtenerNotaCredito(notaCreditoId).then(result => {
+      if (cancelado) return
+      if (!result.ok || !result.data) {
+        setNcError(result.ok ? 'No se pudo cargar la nota de crédito.' : result.error)
+        setNcCargando(false)
+        return
+      }
+      setNcData(result.data)
+      setNcFormato(result.data.caja.formato_impresion)
+      setNcCargando(false)
+    })
+    return () => {
+      cancelado = true
+    }
+  }, [notaCreditoId])
 
   useEffect(() => {
     let cancelado = false
@@ -210,7 +261,85 @@ export default function DevolucionModal({ documentoId, sesiones, cajas, onClose,
         return
       }
       onEmitida(result.data.id)
+      // `ncCargando` arranca en `true` aquí (al disparar el cambio de fase),
+      // no dentro del efecto — llamar setState síncrono en el cuerpo del
+      // efecto (en vez de en un callback async) dispara cascading renders,
+      // ver lint react-hooks/set-state-in-effect (mismo criterio que
+      // `cargando`/lazy init en DocumentoModal).
+      setNcCargando(true)
+      setNotaCreditoId(result.data.id)
     })
+  }
+
+  // Mismo wrapper (clases de documento.module.css) que DocumentoModal usa para
+  // el papel de la venta recién emitida — no el <Modal> genérico (su overlay
+  // `position: fixed` no fragmenta en paginado, ver comentario de
+  // `.modalDocumentoOverlay` en ese CSS): así el papel de la NC/devolución
+  // pagina bien al imprimir desde este modal.
+  if (notaCreditoId) {
+    const tituloNc = ncData
+      ? `${ncData.documento.tipo === 'nota_credito' ? 'Nota de crédito' : 'Devolución'} emitida`
+      : 'Documento emitido'
+
+    return (
+      <div className={impStyles.modalDocumentoOverlay}>
+        <div className={impStyles.modalDocumento}>
+          <div className={`${impStyles.modalDocumentoToolbar} ${impStyles.noPrint}`}>
+            <div className={impStyles.modalDocumentoToolbarTop}>
+              <span className={impStyles.modalDocumentoToolbarTitulo}>{tituloNc}</span>
+            </div>
+            <div className={impStyles.modalDocumentoToolbarAcciones}>
+              {ncData && (
+                <div className={impStyles.formatoGroup}>
+                  <button
+                    type="button"
+                    className="btnMerlinChip"
+                    aria-pressed={ncFormato === '80mm'}
+                    onClick={() => setNcFormato('80mm')}
+                  >
+                    80mm
+                  </button>
+                  <button
+                    type="button"
+                    className="btnMerlinChip"
+                    aria-pressed={ncFormato === 'carta'}
+                    onClick={() => setNcFormato('carta')}
+                  >
+                    Carta
+                  </button>
+                </div>
+              )}
+              {ncData && (
+                <button type="button" className={`btnMerlinPrimary ${impStyles.btnToolbar}`} onClick={() => window.print()}>
+                  Imprimir
+                </button>
+              )}
+              <button type="button" className={`btnMerlinTertiary ${impStyles.btnToolbar}`} onClick={onClose}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+
+          <div className={impStyles.modalDocumentoBody}>
+            {ncCargando && <div className={`${impStyles.modalDocumentoEstado} ${impStyles.noPrint}`}>Cargando…</div>}
+            {!ncCargando && ncError && (
+              <div className={`${impStyles.modalDocumentoEstado} ${impStyles.noPrint}`}>{ncError}</div>
+            )}
+            {!ncCargando && ncData && (
+              <NotaCreditoHoja
+                documento={ncData.documento}
+                items={ncData.items}
+                reembolsos={ncData.reembolsos}
+                origen={ncData.origen}
+                cai={ncData.cai}
+                config={ncData.config}
+                formato={ncFormato}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const titulo = data

@@ -27,6 +27,7 @@ import type {
   CobroMetodo,
   LineaOriginalDoc,
   ReembolsoDevolucion,
+  NotaCreditoReembolso,
 } from '@/types'
 
 export type PosResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
@@ -859,6 +860,70 @@ export async function emitirNotaCredito(input: {
   revalidatePath('/admin/pos')
   revalidatePath('/admin/pos/documentos')
   return { ok: true, data: { id: data as string } }
+}
+
+// POS P5a Task 5: carga la NC/devolución ya emitida para la hoja imprimible
+// — mismas queries que obtenerDocumento (documento + config + caja + cai),
+// más los reembolsos aplicados (nota_credito_reembolsos, no documento_pagos:
+// una devolución nunca tiene pagos propios) y la referencia al documento de
+// origen (solo tipo/correlativo/numero_comprobante, lo único que necesita el
+// papel para mostrar "Documento de origen: Factura FAC-...").
+export async function obtenerNotaCredito(documentoId: string): Promise<PosResult<{
+  documento: Documento
+  items: DocumentoItem[]
+  reembolsos: NotaCreditoReembolso[]
+  origen: Pick<Documento, 'tipo' | 'correlativo' | 'numero_comprobante'> | null
+  cai: CaiAutorizacion | null
+  caja: Caja
+  config: ConfigMap
+}>> {
+  const supabase = await createClient()
+
+  const { data: documento, error: documentoError } = await supabase
+    .from('documentos')
+    .select('*')
+    .eq('id', documentoId)
+    .maybeSingle()
+
+  if (documentoError || !documento) return { ok: false, error: 'El documento ya no existe.' }
+  if (documento.tipo !== 'nota_credito' && documento.tipo !== 'devolucion') {
+    return { ok: false, error: 'Este documento no es una nota de crédito ni una devolución.' }
+  }
+
+  const [
+    { data: items },
+    { data: reembolsos },
+    { data: config },
+    { data: caja },
+    { data: origen },
+  ] = await Promise.all([
+    supabase.from('documento_items').select('*').eq('documento_id', documentoId),
+    supabase.from('nota_credito_reembolsos').select('*').eq('documento_id', documentoId),
+    supabase.from('configuracion').select('key, value'),
+    supabase.from('cajas').select('*').eq('id', documento.caja_id).maybeSingle(),
+    documento.documento_origen_id
+      ? supabase.from('documentos').select('tipo, correlativo, numero_comprobante').eq('id', documento.documento_origen_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
+  if (!caja) return { ok: false, error: ERROR_GENERICO }
+
+  const { data: cai } = documento.cai_id
+    ? await supabase.from('cai_autorizaciones').select('*').eq('id', documento.cai_id).maybeSingle()
+    : { data: null }
+
+  return {
+    ok: true,
+    data: {
+      documento: documento as Documento,
+      items: (items ?? []) as DocumentoItem[],
+      reembolsos: (reembolsos ?? []) as NotaCreditoReembolso[],
+      origen: (origen ?? null) as Pick<Documento, 'tipo' | 'correlativo' | 'numero_comprobante'> | null,
+      cai: (cai ?? null) as CaiAutorizacion | null,
+      caja: caja as Caja,
+      config: toConfigMap(config ?? []),
+    },
+  }
 }
 
 // Devuelve el `id` insertado: las pestañas de venta (PosClient) lo necesitan

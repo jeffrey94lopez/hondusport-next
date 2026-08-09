@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap } from '@/lib/store/adapters'
 import { estadoDevolucionDocumento } from '@/lib/pos/devoluciones'
-import type { Documento, DocumentoItem, DocumentoPago, Caja, CaiAutorizacion, MetodoPagoTipo, DocumentoPagoConMetodo, SesionCaja } from '@/types'
+import type { Documento, DocumentoItem, DocumentoPago, Caja, CaiAutorizacion, MetodoPagoTipo, DocumentoPagoConMetodo, SesionCaja, NotaCreditoReembolso } from '@/types'
 import DocumentoView from './DocumentoView'
 
 // Embed real de documento_pagos → metodos_pago: FK simple (to-one), PostgREST
@@ -51,10 +51,23 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
 
   if (!documento) notFound()
 
-  const [{ data: caja }, { data: cai }] = await Promise.all([
+  // POS P5a Task 5: una NC/devolución necesita datos que una factura/
+  // comprobante no tiene (sus propios reembolsos y la referencia al
+  // documento que devuelve) — se cargan aparte, gateados por tipo, para no
+  // ensuciar el camino normal de venta con queries que siempre volverían
+  // vacías.
+  const esDevolucionDoc = documento.tipo === 'nota_credito' || documento.tipo === 'devolucion'
+
+  const [{ data: caja }, { data: cai }, { data: reembolsos }, { data: origen }] = await Promise.all([
     supabase.from('cajas').select('*').eq('id', documento.caja_id).maybeSingle(),
     documento.cai_id
       ? supabase.from('cai_autorizaciones').select('*').eq('id', documento.cai_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    esDevolucionDoc
+      ? supabase.from('nota_credito_reembolsos').select('*').eq('documento_id', id)
+      : Promise.resolve({ data: [] as NotaCreditoReembolso[] }),
+    esDevolucionDoc && documento.documento_origen_id
+      ? supabase.from('documentos').select('tipo, correlativo, numero_comprobante').eq('id', documento.documento_origen_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
 
@@ -88,6 +101,8 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
       estadoDevolucion={estadoDevolucion}
       sesiones={(sesiones ?? []) as unknown as SesionCaja[]}
       cajas={(cajasAbiertas ?? []) as unknown as Caja[]}
+      reembolsos={(reembolsos ?? []) as NotaCreditoReembolso[]}
+      origen={(origen ?? null) as Pick<Documento, 'tipo' | 'correlativo' | 'numero_comprobante'> | null}
     />
   )
 }

@@ -678,6 +678,17 @@ export interface ReembolsoDevolucion {
   metodo_id?: string | null
 }
 
+// Fila de nota_credito_reembolsos (espejo 1:1 de la tabla) — el reembolso ya
+// persistido de una NC/devolución (Task 5: la hoja imprimible lo consume
+// para la sección "Reembolso").
+export interface NotaCreditoReembolso {
+  id: string
+  documento_id: string
+  tipo: ReembolsoTipo
+  metodo_id: string | null
+  monto: number
+}
+
 // Fila de documento_items del documento original (lo que se puede devolver)
 export interface LineaOriginalDoc {
   id: string

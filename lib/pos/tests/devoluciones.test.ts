@@ -5,6 +5,7 @@ import {
   totalNotaCredito,
   validarReembolsos,
   numeroDevolucion,
+  numeroDocumentoDevolucion,
   estadoDevolucionDocumento,
   puedeDevolverDocumento,
 } from '../devoluciones'
@@ -16,6 +17,15 @@ describe('cantidadDevolvible', () => {
 
 describe('numeroDevolucion', () => {
   it('formatea 8 dígitos', () => expect(numeroDevolucion(5)).toBe('DEV-00000005'))
+})
+
+describe('numeroDocumentoDevolucion', () => {
+  it('nota_credito usa el correlativo', () => {
+    expect(numeroDocumentoDevolucion({ tipo: 'nota_credito', correlativo: 'FAC-001-001-03-00000007', numero_comprobante: null })).toBe('FAC-001-001-03-00000007')
+  })
+  it('devolucion usa numeroDevolucion sobre numero_comprobante', () => {
+    expect(numeroDocumentoDevolucion({ tipo: 'devolucion', correlativo: null, numero_comprobante: 5 })).toBe('DEV-00000005')
+  })
 })
 
 describe('recalcularLineaDevuelta', () => {

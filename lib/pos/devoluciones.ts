@@ -1,5 +1,5 @@
 import { desglosarLinea } from './desglose'
-import type { LineaOriginalDoc, ReembolsoDevolucion } from '@/types'
+import type { Documento, LineaOriginalDoc, ReembolsoDevolucion, ReembolsoTipo } from '@/types'
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
@@ -9,6 +9,28 @@ export function cantidadDevolvible(cantidadOriginal: number, yaDevuelto: number)
 
 export function numeroDevolucion(n: number): string {
   return `DEV-${String(n).padStart(8, '0')}`
+}
+
+// Número del propio documento de devolución (Task 5, hoja imprimible +
+// toolbar del detalle): nota_credito usa correlativo (CAI '03', como
+// factura); devolucion usa numeroDevolucion sobre numero_comprobante (como
+// comprobante). Mismo criterio que el numeroDocumento local de
+// DocumentosClient, aquí como pura testeable porque la hoja imprimible y el
+// toolbar del detalle la necesitan por igual.
+export function numeroDocumentoDevolucion(
+  documento: Pick<Documento, 'tipo' | 'correlativo' | 'numero_comprobante'>,
+): string {
+  if (documento.tipo === 'nota_credito') return documento.correlativo ?? '—'
+  return numeroDevolucion(documento.numero_comprobante ?? 0)
+}
+
+// Etiquetas de las vías de reembolso: compartidas entre DevolucionModal (chips
+// de captura) y NotaCreditoHoja (sección "Reembolso" de la hoja impresa) para
+// que nunca diverjan.
+export const LABEL_REEMBOLSO: Record<ReembolsoTipo, string> = {
+  efectivo: 'Efectivo',
+  saldo_favor: 'Saldo a favor',
+  cxc: 'Abono a cuenta por cobrar',
 }
 
 type OriginalLinea = Pick<LineaOriginalDoc, 'producto_id' | 'variante_id' | 'descripcion' | 'cantidad' | 'precio_unitario' | 'descuento' | 'isv' | 'importe' | 'base' | 'isv_monto'>
