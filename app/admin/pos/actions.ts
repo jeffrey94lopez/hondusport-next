@@ -23,6 +23,7 @@ import type {
   CaiAutorizacion,
   ConfigMap,
   DocumentoPagoConMetodo,
+  CobroMetodo,
 } from '@/types'
 
 export type PosResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
@@ -157,7 +158,21 @@ export async function cerrarSesion(
     })),
   }))
 
-  const { efectivoEsperado } = esperadoCaja(Number(sesion.monto_inicial), docs)
+  // Cobros de CxC registrados en esta sesión (P4c): el efectivo cobrado suma
+  // al esperado igual que el efectivo de ventas; el resto queda informativo.
+  const { data: cobrosRows, error: cobrosError } = await supabase
+    .from('cobros')
+    .select('metodo, monto')
+    .eq('sesion_id', sesionId)
+
+  if (cobrosError) return { ok: false, error: ERROR_GENERICO }
+
+  const cobros = (cobrosRows ?? []).map(c => ({
+    metodo: c.metodo as CobroMetodo,
+    monto: Number(c.monto),
+  }))
+
+  const { efectivoEsperado } = esperadoCaja(Number(sesion.monto_inicial), docs, cobros)
   const diferencia = round2(montoContado - efectivoEsperado)
 
   const { error: updateError } = await supabase
@@ -176,6 +191,27 @@ export async function cerrarSesion(
 
   revalidatePath('/admin/pos')
   return { ok: true, data: { esperado: efectivoEsperado, diferencia } }
+}
+
+// Carga del cierre (P4c): cobros de CxC ya registrados en la sesión abierta,
+// para el resumen previo en `CierreModal` antes de confirmar. Mismos datos
+// que lee `cerrarSesion` para el cálculo definitivo.
+export async function obtenerCobrosSesion(
+  sesionId: string,
+): Promise<PosResult<Array<{ metodo: CobroMetodo; monto: number }>>> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('cobros')
+    .select('metodo, monto')
+    .eq('sesion_id', sesionId)
+
+  if (error) return { ok: false, error: ERROR_GENERICO }
+
+  return {
+    ok: true,
+    data: (data ?? []).map(c => ({ metodo: c.metodo as CobroMetodo, monto: Number(c.monto) })),
+  }
 }
 
 export async function emitirVenta(input: {

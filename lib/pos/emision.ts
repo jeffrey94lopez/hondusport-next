@@ -1,4 +1,4 @@
-import type { PagoPos, MetodoPagoTipo } from '@/types'
+import type { PagoPos, MetodoPagoTipo, CobroMetodo } from '@/types'
 import { precioParaCliente } from '@/lib/store/costeo'
 import { traducirErrorPedido } from '@/lib/store/variantes'
 import { formatPrice } from '@/lib/store/format'
@@ -72,13 +72,23 @@ export function tasaUsdDePagos(pagos: PagoPos[]): number | null {
 }
 
 /**
- * Efectivo y por-método esperados en caja a partir de los documentos emitidos.
- * El cambio entregado sale del efectivo (se resta), pero no de porMetodo.
+ * Efectivo y por-método esperados en caja a partir de los documentos emitidos,
+ * más (opcional) los cobros de CxC registrados en la sesión. El cambio
+ * entregado sale del efectivo (se resta), pero no de porMetodo. Solo los
+ * cobros en efectivo suman al efectivo esperado — el resto (transferencia,
+ * tarjeta, cheque, otro) queda solo en `cobrosPorMetodo`, informativo. El
+ * crédito otorgado en ventas (porMetodo.credito) tampoco es efectivo: es
+ * saldo por cobrar, no dinero en caja.
  */
 export function esperadoCaja(
   montoInicial: number,
   docs: Array<{ estado: string; total: number; pagos: Array<{ tipo: MetodoPagoTipo; monto: number }> }>,
-): { efectivoEsperado: number; porMetodo: Record<MetodoPagoTipo, number> } {
+  cobros: Array<{ metodo: CobroMetodo; monto: number }> = [],
+): {
+  efectivoEsperado: number
+  porMetodo: Record<MetodoPagoTipo, number>
+  cobrosPorMetodo: Record<CobroMetodo, number>
+} {
   const porMetodo: Record<MetodoPagoTipo, number> = {
     efectivo_lps: 0,
     efectivo_usd: 0,
@@ -86,6 +96,13 @@ export function esperadoCaja(
     transferencia: 0,
     otro: 0,
     credito: 0,
+  }
+  const cobrosPorMetodo: Record<CobroMetodo, number> = {
+    efectivo: 0,
+    transferencia: 0,
+    tarjeta: 0,
+    cheque: 0,
+    otro: 0,
   }
 
   let efectivoEsperado = montoInicial
@@ -102,7 +119,14 @@ export function esperadoCaja(
     efectivoEsperado = round2(efectivoEsperado - cambio)
   }
 
-  return { efectivoEsperado, porMetodo }
+  for (const cobro of cobros) {
+    cobrosPorMetodo[cobro.metodo] += cobro.monto
+    if (cobro.metodo === 'efectivo') {
+      efectivoEsperado = round2(efectivoEsperado + cobro.monto)
+    }
+  }
+
+  return { efectivoEsperado, porMetodo, cobrosPorMetodo }
 }
 
 /**

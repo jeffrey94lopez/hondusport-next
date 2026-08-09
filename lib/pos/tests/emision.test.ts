@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { precioLineaPos, validarEmision, validarPagos, cambioPago, esperadoCaja, traducirErrorPos, tasaUsdDePagos, montosPagoAlAgregar } from '../emision'
-import type { MetodoPagoTipo, PagoPos } from '@/types'
+import type { MetodoPagoTipo, PagoPos, CobroMetodo } from '@/types'
 
 describe('precioLineaPos', () => {
   it('final: siempre precio normal', () => {
@@ -88,6 +88,38 @@ describe('esperadoCaja', () => {
     ])
     expect(r.efectivoEsperado).toBe(500 + 230 + 300 + 100)
     expect(r.porMetodo.tarjeta).toBe(200)
+  })
+
+  it('sin cobros: comportamiento actual intacto (parámetro opcional)', () => {
+    const r = esperadoCaja(100, [doc(500, [{ tipo: 'efectivo_lps', monto: 500 }])])
+    expect(r.efectivoEsperado).toBe(600)
+    expect(r.porMetodo.efectivo_lps).toBe(500)
+  })
+
+  it('cobros de CxC: el efectivo suma al esperado, otros métodos no; ambos aparecen en el desglose', () => {
+    const cobros: Array<{ metodo: CobroMetodo; monto: number }> = [
+      { metodo: 'efectivo', monto: 300 },
+      { metodo: 'transferencia', monto: 200 },
+    ]
+    const r = esperadoCaja(
+      100,
+      [doc(500, [{ tipo: 'efectivo_lps', monto: 500 }])],
+      cobros,
+    )
+    expect(r.efectivoEsperado).toBe(900) // 100 inicial + 500 venta efectivo + 300 cobro efectivo
+    expect(r.cobrosPorMetodo.efectivo).toBe(300)
+    expect(r.cobrosPorMetodo.transferencia).toBe(200) // no suma al efectivo, sí al desglose
+  })
+
+  it('cobrosPorMetodo inicializa los 5 métodos aunque no haya cobros', () => {
+    const r = esperadoCaja(0, [])
+    expect(r.cobrosPorMetodo).toEqual({
+      efectivo: 0,
+      transferencia: 0,
+      tarjeta: 0,
+      cheque: 0,
+      otro: 0,
+    })
   })
 })
 
