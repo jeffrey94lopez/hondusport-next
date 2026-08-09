@@ -536,3 +536,48 @@ export interface ReordenLinea {
   cantidad_sugerida: number
   costo: number | null
 }
+
+// POS P4b: Cuentas por pagar
+export type PagoMetodo = 'efectivo' | 'transferencia' | 'cheque' | 'otro'
+export type EstadoPago = 'pagada' | 'parcial' | 'pendiente' | 'vencida'
+export type BucketAntiguedad = 'por_vencer' | 'd1_30' | 'd31_60' | 'd61_90' | 'd90_mas'
+
+export interface PagoProveedor {
+  id: string
+  numero: string
+  proveedor_id: string
+  fecha: string
+  monto: number
+  metodo: PagoMetodo
+  referencia: string | null
+  notas: string | null
+  usuario: string | null
+  created_at: string
+}
+
+export interface PagoAplicacion {
+  id: string
+  pago_id: string
+  compra_id: string
+  monto: number
+}
+
+// Fila de la vista compra_saldos
+export interface CompraSaldo {
+  compra_id: string
+  proveedor_id: string
+  numero: string
+  fecha: string
+  fecha_vencimiento: string | null
+  total: number
+  pagado: number
+  saldo: number
+}
+
+// Fila del tablero de CxP (saldo + datos derivados + nombre del proveedor)
+export interface CxpFila extends CompraSaldo {
+  proveedor_nombre: string
+  estado: EstadoPago
+  bucket: BucketAntiguedad
+  dias_vencido: number
+}
