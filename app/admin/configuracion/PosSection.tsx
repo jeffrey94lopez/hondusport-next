@@ -26,6 +26,7 @@ const TIPO_LABEL: Record<MetodoPagoTipo, string> = {
   tarjeta: 'Tarjeta',
   transferencia: 'Transferencia / Depósito',
   otro: 'Otro',
+  credito: 'Crédito',
 }
 
 const EMPTY_CAJA: CajaForm = { nombre: '', punto_emision: '001', formato_impresion: '80mm', activo: true }

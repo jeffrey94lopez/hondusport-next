@@ -14,6 +14,7 @@ const NOMBRES_METODO: Record<MetodoPagoTipo, string> = {
   tarjeta: 'Tarjeta',
   transferencia: 'Transferencia',
   otro: 'Otro',
+  credito: 'Crédito',
 }
 
 interface CierreModalProps {

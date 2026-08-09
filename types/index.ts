@@ -282,7 +282,7 @@ export interface Vendedor {
   updated_at: string
 }
 
-export type MetodoPagoTipo = 'efectivo_lps' | 'efectivo_usd' | 'tarjeta' | 'transferencia' | 'otro'
+export type MetodoPagoTipo = 'efectivo_lps' | 'efectivo_usd' | 'tarjeta' | 'transferencia' | 'otro' | 'credito'
 
 export interface MetodoPago {
   id: string
@@ -577,6 +577,52 @@ export interface CompraSaldo {
 // Fila del tablero de CxP (saldo + datos derivados + nombre del proveedor)
 export interface CxpFila extends CompraSaldo {
   proveedor_nombre: string
+  estado: EstadoPago
+  bucket: BucketAntiguedad
+  dias_vencido: number
+}
+
+// POS P4c: Cuentas por cobrar
+export type CobroMetodo = 'efectivo' | 'transferencia' | 'tarjeta' | 'cheque' | 'otro'
+
+export interface Cobro {
+  id: string
+  numero: string
+  cliente_id: string
+  fecha: string
+  monto: number
+  metodo: CobroMetodo
+  referencia: string | null
+  notas: string | null
+  sesion_id: string | null
+  usuario: string | null
+  created_at: string
+}
+
+export interface CobroAplicacion {
+  id: string
+  cobro_id: string
+  documento_id: string
+  monto: number
+}
+
+// Fila de la vista documento_saldos
+export interface DocumentoSaldo {
+  documento_id: string
+  cliente_id: string
+  cliente_nombre: string
+  tipo: 'factura' | 'comprobante'
+  correlativo: string | null
+  numero_comprobante: number | null
+  fecha: string
+  fecha_vencimiento: string
+  credito_total: number
+  cobrado: number
+  saldo: number
+}
+
+// Fila del tablero de CxC (saldo + derivados)
+export interface CxcFila extends DocumentoSaldo {
   estado: EstadoPago
   bucket: BucketAntiguedad
   dias_vencido: number

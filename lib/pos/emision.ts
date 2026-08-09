@@ -85,6 +85,7 @@ export function esperadoCaja(
     tarjeta: 0,
     transferencia: 0,
     otro: 0,
+    credito: 0,
   }
 
   let efectivoEsperado = montoInicial

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { saldoCompra, estadoPago, bucketAntiguedad, distribuirPago } from '../cxp'
+import { saldoCompra, estadoPago, bucketAntiguedad, distribuirPago, excedeLimite } from '../cxp'
 
 describe('saldoCompra', () => {
   it('resta pagado del total, redondeado a 2', () => {
@@ -57,5 +57,17 @@ describe('distribuirPago', () => {
     const r = distribuirPago(300, compras)
     expect(r.aplicaciones).toEqual([{ compra_id: 'a', monto: 100 }])
     expect(r.remanente).toBe(200)
+  })
+})
+
+describe('excedeLimite', () => {
+  it('sin límite (null) nunca excede', () => {
+    expect(excedeLimite(5000, 2000, null)).toEqual({ excede: false, excedente: 0 })
+  })
+  it('no excede si saldo + nuevo <= límite', () => {
+    expect(excedeLimite(3000, 2000, 5000)).toEqual({ excede: false, excedente: 0 })
+  })
+  it('excede y reporta el excedente', () => {
+    expect(excedeLimite(4000, 2000, 5000)).toEqual({ excede: true, excedente: 1000 })
   })
 })

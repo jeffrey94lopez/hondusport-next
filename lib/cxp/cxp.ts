@@ -49,3 +49,14 @@ export function distribuirPago(
   }
   return { aplicaciones, remanente: resto }
 }
+
+export function excedeLimite(
+  saldoActual: number,
+  creditoNuevo: number,
+  limite: number | null,
+): { excede: boolean; excedente: number } {
+  if (limite == null) return { excede: false, excedente: 0 }
+  const total = round2(saldoActual + creditoNuevo)
+  const excedente = round2(Math.max(0, total - limite))
+  return { excede: excedente > 0, excedente }
+}
