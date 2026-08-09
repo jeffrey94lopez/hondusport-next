@@ -42,6 +42,13 @@
   white-space: nowrap;
 }
 
+.chipsRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
 .tableWrap {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -94,6 +101,24 @@
 .badgeRevendedor { background: var(--info-bg); color: var(--info); }
 .badgeExonerado { background: var(--warning-bg); color: var(--warning); }
 .badgeNoExonerado { background: var(--bg-hover); color: var(--text-muted); }
+
+.rolBadges {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.badgeCliente,
+.badgeProveedor {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+.badgeCliente { background: var(--accent-dim); color: var(--accent); }
+.badgeProveedor { background: var(--info-bg); color: var(--info); }
 
 .rowActions {
   display: flex;

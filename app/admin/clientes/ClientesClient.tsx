@@ -53,8 +53,11 @@ function clienteAForm(c: Cliente): ClienteForm {
   }
 }
 
+type RoleFilter = 'todos' | 'clientes' | 'proveedores'
+
 export default function ClientesClient({ clientes }: Props) {
   const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('todos')
   const [modal, setModal] = useState<'create' | 'edit' | null>(null)
   const [editing, setEditing] = useState<Cliente | null>(null)
   const [form, setForm] = useState<ClienteForm>(EMPTY_FORM)
@@ -62,14 +65,18 @@ export default function ClientesClient({ clientes }: Props) {
   const [isPending, startTransition] = useTransition()
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return clientes
+    let lista = clientes
+    if (roleFilter === 'clientes') lista = lista.filter(c => c.es_cliente)
+    else if (roleFilter === 'proveedores') lista = lista.filter(c => c.es_proveedor)
+
+    if (!search.trim()) return lista
     const q = search.toLowerCase()
-    return clientes.filter(
+    return lista.filter(
       c =>
         c.nombre.toLowerCase().includes(q) ||
         c.rtn?.toLowerCase().includes(q)
     )
-  }, [clientes, search])
+  }, [clientes, search, roleFilter])
 
   function openCreate() {
     setForm(EMPTY_FORM)
@@ -108,6 +115,10 @@ export default function ClientesClient({ clientes }: Props) {
     e.preventDefault()
     setFormError('')
     if (!form.nombre.trim()) { setFormError('El nombre es requerido'); return }
+    if (!form.es_cliente && !form.es_proveedor) {
+      setFormError('El contacto debe ser cliente, proveedor o ambos.')
+      return
+    }
 
     startTransition(async () => {
       const result = modal === 'edit' && editing
@@ -122,8 +133,8 @@ export default function ClientesClient({ clientes }: Props) {
     <div className={styles.page}>
       <div className={styles.topbar}>
         <div>
-          <h1 className={styles.title}>Clientes</h1>
-          <p className={styles.subtitle}>{filtered.length} de {clientes.length} clientes</p>
+          <h1 className={styles.title}>Clientes y proveedores</h1>
+          <p className={styles.subtitle}>{filtered.length} de {clientes.length} contactos</p>
         </div>
         <div className={styles.actions}>
           <input
@@ -134,9 +145,36 @@ export default function ClientesClient({ clientes }: Props) {
             className={styles.search}
           />
           <button className={`${styles.btnPrimary} btnMerlinPrimary`} onClick={openCreate}>
-            + Nuevo cliente
+            + Nuevo contacto
           </button>
         </div>
+      </div>
+
+      <div className={styles.chipsRow}>
+        <button
+          type="button"
+          className="btnMerlinChip"
+          aria-pressed={roleFilter === 'todos'}
+          onClick={() => setRoleFilter('todos')}
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          className="btnMerlinChip"
+          aria-pressed={roleFilter === 'clientes'}
+          onClick={() => setRoleFilter('clientes')}
+        >
+          Clientes
+        </button>
+        <button
+          type="button"
+          className="btnMerlinChip"
+          aria-pressed={roleFilter === 'proveedores'}
+          onClick={() => setRoleFilter('proveedores')}
+        >
+          Proveedores
+        </button>
       </div>
 
       <div className={styles.tableWrap}>
@@ -144,6 +182,7 @@ export default function ClientesClient({ clientes }: Props) {
           <thead>
             <tr>
               <th>Nombre</th>
+              <th>Rol</th>
               <th>RTN</th>
               <th>Tipo</th>
               <th>Exonerado</th>
@@ -158,6 +197,12 @@ export default function ClientesClient({ clientes }: Props) {
                 <td>
                   <div className={styles.clienteName}>{c.nombre}</div>
                   {c.correo && <div className={styles.clienteMeta}>{c.correo}</div>}
+                </td>
+                <td>
+                  <div className={styles.rolBadges}>
+                    {c.es_cliente && <span className={styles.badgeCliente}>Cliente</span>}
+                    {c.es_proveedor && <span className={styles.badgeProveedor}>Proveedor</span>}
+                  </div>
                 </td>
                 <td>{c.rtn ?? '—'}</td>
                 <td>
@@ -192,58 +237,93 @@ export default function ClientesClient({ clientes }: Props) {
         </table>
         {filtered.length === 0 && (
           <div className={styles.empty}>
-            {search ? `No hay clientes que coincidan con "${search}"` : 'No hay clientes aún.'}
+            {search ? `No hay contactos que coincidan con "${search}"` : 'No hay contactos aún.'}
           </div>
         )}
       </div>
 
       {modal && (
         <Modal
-          title={modal === 'edit' ? 'Editar cliente' : 'Nuevo cliente'}
+          title={modal === 'edit' ? 'Editar contacto' : 'Nuevo contacto'}
           onClose={closeModal}
           maxWidth="560px"
         >
           <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.formRow}>
-              <label className={styles.formLabel}>
-                Nombre *
-                <input
-                  type="text"
-                  value={form.nombre}
-                  onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))}
-                  required
-                />
-              </label>
-              <label className={styles.formLabel}>
-                Tipo de cliente
-                <select
-                  value={form.tipo_cliente}
-                  onChange={e => setForm(p => ({ ...p, tipo_cliente: e.target.value as ClienteForm['tipo_cliente'] }))}
-                >
-                  <option value="final">Consumidor final</option>
-                  <option value="revendedor">Revendedor</option>
-                </select>
-              </label>
+            <label className={styles.formLabel}>
+              Nombre *
+              <input
+                type="text"
+                value={form.nombre}
+                onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))}
+                required
+              />
+            </label>
+            <div className={styles.formChecks}>
+              <Toggle
+                checked={form.es_cliente}
+                onChange={v => setForm(p => ({ ...p, es_cliente: v }))}
+                label="Es cliente"
+              />
+              <Toggle
+                checked={form.es_proveedor}
+                onChange={v => setForm(p => ({ ...p, es_proveedor: v }))}
+                label="Es proveedor"
+              />
             </div>
-            <div className={styles.formRow}>
-              <label className={styles.formLabel}>
-                RTN (14 dígitos, opcional)
-                <input
-                  type="text"
-                  value={form.rtn}
-                  onChange={e => setForm(p => ({ ...p, rtn: e.target.value }))}
-                  placeholder="08011990123456"
-                />
-              </label>
-              <label className={styles.formLabel}>
-                Identidad
-                <input
-                  type="text"
-                  value={form.identidad}
-                  onChange={e => setForm(p => ({ ...p, identidad: e.target.value }))}
-                />
-              </label>
-            </div>
+            {form.es_cliente && (
+              <>
+                <label className={styles.formLabel}>
+                  Tipo de cliente
+                  <select
+                    value={form.tipo_cliente}
+                    onChange={e => setForm(p => ({ ...p, tipo_cliente: e.target.value as ClienteForm['tipo_cliente'] }))}
+                  >
+                    <option value="final">Consumidor final</option>
+                    <option value="revendedor">Revendedor</option>
+                  </select>
+                </label>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>
+                    RTN (14 dígitos, opcional)
+                    <input
+                      type="text"
+                      value={form.rtn}
+                      onChange={e => setForm(p => ({ ...p, rtn: e.target.value }))}
+                      placeholder="08011990123456"
+                    />
+                  </label>
+                  <label className={styles.formLabel}>
+                    Identidad
+                    <input
+                      type="text"
+                      value={form.identidad}
+                      onChange={e => setForm(p => ({ ...p, identidad: e.target.value }))}
+                    />
+                  </label>
+                </div>
+              </>
+            )}
+            {form.es_proveedor && (
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>
+                  Persona de contacto
+                  <input
+                    type="text"
+                    value={form.contacto}
+                    onChange={e => setForm(p => ({ ...p, contacto: e.target.value }))}
+                  />
+                </label>
+                <label className={styles.formLabel}>
+                  Días de crédito
+                  <input
+                    type="number"
+                    value={form.dias_credito}
+                    onChange={e => setForm(p => ({ ...p, dias_credito: parseInt(e.target.value) || 0 }))}
+                    min="0"
+                  />
+                </label>
+              </div>
+            )}
             <div className={styles.formRow}>
               <label className={styles.formLabel}>
                 Teléfono
@@ -270,36 +350,40 @@ export default function ClientesClient({ clientes }: Props) {
                 onChange={e => setForm(p => ({ ...p, direccion: e.target.value }))}
               />
             </label>
-            <div className={styles.formChecks}>
-              <Toggle
-                checked={form.exonerado}
-                onChange={v => setForm(p => (
-                  v
-                    ? { ...p, exonerado: v }
-                    : { ...p, exonerado: v, constancia_exonerado: '', registro_sag: '' }
-                ))}
-                label="Exonerado"
-              />
-            </div>
-            {form.exonerado && (
-              <div className={styles.formRow}>
-                <label className={styles.formLabel}>
-                  N.º de constancia de exoneración
-                  <input
-                    type="text"
-                    value={form.constancia_exonerado}
-                    onChange={e => setForm(p => ({ ...p, constancia_exonerado: e.target.value }))}
+            {form.es_cliente && (
+              <>
+                <div className={styles.formChecks}>
+                  <Toggle
+                    checked={form.exonerado}
+                    onChange={v => setForm(p => (
+                      v
+                        ? { ...p, exonerado: v }
+                        : { ...p, exonerado: v, constancia_exonerado: '', registro_sag: '' }
+                    ))}
+                    label="Exonerado"
                   />
-                </label>
-                <label className={styles.formLabel}>
-                  Registro SAG (opcional)
-                  <input
-                    type="text"
-                    value={form.registro_sag}
-                    onChange={e => setForm(p => ({ ...p, registro_sag: e.target.value }))}
-                  />
-                </label>
-              </div>
+                </div>
+                {form.exonerado && (
+                  <div className={styles.formRow}>
+                    <label className={styles.formLabel}>
+                      N.º de constancia de exoneración
+                      <input
+                        type="text"
+                        value={form.constancia_exonerado}
+                        onChange={e => setForm(p => ({ ...p, constancia_exonerado: e.target.value }))}
+                      />
+                    </label>
+                    <label className={styles.formLabel}>
+                      Registro SAG (opcional)
+                      <input
+                        type="text"
+                        value={form.registro_sag}
+                        onChange={e => setForm(p => ({ ...p, registro_sag: e.target.value }))}
+                      />
+                    </label>
+                  </div>
+                )}
+              </>
             )}
             <label className={styles.formLabel}>
               Notas
@@ -315,7 +399,7 @@ export default function ClientesClient({ clientes }: Props) {
                 Cancelar
               </button>
               <button type="submit" className={`${styles.btnPrimary} btnMerlinPrimary`} disabled={isPending}>
-                {isPending ? 'Guardando…' : modal === 'edit' ? 'Guardar cambios' : 'Crear cliente'}
+                {isPending ? 'Guardando…' : modal === 'edit' ? 'Guardar cambios' : 'Crear contacto'}
               </button>
             </div>
           </form>

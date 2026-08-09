@@ -19,7 +19,21 @@ function toPayload(form: ClienteForm) {
     telefono: form.telefono.trim() || null,
     correo: form.correo.trim() || null,
     notas: form.notas.trim() || null,
+    es_cliente: form.es_cliente,
+    es_proveedor: form.es_proveedor,
+    contacto: form.contacto.trim() || null,
+    dias_credito: form.dias_credito,
   }
+}
+
+// Task 3 (POS P4a): un contacto sin ningún rol activo no tiene sentido — el
+// check de BD (`es_cliente or es_proveedor`) lo rechazaría de todos modos,
+// pero validamos aquí primero para dar un mensaje claro en el formulario.
+function validarRoles(form: ClienteForm): string | null {
+  if (!form.es_cliente && !form.es_proveedor) {
+    return 'El contacto debe ser cliente, proveedor o ambos.'
+  }
+  return null
 }
 
 // El índice único clientes_rtn_unico solo cubre rtn no nulo: si el 23505 salta
@@ -35,6 +49,8 @@ function esRtnDuplicado(error: { code?: string; message: string }): boolean {
 
 export async function createCliente(form: ClienteForm): Promise<ActionResult> {
   if (!form.nombre.trim()) return { error: 'El nombre es requerido' }
+  const rolesError = validarRoles(form)
+  if (rolesError) return { error: rolesError }
   const rtn = form.rtn.trim()
   if (rtn) {
     const rtnError = validarRtn(rtn)
@@ -54,6 +70,8 @@ export async function createCliente(form: ClienteForm): Promise<ActionResult> {
 
 export async function updateCliente(id: string, form: ClienteForm): Promise<ActionResult> {
   if (!form.nombre.trim()) return { error: 'El nombre es requerido' }
+  const rolesError = validarRoles(form)
+  if (rolesError) return { error: rolesError }
   const rtn = form.rtn.trim()
   if (rtn) {
     const rtnError = validarRtn(rtn)
@@ -84,6 +102,17 @@ export async function toggleClienteActivo(id: string, activo: boolean): Promise<
 // se agrega ahí. Mientras tanto, "Desactivar" es la acción primaria en la UI.
 export async function deleteCliente(id: string): Promise<ActionResult> {
   const supabase = await createClient()
+
+  // P4a: el contacto puede tener compras registradas como proveedor —
+  // eliminar rompería la FK compras.proveedor_id y perdería el historial.
+  const { count: compras } = await supabase
+    .from('compras')
+    .select('id', { count: 'exact', head: true })
+    .eq('proveedor_id', id)
+  if ((compras ?? 0) > 0) {
+    return { error: 'El contacto tiene compras como proveedor. No se puede eliminar.' }
+  }
+
   const { error } = await supabase.from('clientes').delete().eq('id', id)
   if (error) return { error: error.message }
   revalidatePath('/admin/clientes')
