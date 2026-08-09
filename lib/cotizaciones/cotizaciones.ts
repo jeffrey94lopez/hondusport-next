@@ -10,6 +10,20 @@ export function validoHasta(creada: Date, dias: number): Date {
   return d
 }
 
+// Honduras usa UTC-6 todo el año (sin horario de verano).
+const OFFSET_HONDURAS_MS = 6 * 60 * 60 * 1000
+
+// "Hoy" en Honduras (UTC-6) como Date a medianoche UTC de ESE día calendario
+// local. Se usa como la fecha base de vigencia y como el "hoy" de estaVencida.
+// Sin esto, tomar el día UTC directo produce un off-by-one: en Honduras una
+// operación de la tarde/noche ya cae en el día UTC siguiente, lo que
+// adelantaría un día tanto la fecha "válida hasta" como el vencimiento. Recibe
+// el instante (new Date()) para mantenerse pura y testeable.
+export function hoyHonduras(instante: Date): Date {
+  const local = new Date(instante.getTime() - OFFSET_HONDURAS_MS)
+  return new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()))
+}
+
 // Vencida si la fecha de hoy (día) es estrictamente posterior a valido_hasta (día).
 export function estaVencida(validoHasta: Date, hoy: Date): boolean {
   const vh = Date.UTC(validoHasta.getUTCFullYear(), validoHasta.getUTCMonth(), validoHasta.getUTCDate())

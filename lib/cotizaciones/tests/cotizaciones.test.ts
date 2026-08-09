@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { numeroCotizacion, validoHasta, estaVencida, agruparPorEtapa, etapaGanadaDestino } from '../cotizaciones'
+import { numeroCotizacion, validoHasta, estaVencida, hoyHonduras, agruparPorEtapa, etapaGanadaDestino } from '../cotizaciones'
 import type { CotizacionEtapa } from '@/types'
 
 const etapa = (id: string, orden: number, tipo: CotizacionEtapa['tipo'] = 'abierta'): CotizacionEtapa =>
@@ -21,6 +21,26 @@ describe('validoHasta', () => {
   it('con 0 días vence el mismo día', () => {
     const r = validoHasta(new Date('2026-08-08T10:00:00Z'), 0)
     expect(r.toISOString().slice(0, 10)).toBe('2026-08-08')
+  })
+})
+
+describe('hoyHonduras', () => {
+  const dia = (d: Date) => d.toISOString().slice(0, 10)
+  it('toma el día local de Honduras (UTC-6), no el UTC', () => {
+    // Honduras 8 ago 20:00 = UTC 9 ago 02:00 → sigue siendo el día 8 en Honduras
+    expect(dia(hoyHonduras(new Date('2026-08-09T02:00:00Z')))).toBe('2026-08-08')
+  })
+  it('antes de medianoche UTC pero ya día siguiente en... no: mediodía UTC = mismo día', () => {
+    expect(dia(hoyHonduras(new Date('2026-08-08T18:00:00Z')))).toBe('2026-08-08')
+  })
+  it('madrugada UTC = día anterior en Honduras', () => {
+    // UTC 8 ago 05:00 = Honduras 7 ago 23:00
+    expect(dia(hoyHonduras(new Date('2026-08-08T05:00:00Z')))).toBe('2026-08-07')
+  })
+  it('validoHasta desde hoyHonduras corrige el off-by-one de la tarde', () => {
+    // Guardado Honduras 8 ago 20:00 (UTC 9 ago 02:00) + 15 días = 23 ago, no 24
+    const r = validoHasta(hoyHonduras(new Date('2026-08-09T02:00:00Z')), 15)
+    expect(dia(r)).toBe('2026-08-23')
   })
 })
 

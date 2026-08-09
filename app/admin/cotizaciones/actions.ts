@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase-server'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { precioLineaPos } from '@/lib/pos/emision'
-import { numeroCotizacion, validoHasta, etapaGanadaDestino } from '@/lib/cotizaciones/cotizaciones'
+import { numeroCotizacion, validoHasta, hoyHonduras, etapaGanadaDestino } from '@/lib/cotizaciones/cotizaciones'
 import type { LineaPos, IsvTipo, CotizacionConDatos, CotizacionItem, CotizacionEtapa } from '@/types'
 
 export type CotizacionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
@@ -133,8 +133,10 @@ export async function guardarCotizacion(input: GuardarCotizacionInput): Promise<
   const desglosadas = prorrateadas.map(l => desglosarLinea(l, exonerado))
   const totales = totalesDocumento(desglosadas, input.descuentoGlobal, '')
 
-  // valido_hasta = hoy + validezDias (se calcula en JS; la BD guarda date)
-  const vh = validoHasta(new Date(), input.validezDias).toISOString().slice(0, 10)
+  // valido_hasta = hoy (día local de Honduras, UTC-6) + validezDias. Se usa
+  // hoyHonduras y no `new Date()` directo para no adelantar un día cuando el
+  // guardado ocurre en la tarde/noche (que en UTC ya es el día siguiente).
+  const vh = validoHasta(hoyHonduras(new Date()), input.validezDias).toISOString().slice(0, 10)
 
   try {
     let cotizacionId = input.id

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap } from '@/lib/store/adapters'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
-import { estaVencida } from '@/lib/cotizaciones/cotizaciones'
+import { estaVencida, hoyHonduras } from '@/lib/cotizaciones/cotizaciones'
 import type { LineaPos } from '@/types'
 import { obtenerCotizacion } from '../../actions'
 import CotizacionPdfView, { type EstiloCotizacion, type EmpresaPdf } from './CotizacionPdfView'
@@ -86,7 +86,7 @@ export default async function CotizacionPdfPage({ params, searchParams }: Props)
     logoUrl: config.logo_url || null,
   }
 
-  const vencida = estaVencida(new Date(cotizacion.valido_hasta + 'T00:00:00Z'), new Date())
+  const vencida = estaVencida(new Date(cotizacion.valido_hasta + 'T00:00:00Z'), hoyHonduras(new Date()))
   const estilo = resolverEstilo(estiloParam, config.cotizacion_formato_default || 'ejecutivo')
 
   return (

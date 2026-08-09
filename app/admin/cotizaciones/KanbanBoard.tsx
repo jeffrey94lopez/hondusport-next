@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { agruparPorEtapa, estaVencida } from '@/lib/cotizaciones/cotizaciones'
+import { agruparPorEtapa, estaVencida, hoyHonduras } from '@/lib/cotizaciones/cotizaciones'
 import { formatPrice } from '@/lib/store/format'
 import type { CotizacionEtapa, Vendedor } from '@/types'
 import { duplicarCotizacion, moverEtapaCotizacion, eliminarCotizacion } from './actions'
@@ -20,7 +20,7 @@ function fechaCorta(iso: string): string {
 
 export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props) {
   const router = useRouter()
-  const hoy = useMemo(() => new Date(), [])
+  const hoy = useMemo(() => hoyHonduras(new Date()), [])
 
   // Estado local para el movimiento optimista entre columnas: se resincroniza
   // cuando la prop cambia (tras router.refresh()). Ajustar estado durante el
