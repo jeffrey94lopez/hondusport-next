@@ -664,3 +664,39 @@ export interface ConteoLinea {
   aplicada: boolean
   aviso_movimiento: boolean
 }
+
+// POS P5a: Devoluciones y notas de crédito
+export type ReembolsoTipo = 'efectivo' | 'saldo_favor' | 'cxc'
+
+export interface ReembolsoDevolucion {
+  tipo: ReembolsoTipo
+  monto: number
+  metodo_id?: string | null
+}
+
+// Fila de documento_items del documento original (lo que se puede devolver)
+export interface LineaOriginalDoc {
+  id: string
+  producto_id: string | null
+  variante_id: string | null
+  descripcion: string
+  cantidad: number
+  precio_unitario: number
+  descuento: number
+  isv: '15' | '18' | 'exento'
+  importe: number
+  base: number
+  isv_monto: number
+  ya_devuelto: number
+}
+
+export interface SaldoFavorMovimiento {
+  id: string
+  cliente_id: string
+  monto: number
+  tipo: 'devolucion'
+  documento_id: string | null
+  notas: string | null
+  usuario: string | null
+  created_at: string
+}

@@ -84,10 +84,12 @@ export function esperadoCaja(
   montoInicial: number,
   docs: Array<{ estado: string; total: number; pagos: Array<{ tipo: MetodoPagoTipo; monto: number }> }>,
   cobros: Array<{ metodo: CobroMetodo; monto: number }> = [],
+  devoluciones: Array<{ metodo: CobroMetodo; monto: number }> = [],
 ): {
   efectivoEsperado: number
   porMetodo: Record<MetodoPagoTipo, number>
   cobrosPorMetodo: Record<CobroMetodo, number>
+  devolucionesPorMetodo: Record<CobroMetodo, number>
 } {
   const porMetodo: Record<MetodoPagoTipo, number> = {
     efectivo_lps: 0,
@@ -126,7 +128,13 @@ export function esperadoCaja(
     }
   }
 
-  return { efectivoEsperado, porMetodo, cobrosPorMetodo }
+  const devolucionesPorMetodo: Record<CobroMetodo, number> = { efectivo: 0, transferencia: 0, tarjeta: 0, cheque: 0, otro: 0 }
+  for (const dev of devoluciones) {
+    devolucionesPorMetodo[dev.metodo] += dev.monto
+    if (dev.metodo === 'efectivo') efectivoEsperado = round2(efectivoEsperado - dev.monto)
+  }
+
+  return { efectivoEsperado, porMetodo, cobrosPorMetodo, devolucionesPorMetodo }
 }
 
 /**

@@ -121,6 +121,23 @@ describe('esperadoCaja', () => {
       otro: 0,
     })
   })
+
+  it('devoluciones: el efectivo resta del esperado, otros métodos no; ambos aparecen en el desglose', () => {
+    const cobros: Array<{ metodo: CobroMetodo; monto: number }> = [{ metodo: 'efectivo', monto: 300 }]
+    const devoluciones: Array<{ metodo: CobroMetodo; monto: number }> = [
+      { metodo: 'efectivo', monto: 200 },
+      { metodo: 'transferencia', monto: 50 },
+    ]
+    const r = esperadoCaja(
+      100,
+      [doc(500, [{ tipo: 'efectivo_lps', monto: 500 }])],
+      cobros,
+      devoluciones,
+    )
+    expect(r.efectivoEsperado).toBe(700) // 100 inicial + 500 venta + 300 cobro - 200 devolución efectivo
+    expect(r.devolucionesPorMetodo.efectivo).toBe(200)
+    expect(r.devolucionesPorMetodo.transferencia).toBe(50) // no resta al efectivo, sí al desglose
+  })
 })
 
 describe('tasaUsdDePagos', () => {
