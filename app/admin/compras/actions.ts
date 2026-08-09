@@ -197,6 +197,18 @@ export async function recibirCompra(
 
 export async function anularCompra(compraId: string, motivo: string): Promise<ComprasResult> {
   const supabase = await createClient()
+
+  // Frontera de confianza: si la compra ya tiene pagos de proveedor aplicados
+  // (POS P4b), no se puede anular sin antes eliminarlos — anularla dejaría
+  // aplicaciones de pago colgando de una compra sin saldo válido.
+  const { count } = await supabase
+    .from('pago_aplicaciones')
+    .select('id', { count: 'exact', head: true })
+    .eq('compra_id', compraId)
+  if ((count ?? 0) > 0) {
+    return { ok: false, error: 'La compra tiene pagos registrados. Elimínalos antes de anular.' }
+  }
+
   const { error } = await supabase.rpc('anular_compra', { p_compra_id: compraId, p_motivo: motivo })
   if (error) return { ok: false, error: traducirError(error.message) }
   revalidatePath('/admin/compras')
