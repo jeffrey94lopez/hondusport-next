@@ -486,6 +486,15 @@ export async function emitirDesdePedido(input: {
 
 export async function anularDocumento(documentoId: string, motivo: string): Promise<PosResult> {
   const supabase = await createClient()
+
+  const { count } = await supabase
+    .from('cobro_aplicaciones')
+    .select('id', { count: 'exact', head: true })
+    .eq('documento_id', documentoId)
+  if ((count ?? 0) > 0) {
+    return { ok: false, error: 'El documento tiene cobros registrados. Elimínalos antes de anular.' }
+  }
+
   const { error } = await supabase.rpc('anular_comprobante', {
     p_documento_id: documentoId,
     p_motivo: motivo,
