@@ -24,6 +24,7 @@ const NAV_GROUPS = [
       { href: '/admin/clientes', icon: '👥', label: 'Clientes' },
       { href: '/admin/compras', icon: '📦', label: 'Compras' },
       { href: '/admin/cuentas-por-pagar', icon: '💰', label: 'Cuentas por pagar' },
+      { href: '/admin/cuentas-por-cobrar', icon: '📈', label: 'Cuentas por cobrar' },
       { href: '/admin/cupones', icon: '🎟️', label: 'Cupones' },
       { href: '/admin/envios', icon: '🚚', label: 'Envíos' },
     ],
