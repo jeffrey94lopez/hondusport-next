@@ -158,6 +158,33 @@ export default function CobroModal({
     )
   }
 
+  // Método tipo `credito` (si está configurado y activo llega en `metodos`).
+  const metodoCredito = metodos.find(m => m.tipo === 'credito') ?? null
+
+  // "Dejar el restante a crédito": fija (o agrega) el pago de crédito por lo que
+  // falta cubrir tras los DEMÁS pagos — misma cuenta que pendienteParaFila. Un
+  // pago de crédito no se cobra ahora: queda como saldo por cobrar del cliente.
+  function dejarRestanteACredito() {
+    if (isPending || !metodoCredito || !clienteActual) return
+    const m = metodoCredito
+    setPagos(prev => {
+      const otros = prev.filter(p => p.metodo_id !== m.id)
+      const sumaOtros = round2(otros.reduce((s, p) => s + p.monto, 0))
+      const pendiente = Math.max(0, round2(total - sumaOtros))
+      const nuevo: PagoUi = {
+        metodo_id: m.id,
+        tipo: m.tipo,
+        monto: pendiente,
+        monto_usd: null,
+        tasa: null,
+        referencia: null,
+        montoTexto: valorMostrado(pendiente),
+        montoUsdTexto: '',
+      }
+      return [...otros, nuevo]
+    })
+  }
+
   function chipsSugerencia(p: PagoUi): ChipSugerencia[] {
     const pendiente = pendienteParaFila(p.metodo_id)
     // "Restante" solo aporta algo distinto de "Total" cuando hay más de un
@@ -272,6 +299,14 @@ export default function CobroModal({
       return
     }
 
+    // Venta al crédito: un pago de tipo `credito` exige cliente registrado (no
+    // CONSUMIDOR FINAL). El server revalida esto releyendo metodos_pago.tipo.
+    const hayCredito = pagosParaEnvio.some(p => p.tipo === 'credito')
+    if (hayCredito && !clienteActual) {
+      setError('Una venta al crédito requiere un cliente registrado.')
+      return
+    }
+
     startTransition(async () => {
       const result = await emitirVenta({
         tipo,
@@ -287,6 +322,9 @@ export default function CobroModal({
         setError(result.ok ? 'No se pudo completar la operación. Intenta de nuevo.' : result.error)
         return
       }
+      // Aviso no-bloqueante: el cliente excede su límite de crédito pero el
+      // toggle `cxc_bloquear_limite` está apagado, así que la venta ya se emitió.
+      if (result.data.aviso) alert(result.data.aviso)
       onEmitido(result.data.documentoId)
     })
   }
@@ -442,6 +480,22 @@ export default function CobroModal({
             </>
           )}
         </div>
+
+        {metodoCredito && restante > 0 && (
+          <div className={styles.creditoRestante}>
+            <button
+              type="button"
+              className={`btnMerlinSecondary ${styles.btnDejarCredito}`}
+              onClick={dejarRestanteACredito}
+              disabled={isPending || !clienteActual}
+            >
+              Dejar el restante a crédito ({formatPrice(restante)})
+            </button>
+            {!clienteActual && (
+              <p className={styles.creditoHint}>Elegí un cliente para vender al crédito.</p>
+            )}
+          </div>
+        )}
 
         <div className={styles.cobroResumen}>
           <div className={styles.resumenDestacado}><span>Total</span><span>{formatPrice(total)}</span></div>

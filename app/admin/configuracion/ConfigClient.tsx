@@ -381,6 +381,7 @@ export default function ConfigClient({ config: initial, cais, cajas, vendedores,
             metodos={metodos}
             limiteConsumidorFinal={initial.pos_limite_consumidor_final ?? '10000'}
             documentoModal={initial.pos_documento_modal ?? 'true'}
+            bloquearLimite={initial.cxc_bloquear_limite ?? 'false'}
           />
           <EtapasSection etapas={etapas} />
         </>

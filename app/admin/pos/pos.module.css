@@ -783,6 +783,24 @@
 .resumenRestante { color: var(--danger); }
 .resumenCambio { color: var(--success); }
 
+/* Venta al crédito: botón "Dejar el restante a crédito" — los btnMerlin* no
+   traen caja propia, así que la clase de módulo aporta display/padding/ancho. */
+.creditoRestante {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.btnDejarCredito {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 1rem;
+}
+.creditoHint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 /* Modal: selector de variantes */
 .varianteList {
   display: flex;

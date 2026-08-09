@@ -31,6 +31,7 @@ const EMPTY_FORM: ClienteForm = {
   es_proveedor: false,
   contacto: '',
   dias_credito: 0,
+  limite_credito: '',
 }
 
 function clienteAForm(c: Cliente): ClienteForm {
@@ -50,6 +51,7 @@ function clienteAForm(c: Cliente): ClienteForm {
     es_proveedor: c.es_proveedor,
     contacto: c.contacto ?? '',
     dias_credito: c.dias_credito,
+    limite_credito: c.limite_credito != null ? String(c.limite_credito) : '',
   }
 }
 
@@ -301,6 +303,16 @@ export default function ClientesClient({ clientes }: Props) {
                     />
                   </label>
                 </div>
+                <label className={styles.formLabel}>
+                  Límite de crédito (L.)
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.limite_credito ?? ''}
+                    onChange={e => setForm(p => ({ ...p, limite_credito: e.target.value }))}
+                    placeholder="Sin límite"
+                  />
+                </label>
               </>
             )}
             {form.es_proveedor && (

@@ -18,6 +18,7 @@ interface Props {
   metodos: MetodoPago[]
   limiteConsumidorFinal: string
   documentoModal: string
+  bloquearLimite: string
 }
 
 const TIPO_LABEL: Record<MetodoPagoTipo, string> = {
@@ -42,11 +43,12 @@ function EstadoCell({ activo, onToggle, disabled }: { activo: boolean; onToggle:
   )
 }
 
-export default function PosSection({ cajas, vendedores, metodos, limiteConsumidorFinal, documentoModal }: Props) {
+export default function PosSection({ cajas, vendedores, metodos, limiteConsumidorFinal, documentoModal, bloquearLimite }: Props) {
   return (
     <div className={styles.wrap}>
       <LimiteConsumidorFinal inicial={limiteConsumidorFinal} />
       <DocumentoModalToggle inicial={documentoModal !== 'false'} />
+      <BloquearLimiteToggle inicial={bloquearLimite === 'true'} />
       <CajasBlock cajas={cajas} />
       <VendedoresBlock vendedores={vendedores} />
       <MetodosBlock metodos={metodos} />
@@ -95,6 +97,54 @@ function DocumentoModalToggle({ inicial }: { inicial: boolean }) {
         onChange={handleChange}
         disabled={isPending}
         label="Abrir el documento en modal tras cobrar"
+      />
+      {saved && <p className={styles.helpText}>Guardado.</p>}
+      {error && <p className={styles.formError}>{error}</p>}
+    </div>
+  )
+}
+
+// P4c (CxC): interruptor de `cxc_bloquear_limite`. Mismo patrón que
+// DocumentoModalToggle. Ausente = 'false' (no bloquear): si el cliente supera
+// su límite de crédito, la venta al crédito solo muestra un aviso; con el
+// toggle activo, se bloquea la emisión.
+function BloquearLimiteToggle({ inicial }: { inicial: boolean }) {
+  const [activo, setActivo] = useState(inicial)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  function handleChange(valor: boolean) {
+    setActivo(valor)
+    setError('')
+    startTransition(async () => {
+      const result = await saveConfig({ cxc_bloquear_limite: valor ? 'true' : 'false' })
+      if (result.error) {
+        setError(result.error)
+        setActivo(!valor)
+        return
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    })
+  }
+
+  return (
+    <div className={styles.block}>
+      <div className={styles.head}>
+        <div>
+          <h2 className={styles.title}>Límite de crédito</h2>
+          <p className={styles.subtitle}>
+            Al vender al crédito, si el saldo del cliente más el nuevo crédito superan su límite,
+            bloquea la emisión. Si está apagado, solo se muestra un aviso y la venta continúa.
+          </p>
+        </div>
+      </div>
+      <Toggle
+        checked={activo}
+        onChange={handleChange}
+        disabled={isPending}
+        label="Bloquear ventas que superen el límite de crédito"
       />
       {saved && <p className={styles.helpText}>Guardado.</p>}
       {error && <p className={styles.formError}>{error}</p>}

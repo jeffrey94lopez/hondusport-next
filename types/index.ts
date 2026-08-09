@@ -16,6 +16,7 @@ export interface Cliente {
   es_proveedor: boolean
   contacto: string | null
   dias_credito: number
+  limite_credito: number | null
   created_at: string
   updated_at: string
 }
@@ -36,6 +37,10 @@ export interface ClienteForm {
   es_proveedor: boolean
   contacto: string
   dias_credito: number
+  // Opcional en el form (solo lo captura el módulo de clientes): texto crudo,
+  // vacío = sin límite (null). Los otros formularios que arman un ClienteForm
+  // (POS, proveedores en compras) lo omiten y persisten null.
+  limite_credito?: string
 }
 
 export interface CaiAutorizacion {

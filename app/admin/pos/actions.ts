@@ -7,6 +7,8 @@ import type { LineaConColumna } from '@/lib/pos/desglose'
 import { numeroALetras } from '@/lib/pos/letras'
 import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos } from '@/lib/pos/emision'
 import { validarRtn } from '@/lib/pos/fiscal'
+import { excedeLimite } from '@/lib/cxp/cxp'
+import { saldoCxcDeCliente } from '@/app/admin/cuentas-por-cobrar/actions'
 import type {
   LineaPos,
   PagoPos,
@@ -194,7 +196,7 @@ export async function emitirVenta(input: {
   descuentoGlobal: number
   pagos: PagoPos[]
   notas: string | null
-}): Promise<PosResult<{ documentoId: string }>> {
+}): Promise<PosResult<{ documentoId: string; aviso?: string }>> {
   if (input.lineas.length === 0) return { ok: false, error: 'Agrega al menos una línea a la venta.' }
 
   const supabase = await createClient()
@@ -273,6 +275,47 @@ export async function emitirVenta(input: {
   const errorPagos = validarPagos(input.pagos, totales.total)
   if (errorPagos) return { ok: false, error: errorPagos }
 
+  // Venta al crédito (P4c): frontera de confianza — releemos metodos_pago.tipo
+  // por metodo_id (NO se confía en el `tipo` que mande el cliente) para saber
+  // cuánto de los pagos es crédito. Un pago de tipo `credito` no se cobra ahora:
+  // queda como saldo por cobrar del cliente (documento_saldos lo deriva). Solo
+  // se agrega validación/aviso alrededor; el pago se persiste como cualquier otro.
+  let aviso: string | undefined
+  const metodoIds = [...new Set(input.pagos.map(p => p.metodo_id))]
+  const { data: metodosRows, error: metodosError } = metodoIds.length
+    ? await supabase.from('metodos_pago').select('id, tipo').in('id', metodoIds)
+    : { data: [], error: null }
+  if (metodosError) return { ok: false, error: ERROR_GENERICO }
+  const tipoPorMetodo = new Map((metodosRows ?? []).map(m => [m.id, m.tipo as MetodoPagoTipo]))
+  const creditoNuevo = round2(
+    input.pagos.reduce((s, p) => (tipoPorMetodo.get(p.metodo_id) === 'credito' ? s + p.monto : s), 0),
+  )
+
+  if (creditoNuevo > 0) {
+    if (!input.cliente.id) {
+      return { ok: false, error: 'Una venta al crédito requiere un cliente registrado.' }
+    }
+
+    const { data: configRows } = await supabase.from('configuracion').select('key, value')
+    const bloquear = toConfigMap(configRows ?? []).cxc_bloquear_limite === 'true'
+
+    const { data: clienteRow } = await supabase
+      .from('clientes')
+      .select('limite_credito')
+      .eq('id', input.cliente.id)
+      .maybeSingle()
+    const limiteCredito = clienteRow?.limite_credito != null ? Number(clienteRow.limite_credito) : null
+
+    const saldoActual = await saldoCxcDeCliente(input.cliente.id)
+    const { excede, excedente } = excedeLimite(saldoActual, creditoNuevo, limiteCredito)
+    if (excede) {
+      if (bloquear) {
+        return { ok: false, error: `El cliente supera su límite de crédito por L. ${excedente}.` }
+      }
+      aviso = `El cliente excede su límite de crédito por L. ${excedente}.`
+    }
+  }
+
   const usuario = await usuarioActual(supabase)
 
   const payload = {
@@ -301,7 +344,7 @@ export async function emitirVenta(input: {
   }
 
   revalidatePath('/admin/pos')
-  return { ok: true, data: { documentoId: data as string } }
+  return { ok: true, data: { documentoId: data as string, aviso } }
 }
 
 export async function emitirDesdePedido(input: {

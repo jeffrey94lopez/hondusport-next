@@ -6,6 +6,16 @@ import type { ActionResult, ClienteForm } from '@/types'
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
+// Límite de crédito: texto crudo del form → número o null. Vacío = sin límite.
+// Un valor no numérico se trata como sin límite (el input es inputMode decimal,
+// así que en la práctica solo llega vacío o un número).
+function parseLimiteCredito(raw: string | undefined): number | null {
+  const t = (raw ?? '').trim()
+  if (t === '') return null
+  const n = Number(t.replace(',', '.'))
+  return Number.isFinite(n) ? n : null
+}
+
 function toPayload(form: ClienteForm) {
   return {
     nombre: form.nombre.trim(),
@@ -23,6 +33,7 @@ function toPayload(form: ClienteForm) {
     es_proveedor: form.es_proveedor,
     contacto: form.contacto.trim() || null,
     dias_credito: form.dias_credito,
+    limite_credito: parseLimiteCredito(form.limite_credito),
   }
 }
 
