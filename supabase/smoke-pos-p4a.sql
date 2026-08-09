@@ -7,9 +7,10 @@ begin
   if to_regclass('public.compras') is null then raise exception 'FALLO: falta compras'; end if;
   if to_regclass('public.compra_items') is null then raise exception 'FALLO: falta compra_items'; end if;
   if to_regclass('public.compra_numero_seq') is null then raise exception 'FALLO: falta compra_numero_seq'; end if;
-  if to_regproc('public.recibir_compra(jsonb)') is null then raise exception 'FALLO: falta recibir_compra'; end if;
-  if to_regproc('public.anular_compra(uuid, text)') is null then raise exception 'FALLO: falta anular_compra'; end if;
-  if to_regproc('public.nextval_compra()') is null then raise exception 'FALLO: falta nextval_compra'; end if;
+  -- to_regprocedure (no to_regproc) para verificar por firma de argumentos.
+  if to_regprocedure('public.recibir_compra(jsonb)') is null then raise exception 'FALLO: falta recibir_compra'; end if;
+  if to_regprocedure('public.anular_compra(uuid, text)') is null then raise exception 'FALLO: falta anular_compra'; end if;
+  if to_regprocedure('public.nextval_compra()') is null then raise exception 'FALLO: falta nextval_compra'; end if;
   raise notice 'Smoke POS P4a: estructura OK';
 end $$;
 select 'Success: migracion POS P4a OK' as resultado,
