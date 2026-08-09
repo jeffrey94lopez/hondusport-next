@@ -42,7 +42,7 @@ create index if not exists ncr_documento_idx on nota_credito_reembolsos (documen
 create table if not exists saldo_favor_movimientos (
   id           uuid primary key default gen_random_uuid(),
   cliente_id   uuid not null references clientes(id) on delete restrict,
-  monto        numeric(12,2) not null,
+  monto        numeric(12,2) not null check (monto > 0),
   tipo         text not null check (tipo in ('devolucion')),
   documento_id uuid references documentos(id) on delete set null,
   notas        text,
@@ -97,10 +97,9 @@ declare
   v_suma_items numeric := 0;
   v_suma_reemb numeric := 0;
   v_doc_id uuid;
-  v_item jsonb; v_reemb jsonb;
+  v_item record; v_reemb jsonb;
   v_origen_item documento_items%rowtype;
   v_ya_devuelto integer;
-  v_cant integer;
   v_sin_efectivo boolean;
   v_saldo_cxc numeric;
   v_cxc_reemb numeric := 0;
@@ -119,22 +118,28 @@ begin
 
   v_tipo := case when v_origen.tipo = 'factura' then 'nota_credito' else 'devolucion' end;
 
-  -- Validar cantidades devolvibles por linea (el origen ya está bloqueado).
-  for v_item in select * from jsonb_array_elements(p->'items') loop
-    select * into v_origen_item from documento_items where id = (v_item->>'origen_item_id')::uuid;
+  -- Validar cantidades devolvibles por linea (agrupado por origen_item_id: una
+  -- misma linea de origen repetida en el payload no debe poder burlar el limite
+  -- devolvible). El origen ya está bloqueado.
+  for v_item in
+    select (e->>'origen_item_id')::uuid as oiid, sum((e->>'cantidad')::integer) as cant
+    from jsonb_array_elements(p->'items') e group by (e->>'origen_item_id')::uuid
+  loop
+    select * into v_origen_item from documento_items where id = v_item.oiid;
     if not found or v_origen_item.documento_id <> v_origen.id then
       raise exception using message = 'HS_DOC|línea de origen inválida';
     end if;
-    v_cant := (v_item->>'cantidad')::integer;
-    if v_cant <= 0 then raise exception using message = 'HS_DOC|cantidad inválida'; end if;
+    if v_item.cant <= 0 then raise exception using message = 'HS_DOC|cantidad inválida'; end if;
     select coalesce(sum(di.cantidad),0) into v_ya_devuelto
       from documento_items di join documentos dd on dd.id = di.documento_id
       where di.origen_item_id = v_origen_item.id and dd.estado <> 'anulado';
-    if v_cant > v_origen_item.cantidad - v_ya_devuelto then
+    if v_item.cant > v_origen_item.cantidad - v_ya_devuelto then
       raise exception using message = 'HS_DEVOLVIBLE|' || v_origen_item.descripcion;
     end if;
-    v_suma_items := v_suma_items + (v_item->>'importe')::numeric;
   end loop;
+
+  select coalesce(sum((it->>'importe')::numeric), 0) into v_suma_items
+    from jsonb_array_elements(p->'items') it;
 
   if abs(v_suma_items - v_total) > 0.01 then raise exception using message = 'HS_TOTAL'; end if;
 
@@ -175,39 +180,48 @@ begin
     p->'totales'->>'total_letras', v_origen.tasa_usd, nullif(p->>'motivo',''), nullif(p->>'usuario','')
   ) returning id into v_doc_id;
 
+  -- producto_id/variante_id/descripcion se derivan SIEMPRE de la linea de origen
+  -- (oi), no del payload: el cliente no puede reasignar la devolucion a otro
+  -- producto/variante enviando un producto_id/variante_id distinto en el payload.
   insert into documento_items (
     documento_id, producto_id, variante_id, descripcion, cantidad,
     precio_unitario, descuento, isv, importe, base, isv_monto, origen_item_id
   )
-  select v_doc_id, nullif(it->>'producto_id','')::uuid, nullif(it->>'variante_id','')::uuid,
-    it->>'descripcion', (it->>'cantidad')::integer, (it->>'precio_unitario')::numeric,
+  select v_doc_id, oi.producto_id, oi.variante_id,
+    oi.descripcion, (it->>'cantidad')::integer, (it->>'precio_unitario')::numeric,
     coalesce((it->>'descuento')::numeric,0), it->>'isv',
     (it->>'importe')::numeric, (it->>'base')::numeric, coalesce((it->>'isv_monto')::numeric,0),
-    (it->>'origen_item_id')::uuid
-  from jsonb_array_elements(p->'items') it;
+    oi.id
+  from jsonb_array_elements(p->'items') it
+  join documento_items oi on oi.id = (it->>'origen_item_id')::uuid;
 
-  -- Reponer stock (items con producto y stock finito). Agrupado por producto/variante.
+  -- Reponer stock (items con producto y stock finito). Agrupado por producto/variante,
+  -- derivados de la linea de origen (oi), no del payload.
   update producto_variantes pv set stock = pv.stock + agg.cantidad
-    from (select nullif(it->>'variante_id','')::uuid as vid, sum((it->>'cantidad')::integer) as cantidad
-          from jsonb_array_elements(p->'items') it where nullif(it->>'variante_id','') is not null
-          group by nullif(it->>'variante_id','')::uuid) agg
+    from (select oi.variante_id as vid, sum((it->>'cantidad')::integer) as cantidad
+          from jsonb_array_elements(p->'items') it
+          join documento_items oi on oi.id = (it->>'origen_item_id')::uuid
+          where oi.variante_id is not null
+          group by oi.variante_id) agg
     where agg.vid = pv.id and pv.stock is not null;
   update productos pr set stock = pr.stock + agg.cantidad
-    from (select nullif(it->>'producto_id','')::uuid as pid, sum((it->>'cantidad')::integer) as cantidad
+    from (select oi.producto_id as pid, sum((it->>'cantidad')::integer) as cantidad
           from jsonb_array_elements(p->'items') it
-          where nullif(it->>'producto_id','') is not null and nullif(it->>'variante_id','') is null
-          group by nullif(it->>'producto_id','')::uuid) agg
+          join documento_items oi on oi.id = (it->>'origen_item_id')::uuid
+          where oi.producto_id is not null and oi.variante_id is null
+          group by oi.producto_id) agg
     where agg.pid = pr.id and pr.stock is not null;
 
   insert into movimientos_inventario (producto_id, variante_id, tipo, cantidad, costo_resultante, referencia, usuario)
-  select nullif(it->>'producto_id','')::uuid, nullif(it->>'variante_id','')::uuid,
+  select oi.producto_id, oi.variante_id,
     'devolucion', (it->>'cantidad')::integer,
     coalesce(pv.costo, pr.costo), 'nota_credito:' || v_doc_id, nullif(p->>'usuario','')
   from jsonb_array_elements(p->'items') it
-  left join producto_variantes pv on pv.id = nullif(it->>'variante_id','')::uuid
-  join productos pr on pr.id = nullif(it->>'producto_id','')::uuid
-  where nullif(it->>'producto_id','') is not null
-    and (case when nullif(it->>'variante_id','') is not null then pv.stock else pr.stock end) is not null;
+  join documento_items oi on oi.id = (it->>'origen_item_id')::uuid
+  left join producto_variantes pv on pv.id = oi.variante_id
+  join productos pr on pr.id = oi.producto_id
+  where oi.producto_id is not null
+    and (case when oi.variante_id is not null then pv.stock else pr.stock end) is not null;
 
   -- Reembolsos.
   select value::boolean into v_sin_efectivo from configuracion where key = 'devoluciones_sin_efectivo';
