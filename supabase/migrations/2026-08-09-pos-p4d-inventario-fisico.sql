@@ -198,11 +198,11 @@ begin
   insert into tmp_sync_variantes_nuevas (ord, id)
   select t.ord, gen_random_uuid()
   from jsonb_array_elements(coalesce(p_variantes, '[]'::jsonb)) with ordinality as t(elem, ord)
-  where t.elem->>'id' is null;
+  where nullif(t.elem->>'id', '') is null;
 
   insert into producto_variantes (id, producto_id, nombre, sku, precio, stock, costo, precio_revendedor, activo, orden)
   select
-    coalesce(nullif(t.elem->>'id', '')::uuid, tv.id),
+    coalesce(nullif(t.elem->>'id', '')::uuid, tv.id, gen_random_uuid()),
     p_producto_id,
     t.elem->>'nombre',
     nullif(t.elem->>'sku', ''),
