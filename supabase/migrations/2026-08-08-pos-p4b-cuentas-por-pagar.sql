@@ -57,8 +57,8 @@ declare
   v_ref text := p->>'referencia';
   v_notas text := p->>'notas';
   v_usuario text := p->>'usuario';
-  r jsonb;
-  v_compra uuid; v_monto numeric; v_total numeric; v_estado text; v_cond text; v_prov_compra uuid;
+  r record;
+  v_total numeric; v_estado text; v_cond text; v_prov_compra uuid;
   v_pagado numeric; v_saldo numeric;
   v_suma numeric := 0;
   v_pago_id uuid; v_numero text;
@@ -67,25 +67,29 @@ begin
     raise exception 'El pago no tiene aplicaciones';
   end if;
 
-  -- Validar cada aplicacion contra el saldo real (con lock de la compra)
-  for r in select value from jsonb_array_elements(p->'aplicaciones') loop
-    v_compra := (r->>'compra_id')::uuid;
-    v_monto := (r->>'monto')::numeric;
-    if v_monto is null or v_monto <= 0 then raise exception 'Monto de aplicacion invalido'; end if;
+  if v_prov is null then
+    raise exception 'Falta el proveedor';
+  end if;
 
+  -- Agrupar por compra (suma) y validar cada compra distinta contra su saldo real.
+  for r in
+    select (e->>'compra_id')::uuid as compra_id, sum((e->>'monto')::numeric) as monto
+    from jsonb_array_elements(p->'aplicaciones') e
+    group by (e->>'compra_id')::uuid
+    order by (e->>'compra_id')::uuid
+  loop
+    if r.monto is null or r.monto <= 0 then raise exception 'Monto de aplicacion invalido'; end if;
     select proveedor_id, condicion_pago, estado, total
       into v_prov_compra, v_cond, v_estado, v_total
-      from compras where id = v_compra for update;
+      from compras where id = r.compra_id for update;
     if not found then raise exception 'Compra no encontrada'; end if;
     if v_prov_compra <> v_prov then raise exception 'La compra no pertenece al proveedor'; end if;
     if v_cond <> 'credito' then raise exception 'La compra no es al credito'; end if;
     if v_estado = 'anulada' then raise exception 'La compra esta anulada'; end if;
-
-    select coalesce(sum(monto),0) into v_pagado from pago_aplicaciones where compra_id = v_compra;
+    select coalesce(sum(monto),0) into v_pagado from pago_aplicaciones where compra_id = r.compra_id;
     v_saldo := v_total - v_pagado;
-    if v_monto > v_saldo then raise exception 'El abono excede el saldo de la compra'; end if;
-
-    v_suma := v_suma + v_monto;
+    if r.monto > v_saldo then raise exception 'El abono excede el saldo de la compra'; end if;
+    v_suma := v_suma + r.monto;
   end loop;
 
   v_numero := 'PAGO-' || lpad(nextval('pago_numero_seq')::text, 8, '0');
@@ -93,10 +97,10 @@ begin
   values (v_numero, v_prov, v_fecha, v_suma, v_metodo, v_ref, v_notas, v_usuario)
   returning id into v_pago_id;
 
-  for r in select value from jsonb_array_elements(p->'aplicaciones') loop
-    insert into pago_aplicaciones (pago_id, compra_id, monto)
-    values (v_pago_id, (r->>'compra_id')::uuid, (r->>'monto')::numeric);
-  end loop;
+  insert into pago_aplicaciones (pago_id, compra_id, monto)
+  select v_pago_id, (e->>'compra_id')::uuid, sum((e->>'monto')::numeric)
+  from jsonb_array_elements(p->'aplicaciones') e
+  group by (e->>'compra_id')::uuid;
 
   return v_pago_id;
 end; $$;
