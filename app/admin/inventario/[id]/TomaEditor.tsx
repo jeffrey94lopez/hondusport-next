@@ -4,8 +4,10 @@ import { useRouter } from 'next/navigation'
 import { resumenConteo } from '@/lib/inventario/conteo'
 import type { ConteoFisico, ConteoLinea, EstadoConteo } from '@/types'
 import { agregarLineaPorSku, anularToma, guardarConteoLinea, quitarLinea } from '../actions'
+import HojaConteo from './HojaConteo'
 import ModoTabla from './ModoTabla'
 import ModoCarrusel, { type ModoCarruselHandle } from './ModoCarrusel'
+import ReporteDiferencias from './ReporteDiferencias'
 import RevisarAplicarModal from './RevisarAplicarModal'
 import styles from '../inventario.module.css'
 
@@ -45,6 +47,10 @@ export default function TomaEditor({ toma, lineasIniciales, ciego }: Props) {
   const editable = toma.estado === 'en_conteo'
 
   const [lineas, setLineas] = useState<LineaConCosto[]>(lineasIniciales)
+  // Imprimibles (Task 8): montados en lugar del editor, nunca a la vez que
+  // este ni entre sí — mismo criterio que EstadoCuentaClienteView (CxC) al
+  // conmutar hacia HojaEstadoCuentaCliente.
+  const [vista, setVista] = useState<'editor' | 'hoja' | 'reporte'>('editor')
   const [modo, setModo] = useState<'tabla' | 'carrusel'>('tabla')
   const [sku, setSku] = useState('')
   const [avisoEscaneo, setAvisoEscaneo] = useState('')
@@ -59,6 +65,14 @@ export default function TomaEditor({ toma, lineasIniciales, ciego }: Props) {
   const carruselRef = useRef<ModoCarruselHandle>(null)
 
   const resumen = resumenConteo(lineas)
+  const hayConteos = resumen.contadas > 0
+
+  if (vista === 'hoja') {
+    return <HojaConteo toma={toma} lineas={lineas} onVolver={() => setVista('editor')} />
+  }
+  if (vista === 'reporte') {
+    return <ReporteDiferencias toma={toma} lineas={lineas} onVolver={() => setVista('editor')} />
+  }
 
   async function handleGuardarLinea(lineaId: string, contado: number | null): Promise<boolean> {
     const res = await guardarConteoLinea(lineaId, contado)
@@ -142,8 +156,17 @@ export default function TomaEditor({ toma, lineasIniciales, ciego }: Props) {
           </div>
         </div>
         <div className={styles.actionsTop}>
-          <button type="button" className={styles.btnToolbarInv} disabled title="Próximamente (Task 8)">
+          <button type="button" className={styles.btnToolbarInv} onClick={() => setVista('hoja')}>
             Hoja de conteo
+          </button>
+          <button
+            type="button"
+            className={styles.btnToolbarInv}
+            onClick={() => setVista('reporte')}
+            disabled={!hayConteos}
+            title={hayConteos ? undefined : 'Contá al menos una línea para ver el reporte de diferencias.'}
+          >
+            Reporte de diferencias
           </button>
           <button
             type="button"

@@ -1,0 +1,138 @@
+/* Imprimibles de inventario físico (POS P4d, Task 8): hoja de conteo (en
+   blanco, sin stock) y reporte de diferencias. Mismo patrón "hoja carta +
+   tinta fija" que app/admin/cuentas-por-cobrar/cliente/[id]/estado.module.css
+   (fondo blanco/texto negro fijos a propósito: simulan papel impreso real,
+   no siguen el tema oscuro del admin). Los dos componentes comparten este
+   módulo porque nunca se montan a la vez (TomaEditor decide cuál mostrar). */
+
+.page { padding: 1.5rem; min-height: 100vh; }
+
+/* ---- Toolbar (no imprimible) ---- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.toolbarLeft, .toolbarRight { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.toolbarTitulo { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+
+/* Los botones Merlin primary/secondary/tertiary no traen padding ni display
+   propios (ver app/merlin.css): se componen con esta clase para que se vean
+   y alineen como botones de verdad en la barra (mismo criterio que
+   documento.module.css / estado.module.css). */
+.btnToolbar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.95rem;
+  min-height: 38px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* ---- Fondo de pantalla detrás del "papel" (solo preview) ---- */
+.pageBg {
+  background: var(--bg);
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* ---- Papel: fondo blanco/tinta negra fijos a propósito (simulan papel
+   impreso real, no chrome de la app) — no deben seguir el tema oscuro. ---- */
+.hojaCarta {
+  position: relative;
+  background: #ffffff;
+  color: #0a0a0a;
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  max-width: 760px;
+  font-family: var(--font-poppins), sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 36px 44px;
+}
+
+/* ---- Contenido de la hoja ---- */
+.docTitulo { text-align: center; margin: 0 0 10px; }
+.docTituloH1 { font-size: 1.3em; font-weight: 800; letter-spacing: 2px; margin: 0; }
+
+.metaGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.6em;
+  font-size: 0.9em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #333;
+}
+.metaGrid strong { font-weight: 700; }
+
+.hojaSectionTitle { font-weight: 700; font-size: 0.95em; margin: 12px 0 4px; }
+
+.itemsTable { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 0.9em; }
+.itemsTable th {
+  text-align: left;
+  border-bottom: 1px solid #333;
+  padding: 4px 5px;
+  font-size: 0.85em;
+}
+.itemsTable td { padding: 4px 5px; border-bottom: 1px dotted #ccc; vertical-align: top; }
+.itemsTable th:nth-child(n+3), .itemsTable td:nth-child(n+3) { text-align: right; white-space: nowrap; }
+.itemsTable th:first-child, .itemsTable td:first-child { text-align: left; white-space: nowrap; }
+
+.hojaEmpty { font-size: 0.88em; color: #555; margin-bottom: 10px; }
+
+/* Renglón en blanco de la hoja de conteo: raya para escribir a mano el
+   conteo, sin ningún valor del sistema. */
+.renglonConteo {
+  display: inline-block;
+  width: 100%;
+  min-width: 70px;
+  height: 1.1em;
+  border-bottom: 1px solid #333;
+}
+
+/* Aviso "hubo movimiento" (reporte de diferencias): ámbar fijo, no token —
+   la hoja completa es tinta fija. */
+.avisoMovimiento {
+  display: inline-block;
+  font-size: 0.72em;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  background: #fff3cd;
+  color: #8a6100;
+  white-space: nowrap;
+}
+
+.signo { white-space: nowrap; }
+.signoPositivo { color: #1a7a3a; }
+.signoNegativo { color: #b3261e; }
+
+.desglose { margin-top: 10px; margin-bottom: 16px; font-size: 0.95em; }
+.desgloseRow { display: flex; justify-content: space-between; gap: 1em; padding: 1px 0; }
+.desgloseTotal { font-weight: 800; font-size: 1.1em; border-top: 1px solid #333; margin-top: 4px; padding-top: 4px; }
+
+/* ---- Espacio para firma ---- */
+.firmaBlock { margin-top: 48px; display: flex; gap: 2.5em; flex-wrap: wrap; }
+.firmaItem { flex: 1; min-width: 200px; }
+.firmaLinea { border-top: 1px solid #333; margin-bottom: 4px; height: 28px; }
+.firmaLabel { font-size: 0.85em; color: #333; }
+
+/* ---- Impresión ---- */
+@media print {
+  .noPrint { display: none !important; }
+  .pageBg { padding: 0; background: none; min-height: auto; display: block; }
+  .hojaCarta { box-shadow: none; margin: 0 auto; }
+}
