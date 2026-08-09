@@ -343,6 +343,12 @@ export default function DevolucionModal({ documentoId, sesiones, cajas, onClose,
               )}
             </div>
 
+            {/* Fix round 1 (revisión Task 4): feedback en vivo de
+                validarReembolsos, no solo al confirmar — el cajero ve al
+                instante si los montos no cuadran, exceden el saldo de CxC,
+                o el efectivo está deshabilitado. */}
+            {errorReembolsos && <div className={styles.formError}>{errorReembolsos}</div>}
+
             <label className={styles.formLabel}>
               Motivo *
               <textarea
@@ -364,7 +370,7 @@ export default function DevolucionModal({ documentoId, sesiones, cajas, onClose,
                 type="button"
                 className={`btnMerlinPrimary ${styles.btnSubmit}`}
                 onClick={handleConfirmar}
-                disabled={isPending || sesiones.length === 0}
+                disabled={isPending || sesiones.length === 0 || !motivo.trim() || !!errorReembolsos}
               >
                 {isPending ? 'Emitiendo…' : 'Confirmar devolución'}
               </button>
