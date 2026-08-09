@@ -10,6 +10,8 @@ import { crearClienteDesdePos } from '@/app/admin/pos/actions'
 import { guardarCompra, anularCompra } from '../actions'
 import type { GuardarCompraInput } from '../actions'
 import RecepcionModal from './RecepcionModal'
+import CompraCxpBlock from './CompraCxpBlock'
+import type { CxpEditorData } from './CompraCxpBlock'
 import type {
   Cliente,
   ClienteForm,
@@ -45,6 +47,7 @@ interface Props {
   productos: Producto[]
   proveedores: Cliente[]
   config: ConfigMap
+  cxp?: CxpEditorData | null
 }
 
 // Línea de la UI: los campos de LineaCompraInput más una `key` de React
@@ -63,7 +66,7 @@ function formatMoneda(n: number, moneda: CompraMoneda): string {
   return moneda === 'USD' ? `$ ${n.toFixed(2)}` : formatPrice(n)
 }
 
-export default function CompraEditor({ compra, productos, proveedores, config }: Props) {
+export default function CompraEditor({ compra, productos, proveedores, config, cxp = null }: Props) {
   const router = useRouter()
 
   const estado = compra?.estado ?? null
@@ -634,6 +637,8 @@ export default function CompraEditor({ compra, productos, proveedores, config }:
       ) : (
         documento
       )}
+
+      {cxp && <CompraCxpBlock cxp={cxp} />}
 
       {/* ---- Modales ---- */}
       {varianteModal && (
