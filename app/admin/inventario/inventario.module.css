@@ -157,5 +157,18 @@
   justify-content: flex-end;
   padding-top: 0.5rem;
 }
-.btnCancel { padding: 0.55rem 1rem; }
+/* Se usa sola (sin btnMerlin*): necesita su propia caja completa, no solo
+   padding — mismo patrón que .btnCancel en PosSection.module.css. */
+.btnCancel {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.btnCancel:hover { color: var(--text); }
+
 .btnSubmit { padding: 0.55rem 1.1rem; }

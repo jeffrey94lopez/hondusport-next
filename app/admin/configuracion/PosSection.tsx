@@ -155,9 +155,10 @@ function BloquearLimiteToggle({ inicial }: { inicial: boolean }) {
 }
 
 // P4d (Inventario físico): interruptor de `inventario_conteo_ciego`. Mismo
-// patrón que BloquearLimiteToggle. Ausente = 'false' (conteo visible): con el
-// toggle activo, el editor de la toma oculta el stock del sistema mientras se
-// cuenta, para no sesgar al contador.
+// patrón que BloquearLimiteToggle. Ausente = 'true' (a ciegas por defecto,
+// igual que sembró la migración de P4d): con el toggle activo, el editor de
+// la toma oculta el stock del sistema mientras se cuenta, para no sesgar al
+// contador; apagado, el conteo se ve junto al stock del sistema.
 function ConteoCiegoToggle({ inicial }: { inicial: boolean }) {
   const [activo, setActivo] = useState(inicial)
   const [saved, setSaved] = useState(false)
