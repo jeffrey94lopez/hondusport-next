@@ -56,6 +56,18 @@ export async function guardarCompra(input: GuardarCompraInput): Promise<ComprasR
 
   const supabase = await createClient()
 
+  // Frontera de confianza: el proveedorId debe referenciar un contacto marcado
+  // como proveedor. Se relee la fila (el cliente no decide el rol) para que un
+  // id equivocado o stale no pase en silencio.
+  const { data: prov } = await supabase
+    .from('clientes')
+    .select('es_proveedor')
+    .eq('id', input.proveedorId)
+    .maybeSingle()
+  if (!prov || !prov.es_proveedor) {
+    return { ok: false, error: 'El proveedor seleccionado no es un proveedor válido.' }
+  }
+
   // Frontera de confianza: el total nunca viene del cliente, se recalcula aquí.
   const total = totalCompra(input.lineas, input.moneda, input.tasaCambio)
   const fechaVencimiento = input.condicionPago === 'credito' ? sumarDias(input.fecha, input.diasCredito) : null

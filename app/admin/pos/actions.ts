@@ -572,6 +572,10 @@ function clienteFormPayload(form: ClienteForm) {
     telefono: form.telefono.trim() || null,
     correo: form.correo.trim() || null,
     notas: form.notas.trim() || null,
+    es_cliente: form.es_cliente ?? true,
+    es_proveedor: form.es_proveedor ?? false,
+    contacto: (form.contacto ?? '').trim() || null,
+    dias_credito: form.dias_credito ?? 0,
   }
 }
 
