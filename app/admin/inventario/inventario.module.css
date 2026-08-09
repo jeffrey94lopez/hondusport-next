@@ -172,3 +172,269 @@
 .btnCancel:hover { color: var(--text); }
 
 .btnSubmit { padding: 0.55rem 1.1rem; }
+
+/* ======================= EDITOR DE TOMA (Task 7) ======================= */
+
+.editorTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.editorBadges {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.avance {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Badges extra sobre los de .badgeAmbar/.badgeVerde/.badgeRojo del listado:
+   gris (pendiente, neutral) e info (contado a ciegas / etiqueta "A ciegas"). */
+.badgeGris { background: var(--bg-hover); color: var(--text-muted); }
+.badgeInfo { background: var(--info-bg); color: var(--info); }
+
+.actionsTop {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Botón "de herramienta" (Hoja de conteo / Agregar del escaneo): caja
+   propia completa porque se usa SOLO, sin btnMerlin* — mismo criterio que
+   .btnAbrir de arriba. */
+.btnToolbarInv {
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btnToolbarInv:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btnToolbarInv:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnRevisar { padding: 0.55rem 1.1rem; white-space: nowrap; }
+
+/* Anular: caja propia completa (solo, sin btnMerlin*), en rojo de aviso —
+   mismo tono que .badgeRojo pero para un botón de línea, no un chip. */
+.btnAnular {
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--danger);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btnAnular:hover:not(:disabled) { background: var(--error-bg); }
+.btnAnular:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.scanBar {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+  max-width: 440px;
+}
+
+.scanInput {
+  flex: 1;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+.scanInput:focus { outline: none; border-color: var(--accent); }
+
+.avisoEscaneo {
+  font-size: 0.82rem;
+  color: var(--warning);
+  margin: -0.3rem 0 0.8rem;
+}
+
+.modoSwitch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.modoBtn {
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.modoBtn:hover { color: var(--text); }
+.modoBtnActivo { background: var(--accent); color: #ffffff; }
+
+/* Columnas propias de la tabla del editor (SKU, campo Contado). */
+.num { text-align: right; }
+.skuCol { white-space: nowrap; color: var(--text-muted); }
+
+.inputContado {
+  width: 90px;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  text-align: right;
+}
+.inputContado:focus { outline: none; border-color: var(--accent); }
+.inputContado:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Quitar de fila: caja propia completa (solo, sin btnMerlin*), discreto. */
+.btnQuitar {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btnQuitar:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ------------------------- Modo carrusel ------------------------- */
+
+.carruselWrap { max-width: 520px; margin: 0 auto; }
+
+.carruselCard {
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 1.5rem;
+}
+
+.carruselHead {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.carruselProgresoTexto { font-weight: 700; font-size: 0.85rem; color: var(--text-muted); }
+
+.carruselBarra {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-hover);
+  overflow: hidden;
+  margin-bottom: 1.2rem;
+}
+.carruselBarraFill { height: 100%; background: var(--accent); transition: width 0.2s; }
+
+.carruselSku { text-align: center; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+.carruselNombre { text-align: center; font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 1rem; }
+.carruselStock { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+.carruselCampo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+.carruselLabel { font-size: 0.78rem; color: var(--text-muted); }
+.carruselInput {
+  width: 160px;
+  padding: 0.75rem;
+  font-size: 1.6rem;
+  text-align: center;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-family: inherit;
+}
+.carruselInput:focus { outline: none; border-color: var(--accent); }
+.carruselInput:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.carruselError { color: var(--danger); text-align: center; margin-bottom: 0.8rem; font-size: 0.85rem; }
+
+.carruselNav { display: flex; gap: 0.6rem; justify-content: space-between; margin-top: 0.5rem; }
+
+/* Nav (Anterior/Saltar): patrón Tertiary, caja propia completa (solo, sin
+   btnMerlin*) — mismo espejo que .btnNav de carrusel.module.css (productos),
+   copiado (no importado: cada módulo de admin repite sus botones chicos). */
+.btnNav {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+.btnNav:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btnNav:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnGuardarCarrusel { padding: 0.55rem 1rem; white-space: nowrap; }
+
+.carruselFin { text-align: center; padding: 1rem; }
+
+/* ------------------------- Revisar y aplicar ------------------------- */
+
+.avisoIrreversible {
+  font-size: 0.85rem;
+  color: var(--warning);
+  background: var(--warning-bg);
+  border-radius: var(--radius-input);
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.resumenGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+.resumenGrid .resumenItem {
+  flex: 1;
+  min-width: 110px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-input);
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.resumenItem span { font-size: 0.72rem; color: var(--text-muted); }
+.resumenItem strong { font-size: 0.95rem; color: var(--text); }
+
+.btnAplicar { padding: 0.55rem 1.1rem; white-space: nowrap; }
