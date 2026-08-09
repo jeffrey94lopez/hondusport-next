@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import Modal from '@/components/admin/Modal'
 import { formatPrice } from '@/lib/store/format'
 import { parseMoneyInput, valorMostrado } from '@/app/admin/pos/pos-helpers'
-import type { Cliente, CobroMetodo, CxcFila, SesionCaja } from '@/types'
+import type { Caja, Cliente, CobroMetodo, CxcFila, SesionCaja } from '@/types'
 import { registrarCobro, type RegistrarCobroInput } from './actions'
 import { numeroDocumento } from './CuentasPorCobrarClient'
 import styles from './cxc.module.css'
@@ -14,6 +14,7 @@ interface Props {
   clientes: Cliente[]
   filas: CxcFila[] // todas las CxcFila (para armar el detalle manual por cliente)
   sesiones: SesionCaja[] // sesiones de caja abiertas (para ligar cobros en efectivo)
+  cajas: Caja[] // para etiquetar cada sesión abierta con el NOMBRE de su caja
   onClose: () => void
   onOk: () => void
 }
@@ -38,7 +39,14 @@ function formatHora(iso: string): string {
   return new Date(iso).toLocaleTimeString('es-HN', { hour: '2-digit', minute: '2-digit' })
 }
 
-export default function CobroModal({ modo, fila, clientes, filas, sesiones, onClose, onOk }: Props) {
+export default function CobroModal({ modo, fila, clientes, filas, sesiones, cajas, onClose, onOk }: Props) {
+  // `sesiones_caja` solo trae `caja_id`; se resuelve el nombre contra `cajas`
+  // (Important del reviewer, fix round 1: sin el nombre, con 2+ cajas
+  // abiertas a horas similares el cajero podía atribuir el cobro a la caja
+  // equivocada y descuadrar el arqueo).
+  function nombreCaja(cajaId: string): string {
+    return cajas.find(c => c.id === cajaId)?.nombre ?? 'Caja'
+  }
   const [fecha, setFecha] = useState(hoyISO())
   const [metodo, setMetodo] = useState<CobroMetodo>('efectivo')
   const [referencia, setReferencia] = useState('')
@@ -224,13 +232,17 @@ export default function CobroModal({ modo, fila, clientes, filas, sesiones, onCl
             <select value={sesionId ?? ''} onChange={e => setSesionId(e.target.value || null)}>
               <option value="">Selecciona una caja…</option>
               {sesiones.map(s => (
-                <option key={s.id} value={s.id}>Sesión abierta desde {formatHora(s.abierta_at)}</option>
+                <option key={s.id} value={s.id}>
+                  {nombreCaja(s.caja_id)} — abierta desde {formatHora(s.abierta_at)}
+                </option>
               ))}
             </select>
           </label>
         )}
         {metodo === 'efectivo' && sesiones.length === 1 && (
-          <p className={styles.hint}>Se asignará a la caja abierta desde {formatHora(sesiones[0].abierta_at)}.</p>
+          <p className={styles.hint}>
+            Se asignará a la caja {nombreCaja(sesiones[0].caja_id)} (abierta desde {formatHora(sesiones[0].abierta_at)}).
+          </p>
         )}
         {metodo === 'efectivo' && sesiones.length === 0 && (
           <p className={styles.hint}>No hay una caja abierta; el cobro no se asignará a ninguna sesión.</p>

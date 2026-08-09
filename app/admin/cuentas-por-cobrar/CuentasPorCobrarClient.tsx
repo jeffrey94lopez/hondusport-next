@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatPrice } from '@/lib/store/format'
-import type { BucketAntiguedad, Cliente, CxcFila, EstadoPago, SesionCaja } from '@/types'
+import type { BucketAntiguedad, Caja, Cliente, CxcFila, EstadoPago, SesionCaja } from '@/types'
 import CobroModal from './CobroModal'
 import styles from './cxc.module.css'
 
@@ -10,6 +10,7 @@ interface Props {
   filas: CxcFila[]
   clientes: Cliente[]
   sesiones: SesionCaja[]
+  cajas: Caja[]
 }
 
 const BUCKETS: { key: BucketAntiguedad; label: string }[] = [
@@ -56,7 +57,7 @@ function formatFecha(iso: string | null): string {
   return iso ? iso.slice(0, 10) : '—'
 }
 
-export default function CuentasPorCobrarClient({ filas, clientes, sesiones }: Props) {
+export default function CuentasPorCobrarClient({ filas, clientes, sesiones, cajas }: Props) {
   const router = useRouter()
   const [clienteFiltro, setClienteFiltro] = useState<'todos' | string>('todos')
   const [estadoFiltro, setEstadoFiltro] = useState<'todos' | EstadoPago>('todos')
@@ -189,6 +190,7 @@ export default function CuentasPorCobrarClient({ filas, clientes, sesiones }: Pr
           clientes={clientes}
           filas={filas}
           sesiones={sesiones}
+          cajas={cajas}
           onClose={() => setModal(null)}
           onOk={() => {
             setModal(null)
