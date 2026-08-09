@@ -91,6 +91,11 @@ export default function PagoModal({ modo, fila, proveedores, filas, onClose, onO
     if (distrib === 'manual') {
       for (const c of comprasProveedor) {
         const m = parseMoneyInput(montosCompra[c.compra_id] ?? '')
+        // Un monto negativo (o no numérico) invalida todo el formulario: si se
+        // permitiera, `submit()` filtra las filas ≤ 0 y la RPC recibiría una
+        // suma distinta a la validada (una fila en -50 y otra en 150 pasan la
+        // validación de "Σ = monto" pero registran 150). Ver task-4-report.
+        if (m < 0) return 'Los montos no pueden ser negativos.'
         if (m > c.saldo + 0.005) return `El abono a ${c.numero} excede su saldo.`
       }
       if (Math.abs(sumaManual - monto) > 0.005) return 'La suma de los abonos debe igualar el monto.'
