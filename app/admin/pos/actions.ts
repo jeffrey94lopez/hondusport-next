@@ -6,6 +6,7 @@ import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/l
 import type { LineaConColumna } from '@/lib/pos/desglose'
 import { numeroALetras } from '@/lib/pos/letras'
 import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos } from '@/lib/pos/emision'
+import { cantidadDevolvible, recalcularLineaDevuelta, totalNotaCredito, validarReembolsos } from '@/lib/pos/devoluciones'
 import { validarRtn } from '@/lib/pos/fiscal'
 import { excedeLimite } from '@/lib/cxp/cxp'
 import { saldoCxcDeCliente } from '@/app/admin/cuentas-por-cobrar/actions'
@@ -24,6 +25,8 @@ import type {
   ConfigMap,
   DocumentoPagoConMetodo,
   CobroMetodo,
+  LineaOriginalDoc,
+  ReembolsoDevolucion,
 } from '@/types'
 
 export type PosResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
@@ -43,6 +46,69 @@ async function limiteConsumidorFinal(supabase: SupabaseServerClient): Promise<nu
   const { data } = await supabase.from('configuracion').select('key, value')
   const limite = Number(toConfigMap(data ?? []).pos_limite_consumidor_final)
   return Number.isFinite(limite) ? limite : 10000
+}
+
+async function sinEfectivoDevoluciones(supabase: SupabaseServerClient): Promise<boolean> {
+  const { data } = await supabase.from('configuracion').select('key, value')
+  return toConfigMap(data ?? []).devoluciones_sin_efectivo === 'true'
+}
+
+// Saldo de CxC pendiente del documento origen (0 si no hay fila: documento_saldos
+// solo lista documentos con crédito otorgado, ver P4c). Se relee siempre en el
+// servidor — nunca se confía en un saldo que mande el navegador.
+async function saldoCxcDocumento(supabase: SupabaseServerClient, documentoId: string): Promise<number> {
+  const { data } = await supabase
+    .from('documento_saldos')
+    .select('saldo')
+    .eq('documento_id', documentoId)
+    .maybeSingle()
+  return data ? Number(data.saldo) : 0
+}
+
+// Los montos numéricos de documento_items pueden volver como string desde
+// PostgREST (columnas `numeric`); se normalizan a number antes de cualquier
+// cálculo (recalcularLineaDevuelta, sumas de devolvible).
+function normalizarItem(row: DocumentoItem): DocumentoItem {
+  return {
+    ...row,
+    cantidad: Number(row.cantidad),
+    precio_unitario: Number(row.precio_unitario),
+    descuento: Number(row.descuento),
+    importe: Number(row.importe),
+    base: Number(row.base),
+    isv_monto: Number(row.isv_monto),
+  }
+}
+
+// Embed real de documento_items → documentos: FK simple (to-one), PostgREST
+// devuelve un OBJETO por fila (mismo caso documentado en DocumentoPagoEmbed
+// más abajo en este archivo).
+interface DocumentoItemConEstado {
+  origen_item_id: string | null
+  cantidad: number
+  documentos: { estado: string } | null
+}
+
+// Cuánto se ha devuelto ya de cada línea de origen: suma `cantidad` de los
+// documento_items cuyo `origen_item_id` apunta a esa línea, excluyendo
+// devoluciones anuladas. Mismo criterio que usa la RPC `emitir_nota_credito`.
+async function yaDevueltoPorLinea(
+  supabase: SupabaseServerClient,
+  itemIds: string[],
+): Promise<Map<string, number>> {
+  const mapa = new Map<string, number>()
+  if (itemIds.length === 0) return mapa
+
+  const { data } = await supabase
+    .from('documento_items')
+    .select('origen_item_id, cantidad, documentos(estado)')
+    .in('origen_item_id', itemIds)
+
+  for (const row of (data ?? []) as unknown as DocumentoItemConEstado[]) {
+    if (!row.origen_item_id || row.documentos?.estado === 'anulado') continue
+    mapa.set(row.origen_item_id, (mapa.get(row.origen_item_id) ?? 0) + Number(row.cantidad))
+  }
+  return mapa
 }
 
 // Recalcula prorrateo + desglose + totales (incluye numeroALetras del total ya
@@ -172,7 +238,31 @@ export async function cerrarSesion(
     monto: Number(c.monto),
   }))
 
-  const { efectivoEsperado } = esperadoCaja(Number(sesion.monto_inicial), docs, cobros)
+  // Devoluciones/reembolsos de la sesión (P5a): documentos nota_credito/devolucion
+  // emitidos con este sesion_id, con sus reembolsos (efectivo resta al esperado;
+  // saldo_favor/cxc no mueven efectivo, quedan informativos en 'otro').
+  const { data: devDocsRows, error: devDocsError } = await supabase
+    .from('documentos')
+    .select('id')
+    .eq('sesion_id', sesionId)
+    .in('tipo', ['nota_credito', 'devolucion'])
+    .neq('estado', 'anulado')
+
+  if (devDocsError) return { ok: false, error: ERROR_GENERICO }
+
+  const devDocIds = (devDocsRows ?? []).map(d => d.id)
+  const { data: devolucionesRows, error: devolucionesError } = devDocIds.length
+    ? await supabase.from('nota_credito_reembolsos').select('tipo, monto').in('documento_id', devDocIds)
+    : { data: [], error: null }
+
+  if (devolucionesError) return { ok: false, error: ERROR_GENERICO }
+
+  const devoluciones = (devolucionesRows ?? []).map(r => ({
+    metodo: (r.tipo === 'efectivo' ? 'efectivo' : 'otro') as CobroMetodo,
+    monto: Number(r.monto),
+  }))
+
+  const { efectivoEsperado } = esperadoCaja(Number(sesion.monto_inicial), docs, cobros, devoluciones)
   const diferencia = round2(montoContado - efectivoEsperado)
 
   const { error: updateError } = await supabase
@@ -582,6 +672,193 @@ export async function anularDocumento(documentoId: string, motivo: string): Prom
 
   revalidatePath('/admin/pos/documentos')
   return { ok: true }
+}
+
+// POS P5a: qué se puede devolver de un documento origen (factura/comprobante
+// emitido) — carga para DevolucionModal. Por cada línea calcula ya_devuelto
+// contra otras devoluciones no anuladas del mismo origen_item_id.
+export async function obtenerDevolvible(documentoId: string): Promise<PosResult<{
+  documento: Pick<Documento, 'id' | 'tipo' | 'correlativo' | 'numero_comprobante' | 'cliente_id' | 'cliente_nombre' | 'exonerado' | 'total' | 'estado' | 'created_at'>
+  lineas: LineaOriginalDoc[]
+  saldoCxc: number
+  sinEfectivo: boolean
+}>> {
+  const supabase = await createClient()
+
+  const { data: documentoRow, error: documentoError } = await supabase
+    .from('documentos')
+    .select('id, tipo, correlativo, numero_comprobante, cliente_id, cliente_nombre, exonerado, total, estado, created_at')
+    .eq('id', documentoId)
+    .maybeSingle()
+
+  if (documentoError || !documentoRow) return { ok: false, error: 'El documento ya no existe.' }
+  if (documentoRow.tipo !== 'factura' && documentoRow.tipo !== 'comprobante') {
+    return { ok: false, error: 'Este documento no admite devolución.' }
+  }
+
+  const { data: itemsRows, error: itemsError } = await supabase
+    .from('documento_items')
+    .select('*')
+    .eq('documento_id', documentoId)
+
+  if (itemsError) return { ok: false, error: ERROR_GENERICO }
+
+  const items = ((itemsRows ?? []) as DocumentoItem[]).map(normalizarItem)
+  const yaDevuelto = await yaDevueltoPorLinea(supabase, items.map(it => it.id))
+
+  const lineas: LineaOriginalDoc[] = items.map(it => ({
+    id: it.id,
+    producto_id: it.producto_id,
+    variante_id: it.variante_id,
+    descripcion: it.descripcion,
+    cantidad: it.cantidad,
+    precio_unitario: it.precio_unitario,
+    descuento: it.descuento,
+    isv: it.isv,
+    importe: it.importe,
+    base: it.base,
+    isv_monto: it.isv_monto,
+    ya_devuelto: yaDevuelto.get(it.id) ?? 0,
+  }))
+
+  const [saldoCxc, sinEfectivo] = await Promise.all([
+    saldoCxcDocumento(supabase, documentoId),
+    sinEfectivoDevoluciones(supabase),
+  ])
+
+  return {
+    ok: true,
+    data: {
+      documento: {
+        id: documentoRow.id,
+        tipo: documentoRow.tipo as 'factura' | 'comprobante',
+        correlativo: documentoRow.correlativo,
+        numero_comprobante: documentoRow.numero_comprobante,
+        cliente_id: documentoRow.cliente_id,
+        cliente_nombre: documentoRow.cliente_nombre,
+        exonerado: documentoRow.exonerado,
+        total: Number(documentoRow.total),
+        estado: documentoRow.estado as 'emitido' | 'anulado',
+        created_at: documentoRow.created_at,
+      },
+      lineas,
+      saldoCxc,
+      sinEfectivo,
+    },
+  }
+}
+
+// POS P5a: emite la nota de crédito (origen factura) o devolución (origen
+// comprobante). Frontera de confianza — relee el origen y sus líneas de la
+// BD y recalcula importes/totales; nunca confía en lo que mande el navegador.
+// La RPC `emitir_nota_credito` es quien valida atómicamente lo devolvible
+// (con lock sobre el origen) y aplica el reembolso; esta acción hace la misma
+// validación de antemano solo para dar un mensaje de error más claro.
+export async function emitirNotaCredito(input: {
+  documentoOrigenId: string
+  cajaId: string
+  motivo: string
+  lineas: { origenItemId: string; cantidad: number }[]
+  reembolsos: ReembolsoDevolucion[]
+}): Promise<PosResult<{ id: string }>> {
+  if (input.lineas.length === 0) return { ok: false, error: 'Selecciona al menos una línea a devolver.' }
+  if (!input.motivo.trim()) return { ok: false, error: 'El motivo es requerido.' }
+
+  const supabase = await createClient()
+
+  const { data: origen, error: origenError } = await supabase
+    .from('documentos')
+    .select('id, tipo, estado, cliente_id')
+    .eq('id', input.documentoOrigenId)
+    .maybeSingle()
+
+  if (origenError || !origen) return { ok: false, error: 'El documento origen ya no existe.' }
+  if (origen.estado !== 'emitido') return { ok: false, error: 'El documento origen no está emitido.' }
+  if (origen.tipo !== 'factura' && origen.tipo !== 'comprobante') {
+    return { ok: false, error: 'Este documento no admite devolución.' }
+  }
+
+  const { data: itemsRows, error: itemsError } = await supabase
+    .from('documento_items')
+    .select('*')
+    .eq('documento_id', origen.id)
+
+  if (itemsError) return { ok: false, error: ERROR_GENERICO }
+
+  const itemsPorId = new Map(
+    ((itemsRows ?? []) as DocumentoItem[]).map(normalizarItem).map(it => [it.id, it]),
+  )
+  const yaDevuelto = await yaDevueltoPorLinea(supabase, [...itemsPorId.keys()])
+
+  const lineasDevueltas: Array<LineaConColumna & { origenItemId: string }> = []
+  for (const linea of input.lineas) {
+    const original = itemsPorId.get(linea.origenItemId)
+    if (!original) return { ok: false, error: 'Una de las líneas de origen ya no existe.' }
+    if (!Number.isFinite(linea.cantidad) || linea.cantidad <= 0) {
+      return { ok: false, error: 'La cantidad a devolver debe ser mayor a cero.' }
+    }
+    const devuelto = yaDevuelto.get(linea.origenItemId) ?? 0
+    if (linea.cantidad > cantidadDevolvible(original.cantidad, devuelto)) {
+      return { ok: false, error: `La cantidad supera lo devolvible de "${original.descripcion}".` }
+    }
+    lineasDevueltas.push({ ...recalcularLineaDevuelta(original, linea.cantidad), origenItemId: linea.origenItemId })
+  }
+
+  // total_letras se deriva del mismo total que se manda como suma de líneas
+  // (totalNotaCredito), no del total recompuesto por columna en totalesDocumento
+  // — así la RPC (que suma importe de items) nunca discrepa por redondeo.
+  const total = totalNotaCredito(lineasDevueltas)
+  const parcial = totalesDocumento(lineasDevueltas, 0, '')
+  const totales: TotalesDocumento = { ...parcial, total, total_letras: numeroALetras(total) }
+
+  const [saldoCxc, sinEfectivo] = await Promise.all([
+    saldoCxcDocumento(supabase, origen.id),
+    sinEfectivoDevoluciones(supabase),
+  ])
+
+  const errorReembolsos = validarReembolsos(input.reembolsos, total, {
+    saldoCxc,
+    sinEfectivo,
+    clienteRegistrado: !!origen.cliente_id,
+  })
+  if (errorReembolsos) return { ok: false, error: errorReembolsos }
+
+  const usuario = await usuarioActual(supabase)
+
+  const payload = {
+    documento_origen_id: origen.id,
+    caja_id: input.cajaId,
+    motivo: input.motivo,
+    usuario,
+    items: lineasDevueltas.map(l => ({
+      origen_item_id: l.origenItemId,
+      producto_id: l.producto_id,
+      variante_id: l.variante_id,
+      descripcion: l.descripcion,
+      cantidad: l.cantidad,
+      precio_unitario: l.precio_unitario,
+      descuento: l.descuento,
+      isv: l.isv,
+      importe: l.importe,
+      base: l.base,
+      isv_monto: l.isv_monto,
+    })),
+    totales,
+    reembolsos: input.reembolsos.map(r => ({
+      tipo: r.tipo,
+      monto: r.monto,
+      metodo_id: r.metodo_id ?? null,
+    })),
+  }
+
+  const { data, error } = await supabase.rpc('emitir_nota_credito', { p: payload })
+  if (error || !data) {
+    return { ok: false, error: traducirErrorPos(error?.message) ?? ERROR_GENERICO }
+  }
+
+  revalidatePath('/admin/pos')
+  revalidatePath('/admin/pos/documentos')
+  return { ok: true, data: { id: data as string } }
 }
 
 // Devuelve el `id` insertado: las pestañas de venta (PosClient) lo necesitan

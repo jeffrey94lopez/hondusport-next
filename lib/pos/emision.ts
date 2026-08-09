@@ -139,8 +139,8 @@ export function esperadoCaja(
 
 /**
  * Traduce los códigos de error nuevos del POS (HS_CAJA, HS_CAI, HS_TOTAL,
- * HS_PEDIDO_DOC, HS_DOC) a mensajes legibles; delega los demás en
- * traducirErrorPedido (HS_STOCK, HS_REQUIERE_VARIANTE, etc.).
+ * HS_PEDIDO_DOC, HS_DOC, HS_DEVOLVIBLE, HS_REEMB) a mensajes legibles; delega
+ * los demás en traducirErrorPedido (HS_STOCK, HS_REQUIERE_VARIANTE, etc.).
  */
 export function traducirErrorPos(message: string | null | undefined): string | null {
   if (!message) return null
@@ -160,6 +160,10 @@ export function traducirErrorPos(message: string | null | undefined): string | n
       return `Este pedido ya tiene un documento emitido (#${a}).`
     case 'HS_DOC':
       return a
+    case 'HS_DEVOLVIBLE':
+      return `La cantidad supera lo devolvible de "${a}".`
+    case 'HS_REEMB':
+      return `Problema con el reembolso: ${a}.`
     default:
       return traducirErrorPedido(message)
   }
