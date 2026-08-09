@@ -632,3 +632,35 @@ export interface CxcFila extends DocumentoSaldo {
   bucket: BucketAntiguedad
   dias_vencido: number
 }
+
+// POS P4d: Inventario físico / Conteos
+export type EstadoConteo = 'en_conteo' | 'aplicada' | 'anulada'
+export type AlcanceTipo = 'todo' | 'categoria' | 'subcategoria' | 'seleccion'
+
+export interface ConteoFisico {
+  id: string
+  numero: string
+  estado: EstadoConteo
+  alcance_tipo: AlcanceTipo
+  alcance_ref: string | null
+  descripcion: string | null
+  notas: string | null
+  usuario: string | null
+  created_at: string
+  aplicada_at: string | null
+}
+
+export interface ConteoLinea {
+  id: string
+  conteo_id: string
+  producto_id: string
+  variante_id: string | null
+  sku: string | null
+  nombre: string
+  stock_snapshot: number
+  contado: number | null
+  stock_al_aplicar: number | null
+  ajuste: number | null
+  aplicada: boolean
+  aviso_movimiento: boolean
+}
