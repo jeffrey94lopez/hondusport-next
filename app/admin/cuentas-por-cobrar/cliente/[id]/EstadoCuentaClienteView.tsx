@@ -1,9 +1,9 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { numeroDocumento } from '@/lib/pos/documentos'
 import { formatPrice } from '@/lib/store/format'
 import type { Cliente, Cobro, CobroAplicacion, CobroMetodo, ConfigMap, CxcFila, EstadoPago } from '@/types'
-import { numeroDocumento } from '../../CuentasPorCobrarClient'
 import HojaEstadoCuentaCliente from './HojaEstadoCuentaCliente'
 import styles from './estado.module.css'
 

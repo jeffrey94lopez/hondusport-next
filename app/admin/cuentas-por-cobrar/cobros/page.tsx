@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
+import { numeroDocumento } from '@/lib/pos/documentos'
 import { obtenerCobros } from '../actions'
-import { numeroDocumento } from '../CuentasPorCobrarClient'
 import CobrosClient from './CobrosClient'
 
 export const dynamic = 'force-dynamic'

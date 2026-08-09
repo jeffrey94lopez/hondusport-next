@@ -1,6 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { numeroDocumento } from '@/lib/pos/documentos'
 import { formatPrice } from '@/lib/store/format'
 import type { BucketAntiguedad, Caja, Cliente, CxcFila, EstadoPago, SesionCaja } from '@/types'
 import CobroModal from './CobroModal'
@@ -39,19 +40,6 @@ const ESTADO_BADGE: Record<EstadoPago, string> = {
 }
 
 const ESTADOS: EstadoPago[] = ['pendiente', 'parcial', 'vencida']
-
-// El documento no tiene un campo "numero" único: factura usa el correlativo
-// fiscal, comprobante usa numero_comprobante con prefijo C- (mismo criterio
-// que DocumentosClient.tsx). Se duplica aquí (y en CobroModal) porque no es
-// una regla de negocio con peso — es presentación, como el resto del archivo.
-export function numeroDocumento(f: {
-  tipo: 'factura' | 'comprobante'
-  correlativo: string | null
-  numero_comprobante: number | null
-}): string {
-  if (f.tipo === 'factura') return f.correlativo ?? '—'
-  return `C-${String(f.numero_comprobante ?? 0).padStart(8, '0')}`
-}
 
 function formatFecha(iso: string | null): string {
   return iso ? iso.slice(0, 10) : '—'

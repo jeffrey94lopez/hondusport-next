@@ -1,7 +1,7 @@
 'use client'
+import { numeroDocumento } from '@/lib/pos/documentos'
 import { formatPrice } from '@/lib/store/format'
 import type { Cliente, Cobro, CobroAplicacion, CobroMetodo, ConfigMap, CxcFila, EstadoPago } from '@/types'
-import { numeroDocumento } from '../../CuentasPorCobrarClient'
 import styles from './estado.module.css'
 
 type CobroConAplicaciones = Cobro & { aplicaciones: CobroAplicacion[] }

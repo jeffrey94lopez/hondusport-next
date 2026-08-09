@@ -1,11 +1,11 @@
 'use client'
 import { useMemo, useState } from 'react'
 import Modal from '@/components/admin/Modal'
+import { numeroDocumento } from '@/lib/pos/documentos'
 import { formatPrice } from '@/lib/store/format'
 import { parseMoneyInput, valorMostrado } from '@/app/admin/pos/pos-helpers'
 import type { Caja, Cliente, CobroMetodo, CxcFila, SesionCaja } from '@/types'
 import { registrarCobro, type RegistrarCobroInput } from './actions'
-import { numeroDocumento } from './CuentasPorCobrarClient'
 import styles from './cxc.module.css'
 
 interface Props {
