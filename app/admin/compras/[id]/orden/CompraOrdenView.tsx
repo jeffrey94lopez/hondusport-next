@@ -17,7 +17,7 @@ export default function CompraOrdenView({ compra, config }: Props) {
     <div className={styles.page}>
       <div className={`${styles.toolbar} ${styles.noPrint}`}>
         <div className={styles.toolbarLeft}>
-          <Link href={`/admin/compras/${compra.id}`} className="btnMerlinTertiary">
+          <Link href={`/admin/compras/${compra.id}`} className={`btnMerlinTertiary ${styles.btnToolbar}`}>
             ← Volver
           </Link>
           <span className={styles.toolbarTitulo}>Orden de compra {compra.numero}</span>
