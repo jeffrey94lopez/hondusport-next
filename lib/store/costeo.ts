@@ -36,7 +36,8 @@ export function margen(precio: number, costo: number | null): { ganancia: number
 export type CambioStock =
   | { tipo: 'sin_cambio' }
   // null <-> número: cambio de modalidad (ilimitado a limitado o viceversa).
-  // No es un movimiento real de inventario: se escribe directo, sin kardex.
+  // Desde P4d SÍ es kardexable: null->N genera apertura ('inicial' +N),
+  // N->null genera cierre ('ajuste' -N). Ver calcularMovimientoStock y fijar_stock.
   | { tipo: 'modalidad'; valor: number | null }
   // número -> número distinto: sí es kardexable, pasa por registrar_entrada.
   | { tipo: 'delta'; delta: number }

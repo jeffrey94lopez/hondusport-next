@@ -233,7 +233,7 @@ export interface MovimientoImport {
   productoSlugTemp?: string
   variante_id: string | null
   orden?: number   // solo en altas de variante nueva (ver arriba)
-  tipo: 'entrada' | 'ajuste'
+  tipo: 'entrada' | 'ajuste' | 'inicial'
   cantidad: number
   costo_unitario: number | null
   stock_anterior: number | null
@@ -283,18 +283,19 @@ export interface ParseResult {
 // junto al resto de la fila) de la construcción del objeto final (tardía,
 // una vez resueltos slug/sku de un alta) sin repetir el cálculo.
 export interface MovimientoParcial {
-  tipo: 'entrada' | 'ajuste'
+  tipo: 'entrada' | 'ajuste' | 'inicial'
   cantidad: number
   costo_unitario: number | null
   stock_anterior: number | null
 }
 
 // Valida y calcula (sin ids) el movimiento de kardex a partir de un diff de
-// stock. Reutiliza calcularCambioStock: un cambio de modalidad (null <-> número)
-// no es un movimiento real de inventario (se escribe directo, sin kardex) —
-// mismo criterio que ya usa el panel de admin (ver costeo.ts). Devuelve null
-// si no hay movimiento que registrar. Empuja a rowErrors si costoEntrada viene
-// en una fila que no es un aumento de stock.
+// stock. Reutiliza calcularCambioStock. Desde P4d el cambio de modalidad
+// (null <-> número) SÍ es kardexable: null->N genera apertura ('inicial'
+// +N), N->null genera cierre ('ajuste' -N) — mismo criterio que usa
+// fijar_stock (ver costeo.ts). Devuelve null si no hay movimiento que
+// registrar. Empuja a rowErrors si costoEntrada viene en una fila que no es
+// un aumento de stock.
 export function calcularMovimientoStock(
   stockAnterior: number | null,
   stockNuevo: number | null,
@@ -302,10 +303,29 @@ export function calcularMovimientoStock(
   rowErrors: string[],
 ): MovimientoParcial | null {
   const cambio = calcularCambioStock(stockAnterior, stockNuevo)
-  if (cambio.tipo !== 'delta') {
+  if (cambio.tipo === 'sin_cambio') {
     if (costoEntrada != null) rowErrors.push('el costo_entrada solo aplica si el stock aumenta')
     return null
   }
+  if (cambio.tipo === 'modalidad') {
+    if (cambio.valor === null) {
+      // N -> ilimitado: cierre. stockAnterior es un número.
+      if (costoEntrada != null) rowErrors.push('el costo_entrada solo aplica si el stock aumenta')
+      const cantidad = -(stockAnterior as number)
+      // stockAnterior 0: no hay nada que cerrar (incluye el sentinel 0 que
+      // Nuevos/Variantes altas y externalImport usan como "stockAnterior" de
+      // un recurso que todavía no existe — no es un cambio de modalidad real).
+      if (cantidad === 0) return null
+      return { tipo: 'ajuste', cantidad, costo_unitario: null, stock_anterior: stockAnterior }
+    }
+    // ilimitado -> N: apertura.
+    if (cambio.valor === 0) {
+      if (costoEntrada != null) rowErrors.push('el costo_entrada solo aplica si el stock aumenta')
+      return null
+    }
+    return { tipo: 'inicial', cantidad: cambio.valor, costo_unitario: costoEntrada ?? null, stock_anterior: stockAnterior }
+  }
+  // delta número -> número
   if (cambio.delta > 0) {
     return { tipo: costoEntrada != null ? 'entrada' : 'ajuste', cantidad: cambio.delta, costo_unitario: costoEntrada ?? null, stock_anterior: stockAnterior }
   }

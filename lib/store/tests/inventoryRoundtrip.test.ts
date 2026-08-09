@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   COLUMNAS, INSTRUCCIONES, VARIANTES_COLUMNAS, NOTA_VENDE_POR_VARIANTES,
   parseBool, parseNum, cellText, cellBool, splitList, joinList, normNombre,
-  buildExportData, parseInventoryUpload, parseCostoEntrada,
+  buildExportData, parseInventoryUpload, parseCostoEntrada, calcularMovimientoStock,
 } from '../inventoryRoundtrip'
 import type { Producto, ProductoVariante } from '@/types'
 import type { ParseContext } from '../inventoryRoundtrip'
@@ -494,7 +494,7 @@ describe('parseInventoryUpload — movimientos de stock (Actualizar)', () => {
     expect(res.errors.some(e => e.motivo.includes('costo_entrada'))).toBe(true)
   })
 
-  it('cambio de modalidad (ilimitado <-> número) no genera movimiento', () => {
+  it('modalidad ilimitado -> número genera apertura inicial', () => {
     const c = ctxBase()
     c.existentes[0].stock = null
     const res = parseInventoryUpload({
@@ -502,19 +502,34 @@ describe('parseInventoryUpload — movimientos de stock (Actualizar)', () => {
       nuevos: [], variantes: [],
     }, c)
     expect(res.errors).toEqual([])
-    expect(res.movimientos).toEqual([])
+    expect(res.movimientos).toEqual([
+      { producto_id: 'p1', variante_id: null, tipo: 'inicial', cantidad: 20, costo_unitario: null, stock_anterior: null, referencia: expect.any(String) },
+    ])
   })
 
-  it('error: costo_entrada presente durante un cambio de modalidad (ilimitado -> número)', () => {
+  // Nota: la celda "stock" del import no puede expresar "fijar ilimitado"
+  // (INSTRUCCIONES: "Ilimitado se fija en el panel"; una celda vacía significa
+  // "no cambia", nunca "poner null"), así que este caso (cierre número ->
+  // ilimitado) no es alcanzable vía parseInventoryUpload y se prueba llamando
+  // directo a calcularMovimientoStock (la función que el parser usa por fila).
+  it('modalidad número -> ilimitado genera cierre ajuste', () => {
+    const rowErrors: string[] = []
+    const mov = calcularMovimientoStock(12, null, null, rowErrors)
+    expect(rowErrors).toEqual([])
+    expect(mov).toEqual({ tipo: 'ajuste', cantidad: -12, costo_unitario: null, stock_anterior: 12 })
+  })
+
+  it('costo_entrada durante una apertura (ilimitado -> número) se acepta como costo_unitario', () => {
     const c = ctxBase()
     c.existentes[0].stock = null
     const res = parseInventoryUpload({
       actualizar: [{ id: 'p1', nombre: 'Camiseta', precio: 250, stock: 20, costo_entrada: 50 }],
       nuevos: [], variantes: [],
     }, c)
-    expect(res.updates).toEqual([])
-    expect(res.movimientos).toEqual([])
-    expect(res.errors.some(e => e.motivo.includes('costo_entrada'))).toBe(true)
+    expect(res.errors).toEqual([])
+    expect(res.movimientos).toEqual([
+      { producto_id: 'p1', variante_id: null, tipo: 'inicial', cantidad: 20, costo_unitario: 50, stock_anterior: null, referencia: expect.any(String) },
+    ])
   })
 
   it('sin cambio de stock no genera movimiento', () => {
