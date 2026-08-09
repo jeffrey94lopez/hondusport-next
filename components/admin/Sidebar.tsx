@@ -10,6 +10,7 @@ const NAV_GROUPS = [
     label: 'TIENDA',
     items: [
       { href: '/admin/productos', icon: '📦', label: 'Productos' },
+      { href: '/admin/inventario', icon: '📦', label: 'Inventario físico' },
       { href: '/admin/categorias', icon: '🏷️', label: 'Categorías' },
       { href: '/admin/banners', icon: '🖼️', label: 'Banners' },
     ],

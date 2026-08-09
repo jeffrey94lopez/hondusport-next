@@ -1,0 +1,161 @@
+/* Inventario físico (POS P4d). Listado de tomas + modal de alta. Estilos
+   Merlin (tokens de app/merlin.css); patrones visuales copiados de
+   compras.module.css (listado + modales) — no se importa ese módulo. */
+
+.page {
+  padding: 1.5rem;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btnPrimary {
+  padding: 0.55rem 1rem;
+  white-space: nowrap;
+}
+
+.tableWrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.855rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+.rowClickable { cursor: pointer; }
+.rowClickable:hover td { background: var(--bg-hover); }
+
+.numero { font-weight: 700; white-space: nowrap; }
+.fechaCol { white-space: nowrap; color: var(--text-muted); }
+.accionesCol { text-align: right; white-space: nowrap; }
+
+.btnAbrir {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btnAbrir:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Badge de estado (en_conteo ámbar, aplicada verde, anulada rojo) */
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+.badgeAmbar { background: var(--warning-bg); color: var(--warning); }
+.badgeVerde { background: var(--success-bg); color: var(--success); }
+.badgeRojo { background: var(--error-bg); color: var(--danger); }
+
+.empty {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+/* ============================ MODAL ============================ */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.form input,
+.form select,
+.form textarea {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+.form textarea { resize: vertical; }
+.form input:focus,
+.form select:focus,
+.form textarea:focus { outline: none; border-color: var(--accent); }
+
+.helpText {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.formError { font-size: 0.8rem; color: var(--danger); }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+.btnCancel { padding: 0.55rem 1rem; }
+.btnSubmit { padding: 0.55rem 1.1rem; }
