@@ -1,0 +1,270 @@
+/* Cuentas por pagar (POS P4b). Tablero: resumen de antigüedad + tabla de
+   saldos + filtros, y el modal de registro de pago (abono/global). Estilos
+   Merlin (tokens de app/merlin.css); patrones visuales copiados del listado de
+   compras (compras.module.css) — no se importa ese módulo. */
+
+/* ============================ TABLERO ============================ */
+.page {
+  padding: 1.5rem;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.btnAccion { padding: 0.55rem 1rem; white-space: nowrap; }
+
+/* ---- Resumen de antigüedad ---- */
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+@media (max-width: 720px) {
+  .resumen { grid-template-columns: repeat(2, 1fr); }
+}
+.resumenCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 0.85rem 1rem;
+}
+.resumenLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+}
+.resumenMonto {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ---- Filtros ---- */
+.filtros {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.filtroSelect {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+.filtroSelect:focus { outline: none; border-color: var(--accent); }
+
+/* ---- Tabla ---- */
+.tableWrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.855rem;
+}
+.table th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  white-space: nowrap;
+}
+.table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+
+.numero { font-weight: 700; white-space: nowrap; }
+.num { text-align: right; white-space: nowrap; }
+.saldoCol { font-weight: 700; }
+.fechaCol { white-space: nowrap; color: var(--text-muted); }
+.accionCol { text-align: right; white-space: nowrap; }
+.btnAbonar { padding: 0.35rem 0.85rem; font-size: 0.78rem; }
+
+/* Badge de estado (pendiente gris, parcial ámbar, vencida rojo, pagada verde) */
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+.badgeGris { background: var(--bg-hover); color: var(--text-muted); }
+.badgeAmbar { background: var(--warning-bg); color: var(--warning); }
+.badgeVerde { background: var(--success-bg); color: var(--success); }
+.badgeRojo { background: var(--error-bg); color: var(--danger); }
+
+.empty {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+/* ============================ MODAL DE PAGO ============================ */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.form input,
+.form select {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+.form input:focus,
+.form select:focus { outline: none; border-color: var(--accent); }
+
+/* Compra fija (modo abono) */
+.compraFija {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--bg-hover);
+  border-radius: var(--radius-card);
+  padding: 0.65rem 0.9rem;
+}
+.compraNumero { font-weight: 700; color: var(--text); }
+.compraSaldo { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; }
+
+/* Toggle de distribución (modo global) */
+.distribToggle {
+  display: inline-flex;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  overflow: hidden;
+  align-self: flex-start;
+}
+.distribBtn {
+  padding: 0.5rem 0.9rem;
+  background: var(--bg-input);
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.distribBtn[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Detalle manual (modo global manual) */
+.detalleManual {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 34vh;
+  overflow-y: auto;
+}
+.detalleRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+.detalleRow:last-child { border-bottom: none; }
+.detalleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.detalleInput {
+  width: 110px;
+  text-align: right;
+}
+.detalleTotal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--border);
+}
+.sumaOk { color: var(--success); }
+.sumaMal { color: var(--danger); }
+
+.formError { font-size: 0.8rem; color: var(--danger); }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+.btnCancel { padding: 0.55rem 1rem; }
+.btnSubmit { padding: 0.55rem 1.1rem; }
