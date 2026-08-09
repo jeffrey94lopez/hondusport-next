@@ -138,7 +138,11 @@ begin
     v_ajuste := r.contado - r.stock_snapshot;
     if v_ajuste <> 0 then
       insert into movimientos_inventario (producto_id, variante_id, tipo, cantidad, costo_resultante, referencia)
-      values (r.producto_id, r.variante_id, 'conteo', v_ajuste, v_costo, 'conteo:' || v_numero);
+      values (r.producto_id, r.variante_id, 'conteo', v_ajuste,
+              case when r.variante_id is not null
+                then coalesce(v_costo, (select costo from productos where id = r.producto_id))
+                else v_costo end,
+              'conteo:' || v_numero);
       if r.variante_id is not null then update producto_variantes set stock = v_stock + v_ajuste where id = r.variante_id;
       else update productos set stock = v_stock + v_ajuste where id = r.producto_id; end if;
     end if;
