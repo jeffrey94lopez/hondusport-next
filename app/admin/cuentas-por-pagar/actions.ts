@@ -41,7 +41,10 @@ function traducirError(mensaje: string | undefined | null): string {
     m.includes('esta anulada') ||
     m.includes('no pertenece al proveedor') ||
     m.includes('no tiene aplicaciones') ||
-    m.includes('sin aplicaciones')
+    m.includes('sin aplicaciones') ||
+    m.includes('Falta el proveedor') ||
+    m.includes('Monto de aplicacion invalido') ||
+    m.includes('Compra no encontrada')
   ) {
     return m
   }
@@ -62,7 +65,11 @@ async function mapaProveedores(
 function aCxpFila(saldo: CompraSaldo, hoy: Date, nombreProveedor: string): CxpFila {
   const fechaVenc = saldo.fecha_vencimiento ? new Date(`${saldo.fecha_vencimiento}T00:00:00Z`) : null
   const diasVencido = fechaVenc ? diasEntre(fechaVenc, hoy) : 0
-  const estado = fechaVenc ? estadoPago(saldo.total, saldo.pagado, fechaVenc, hoy) : 'pendiente'
+  // Sin fecha de vencimiento no se puede determinar 'vencida' (no hay fecha
+  // contra la cual comparar): el estado se deriva solo de saldo/pagado.
+  const estado = fechaVenc
+    ? estadoPago(saldo.total, saldo.pagado, fechaVenc, hoy)
+    : saldo.saldo <= 0 ? 'pagada' : saldo.pagado > 0 ? 'parcial' : 'pendiente'
   const bucket = fechaVenc ? bucketAntiguedad(fechaVenc, hoy) : 'por_vencer'
   return {
     ...saldo,
