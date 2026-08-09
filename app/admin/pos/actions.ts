@@ -912,6 +912,13 @@ export async function obtenerNotaCredito(documentoId: string): Promise<PosResult
     ? await supabase.from('cai_autorizaciones').select('*').eq('id', documento.cai_id).maybeSingle()
     : { data: null }
 
+  // El CAI es garantía de la propia RPC `emitir_nota_credito` (una nota_credito
+  // nunca se emite sin uno vigente): si falta aquí es un problema de datos, no
+  // un caso normal — no se devuelve una NC fiscal sin su bloque CAI (mismo
+  // criterio que el guard de factura en documento/[id]/page.tsx). `devolucion`
+  // queda afuera a propósito: no es fiscal, no lleva CAI.
+  if (documento.tipo === 'nota_credito' && !cai) return { ok: false, error: ERROR_GENERICO }
+
   return {
     ok: true,
     data: {
