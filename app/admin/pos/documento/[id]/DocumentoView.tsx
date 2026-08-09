@@ -1,7 +1,10 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import type { Documento, DocumentoItem, Caja, CaiAutorizacion, ConfigMap, DocumentoPagoConMetodo } from '@/types'
+import { useRouter } from 'next/navigation'
+import DevolucionModal from '../../components/DevolucionModal'
+import { puedeDevolverDocumento, type EstadoDevolucionDocumento } from '@/lib/pos/devoluciones'
+import type { Documento, DocumentoItem, Caja, CaiAutorizacion, ConfigMap, DocumentoPagoConMetodo, SesionCaja } from '@/types'
 import DocumentoHoja, { numeroDocumento } from './DocumentoHoja'
 import styles from '../documento.module.css'
 
@@ -15,10 +18,26 @@ interface Props {
   cai: CaiAutorizacion | null
   config: ConfigMap
   volverPos: boolean
+  estadoDevolucion: EstadoDevolucionDocumento
+  sesiones: SesionCaja[]
+  cajas: Caja[]
 }
 
-export default function DocumentoView({ documento, items, pagos, caja, cai, config, volverPos }: Props) {
+export default function DocumentoView({
+  documento,
+  items,
+  pagos,
+  caja,
+  cai,
+  config,
+  volverPos,
+  estadoDevolucion,
+  sesiones,
+  cajas,
+}: Props) {
+  const router = useRouter()
   const [formato, setFormato] = useState<Formato>(caja.formato_impresion)
+  const [devolviendo, setDevolviendo] = useState(false)
 
   const esFactura = documento.tipo === 'factura'
   const anulado = documento.estado === 'anulado'
@@ -32,6 +51,11 @@ export default function DocumentoView({ documento, items, pagos, caja, cai, conf
             {esFactura ? 'Factura' : 'Comprobante'} {numeroDocumento(documento)}
           </span>
           {anulado && <span className={styles.badgeAnuladoToolbar}>ANULADO</span>}
+          {estadoDevolucion !== 'ninguna' && (
+            <span className={styles.badgeDevueltoToolbar}>
+              {estadoDevolucion === 'total' ? 'Devuelto (total)' : 'Devuelto (parcial)'}
+            </span>
+          )}
         </div>
         <div className={styles.toolbarRight}>
           <div className={styles.formatoGroup}>
@@ -52,6 +76,15 @@ export default function DocumentoView({ documento, items, pagos, caja, cai, conf
               Carta
             </button>
           </div>
+          {puedeDevolverDocumento(documento.tipo, documento.estado, estadoDevolucion) && (
+            <button
+              type="button"
+              className={`btnMerlinSecondary ${styles.btnToolbar}`}
+              onClick={() => setDevolviendo(true)}
+            >
+              Devolver / Nota de crédito
+            </button>
+          )}
           <button type="button" className="btnMerlinPrimary" onClick={() => window.print()}>
             Imprimir
           </button>
@@ -64,6 +97,16 @@ export default function DocumentoView({ documento, items, pagos, caja, cai, conf
       </div>
 
       <DocumentoHoja documento={documento} items={items} pagos={pagos} cai={cai} config={config} formato={formato} />
+
+      {devolviendo && (
+        <DevolucionModal
+          documentoId={documento.id}
+          sesiones={sesiones}
+          cajas={cajas}
+          onClose={() => setDevolviendo(false)}
+          onEmitida={() => { setDevolviendo(false); router.refresh() }}
+        />
+      )}
     </div>
   )
 }

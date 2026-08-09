@@ -1,0 +1,153 @@
+/* Estilos propios de DevolucionModal (POS P5a): el modal se abre tanto desde
+   el listado de documentos como desde el detalle de un documento — cada uno
+   con su propio módulo CSS de página (documentos.module.css /
+   documento.module.css) — así que este componente compartido lleva su propio
+   módulo, en vez de acoplarse a uno de los dos consumidores (mismo criterio
+   que components/admin/Modal.tsx con su Modal.module.css). */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.estado {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.cliente {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.lineas {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.lineasHeader,
+.lineaRow {
+  display: grid;
+  grid-template-columns: 1fr 5.5rem 5.5rem 6rem;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+}
+
+.lineasHeader {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+  background: var(--bg-hover);
+}
+
+.lineaRow {
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+
+.lineaDesc { color: var(--text); overflow-wrap: anywhere; }
+.lineaDevolvible { color: var(--text-muted); text-align: right; }
+.lineaImporte { color: var(--text); text-align: right; font-weight: 600; }
+
+.cantidadInput {
+  width: 100%;
+  text-align: right;
+}
+.cantidadInput:disabled { opacity: 0.5; }
+
+.sinLineas {
+  padding: 1rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text);
+  padding: 0.6rem 0.8rem;
+  background: var(--accent-dim);
+  border-radius: var(--radius-input);
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.formError { font-size: 0.8rem; color: var(--danger); }
+
+.reembolsoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.reembolsoHeader { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+
+.chipsRow {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.reembolsoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.6rem 0.7rem;
+}
+
+.reembolsoNombre { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+
+.montoInput { width: 100%; }
+
+.reembolsoChipsRow { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+
+.btnCancel {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.btnCancel:hover { color: var(--text); }
+
+.btnSubmit {
+  padding: 0.55rem 1.1rem;
+  font-size: 0.85rem;
+}

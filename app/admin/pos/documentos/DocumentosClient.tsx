@@ -3,23 +3,43 @@ import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Modal from '@/components/admin/Modal'
+import DevolucionModal from '../components/DevolucionModal'
 import { formatPrice } from '@/lib/store/format'
+import { numeroDevolucion, puedeDevolverDocumento } from '@/lib/pos/devoluciones'
 import { anularDocumento } from '../actions'
 import type { DocumentoListItem } from './page'
+import type { Caja, SesionCaja } from '@/types'
 import styles from './documentos.module.css'
 
 const PAGE_SIZE = 50
 
-type FiltroTipo = 'todos' | 'factura' | 'comprobante'
+type FiltroTipo = 'todos' | 'factura' | 'comprobante' | 'nota_credito' | 'devolucion'
 type FiltroEstado = 'todos' | 'emitido' | 'anulado'
 
 interface Props {
   documentos: DocumentoListItem[]
+  sesiones: SesionCaja[]
+  cajas: Caja[]
+}
+
+const TIPO_LABEL: Record<DocumentoListItem['tipo'], string> = {
+  factura: 'Factura',
+  comprobante: 'Comprobante',
+  nota_credito: 'Nota de crédito',
+  devolucion: 'Devolución',
 }
 
 function numeroDocumento(d: DocumentoListItem): string {
-  if (d.tipo === 'factura') return d.correlativo ?? '—'
+  if (d.tipo === 'factura' || d.tipo === 'nota_credito') return d.correlativo ?? '—'
+  if (d.tipo === 'devolucion') return numeroDevolucion(d.numero_comprobante ?? 0)
   return `C-${String(d.numero_comprobante ?? 0).padStart(8, '0')}`
+}
+
+function badgeTipoClass(tipo: DocumentoListItem['tipo']): string {
+  if (tipo === 'factura') return styles.badgeFactura
+  if (tipo === 'nota_credito') return styles.badgeNotaCredito
+  if (tipo === 'devolucion') return styles.badgeDevolucion
+  return styles.badgeComprobante
 }
 
 function fecha(iso: string): string {
@@ -32,13 +52,14 @@ function fecha(iso: string): string {
   })
 }
 
-export default function DocumentosClient({ documentos }: Props) {
+export default function DocumentosClient({ documentos, sesiones, cajas }: Props) {
   const router = useRouter()
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos')
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('todos')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [anulando, setAnulando] = useState<DocumentoListItem | null>(null)
+  const [devolviendo, setDevolviendo] = useState<DocumentoListItem | null>(null)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -79,13 +100,13 @@ export default function DocumentosClient({ documentos }: Props) {
       </div>
 
       <div className={styles.filtros}>
-        {(['todos', 'factura', 'comprobante'] as FiltroTipo[]).map(v => (
+        {(['todos', 'factura', 'comprobante', 'nota_credito', 'devolucion'] as FiltroTipo[]).map(v => (
           <button
             key={v}
             className={`${styles.filtroBtn} ${filtroTipo === v ? styles.filtroActive : ''}`}
             onClick={() => actualizarFiltroTipo(v)}
           >
-            {v === 'todos' ? 'Todos' : v === 'factura' ? 'Facturas' : 'Comprobantes'}
+            {v === 'todos' ? 'Todos' : v === 'factura' ? 'Facturas' : v === 'comprobante' ? 'Comprobantes' : v === 'nota_credito' ? 'Notas de crédito' : 'Devoluciones'}
           </button>
         ))}
         <span className={styles.filtroDivider} />
@@ -119,9 +140,7 @@ export default function DocumentosClient({ documentos }: Props) {
               <tr key={d.id}>
                 <td>{fecha(d.created_at)}</td>
                 <td>
-                  <span className={d.tipo === 'factura' ? styles.badgeFactura : styles.badgeComprobante}>
-                    {d.tipo === 'factura' ? 'Factura' : 'Comprobante'}
-                  </span>
+                  <span className={badgeTipoClass(d.tipo)}>{TIPO_LABEL[d.tipo]}</span>
                 </td>
                 <td>
                   <Link href={`/admin/pos/documento/${d.id}`} className={styles.numeroLink}>
@@ -137,16 +156,28 @@ export default function DocumentosClient({ documentos }: Props) {
                   >
                     {d.estado === 'anulado' ? 'Anulado' : 'Emitido'}
                   </span>
+                  {d.estadoDevolucion !== 'ninguna' && (
+                    <span className={styles.badgeDevuelto}>
+                      {d.estadoDevolucion === 'total' ? 'Devuelto (total)' : 'Devuelto (parcial)'}
+                    </span>
+                  )}
                 </td>
                 <td>{d.caja_nombre}</td>
                 <td>
-                  {d.tipo === 'comprobante' && d.estado === 'emitido' ? (
-                    <button className={styles.btnAnular} onClick={() => setAnulando(d)}>Anular</button>
-                  ) : d.tipo === 'factura' ? (
-                    <span className={styles.sinAccion} title="Las facturas se corrigen con nota de crédito">
-                      —
-                    </span>
-                  ) : null}
+                  <div className={styles.accionesCell}>
+                    {d.tipo === 'comprobante' && d.estado === 'emitido' && (
+                      <button className={styles.btnAnular} onClick={() => setAnulando(d)}>Anular</button>
+                    )}
+                    {puedeDevolverDocumento(d.tipo, d.estado, d.estadoDevolucion) && (
+                      <button className={styles.btnDevolver} onClick={() => setDevolviendo(d)}>Devolver</button>
+                    )}
+                    {!puedeDevolverDocumento(d.tipo, d.estado, d.estadoDevolucion) &&
+                      !(d.tipo === 'comprobante' && d.estado === 'emitido') && (
+                      <span className={styles.sinAccion} title="Este documento no admite más acciones">
+                        —
+                      </span>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -186,6 +217,16 @@ export default function DocumentosClient({ documentos }: Props) {
           documento={anulando}
           onClose={() => setAnulando(null)}
           onAnulado={() => { setAnulando(null); router.refresh() }}
+        />
+      )}
+
+      {devolviendo && (
+        <DevolucionModal
+          documentoId={devolviendo.id}
+          sesiones={sesiones}
+          cajas={cajas}
+          onClose={() => setDevolviendo(null)}
+          onEmitida={() => { setDevolviendo(null); router.refresh() }}
         />
       )}
     </div>

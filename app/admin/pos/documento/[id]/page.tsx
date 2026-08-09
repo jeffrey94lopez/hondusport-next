@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap } from '@/lib/store/adapters'
-import type { Documento, DocumentoItem, DocumentoPago, Caja, CaiAutorizacion, MetodoPagoTipo, DocumentoPagoConMetodo } from '@/types'
+import { estadoDevolucionDocumento } from '@/lib/pos/devoluciones'
+import type { Documento, DocumentoItem, DocumentoPago, Caja, CaiAutorizacion, MetodoPagoTipo, DocumentoPagoConMetodo, SesionCaja } from '@/types'
 import DocumentoView from './DocumentoView'
 
 // Embed real de documento_pagos → metodos_pago: FK simple (to-one), PostgREST
@@ -26,11 +27,26 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
     { data: items },
     { data: pagos },
     { data: config },
+    { data: devolucionesData },
+    { data: sesiones },
+    { data: cajasAbiertas },
   ] = await Promise.all([
     supabase.from('documentos').select('*').eq('id', id).maybeSingle(),
     supabase.from('documento_items').select('*').eq('documento_id', id),
     supabase.from('documento_pagos').select('*, metodos_pago(nombre, tipo)').eq('documento_id', id),
     supabase.from('configuracion').select('key, value'),
+    // POS P5a: notas de crédito/devoluciones de ESTE documento (para el badge
+    // "Devuelto" — ver estadoDevolucionDocumento).
+    supabase
+      .from('documentos')
+      .select('total')
+      .eq('documento_origen_id', id)
+      .in('tipo', ['nota_credito', 'devolucion'])
+      .neq('estado', 'anulado'),
+    // Sesiones de caja abiertas: para que DevolucionModal pueda ligar la
+    // devolución a la caja que la recibe (mismo criterio que el listado).
+    supabase.from('sesiones_caja').select('*').eq('estado', 'abierta'),
+    supabase.from('cajas').select('*').eq('activo', true).order('nombre'),
   ])
 
   if (!documento) notFound()
@@ -57,6 +73,9 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
     }),
   )
 
+  const sumaDevuelta = (devolucionesData ?? []).reduce((s, d) => s + Number(d.total), 0)
+  const estadoDevolucion = estadoDevolucionDocumento(documento.tipo, Number(documento.total), sumaDevuelta)
+
   return (
     <DocumentoView
       documento={documento as Documento}
@@ -66,6 +85,9 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
       cai={(cai ?? null) as CaiAutorizacion | null}
       config={toConfigMap(config ?? [])}
       volverPos={volver === 'pos'}
+      estadoDevolucion={estadoDevolucion}
+      sesiones={(sesiones ?? []) as unknown as SesionCaja[]}
+      cajas={(cajasAbiertas ?? []) as unknown as Caja[]}
     />
   )
 }

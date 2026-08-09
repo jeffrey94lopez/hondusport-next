@@ -83,8 +83,11 @@
 
 .badgeFactura,
 .badgeComprobante,
+.badgeNotaCredito,
+.badgeDevolucion,
 .badgeEmitido,
-.badgeAnulado {
+.badgeAnulado,
+.badgeDevuelto {
   display: inline-block;
   font-size: 0.75rem;
   font-weight: 700;
@@ -94,8 +97,27 @@
 }
 .badgeFactura { background: var(--info-bg); color: var(--info); }
 .badgeComprobante { background: var(--accent-dim); color: var(--accent); }
+/* POS P5a: nota de crédito/devolución comparten paleta de aviso (naranja) —
+   distinta de factura/comprobante para que salten a la vista en el listado. */
+.badgeNotaCredito,
+.badgeDevolucion { background: var(--warning-bg); color: var(--warning); }
 .badgeEmitido { background: var(--success-bg); color: var(--success); }
 .badgeAnulado { background: var(--bg-hover); color: var(--text-muted); cursor: help; }
+/* Badge "Devuelto (parcial/total)": va junto al de Emitido/Anulado, en su
+   propia línea si no cabe (gap vertical via margin-top). */
+.badgeDevuelto {
+  background: var(--warning-bg);
+  color: var(--warning);
+  margin-top: 0.3rem;
+  margin-left: 0.35rem;
+}
+
+.accionesCell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
 
 .btnAnular {
   background: var(--error-bg);
@@ -109,6 +131,19 @@
   transition: all 0.12s;
 }
 .btnAnular:hover { border-color: var(--danger); }
+
+.btnDevolver {
+  background: var(--warning-bg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--warning);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.btnDevolver:hover { border-color: var(--warning); }
 
 .sinAccion { color: var(--text-dim); cursor: help; }
 

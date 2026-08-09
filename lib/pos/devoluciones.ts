@@ -34,6 +34,35 @@ export function totalNotaCredito(lineas: Array<{ importe: number }>): number {
   return round2(lineas.reduce((s, l) => s + l.importe, 0))
 }
 
+// Estado de devolución de un documento origen (factura/comprobante), usado
+// por el listado y el detalle de documentos (POS P5a Task 4) para el badge
+// "Devuelto" y para habilitar el botón "Devolver". Se deriva de la SUMA de
+// montos (no cantidades) de sus notas de crédito/devoluciones asociadas
+// (`documento_origen_id = este.id`, no anuladas): como cada NC prorratea el
+// mismo precio/descuento que la línea original, esa suma solo iguala el
+// total cuando se devolvió el 100% de las líneas — evita releer/comparar
+// cantidades por línea solo para pintar un badge en un listado.
+export type EstadoDevolucionDocumento = 'ninguna' | 'parcial' | 'total'
+
+export function estadoDevolucionDocumento(
+  tipo: string,
+  totalOrigen: number,
+  sumaDevuelta: number,
+): EstadoDevolucionDocumento {
+  if ((tipo !== 'factura' && tipo !== 'comprobante') || sumaDevuelta <= 0) return 'ninguna'
+  return sumaDevuelta >= totalOrigen - 0.01 ? 'total' : 'parcial'
+}
+
+// El botón "Devolver" solo aplica a facturas/comprobantes emitidos que aún
+// tengan algo devolvible (estado de devolución distinto de 'total').
+export function puedeDevolverDocumento(
+  tipo: string,
+  estado: string,
+  estadoDevolucion: EstadoDevolucionDocumento,
+): boolean {
+  return (tipo === 'factura' || tipo === 'comprobante') && estado === 'emitido' && estadoDevolucion !== 'total'
+}
+
 export function validarReembolsos(
   reembolsos: ReembolsoDevolucion[],
   total: number,

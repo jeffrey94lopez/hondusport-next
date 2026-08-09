@@ -29,6 +29,17 @@
   padding: 0.2rem 0.6rem;
 }
 
+/* POS P5a: badge "Devuelto (parcial/total)" junto al título del toolbar. */
+.badgeDevueltoToolbar {
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-tag);
+  padding: 0.2rem 0.6rem;
+}
+
 /* Task 12: los botones pasan a btnMerlinChip (con su propio borde/fondo), así
    que este contenedor ya no necesita simular una píldora — solo agrupa. */
 .formatoGroup {

@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { cantidadDevolvible, recalcularLineaDevuelta, totalNotaCredito, validarReembolsos, numeroDevolucion } from '../devoluciones'
+import {
+  cantidadDevolvible,
+  recalcularLineaDevuelta,
+  totalNotaCredito,
+  validarReembolsos,
+  numeroDevolucion,
+  estadoDevolucionDocumento,
+  puedeDevolverDocumento,
+} from '../devoluciones'
 
 describe('cantidadDevolvible', () => {
   it('original menos ya devuelto', () => expect(cantidadDevolvible(3, 1)).toBe(2))
@@ -51,5 +59,37 @@ describe('validarReembolsos', () => {
   })
   it('cxc no puede exceder el saldo pendiente', () => {
     expect(validarReembolsos([{ tipo: 'cxc', monto: 230 }], 230, { ...base, saldoCxc: 100 })).toMatch(/cuenta por cobrar|saldo/i)
+  })
+})
+
+describe('estadoDevolucionDocumento', () => {
+  it('ninguna si no hay nada devuelto', () => {
+    expect(estadoDevolucionDocumento('factura', 230, 0)).toBe('ninguna')
+  })
+  it('parcial si lo devuelto es menor al total', () => {
+    expect(estadoDevolucionDocumento('comprobante', 230, 100)).toBe('parcial')
+  })
+  it('total si lo devuelto iguala el total (con tolerancia de redondeo)', () => {
+    expect(estadoDevolucionDocumento('factura', 230, 229.995)).toBe('total')
+    expect(estadoDevolucionDocumento('factura', 230, 230)).toBe('total')
+  })
+  it('ninguna para documentos que no son factura/comprobante (nota_credito/devolucion no tienen devueltos propios)', () => {
+    expect(estadoDevolucionDocumento('nota_credito', 230, 230)).toBe('ninguna')
+  })
+})
+
+describe('puedeDevolverDocumento', () => {
+  it('true para factura emitida con algo devolvible', () => {
+    expect(puedeDevolverDocumento('factura', 'emitido', 'ninguna')).toBe(true)
+    expect(puedeDevolverDocumento('comprobante', 'emitido', 'parcial')).toBe(true)
+  })
+  it('false si ya se devolvió todo', () => {
+    expect(puedeDevolverDocumento('factura', 'emitido', 'total')).toBe(false)
+  })
+  it('false si el documento está anulado', () => {
+    expect(puedeDevolverDocumento('factura', 'anulado', 'ninguna')).toBe(false)
+  })
+  it('false para nota_credito/devolucion', () => {
+    expect(puedeDevolverDocumento('nota_credito', 'emitido', 'ninguna')).toBe(false)
   })
 })

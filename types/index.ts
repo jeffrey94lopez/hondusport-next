@@ -348,10 +348,13 @@ export interface DocumentoParaArqueo {
   pagos: Array<{ tipo: MetodoPagoTipo; monto: number }>
 }
 
-// Documentos: factura o comprobante (espejo 1:1 de la tabla documentos)
+// Documentos: factura, comprobante, nota de crédito o devolución (espejo 1:1
+// de la tabla documentos). nota_credito/devolucion (POS P5a) llevan
+// `documento_origen_id` apuntando a la factura/comprobante que devuelven —
+// null en los documentos originales.
 export interface Documento {
   id: string
-  tipo: 'factura' | 'comprobante'
+  tipo: 'factura' | 'comprobante' | 'nota_credito' | 'devolucion'
   correlativo: string | null
   numero_comprobante: number | null
   cai_id: string | null
@@ -367,6 +370,7 @@ export interface Documento {
   constancia_exonerado: string | null
   registro_sag: string | null
   pedido_id: string | null
+  documento_origen_id: string | null
   total_exento: number
   total_exonerado: number
   total_gravado15: number
