@@ -11,6 +11,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/admin/productos', icon: '📦', label: 'Productos' },
       { href: '/admin/inventario', icon: '📦', label: 'Inventario físico' },
+      { href: '/admin/movimientos', icon: '📒', label: 'Movimientos de inventario' },
       { href: '/admin/categorias', icon: '🏷️', label: 'Categorías' },
       { href: '/admin/banners', icon: '🖼️', label: 'Banners' },
     ],
