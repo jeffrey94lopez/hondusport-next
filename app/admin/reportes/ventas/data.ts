@@ -23,22 +23,28 @@ export async function obtenerReporteVentas(f: FiltrosReporteVentas): Promise<Fil
     .neq('estado', 'anulado')
     .gte('created_at', f.desde).lt('created_at', f.hasta)
     .order('created_at', { ascending: false })
+    .limit(5000)
   if (f.tipo) q = q.eq('tipo', f.tipo)
   if (f.clienteId) q = q.eq('cliente_id', f.clienteId)
   if (f.vendedorId) q = q.eq('vendedor_id', f.vendedorId)
   if (f.cajaId) q = q.eq('caja_id', f.cajaId)
 
-  // Filtro por método de pago: documentos con al menos un pago de ese método.
-  let idsPorMetodo: Set<string> | null = null
-  if (f.metodoId) {
-    const { data: pagos } = await supabase.from('documento_pagos').select('documento_id').eq('metodo_id', f.metodoId)
-    idsPorMetodo = new Set((pagos ?? []).map(p => p.documento_id as string))
-  }
-
   const { data, error } = await q
   if (error) console.error('[reporte-ventas] error:', error.message)
   let rows = (data ?? []) as unknown as DocConItems[]
-  if (idsPorMetodo) rows = rows.filter(d => idsPorMetodo!.has(d.id))
+
+  // Filtro por método de pago: documentos con al menos un pago de ese método,
+  // acotado a los documentos ya traídos por la query principal (evita traer
+  // el histórico completo de pagos de ese método).
+  if (f.metodoId && rows.length) {
+    const { data: pagos } = await supabase
+      .from('documento_pagos')
+      .select('documento_id')
+      .eq('metodo_id', f.metodoId)
+      .in('documento_id', rows.map(d => d.id))
+    const ids = new Set((pagos ?? []).map(p => p.documento_id as string))
+    rows = rows.filter(d => ids.has(d.id))
+  }
 
   return rows.map(d => ({
     id: d.id,

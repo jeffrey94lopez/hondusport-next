@@ -16,6 +16,7 @@ export async function obtenerLibroVentas(desde: string, hasta: string): Promise<
     .gte('created_at', desde)
     .lt('created_at', hasta)
     .order('created_at', { ascending: true })
+    .limit(5000)
   if (error) console.error('[libro-ventas] error:', error.message)
   return ((data ?? []) as unknown as DocFiscalEmbed[]).map(({ cai_autorizaciones, ...d }) => ({
     ...(d as unknown as DocumentoFiscal),
