@@ -62,9 +62,9 @@ select
   (d.created_at::date + (coalesce(cl.dias_credito,0) || ' days')::interval)::date as fecha_vencimiento,
   coalesce(sum(dp.monto) filter (where m.tipo = 'credito'), 0) as credito_total,
   coalesce(max(ca.cobrado), 0) as cobrado,
-  coalesce(max(ncx.nc_cxc), 0) as nc_cxc,
   coalesce(sum(dp.monto) filter (where m.tipo = 'credito'), 0)
-    - coalesce(max(ca.cobrado), 0) - coalesce(max(ncx.nc_cxc), 0) as saldo
+    - coalesce(max(ca.cobrado), 0) - coalesce(max(ncx.nc_cxc), 0) as saldo,
+  coalesce(max(ncx.nc_cxc), 0) as nc_cxc
 from documentos d
 join clientes cl on cl.id = d.cliente_id
 join documento_pagos dp on dp.documento_id = d.id
