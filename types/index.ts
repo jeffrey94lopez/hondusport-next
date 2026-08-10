@@ -715,3 +715,11 @@ export interface SaldoFavorMovimiento {
   usuario: string | null
   created_at: string
 }
+
+// Fila de la vista saldo_favor_clientes (saldo_favor_movimientos agrupado
+// por cliente). Solo lectura en /admin/clientes (Task 6, P5a); el gasto del
+// saldo a favor es P5b.
+export interface SaldoFavorCliente {
+  cliente_id: string
+  saldo: number
+}

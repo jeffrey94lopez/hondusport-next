@@ -120,6 +120,11 @@
 .badgeCliente { background: var(--accent-dim); color: var(--accent); }
 .badgeProveedor { background: var(--info-bg); color: var(--info); }
 
+.saldoFavor {
+  font-weight: 700;
+  color: var(--success);
+}
+
 .rowActions {
   display: flex;
   gap: 0.4rem;

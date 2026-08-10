@@ -242,26 +242,9 @@ export async function cerrarSesion(
   // Devoluciones/reembolsos de la sesión (P5a): documentos nota_credito/devolucion
   // emitidos con este sesion_id, con sus reembolsos (efectivo resta al esperado;
   // saldo_favor/cxc no mueven efectivo, quedan informativos en 'otro').
-  const { data: devDocsRows, error: devDocsError } = await supabase
-    .from('documentos')
-    .select('id')
-    .eq('sesion_id', sesionId)
-    .in('tipo', ['nota_credito', 'devolucion'])
-    .neq('estado', 'anulado')
-
-  if (devDocsError) return { ok: false, error: ERROR_GENERICO }
-
-  const devDocIds = (devDocsRows ?? []).map(d => d.id)
-  const { data: devolucionesRows, error: devolucionesError } = devDocIds.length
-    ? await supabase.from('nota_credito_reembolsos').select('tipo, monto').in('documento_id', devDocIds)
-    : { data: [], error: null }
-
-  if (devolucionesError) return { ok: false, error: ERROR_GENERICO }
-
-  const devoluciones = (devolucionesRows ?? []).map(r => ({
-    metodo: (r.tipo === 'efectivo' ? 'efectivo' : 'otro') as CobroMetodo,
-    monto: Number(r.monto),
-  }))
+  const devolucionesResult = await devolucionesDeSesion(supabase, sesionId)
+  if (!devolucionesResult.ok) return devolucionesResult
+  const devoluciones = devolucionesResult.data ?? []
 
   const { efectivoEsperado } = esperadoCaja(Number(sesion.monto_inicial), docs, cobros, devoluciones)
   const diferencia = round2(montoContado - efectivoEsperado)
@@ -303,6 +286,52 @@ export async function obtenerCobrosSesion(
     ok: true,
     data: (data ?? []).map(c => ({ metodo: c.metodo as CobroMetodo, monto: Number(c.monto) })),
   }
+}
+
+// Devoluciones/reembolsos de una sesión (P5a): documentos nota_credito/devolucion
+// emitidos con ese sesion_id (no anulados), con sus reembolsos en
+// nota_credito_reembolsos. Mapeo tipo → metodo: 'efectivo' → 'efectivo';
+// 'saldo_favor'/'cxc' → 'otro' (no mueven efectivo de la caja, son
+// informativos; no hay CobroMetodo dedicado para esos dos). Compartida entre
+// `cerrarSesion` (cálculo definitivo al confirmar) y `obtenerDevolucionesSesion`
+// (resumen previo en CierreModal, Task 6).
+async function devolucionesDeSesion(
+  supabase: SupabaseServerClient,
+  sesionId: string,
+): Promise<PosResult<Array<{ metodo: CobroMetodo; monto: number }>>> {
+  const { data: devDocsRows, error: devDocsError } = await supabase
+    .from('documentos')
+    .select('id')
+    .eq('sesion_id', sesionId)
+    .in('tipo', ['nota_credito', 'devolucion'])
+    .neq('estado', 'anulado')
+
+  if (devDocsError) return { ok: false, error: ERROR_GENERICO }
+
+  const devDocIds = (devDocsRows ?? []).map(d => d.id)
+  const { data: devolucionesRows, error: devolucionesError } = devDocIds.length
+    ? await supabase.from('nota_credito_reembolsos').select('tipo, monto').in('documento_id', devDocIds)
+    : { data: [], error: null }
+
+  if (devolucionesError) return { ok: false, error: ERROR_GENERICO }
+
+  return {
+    ok: true,
+    data: (devolucionesRows ?? []).map(r => ({
+      metodo: (r.tipo === 'efectivo' ? 'efectivo' : 'otro') as CobroMetodo,
+      monto: Number(r.monto),
+    })),
+  }
+}
+
+// Carga del cierre (P5a): devoluciones/reembolsos ya registrados en la sesión
+// abierta, para el resumen previo en `CierreModal` antes de confirmar. Mismos
+// datos que lee `cerrarSesion` para el cálculo definitivo.
+export async function obtenerDevolucionesSesion(
+  sesionId: string,
+): Promise<PosResult<Array<{ metodo: CobroMetodo; monto: number }>>> {
+  const supabase = await createClient()
+  return devolucionesDeSesion(supabase, sesionId)
 }
 
 export async function emitirVenta(input: {

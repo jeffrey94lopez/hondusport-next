@@ -2,6 +2,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import Modal from '@/components/admin/Modal'
 import Toggle from '@/components/admin/Toggle'
+import { formatPrice } from '@/lib/store/format'
 import type { Cliente, ClienteForm } from '@/types'
 import {
   createCliente,
@@ -13,6 +14,9 @@ import styles from './clientes.module.css'
 
 interface Props {
   clientes: Cliente[]
+  // Saldo a favor por cliente (vista saldo_favor_clientes, P5a). Solo lectura
+  // aquí: el gasto del saldo a favor es P5b. Clientes sin fila = sin saldo.
+  saldosFavor: Record<string, number>
 }
 
 const EMPTY_FORM: ClienteForm = {
@@ -57,7 +61,7 @@ function clienteAForm(c: Cliente): ClienteForm {
 
 type RoleFilter = 'todos' | 'clientes' | 'proveedores'
 
-export default function ClientesClient({ clientes }: Props) {
+export default function ClientesClient({ clientes, saldosFavor }: Props) {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('todos')
   const [modal, setModal] = useState<'create' | 'edit' | null>(null)
@@ -189,6 +193,7 @@ export default function ClientesClient({ clientes }: Props) {
               <th>Tipo</th>
               <th>Exonerado</th>
               <th>Teléfono</th>
+              <th>Saldo a favor</th>
               <th>Activo</th>
               <th></th>
             </tr>
@@ -218,6 +223,11 @@ export default function ClientesClient({ clientes }: Props) {
                   </span>
                 </td>
                 <td>{c.telefono ?? '—'}</td>
+                <td>
+                  {saldosFavor[c.id] > 0 ? (
+                    <span className={styles.saldoFavor}>{formatPrice(saldosFavor[c.id])}</span>
+                  ) : '—'}
+                </td>
                 <td>
                   <Toggle
                     checked={c.activo}

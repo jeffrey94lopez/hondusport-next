@@ -1,7 +1,7 @@
 'use client'
 import { useState, useTransition, useEffect } from 'react'
 import Modal from '@/components/admin/Modal'
-import { cerrarSesion, obtenerCobrosSesion } from '../actions'
+import { cerrarSesion, obtenerCobrosSesion, obtenerDevolucionesSesion } from '../actions'
 import { esperadoCaja } from '@/lib/pos/emision'
 import { formatPrice } from '@/lib/store/format'
 import { round2, parseMoneyInput } from '../pos-helpers'
@@ -39,24 +39,29 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
   const [cobros, setCobros] = useState<Array<{ metodo: CobroMetodo; monto: number }>>([])
+  const [devoluciones, setDevoluciones] = useState<Array<{ metodo: CobroMetodo; monto: number }>>([])
 
-  // Cobros de CxC ya registrados en esta sesión abierta, para el resumen
-  // previo (no persiste nada; `cerrarSesion` los vuelve a traer en el server
-  // para el cálculo definitivo al confirmar).
+  // Cobros de CxC y devoluciones/reembolsos (P5a) ya registrados en esta
+  // sesión abierta, para el resumen previo (no persiste nada; `cerrarSesion`
+  // los vuelve a traer en el server para el cálculo definitivo al confirmar).
   useEffect(() => {
     let activo = true
     obtenerCobrosSesion(sesion.id).then(result => {
       if (activo && result.ok && result.data) setCobros(result.data)
+    })
+    obtenerDevolucionesSesion(sesion.id).then(result => {
+      if (activo && result.ok && result.data) setDevoluciones(result.data)
     })
     return () => { activo = false }
   }, [sesion.id])
 
   // Resumen previo (no persiste nada): la misma pura que usa `cerrarSesion`
   // en el server para el cálculo definitivo al confirmar.
-  const { efectivoEsperado, porMetodo, cobrosPorMetodo } = esperadoCaja(
+  const { efectivoEsperado, porMetodo, cobrosPorMetodo, devolucionesPorMetodo } = esperadoCaja(
     Number(sesion.monto_inicial),
     documentos,
     cobros,
+    devoluciones,
   )
   const contadoNum = parseMoneyInput(montoContado)
   const contadoValido = montoContado.trim() !== '' && contadoNum >= 0
@@ -123,6 +128,23 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
                 <div key={metodo} className={styles.totalesRow}>
                   <span>{NOMBRES_COBRO[metodo]}</span>
                   <span>{formatPrice(cobrosPorMetodo[metodo])}</span>
+                </div>
+              ))}
+          </div>
+        )}
+
+        {(Object.keys(devolucionesPorMetodo) as CobroMetodo[]).some(m => devolucionesPorMetodo[m] > 0) && (
+          <div className={styles.totalesPanel}>
+            <div className={styles.panelTitle}>Devoluciones / reembolsos</div>
+            <div className={styles.identNota}>
+              Reembolsos de esta sesión. El efectivo reembolsado ya está restado del efectivo esperado.
+            </div>
+            {(Object.keys(devolucionesPorMetodo) as CobroMetodo[])
+              .filter(metodo => devolucionesPorMetodo[metodo] > 0)
+              .map(metodo => (
+                <div key={metodo} className={styles.totalesRow}>
+                  <span>{NOMBRES_COBRO[metodo]}</span>
+                  <span>{formatPrice(devolucionesPorMetodo[metodo])}</span>
                 </div>
               ))}
           </div>

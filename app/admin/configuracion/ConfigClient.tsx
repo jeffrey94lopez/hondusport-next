@@ -383,6 +383,7 @@ export default function ConfigClient({ config: initial, cais, cajas, vendedores,
             documentoModal={initial.pos_documento_modal ?? 'true'}
             bloquearLimite={initial.cxc_bloquear_limite ?? 'false'}
             conteoCiego={initial.inventario_conteo_ciego ?? 'true'}
+            devolucionesSinEfectivo={initial.devoluciones_sin_efectivo ?? 'false'}
           />
           <EtapasSection etapas={etapas} />
         </>

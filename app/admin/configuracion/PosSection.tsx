@@ -20,6 +20,7 @@ interface Props {
   documentoModal: string
   bloquearLimite: string
   conteoCiego: string
+  devolucionesSinEfectivo: string
 }
 
 const TIPO_LABEL: Record<MetodoPagoTipo, string> = {
@@ -44,13 +45,14 @@ function EstadoCell({ activo, onToggle, disabled }: { activo: boolean; onToggle:
   )
 }
 
-export default function PosSection({ cajas, vendedores, metodos, limiteConsumidorFinal, documentoModal, bloquearLimite, conteoCiego }: Props) {
+export default function PosSection({ cajas, vendedores, metodos, limiteConsumidorFinal, documentoModal, bloquearLimite, conteoCiego, devolucionesSinEfectivo }: Props) {
   return (
     <div className={styles.wrap}>
       <LimiteConsumidorFinal inicial={limiteConsumidorFinal} />
       <DocumentoModalToggle inicial={documentoModal !== 'false'} />
       <BloquearLimiteToggle inicial={bloquearLimite === 'true'} />
       <ConteoCiegoToggle inicial={conteoCiego === 'true'} />
+      <DevolucionesSinEfectivoToggle inicial={devolucionesSinEfectivo === 'true'} />
       <CajasBlock cajas={cajas} />
       <VendedoresBlock vendedores={vendedores} />
       <MetodosBlock metodos={metodos} />
@@ -196,6 +198,55 @@ function ConteoCiegoToggle({ inicial }: { inicial: boolean }) {
         onChange={handleChange}
         disabled={isPending}
         label="Ocultar el stock del sistema durante el conteo"
+      />
+      {saved && <p className={styles.helpText}>Guardado.</p>}
+      {error && <p className={styles.formError}>{error}</p>}
+    </div>
+  )
+}
+
+// P5a (Devoluciones): interruptor de `devoluciones_sin_efectivo`. Mismo
+// patrón que BloquearLimiteToggle. Ausente = 'false' (la migración lo sembró
+// así): con el toggle activo, el reembolso en efectivo se bloquea al devolver
+// una factura/comprobante — solo quedan disponibles saldo a favor o abono a
+// CxC como forma de reembolso.
+function DevolucionesSinEfectivoToggle({ inicial }: { inicial: boolean }) {
+  const [activo, setActivo] = useState(inicial)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  function handleChange(valor: boolean) {
+    setActivo(valor)
+    setError('')
+    startTransition(async () => {
+      const result = await saveConfig({ devoluciones_sin_efectivo: valor ? 'true' : 'false' })
+      if (result.error) {
+        setError(result.error)
+        setActivo(!valor)
+        return
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    })
+  }
+
+  return (
+    <div className={styles.block}>
+      <div className={styles.head}>
+        <div>
+          <h2 className={styles.title}>Devoluciones en efectivo</h2>
+          <p className={styles.subtitle}>
+            Al devolver una factura o comprobante, bloquea el reembolso en efectivo. El cliente solo
+            podrá recibir el reembolso como saldo a favor o como abono a su cuenta por cobrar.
+          </p>
+        </div>
+      </div>
+      <Toggle
+        checked={activo}
+        onChange={handleChange}
+        disabled={isPending}
+        label="No permitir devoluciones en efectivo"
       />
       {saved && <p className={styles.helpText}>Guardado.</p>}
       {error && <p className={styles.formError}>{error}</p>}
