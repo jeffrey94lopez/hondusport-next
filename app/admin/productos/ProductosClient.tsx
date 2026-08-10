@@ -261,6 +261,9 @@ export default function ProductosClient({ productos, categorias, subcategorias }
                 <td>
                   <div className={styles.rowActions}>
                     <button className={styles.btnEdit} onClick={() => openEdit(p)}>Editar</button>
+                    <Link href={`/admin/productos/${p.id}/movimientos`} className={styles.btnKardex}>
+                      Kardex
+                    </Link>
                     <button className={styles.btnDelete} onClick={() => handleDelete(p.id, p.nombre)}>
                       Eliminar
                     </button>

@@ -1,0 +1,230 @@
+/* Kardex por ítem (POS P5b, Task 4). Dos modos en el mismo módulo: la vista
+   en pantalla (sigue el tema oscuro, tokens de app/merlin.css) y la hoja
+   imprimible (fondo blanco/tinta fija — patrón "hoja carta" copiado de
+   app/admin/cuentas-por-cobrar/cliente/[id]/estado.module.css). `.page` es
+   compartido por ambos modos (nunca se montan a la vez: MovimientosItemView
+   decide cuál renderizar). */
+
+.page { padding: 1.5rem; min-height: 100vh; }
+
+/* ============================ PANTALLA ============================ */
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.title { font-size: 1.25rem; font-weight: 800; color: var(--text); }
+.subtitle { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+.actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.btnAccion { padding: 0.55rem 1rem; white-space: nowrap; }
+
+.itemCard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.itemDato { color: var(--text-muted); }
+.itemDato strong { color: var(--text); font-weight: 700; }
+
+.selectorRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.selectorLabel { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.selector {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  color: var(--text);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.tableToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+.sectionTitle { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0; }
+
+.tableWrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+.table { width: 100%; border-collapse: collapse; font-size: 0.855rem; }
+.table th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  white-space: nowrap;
+}
+.table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.table tr:last-child td { border-bottom: none; }
+
+.num { text-align: right; }
+.fechaCol { color: var(--text-muted); }
+.notasCol { white-space: normal; color: var(--text-muted); max-width: 220px; }
+
+/* Etiqueta del tipo de movimiento, coloreada por el signo de `cantidad`
+   (no por `direccion` de etiquetaTipoMovimiento — el brief pide el color
+   basado en el signo real de la fila, que es lo que ve el usuario). */
+.tipo { display: inline-block; font-size: 0.72rem; font-weight: 700; border-radius: var(--radius-tag); padding: 0.2rem 0.6rem; }
+.tipoEntrada { background: var(--success-bg); color: var(--success); }
+.tipoSalida { background: var(--error-bg); color: var(--danger); }
+.tipoNeutro { background: var(--bg-hover); color: var(--text-muted); }
+
+.cantidadPositiva { color: var(--success); font-weight: 700; }
+.cantidadNegativa { color: var(--danger); font-weight: 700; }
+.cantidadNeutra { color: var(--text-muted); font-weight: 700; }
+
+.referenciaLink { color: var(--accent); text-decoration: none; }
+.referenciaLink:hover { text-decoration: underline; }
+
+.empty { padding: 3rem; text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+
+.nota {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ============================ HOJA IMPRIMIBLE ============================ */
+/* ---- Toolbar (no imprimible) ---- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.toolbarLeft, .toolbarRight { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.toolbarTitulo { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+
+/* Los botones Merlin primary/secondary/tertiary no traen padding ni display
+   propios (ver app/merlin.css): se componen con esta clase para que se vean
+   y alineen como botones de verdad en la barra (mismo criterio documentado en
+   app/admin/pos/documento/documento.module.css). */
+.btnToolbar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.95rem;
+  min-height: 38px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* ---- Fondo de pantalla detrás del "papel" (solo preview) ---- */
+.pageBg {
+  background: var(--bg);
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* ---- Papel: fondo blanco/tinta negra fijos a propósito (simulan papel
+   impreso real, no chrome de la app) — no deben seguir el tema oscuro. ---- */
+.hojaCarta {
+  position: relative;
+  background: #ffffff;
+  color: #0a0a0a;
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  max-width: 900px;
+  font-family: var(--font-poppins), sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 36px 44px;
+}
+
+/* ---- Contenido de la hoja ---- */
+.docTitulo { text-align: center; margin: 0 0 10px; }
+.docTituloH1 { font-size: 1.3em; font-weight: 800; letter-spacing: 2px; margin: 0; }
+
+.metaGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.6em;
+  font-size: 0.9em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #333;
+}
+.metaGrid strong { font-weight: 700; }
+
+.hojaSectionTitle { font-weight: 700; font-size: 0.95em; margin: 12px 0 4px; }
+
+.itemsTable { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 0.85em; }
+.itemsTable th {
+  text-align: left;
+  border-bottom: 1px solid #333;
+  padding: 4px 5px;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+.itemsTable td { padding: 4px 5px; border-bottom: 1px dotted #ccc; vertical-align: top; }
+.itemsTable th:nth-child(n+3), .itemsTable td:nth-child(n+3) { text-align: right; white-space: nowrap; }
+.itemsTable th:first-child, .itemsTable td:first-child,
+.itemsTable th:nth-child(2), .itemsTable td:nth-child(2) { text-align: left; }
+
+.hojaEmpty { font-size: 0.88em; color: #555; margin-bottom: 10px; }
+
+.hojaNota {
+  font-size: 0.78em;
+  color: #555;
+  margin-top: 14px;
+  padding-top: 8px;
+  border-top: 1px solid #333;
+}
+
+/* ---- Impresión ---- */
+@media print {
+  .noPrint { display: none !important; }
+  .pageBg { padding: 0; background: none; min-height: auto; display: block; }
+  .hojaCarta { box-shadow: none; margin: 0 auto; }
+}
