@@ -303,6 +303,7 @@ begin
     where m.tipo = 'saldo_favor';
   if v_saldo_favor > 0 then
     if v_cli_sf is null then raise exception using message = 'HS_SALDO|requiere cliente'; end if;
+    if v_saldo_favor > v_total + 0.01 then raise exception using message = 'HS_SALDO|excede total'; end if;
     perform 1 from clientes where id = v_cli_sf for update;
     select coalesce(sum(monto),0) into v_balance_sf from saldo_favor_movimientos where cliente_id = v_cli_sf;
     if v_saldo_favor > v_balance_sf + 0.01 then raise exception using message = 'HS_SALDO|insuficiente'; end if;
