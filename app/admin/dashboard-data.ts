@@ -20,12 +20,12 @@ export async function obtenerDashboardData(
   const args = { p_desde: rango.desde, p_hasta: rango.hasta }
 
   const [
-    { data: resumenRows },
-    { data: ventasDia },
-    { data: topItems },
-    { data: topClientes },
-    { data: productosStock },
-    { data: ultimosRows },
+    { data: resumenRows, error: eResumen },
+    { data: ventasDia, error: eVentas },
+    { data: topItems, error: eItems },
+    { data: topClientes, error: eClientes },
+    { data: productosStock, error: eProd },
+    { data: ultimosRows, error: eUlt },
   ] = await Promise.all([
     supabase.rpc('dashboard_resumen', args),
     supabase.rpc('dashboard_ventas_por_dia', args),
@@ -39,6 +39,18 @@ export async function obtenerDashboardData(
       .in('tipo', ['factura', 'comprobante']).neq('estado', 'anulado')
       .order('created_at', { ascending: false }).limit(8),
   ])
+
+  // Loguear errores de cualquier consulta sin silenciarlos
+  for (const [fuente, err] of [
+    ['dashboard_resumen', eResumen],
+    ['dashboard_ventas_por_dia', eVentas],
+    ['dashboard_top_items', eItems],
+    ['dashboard_top_clientes', eClientes],
+    ['productos(stockBajo)', eProd],
+    ['documentos(ultimos)', eUlt],
+  ] as const) {
+    if (err) console.error(`[dashboard-data] error en ${fuente}:`, err.message)
+  }
 
   // Stock bajo: mismo criterio que el dashboard previo (stockEfectivo por
   // producto/variante). Se calcula en el server, no en SQL (evita replicar la
