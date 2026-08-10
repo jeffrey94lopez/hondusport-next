@@ -447,6 +447,15 @@ export async function emitirVenta(input: {
     input.pagos.reduce((s, p) => (tipoPorMetodo.get(p.metodo_id) === 'credito' ? s + p.monto : s), 0),
   )
 
+  // Gasto de saldo a favor (P5b): mismo `tipoPorMetodo` releído arriba
+  // (frontera de confianza). El descuento del balance lo hace la RPC
+  // `emitir_documento` bajo lock; aquí solo exigimos cliente registrado —
+  // NO se descuenta ni se valida el balance en JS.
+  const tieneSaldoFavor = input.pagos.some(p => tipoPorMetodo.get(p.metodo_id) === 'saldo_favor')
+  if (tieneSaldoFavor && !input.cliente.id) {
+    return { ok: false, error: 'Un pago con saldo a favor requiere un cliente registrado.' }
+  }
+
   if (creditoNuevo > 0) {
     if (!input.cliente.id) {
       return { ok: false, error: 'Una venta al crédito requiere un cliente registrado.' }
