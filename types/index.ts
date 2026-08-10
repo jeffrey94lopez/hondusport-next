@@ -727,3 +727,41 @@ export interface SaldoFavorCliente {
   cliente_id: string
   saldo: number
 }
+
+// Visor de Kardex (POS P5b)
+export type MovimientoTipo =
+  | 'entrada' | 'ajuste' | 'venta_web' | 'reposicion_cancelacion'
+  | 'venta_pos' | 'devolucion' | 'compra' | 'inicial' | 'conteo'
+
+export interface MovimientoInventario {
+  id: string
+  producto_id: string
+  variante_id: string | null
+  tipo: MovimientoTipo
+  cantidad: number
+  costo_unitario: number | null
+  costo_resultante: number | null
+  referencia: string | null
+  usuario: string | null
+  notas: string | null
+  created_at: string
+}
+
+export interface MovimientoResuelto extends MovimientoInventario {
+  producto_nombre: string
+  variante_nombre: string | null
+  sku: string | null
+  ref_etiqueta: string
+  ref_href: string | null
+  saldo: number | null
+}
+
+export interface FiltrosMovimientos {
+  tipo: MovimientoTipo | null
+  desde: string | null
+  hasta: string | null
+  producto: string | null
+  usuario: string | null
+}
+
+export type KardexResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
