@@ -141,8 +141,9 @@ export function esperadoCaja(
 
 /**
  * Traduce los códigos de error nuevos del POS (HS_CAJA, HS_CAI, HS_TOTAL,
- * HS_PEDIDO_DOC, HS_DOC, HS_DEVOLVIBLE, HS_REEMB) a mensajes legibles; delega
- * los demás en traducirErrorPedido (HS_STOCK, HS_REQUIERE_VARIANTE, etc.).
+ * HS_PEDIDO_DOC, HS_DOC, HS_DEVOLVIBLE, HS_REEMB, HS_SALDO) a mensajes
+ * legibles; delega los demás en traducirErrorPedido (HS_STOCK,
+ * HS_REQUIERE_VARIANTE, etc.).
  */
 export function traducirErrorPos(message: string | null | undefined): string | null {
   if (!message) return null
@@ -166,6 +167,10 @@ export function traducirErrorPos(message: string | null | undefined): string | n
       return `La cantidad supera lo devolvible de "${a}".`
     case 'HS_REEMB':
       return `Problema con el reembolso: ${a}.`
+    case 'HS_SALDO':
+      if (a === 'insuficiente') return 'El cliente no tiene saldo a favor suficiente.'
+      if (a === 'requiere cliente') return 'Un pago con saldo a favor requiere un cliente registrado.'
+      return 'Problema con el saldo a favor.'
     default:
       return traducirErrorPedido(message)
   }
