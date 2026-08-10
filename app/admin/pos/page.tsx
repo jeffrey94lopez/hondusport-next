@@ -3,6 +3,7 @@ import { toConfigMap } from '@/lib/store/adapters'
 import { obtenerCotizacionParaPos, type CotizacionPrefillPos } from '@/app/admin/cotizaciones/actions'
 import type { DocumentoParaArqueo, MetodoPagoTipo } from '@/types'
 import PosClient from './PosClient'
+import styles from './pos.module.css'
 
 const PRODUCTO_SELECT =
   '*, categorias!productos_categoria_id_fkey(valor), subcategorias:categorias!productos_subcategoria_id_fkey(valor), producto_variantes(*)'
@@ -99,20 +100,22 @@ export default async function PosPage({
   }
 
   return (
-    <PosClient
-      cajas={cajas ?? []}
-      sesionesAbiertas={sesionesAbiertas ?? []}
-      vendedores={vendedores ?? []}
-      metodos={metodos ?? []}
-      productos={productos ?? []}
-      clientes={clientes ?? []}
-      cais={cais ?? []}
-      config={toConfigMap(config ?? [])}
-      esperas={esperas ?? []}
-      sesionesCerradas={sesionesCerradas ?? []}
-      documentosPorSesion={documentosPorSesion}
-      categorias={categorias ?? []}
-      cotizacionPrefill={cotizacionPrefill}
-    />
+    <div className={styles.overlay}>
+      <PosClient
+        cajas={cajas ?? []}
+        sesionesAbiertas={sesionesAbiertas ?? []}
+        vendedores={vendedores ?? []}
+        metodos={metodos ?? []}
+        productos={productos ?? []}
+        clientes={clientes ?? []}
+        cais={cais ?? []}
+        config={toConfigMap(config ?? [])}
+        esperas={esperas ?? []}
+        sesionesCerradas={sesionesCerradas ?? []}
+        documentosPorSesion={documentosPorSesion}
+        categorias={categorias ?? []}
+        cotizacionPrefill={cotizacionPrefill}
+      />
+    </div>
   )
 }
