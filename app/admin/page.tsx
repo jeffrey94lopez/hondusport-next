@@ -1,10 +1,11 @@
 import { obtenerDashboardData } from './dashboard-data'
 import { etiquetaRango } from '@/lib/dashboard/rango'
-import { ticketPromedio } from '@/lib/dashboard/metricas'
+import { ticketPromedio, utilidadNeta, margen } from '@/lib/dashboard/metricas'
 import { formatPrice } from '@/lib/store/format'
 import type { PresetRango } from '@/types'
 import FiltroFechas from './FiltroFechas'
 import DashboardGraficos from './DashboardGraficos'
+import KpiSegmento from './KpiSegmento'
 import Link from 'next/link'
 import styles from './dashboard.module.css'
 
@@ -20,7 +21,9 @@ export default async function DashboardPage({
     ? (sp.preset as PresetRango) : 'semana'
   const data = await obtenerDashboardData(preset, sp.desde, sp.hasta)
   const { resumen, stockBajo } = data
-  const ticket = ticketPromedio(resumen.ventas_netas, resumen.num_documentos)
+  const ticket = ticketPromedio(resumen.ventas_sin_isv, resumen.num_documentos)
+  const utilidad = utilidadNeta(resumen.ventas_sin_isv, resumen.costo_ventas)
+  const pctMargen = margen(resumen.ventas_sin_isv, utilidad)
 
   return (
     <div className={styles.page}>
@@ -30,20 +33,41 @@ export default async function DashboardPage({
 
       <FiltroFechas preset={preset} desde={sp.desde} hasta={sp.hasta} etiqueta={etiquetaRango(preset, data.rango)} />
 
-      <h2 className={styles.filaTitulo}>En el rango</h2>
-      <div className={styles.stats}>
-        <Kpi num={formatPrice(resumen.ventas_netas)} label="Ventas netas (POS)" />
-        <Kpi num={String(resumen.num_documentos)} label="Documentos" />
-        <Kpi num={formatPrice(ticket)} label="Ticket promedio" />
-        <Kpi num={String(resumen.pedidos_web)} label="Pedidos web" badge={resumen.pedidos_sin_procesar} badgeLabel="sin procesar" alert={resumen.pedidos_sin_procesar > 0} />
-      </div>
-
-      <h2 className={styles.filaTitulo}>Ahora mismo</h2>
-      <div className={styles.stats}>
-        <Kpi num={formatPrice(resumen.cxc_pendiente)} label="Por cobrar (CxC)" />
-        <Kpi num={formatPrice(resumen.cxp_pendiente)} label="Por pagar (CxP)" />
-        <Kpi num={`${resumen.cotizaciones_abiertas} · ${formatPrice(resumen.cotizaciones_monto)}`} label="Cotizaciones abiertas" />
-        <Kpi num={String(stockBajo)} label="Stock bajo (<5)" warn={stockBajo > 0} />
+      <div className={styles.segmentos}>
+        <KpiSegmento icon="💵" titulo="Ventas" metricas={[
+          { label: 'Ventas (sin ISV)', valor: formatPrice(resumen.ventas_sin_isv) },
+          { label: 'Costo de ventas', valor: formatPrice(resumen.costo_ventas) },
+          { label: `Utilidad neta (${pctMargen}%)`, valor: formatPrice(utilidad), alerta: utilidad < 0 },
+          { label: 'Ticket promedio', valor: formatPrice(ticket) },
+        ]} />
+        <KpiSegmento icon="📄" titulo="Documentos" metricas={[
+          { label: 'Total', valor: String(resumen.num_documentos) },
+          { label: 'Facturas', valor: String(resumen.facturas) },
+          { label: 'Comprobantes', valor: String(resumen.comprobantes) },
+          { label: 'Pedidos web', valor: String(resumen.pedidos_web) },
+          ...(resumen.pedidos_sin_procesar > 0
+            ? [{ label: 'Sin procesar', valor: String(resumen.pedidos_sin_procesar), alerta: true }]
+            : []),
+        ]} />
+        <KpiSegmento icon="📝" titulo="Cotizaciones" metricas={[
+          { label: 'Abiertas', valor: String(resumen.cotizaciones_abiertas) },
+          { label: 'Ganadas', valor: String(resumen.cotizaciones_ganadas) },
+          { label: 'Perdidas', valor: String(resumen.cotizaciones_perdidas) },
+        ]} />
+        <KpiSegmento icon="📈" titulo="Cuentas por cobrar" metricas={[
+          { label: 'Crédito nuevo', valor: formatPrice(resumen.cxc_nuevo) },
+          { label: 'Cobrado', valor: formatPrice(resumen.cxc_cobrado) },
+          { label: 'Acumulado', valor: formatPrice(resumen.cxc_pendiente) },
+        ]} />
+        <KpiSegmento icon="🧾" titulo="Cuentas por pagar" metricas={[
+          { label: 'Crédito nuevo', valor: formatPrice(resumen.cxp_nuevo) },
+          { label: 'Pagado', valor: formatPrice(resumen.cxp_pagado) },
+          { label: 'Acumulado', valor: formatPrice(resumen.cxp_pendiente) },
+        ]} />
+        <KpiSegmento icon="📦" titulo="Ítems" metricas={[
+          { label: 'Stock bajo (<5)', valor: String(stockBajo), alerta: stockBajo > 0 },
+          { label: 'Ítems nuevos', valor: String(resumen.productos_nuevos) },
+        ]} />
       </div>
 
       <DashboardGraficos
@@ -52,7 +76,7 @@ export default async function DashboardPage({
         topClientes={data.topClientes}
       />
 
-      <div className={styles.section}>
+      <div className={`${styles.section} ${styles.ultimos}`}>
         <h2 className={styles.sectionTitle}>Últimos documentos</h2>
         <div className={styles.pedidosList}>
           {data.ultimosDocumentos.map(d => (
@@ -68,20 +92,6 @@ export default async function DashboardPage({
           ))}
           {data.ultimosDocumentos.length === 0 && <div className={styles.empty}>Sin documentos aún.</div>}
         </div>
-      </div>
-    </div>
-  )
-}
-
-function Kpi({ num, label, badge, badgeLabel, alert, warn }: {
-  num: string; label: string; badge?: number; badgeLabel?: string; alert?: boolean; warn?: boolean
-}) {
-  return (
-    <div className={`${styles.stat} ${alert ? styles.statAlert : ''} ${warn ? styles.statWarn : ''}`}>
-      <div className={styles.statNum}>{num}</div>
-      <div className={styles.statLabel}>
-        {label}
-        {badge != null && badge > 0 && <span className={styles.kpiBadge}> · {badge} {badgeLabel}</span>}
       </div>
     </div>
   )
