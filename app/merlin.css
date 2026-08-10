@@ -58,6 +58,19 @@
   --text-caption: 700 12px/16px var(--font-poppins), sans-serif;
 }
 
+/* Convención de iconos (POS P6): todos los iconos del app van en DORADO y
+   SIN FONDO. Los iconos son SVG que heredan `currentColor`; aplicar esta clase
+   (o setear color: var(--brand)) en el contenedor. Barrido app-wide en el P de
+   diseño; P6 lo aplica al Sidebar. */
+.iconoMerlin {
+  color: var(--brand);
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.iconoMerlin svg { width: 1em; height: 1em; fill: none; stroke: currentColor; }
+
 /* Variantes de botón Merlin (pill). Los módulos las componen con sus
    clases propias: className={`${styles.addBtn} btnMerlinPrimary`}. */
 .btnMerlinPrimary,
