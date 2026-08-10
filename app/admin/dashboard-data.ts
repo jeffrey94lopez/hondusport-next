@@ -86,7 +86,6 @@ export async function obtenerDashboardData(
     ventas_netas: Number(resumenCrudo.ventas_netas),
     cxc_pendiente: Number(resumenCrudo.cxc_pendiente),
     cxp_pendiente: Number(resumenCrudo.cxp_pendiente),
-    cotizaciones_monto: Number(resumenCrudo.cotizaciones_monto),
     // P6.1: campos nuevos con guarda defensiva
     ventas_sin_isv: Number(resumenCrudo.ventas_sin_isv ?? 0),
     costo_ventas: Number(resumenCrudo.costo_ventas ?? 0),

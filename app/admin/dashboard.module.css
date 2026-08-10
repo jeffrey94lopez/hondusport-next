@@ -3,37 +3,6 @@
 .title { font-size: 1.25rem; font-weight: 800; }
 .date { font-size: 0.8rem; color: var(--text-muted); text-transform: capitalize; }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.stat {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: 1.1rem 1.2rem;
-}
-
-.statAlert { border-color: var(--info); }
-.statWarn { border-color: var(--warning); }
-
-.statNum {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--accent);
-  margin-bottom: 0.2rem;
-}
-
-.statLabel {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
 .section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.25rem; }
 .sectionTitle { font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; }
 
@@ -69,10 +38,6 @@
 .rangoLibre { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
 .rangoLibre input { border: 1px solid var(--border); border-radius: var(--radius-input); padding: 0.25rem 0.5rem; }
 .filtroEtiqueta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-left: auto; }
-
-/* P6: títulos de fila de KPIs */
-.filaTitulo { font-size: 0.78rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin: 0.5rem 0; }
-.kpiBadge { color: var(--info); font-weight: 700; }
 
 /* P6: grid de gráficos */
 .graficosGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
