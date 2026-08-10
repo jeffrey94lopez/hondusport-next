@@ -269,8 +269,10 @@
 /* Un contenedor `position: fixed` no fragmenta en paged media (paginado):
    se imprimiría solo la primera página. Se neutraliza el modal Y su overlay
    para que el papel (DocumentoHoja, dentro de .pageBg dentro de .modalDocumentoBody)
-   vuelva al flujo normal del documento, que sí pagina — mismo criterio que
-   `.overlay` en pos.module.css para la ruta de la página del documento. */
+   vuelva al flujo normal del documento, que sí pagina — mismo criterio (pura
+   analogía de diseño, no la misma regla ni el mismo DOM) que `.overlay` en
+   pos.module.css: esta ruta (documento/[id]) ya no vive bajo ese overlay,
+   que hoy solo envuelve la pantalla POS (app/admin/pos/page.tsx). */
 @media print {
   .modalDocumentoOverlay {
     position: static;

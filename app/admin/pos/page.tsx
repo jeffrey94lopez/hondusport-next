@@ -99,6 +99,12 @@ export default async function PosPage({
     })
   }
 
+  // El overlay fullscreen se aplica AQUÍ (no en app/admin/pos/layout.tsx,
+  // que es un passthrough) para que solo /admin/pos quede a pantalla
+  // completa. Las rutas hermanas /admin/pos/documentos y
+  // /admin/pos/documento/[id] no importan este CSS module, así que
+  // conservan el Sidebar del admin visible (ver pos.module.css `.overlay`
+  // para el detalle de por qué es `fixed` y su `@media print`).
   return (
     <div className={styles.overlay}>
       <PosClient

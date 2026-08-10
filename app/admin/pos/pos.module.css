@@ -1,6 +1,10 @@
 /* Pantalla POS a pantalla completa: el layout padre (/admin) siempre renderiza
-   el Sidebar (ver layout.tsx de este directorio para la decisión). Este overlay
-   se posiciona fixed y por encima para cubrirlo sin tocar app/admin/layout.tsx. */
+   el Sidebar, y app/admin/pos/layout.tsx es un passthrough (no lo apaga). Este
+   overlay se aplica en app/admin/pos/page.tsx (envolviendo <PosClient>, NO en
+   el layout) y se posiciona fixed y por encima para cubrir al Sidebar sin
+   tocar app/admin/layout.tsx. Las rutas hermanas /admin/pos/documentos y
+   /admin/pos/documento/[id] NO importan este overlay, así que conservan el
+   Sidebar visible. */
 .overlay {
   position: fixed;
   inset: 0;
@@ -9,12 +13,15 @@
   overflow-y: auto;
 }
 
-/* El documento imprimible (app/admin/pos/documento/[id]) también vive bajo
-   este layout, así que hereda el overlay `fixed`. En paged media un `fixed`
-   NO fragmenta entre páginas — una factura con muchos ítems se truncaría a
-   una sola hoja — y el overflow:auto recortaría cualquier contenido que no
-   quepa en el viewport. Se neutraliza solo al imprimir: el documento pasa a
-   fluir en el flujo normal del documento, que sí pagina. */
+/* Este overlay envuelve solo la pantalla POS (app/admin/pos/page.tsx), no el
+   documento imprimible — ese vive en una ruta hermana (documento/[id]) que ya
+   no importa este overlay. Aquí el `fixed` sigue siendo un problema en paged
+   media para el propio POS: p.ej. cuando `DocumentoModal` se abre encima tras
+   cobrar (ver `.ventaWrap` más abajo), ese modal se renderiza como hermano de
+   este overlay, y un `fixed` NO fragmenta entre páginas al imprimir — una
+   factura con muchos ítems se truncaría a una sola hoja — y el overflow:auto
+   recortaría cualquier contenido que no quepa en el viewport. Se neutraliza
+   solo al imprimir: el overlay pasa a flujo normal, que sí pagina. */
 @media print {
   .overlay {
     position: static;
