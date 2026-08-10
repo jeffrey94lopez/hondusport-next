@@ -14,7 +14,7 @@ begin
      and pg_get_constraintdef(oid) like '%tipo%';
   if v_con is not null then execute format('alter table saldo_favor_movimientos drop constraint %I', v_con); end if;
   alter table saldo_favor_movimientos add constraint saldo_favor_movimientos_tipo_chk
-    check (tipo in ('devolucion','venta','cobro'));
+    check (tipo in ('devolucion','venta','cobro','reverso'));
 end $$;
 
 alter table saldo_favor_movimientos add column if not exists cobro_id uuid references cobros(id) on delete set null;
@@ -316,3 +316,89 @@ end;
 $$;
 grant execute on function emitir_documento(jsonb) to authenticated;
 revoke execute on function emitir_documento(jsonb) from public, anon;
+
+-- 6. anular_comprobante: re-crear COMPLETA con la reversa del saldo a favor.
+-- Cuerpo vigente copiado de supabase/migrations/2026-08-09-pos-p5a-devoluciones.sql
+-- (guard de devoluciones + reposicion de stock agrupada + kardex 'devolucion'),
+-- agregando el bloque de re-credito antes del update de estado. Nada mas cambia.
+create or replace function anular_comprobante(p_documento_id uuid, p_motivo text)
+returns void
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  v_doc documentos%rowtype;
+begin
+  if coalesce(trim(p_motivo), '') = '' then
+    raise exception using message = 'HS_DOC|motivo requerido';
+  end if;
+  select * into v_doc from documentos where id = p_documento_id for update;
+  if not found then raise exception using message = 'HS_DOC|documento no encontrado'; end if;
+  if v_doc.tipo <> 'comprobante' then
+    raise exception using message = 'HS_DOC|solo los comprobantes se anulan (facturas: nota de crédito)';
+  end if;
+  if v_doc.estado <> 'emitido' then
+    raise exception using message = 'HS_DOC|ya está anulado';
+  end if;
+
+  -- [P5a] Guard: si existe alguna devolución/nota de crédito NO anulada con
+  -- documento_origen_id = este comprobante, no se puede anular (ver C1 en P5a).
+  perform 1 from documentos dv where dv.documento_origen_id = v_doc.id and dv.estado <> 'anulado';
+  if found then
+    raise exception using message = 'HS_DOC|el comprobante tiene devoluciones registradas';
+  end if;
+
+  -- Reponer stock solo si el documento descontó (mostrador, no pedido web).
+  -- Se agrega por producto/variante ANTES del update: un UPDATE ... FROM con
+  -- varias filas coincidentes por fila objetivo solo aplica una de ellas
+  -- (semántica de Postgres), así que dos líneas del mismo producto/variante
+  -- repondrían solo una si se hiciera el join directo contra documento_items.
+  if v_doc.pedido_id is null then
+    update producto_variantes pv
+      set stock = pv.stock + agg.cantidad
+      from (
+        select variante_id, sum(cantidad) as cantidad
+        from documento_items
+        where documento_id = v_doc.id and variante_id is not null
+        group by variante_id
+      ) agg
+      where agg.variante_id = pv.id and pv.stock is not null;
+    update productos pr
+      set stock = pr.stock + agg.cantidad
+      from (
+        select producto_id, sum(cantidad) as cantidad
+        from documento_items
+        where documento_id = v_doc.id and variante_id is null and producto_id is not null
+        group by producto_id
+      ) agg
+      where agg.producto_id = pr.id and pr.stock is not null;
+
+    insert into movimientos_inventario (producto_id, variante_id, tipo, cantidad, costo_resultante, referencia)
+    select di.producto_id, di.variante_id, 'devolucion', di.cantidad,
+      coalesce(pv.costo, pr.costo), 'documento:' || v_doc.id
+    from documento_items di
+    left join producto_variantes pv on pv.id = di.variante_id
+    left join productos pr on pr.id = di.producto_id
+    where di.documento_id = v_doc.id and di.producto_id is not null
+      and (case when di.variante_id is not null then pv.stock else pr.stock end) is not null;
+  end if;
+
+  -- [P5b] Re-acreditar el saldo a favor gastado en este comprobante (reversa).
+  declare v_saldo_pagado numeric;
+  begin
+    select coalesce(sum(dp.monto),0) into v_saldo_pagado
+      from documento_pagos dp join metodos_pago m on m.id = dp.metodo_id
+      where dp.documento_id = v_doc.id and m.tipo = 'saldo_favor';
+    if v_saldo_pagado > 0 and v_doc.cliente_id is not null then
+      insert into saldo_favor_movimientos (cliente_id, monto, tipo, documento_id, usuario)
+      values (v_doc.cliente_id, v_saldo_pagado, 'reverso', v_doc.id, trim(p_motivo));
+    end if;
+  end;
+
+  update documentos set estado = 'anulado', anulado_motivo = trim(p_motivo), anulado_at = now()
+    where id = v_doc.id;
+end;
+$$;
+grant execute on function anular_comprobante(uuid, text) to authenticated;
+revoke execute on function anular_comprobante(uuid, text) from public, anon;

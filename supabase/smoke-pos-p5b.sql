@@ -8,6 +8,10 @@ begin
       and pg_get_constraintdef(oid) like '%venta%' and pg_get_constraintdef(oid) like '%cobro%'
   ) then raise exception 'FALLO: el tipo del ledger no incluye venta/cobro'; end if;
   if not exists (
+    select 1 from pg_constraint where conrelid='saldo_favor_movimientos'::regclass and contype='c'
+      and pg_get_constraintdef(oid) like '%reverso%'
+  ) then raise exception 'FALLO: el tipo del ledger no incluye reverso'; end if;
+  if not exists (
     select 1 from pg_constraint where conrelid='cobros'::regclass and contype='c'
       and pg_get_constraintdef(oid) like '%saldo_favor%'
   ) then raise exception 'FALLO: cobros.metodo no acepta saldo_favor'; end if;
