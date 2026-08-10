@@ -765,3 +765,63 @@ export interface FiltrosMovimientos {
 }
 
 export type KardexResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
+
+// ── POS P6: Dashboard ──────────────────────────────────────────────
+export type PresetRango = 'hoy' | 'semana' | 'mes' | 'anio' | 'personalizado'
+
+// Bordes del rango como ISO timestamptz (desde inclusivo, hasta exclusivo).
+export interface RangoFechas {
+  desde: string
+  hasta: string
+}
+
+export interface DashboardResumen {
+  ventas_netas: number
+  num_documentos: number
+  pedidos_web: number
+  pedidos_sin_procesar: number
+  cxc_pendiente: number
+  cxp_pendiente: number
+  cotizaciones_abiertas: number
+  cotizaciones_monto: number
+}
+
+export interface VentaPorDia {
+  dia: string // 'YYYY-MM-DD'
+  ventas: number
+}
+
+export interface TopItem {
+  producto_id: string | null
+  variante_id: string | null
+  nombre: string
+  cantidad: number
+  monto: number
+}
+
+export interface TopCliente {
+  cliente_id: string
+  nombre: string
+  num_compras: number
+  monto: number
+}
+
+export interface DashboardUltimoDocumento {
+  id: string
+  tipo: 'factura' | 'comprobante'
+  numero: string
+  cliente_nombre: string
+  total: number
+  created_at: string
+}
+
+export interface DashboardData {
+  preset: PresetRango
+  rango: RangoFechas
+  resumen: DashboardResumen
+  stockBajo: number
+  ventasPorDia: VentaPorDia[]
+  topItems: TopItem[]
+  topClientes: TopCliente[]
+  ultimosDocumentos: DashboardUltimoDocumento[]
+}
