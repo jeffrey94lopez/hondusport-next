@@ -14,6 +14,14 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
 type ReferenciaResuelta = { etiqueta: string; href: string | null }
 
+// Escapa un valor para usarlo dentro del patrón `col.ilike."%valor%"` de
+// PostgREST: entre comillas dobles, `,`/`(`/`)` ya no rompen la microsintaxis
+// de `.or()`; solo hay que escapar `\` y `"` (los caracteres que sí tienen
+// significado dentro de la cadena entre comillas).
+function escaparParaOr(valor: string): string {
+  return valor.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
 interface DocumentoLookup {
   id: string
   tipo: string
@@ -155,10 +163,14 @@ export async function obtenerMovimientosItem(
 
   let variante: { id: string; nombre: string; stock: number | null; costo: number | null; sku: string | null } | null = null
   if (varianteId) {
+    // `.eq('producto_id', productoId)` evita que una variante de OTRO
+    // producto (id crafteado en la URL) se muestre con la cabecera de este
+    // producto; si no matchea, se trata como no encontrada.
     const { data: v, error: varErr } = await supabase
       .from('producto_variantes')
       .select('id, nombre, stock, costo, sku')
       .eq('id', varianteId)
+      .eq('producto_id', productoId)
       .maybeSingle()
     if (varErr || !v) return { ok: false, error: 'Variante no encontrada.' }
     variante = v
@@ -219,11 +231,11 @@ export async function obtenerMovimientosGlobal(
 
   let productoIds: string[] | null = null
   if (filtros.producto && filtros.producto.trim()) {
-    const texto = filtros.producto.trim()
+    const texto = escaparParaOr(filtros.producto.trim())
     const { data: productosMatch } = await supabase
       .from('productos')
       .select('id')
-      .or(`nombre.ilike.%${texto}%,sku.ilike.%${texto}%`)
+      .or(`nombre.ilike."%${texto}%",sku.ilike."%${texto}%"`)
     productoIds = (productosMatch ?? []).map(p => p.id as string)
     if (productoIds.length === 0) return { ok: true, data: { movimientos: [], total: 0 } }
   }
@@ -232,9 +244,12 @@ export async function obtenerMovimientosGlobal(
     .from('movimientos_inventario')
     .select('*, productos(nombre, sku), producto_variantes(nombre)', { count: 'exact' })
 
+  // `created_at` es timestamptz; sin offset, `desde`/`hasta` (fecha local del
+  // filtro) se interpretan en UTC y desfasan el borde del día para Honduras
+  // (UTC-6). Se ancla explícitamente el offset de Honduras.
   if (filtros.tipo) query = query.eq('tipo', filtros.tipo)
-  if (filtros.desde) query = query.gte('created_at', filtros.desde)
-  if (filtros.hasta) query = query.lte('created_at', `${filtros.hasta}T23:59:59`)
+  if (filtros.desde) query = query.gte('created_at', `${filtros.desde}T00:00:00-06:00`)
+  if (filtros.hasta) query = query.lte('created_at', `${filtros.hasta}T23:59:59.999-06:00`)
   if (filtros.usuario && filtros.usuario.trim()) query = query.ilike('usuario', `%${filtros.usuario.trim()}%`)
   if (productoIds) query = query.in('producto_id', productoIds)
 
