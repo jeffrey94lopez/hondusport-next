@@ -21,6 +21,17 @@ function diaSemanaLunes0(y: number, m: number, d: number): number {
   return (dow + 6) % 7 // 0=lunes
 }
 
+// Valida que `s` sea una fecha calendario real en formato 'YYYY-MM-DD'
+// (vacío, undefined, basura o fechas inexistentes como '2026-02-30' → false).
+function esFechaValida(s?: string): boolean {
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false
+  const t = new Date(`${s}T00:00:00Z`)
+  if (Number.isNaN(t.getTime())) return false
+  // new Date normaliza días fuera de rango (p.ej. 2026-02-30 → 2026-03-02);
+  // comparamos contra el ISO para descartar esos casos.
+  return t.toISOString().slice(0, 10) === s
+}
+
 export function rangoDesdePreset(
   preset: PresetRango,
   instante: Date,
@@ -33,9 +44,13 @@ export function rangoDesdePreset(
   if (preset === 'hoy') {
     return { desde: medianocheHonduras(y, m, d).toISOString(), hasta: manana.toISOString() }
   }
+  const offLun = diaSemanaLunes0(y, m, d)
+  const rangoSemana: RangoFechas = {
+    desde: medianocheHonduras(y, m, d - offLun).toISOString(),
+    hasta: manana.toISOString(),
+  }
   if (preset === 'semana') {
-    const offLun = diaSemanaLunes0(y, m, d)
-    return { desde: medianocheHonduras(y, m, d - offLun).toISOString(), hasta: manana.toISOString() }
+    return rangoSemana
   }
   if (preset === 'mes') {
     return { desde: medianocheHonduras(y, m, 1).toISOString(), hasta: manana.toISOString() }
@@ -44,8 +59,13 @@ export function rangoDesdePreset(
     return { desde: medianocheHonduras(y, 0, 1).toISOString(), hasta: manana.toISOString() }
   }
   // personalizado: 'YYYY-MM-DD' → 00:00 Honduras; hasta +1 día (inclusivo del día).
-  const [dy, dm, dd] = (desde ?? `${y}-01-01`).split('-').map(Number)
-  const [hy, hm, hd] = (hasta ?? `${y}-12-31`).split('-').map(Number)
+  // Si alguna de las dos fechas no es válida (vacía, malformada, o no parsea a
+  // fecha real), cae de forma segura a la semana en curso en vez de crashear.
+  if (!esFechaValida(desde) || !esFechaValida(hasta)) {
+    return rangoSemana
+  }
+  const [dy, dm, dd] = desde!.split('-').map(Number)
+  const [hy, hm, hd] = hasta!.split('-').map(Number)
   return {
     desde: medianocheHonduras(dy, dm - 1, dd).toISOString(),
     hasta: medianocheHonduras(hy, hm - 1, hd + 1).toISOString(),

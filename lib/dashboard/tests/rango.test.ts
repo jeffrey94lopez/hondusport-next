@@ -38,6 +38,33 @@ describe('rangoDesdePreset', () => {
     expect(r.desde).toBe('2026-08-01T06:00:00.000Z')
     expect(r.hasta).toBe('2026-08-06T06:00:00.000Z')
   })
+
+  // Hallazgo bloqueante del review final P6: FiltroFechas manda `desde=''`
+  // cuando el usuario borra el input de fecha, y una URL manual puede mandar
+  // basura. rangoDesdePreset NO debe crashear: cae a la semana en curso.
+  it('personalizado con desde vacío no crashea y cae a semana en curso', () => {
+    const semana = rangoDesdePreset('semana', instante)
+    const r = rangoDesdePreset('personalizado', instante, '', '2026-08-05')
+    expect(r).toEqual(semana)
+  })
+
+  it('personalizado con hasta vacío no crashea y cae a semana en curso', () => {
+    const semana = rangoDesdePreset('semana', instante)
+    const r = rangoDesdePreset('personalizado', instante, '2026-08-01', '')
+    expect(r).toEqual(semana)
+  })
+
+  it('personalizado con desde inválido ("abc") no crashea y cae a semana en curso', () => {
+    const semana = rangoDesdePreset('semana', instante)
+    const r = rangoDesdePreset('personalizado', instante, 'abc', '2026-08-05')
+    expect(r).toEqual(semana)
+  })
+
+  it('personalizado sin fechas (undefined) no crashea y cae a semana en curso', () => {
+    const semana = rangoDesdePreset('semana', instante)
+    const r = rangoDesdePreset('personalizado', instante)
+    expect(r).toEqual(semana)
+  })
 })
 
 describe('etiquetaRango', () => {

@@ -73,13 +73,25 @@ export async function obtenerDashboardData(
     created_at: d.created_at,
   }))
 
-  const resumen = (resumenRows?.[0] as DashboardResumen | undefined) ?? RESUMEN_VACIO
+  const resumenCrudo = (resumenRows?.[0] as DashboardResumen | undefined) ?? RESUMEN_VACIO
+  // Los campos numeric de PostgREST no siempre llegan como number; casteamos
+  // explícitamente para que formatPrice/ticketPromedio nunca reciban un string
+  // ni produzcan NaN.
+  const resumen: DashboardResumen = {
+    ...resumenCrudo,
+    ventas_netas: Number(resumenCrudo.ventas_netas),
+    cxc_pendiente: Number(resumenCrudo.cxc_pendiente),
+    cxp_pendiente: Number(resumenCrudo.cxp_pendiente),
+    cotizaciones_monto: Number(resumenCrudo.cotizaciones_monto),
+  }
 
   return {
     preset, rango, resumen, stockBajo,
-    ventasPorDia: (ventasDia ?? []) as VentaPorDia[],
-    topItems: (topItems ?? []) as TopItem[],
-    topClientes: (topClientes ?? []) as TopCliente[],
+    ventasPorDia: ((ventasDia ?? []) as VentaPorDia[]).map(v => ({ ...v, ventas: Number(v.ventas) })),
+    topItems: ((topItems ?? []) as TopItem[]).map(i => ({
+      ...i, monto: Number(i.monto), cantidad: Number(i.cantidad),
+    })),
+    topClientes: ((topClientes ?? []) as TopCliente[]).map(c => ({ ...c, monto: Number(c.monto) })),
     ultimosDocumentos,
   }
 }
