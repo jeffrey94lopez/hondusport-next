@@ -837,3 +837,27 @@ export interface DashboardData {
   topClientes: TopCliente[]
   ultimosDocumentos: DashboardUltimoDocumento[]
 }
+
+// ── POS P7a: Reportes ──────────────────────────────────────────────
+export interface DocumentoFiscal extends Documento {
+  cai_codigo: string | null
+}
+export interface FilaLibroVentas {
+  fecha: string
+  correlativo: string
+  cai: string
+  cliente: string
+  rtn: string
+  exento: number
+  exonerado: number
+  gravado15: number
+  isv15: number
+  gravado18: number
+  isv18: number
+  total: number
+  esNota: boolean
+}
+export interface TotalesLibroVentas {
+  exento: number; exonerado: number; gravado15: number; isv15: number
+  gravado18: number; isv18: number; total: number
+}
