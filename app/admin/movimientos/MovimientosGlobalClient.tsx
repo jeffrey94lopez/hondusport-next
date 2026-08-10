@@ -74,8 +74,19 @@ export default function MovimientosGlobalClient({ movimientos, total, filtros, p
     router.push('/admin/movimientos')
   }
 
+  // Paginar conserva EXACTAMENTE los filtros ya aplicados en la URL (prop
+  // `filtros`), no el borrador local de los inputs: si el usuario editó un
+  // campo sin pulsar "Filtrar", ese cambio no debe colarse al navegar de
+  // página (fix round 1, Task 5).
   function irAPagina(nueva: number) {
-    router.push(construirUrl({ tipo, desde, hasta, producto, usuario, pagina: nueva }))
+    router.push(construirUrl({
+      tipo: filtros.tipo ?? '',
+      desde: filtros.desde ?? '',
+      hasta: filtros.hasta ?? '',
+      producto: filtros.producto ?? '',
+      usuario: filtros.usuario ?? '',
+      pagina: nueva,
+    }))
   }
 
   const hayFiltros = Boolean(filtros.tipo || filtros.desde || filtros.hasta || filtros.producto || filtros.usuario)
