@@ -5,6 +5,7 @@ import { numeroDocumento } from '@/lib/pos/documentos'
 import { formatPrice } from '@/lib/store/format'
 import type { BucketAntiguedad, Caja, Cliente, CxcFila, EstadoPago, SesionCaja } from '@/types'
 import CobroModal from './CobroModal'
+import SaldoFavorModal from './SaldoFavorModal'
 import styles from './cxc.module.css'
 
 interface Props {
@@ -12,6 +13,9 @@ interface Props {
   clientes: Cliente[]
   sesiones: SesionCaja[]
   cajas: Caja[]
+  // Saldo a favor por cliente (vista saldo_favor_clientes, P5a/P5b). Clientes
+  // sin fila = sin saldo. Mismo mapa que /admin/clientes (solo lectura ahí).
+  saldosFavor: Record<string, number>
 }
 
 const BUCKETS: { key: BucketAntiguedad; label: string }[] = [
@@ -45,12 +49,15 @@ function formatFecha(iso: string | null): string {
   return iso ? iso.slice(0, 10) : '—'
 }
 
-export default function CuentasPorCobrarClient({ filas, clientes, sesiones, cajas }: Props) {
+export default function CuentasPorCobrarClient({ filas, clientes, sesiones, cajas, saldosFavor }: Props) {
   const router = useRouter()
   const [clienteFiltro, setClienteFiltro] = useState<'todos' | string>('todos')
   const [estadoFiltro, setEstadoFiltro] = useState<'todos' | EstadoPago>('todos')
   // null = cerrado; { modo: 'abono', fila } | { modo: 'global' }
   const [modal, setModal] = useState<{ modo: 'abono'; fila: CxcFila } | { modo: 'global' } | null>(null)
+  // Modal de saldo a favor: se abre por cliente (no por documento), con TODOS
+  // sus documentos con saldo (para distribuir/elegir), independiente de `modal`.
+  const [modalSaldoFavor, setModalSaldoFavor] = useState<string | null>(null) // cliente_id
 
   const totalesPorBucket = useMemo(() => {
     const acc: Record<BucketAntiguedad, number> = {
@@ -157,12 +164,22 @@ export default function CuentasPorCobrarClient({ filas, clientes, sesiones, caja
                   </span>
                 </td>
                 <td className={styles.accionCol}>
-                  <button
-                    className={`${styles.btnAbonar} btnMerlinSecondary`}
-                    onClick={() => setModal({ modo: 'abono', fila: f })}
-                  >
-                    Cobrar
-                  </button>
+                  <div className={styles.accionesFila}>
+                    <button
+                      className={`${styles.btnAbonar} btnMerlinSecondary`}
+                      onClick={() => setModal({ modo: 'abono', fila: f })}
+                    >
+                      Cobrar
+                    </button>
+                    {(saldosFavor[f.cliente_id] ?? 0) > 0 && (
+                      <button
+                        className={`${styles.btnAbonar} btnMerlinSecondary`}
+                        onClick={() => setModalSaldoFavor(f.cliente_id)}
+                      >
+                        Aplicar saldo a favor
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -188,6 +205,19 @@ export default function CuentasPorCobrarClient({ filas, clientes, sesiones, caja
           onClose={() => setModal(null)}
           onOk={() => {
             setModal(null)
+            router.refresh()
+          }}
+        />
+      )}
+
+      {modalSaldoFavor && (
+        <SaldoFavorModal
+          clienteId={modalSaldoFavor}
+          saldoDisponible={saldosFavor[modalSaldoFavor] ?? 0}
+          documentos={filas.filter(f => f.cliente_id === modalSaldoFavor)}
+          onClose={() => setModalSaldoFavor(null)}
+          onOk={() => {
+            setModalSaldoFavor(null)
             router.refresh()
           }}
         />

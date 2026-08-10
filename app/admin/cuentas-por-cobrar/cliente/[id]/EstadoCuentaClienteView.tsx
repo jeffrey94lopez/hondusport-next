@@ -1,13 +1,29 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { numeroDocumento } from '@/lib/pos/documentos'
 import { formatPrice } from '@/lib/store/format'
-import type { Cliente, Cobro, CobroAplicacion, CobroMetodo, ConfigMap, CxcFila, EstadoPago } from '@/types'
+import type {
+  Cliente,
+  Cobro,
+  CobroAplicacion,
+  ConfigMap,
+  CxcFila,
+  EstadoPago,
+  SaldoFavorMovimiento,
+} from '@/types'
+import SaldoFavorModal from '../../SaldoFavorModal'
 import HojaEstadoCuentaCliente from './HojaEstadoCuentaCliente'
 import styles from './estado.module.css'
 
 type CobroConAplicaciones = Cobro & { aplicaciones: CobroAplicacion[] }
+
+// Movimiento de saldo a favor con la referencia ya resuelta a un número
+// legible (número de documento para 'devolucion'/'venta', número de cobro
+// para 'cobro') — el page.tsx la calcula (necesita consultar `documentos`,
+// que aquí no está disponible como Server Component).
+export type MovimientoSaldoFavorConReferencia = SaldoFavorMovimiento & { referencia: string }
 
 interface Props {
   cliente: Cliente
@@ -15,6 +31,8 @@ interface Props {
   cobros: CobroConAplicaciones[]
   totalAdeudado: number
   config: ConfigMap
+  saldoFavor: number
+  historialSaldoFavor: MovimientoSaldoFavorConReferencia[]
 }
 
 const ESTADO_LABEL: Record<EstadoPago, string> = {
@@ -31,16 +49,34 @@ const ESTADO_BADGE: Record<EstadoPago, string> = {
   vencida: styles.badgeRojo,
 }
 
-const METODO_LABEL: Record<CobroMetodo, string> = {
+// `Record<string, ...>` (no `Record<CobroMetodo, ...>`): desde POS P5b un
+// cobro puede venir de aplicar saldo a favor (`cobros.metodo = 'saldo_favor'`,
+// ver migración 2026-08-09-pos-p5b-gasto-saldo-favor.sql), valor que el tipo
+// `CobroMetodo` de types/index.ts todavía no declara (ese tipo lo comparten
+// otros Records exhaustivos como el arqueo de lib/pos/emision.ts, que no se
+// tocan aquí). Con `Record<string,...>` se cubre ese método sin ensanchar el
+// tipo compartido.
+const METODO_LABEL: Record<string, string> = {
   efectivo: 'Efectivo',
   transferencia: 'Transferencia',
   tarjeta: 'Tarjeta',
   cheque: 'Cheque',
   otro: 'Otro',
+  saldo_favor: 'Saldo a favor',
+}
+
+const TIPO_MOVIMIENTO_LABEL: Record<SaldoFavorMovimiento['tipo'], string> = {
+  devolucion: 'Devolución acreditada',
+  venta: 'Gasto en venta',
+  cobro: 'Gasto en cobro de CxC',
 }
 
 function formatFecha(iso: string | null): string {
   return iso ? iso.slice(0, 10) : '—'
+}
+
+function formatFechaHora(iso: string): string {
+  return new Date(iso).toLocaleString('es-HN', { dateStyle: 'short', timeStyle: 'short' })
 }
 
 // Vista en pantalla del estado de cuenta (sigue el tema oscuro, como el resto
@@ -49,8 +85,18 @@ function formatFecha(iso: string | null): string {
 // window.print() directamente: monta la hoja, que trae su propia barra con el
 // botón real de impresión (mismo criterio que EstadoCuentaView, CxP —
 // espejo).
-export default function EstadoCuentaClienteView({ cliente, documentos, cobros, totalAdeudado, config }: Props) {
+export default function EstadoCuentaClienteView({
+  cliente,
+  documentos,
+  cobros,
+  totalAdeudado,
+  config,
+  saldoFavor,
+  historialSaldoFavor,
+}: Props) {
+  const router = useRouter()
   const [modoImpresion, setModoImpresion] = useState(false)
+  const [modalSaldoFavor, setModalSaldoFavor] = useState(false)
 
   if (modoImpresion) {
     return (
@@ -76,6 +122,15 @@ export default function EstadoCuentaClienteView({ cliente, documentos, cobros, t
           <Link href="/admin/cuentas-por-cobrar" className={`${styles.btnAccion} btnMerlinSecondary`}>
             ← Cuentas por cobrar
           </Link>
+          {saldoFavor > 0 && documentos.length > 0 && (
+            <button
+              type="button"
+              className={`${styles.btnAccion} btnMerlinSecondary`}
+              onClick={() => setModalSaldoFavor(true)}
+            >
+              Aplicar saldo a favor
+            </button>
+          )}
           <button
             type="button"
             className={`${styles.btnAccion} btnMerlinPrimary`}
@@ -102,6 +157,13 @@ export default function EstadoCuentaClienteView({ cliente, documentos, cobros, t
         <span className={styles.totalLabel}>Total adeudado</span>
         <span className={styles.totalMonto}>{formatPrice(totalAdeudado)}</span>
       </div>
+
+      {saldoFavor > 0 && (
+        <div className={styles.totalCard}>
+          <span className={styles.totalLabel}>Saldo a favor</span>
+          <span className={styles.totalMonto}>{formatPrice(saldoFavor)}</span>
+        </div>
+      )}
 
       <h2 className={styles.sectionTitle}>Documentos con saldo</h2>
       <div className={styles.tableWrap}>
@@ -164,6 +226,50 @@ export default function EstadoCuentaClienteView({ cliente, documentos, cobros, t
           <div className={styles.empty}>Este cliente no tiene cobros registrados.</div>
         )}
       </div>
+
+      <h2 className={styles.sectionTitle}>Movimientos de saldo a favor</h2>
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th className={styles.num}>Monto</th>
+              <th>Referencia</th>
+              <th>Notas</th>
+            </tr>
+          </thead>
+          <tbody>
+            {historialSaldoFavor.map(m => (
+              <tr key={m.id}>
+                <td className={styles.fechaCol}>{formatFechaHora(m.created_at)}</td>
+                <td>{TIPO_MOVIMIENTO_LABEL[m.tipo]}</td>
+                <td className={`${styles.num} ${m.monto > 0 ? styles.montoPositivo : styles.montoNegativo}`}>
+                  {m.monto > 0 ? '+' : '−'} {formatPrice(Math.abs(m.monto))}
+                </td>
+                <td>{m.referencia}</td>
+                <td>{m.notas || '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {historialSaldoFavor.length === 0 && (
+          <div className={styles.empty}>Este cliente no tiene movimientos de saldo a favor.</div>
+        )}
+      </div>
+
+      {modalSaldoFavor && (
+        <SaldoFavorModal
+          clienteId={cliente.id}
+          saldoDisponible={saldoFavor}
+          documentos={documentos}
+          onClose={() => setModalSaldoFavor(false)}
+          onOk={() => {
+            setModalSaldoFavor(false)
+            router.refresh()
+          }}
+        />
+      )}
     </div>
   )
 }

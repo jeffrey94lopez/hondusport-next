@@ -107,6 +107,11 @@
 
 .empty { padding: 3rem; text-align: center; color: var(--text-muted); font-size: 0.88rem; }
 
+/* Movimientos de saldo a favor: acreditaciones (devolución) en verde, gastos
+   (venta/cobro) en rojo — mismo criterio de color que los badges de estado. */
+.montoPositivo { color: var(--success); font-weight: 700; }
+.montoNegativo { color: var(--danger); font-weight: 700; }
+
 /* ============================ HOJA IMPRIMIBLE ============================ */
 /* ---- Toolbar (no imprimible) ---- */
 .toolbar {

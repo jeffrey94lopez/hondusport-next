@@ -124,7 +124,8 @@
 .saldoCol { font-weight: 700; }
 .fechaCol { white-space: nowrap; color: var(--text-muted); }
 .accionCol { text-align: right; white-space: nowrap; }
-.btnAbonar { padding: 0.35rem 0.85rem; font-size: 0.78rem; }
+.accionesFila { display: flex; gap: 0.4rem; justify-content: flex-end; }
+.btnAbonar { padding: 0.35rem 0.85rem; font-size: 0.78rem; white-space: nowrap; }
 
 /* Badge de estado (pendiente gris, parcial ámbar, vencida rojo, pagada verde) */
 .badge {
