@@ -267,3 +267,152 @@ do $$ begin
 do $$ begin
   create policy sfm_admin on saldo_favor_movimientos for all to authenticated using (true) with check (true);
   exception when duplicate_object then null; end $$;
+
+-- 8. Fix de integración cross-task (review final de rama):
+--
+-- C1 (crítico): `anular_comprobante` (2026-08-07-pos-p2-rpcs.sql) repone la
+-- cantidad ORIGINAL completa de documento_items. P5a permite devolver
+-- PARCIALMENTE un comprobante dejándolo estado='emitido' (la reposición de la
+-- devolución ya movió la porción devuelta); anularlo después repondría esa
+-- porción una segunda vez (doble conteo de stock + kardex corrupto). Se
+-- re-crea COMPLETA (mismo cuerpo vigente) agregando solo un guard al inicio.
+create or replace function anular_comprobante(p_documento_id uuid, p_motivo text)
+returns void
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  v_doc documentos%rowtype;
+begin
+  if coalesce(trim(p_motivo), '') = '' then
+    raise exception using message = 'HS_DOC|motivo requerido';
+  end if;
+  select * into v_doc from documentos where id = p_documento_id for update;
+  if not found then raise exception using message = 'HS_DOC|documento no encontrado'; end if;
+  if v_doc.tipo <> 'comprobante' then
+    raise exception using message = 'HS_DOC|solo los comprobantes se anulan (facturas: nota de crédito)';
+  end if;
+  if v_doc.estado <> 'emitido' then
+    raise exception using message = 'HS_DOC|ya está anulado';
+  end if;
+
+  -- [P5a] Guard: si existe alguna devolución/nota de crédito NO anulada con
+  -- documento_origen_id = este comprobante, no se puede anular (ver C1 arriba).
+  perform 1 from documentos dv where dv.documento_origen_id = v_doc.id and dv.estado <> 'anulado';
+  if found then
+    raise exception using message = 'HS_DOC|el comprobante tiene devoluciones registradas';
+  end if;
+
+  -- Reponer stock solo si el documento descontó (mostrador, no pedido web).
+  -- Se agrega por producto/variante ANTES del update: un UPDATE ... FROM con
+  -- varias filas coincidentes por fila objetivo solo aplica una de ellas
+  -- (semántica de Postgres), así que dos líneas del mismo producto/variante
+  -- repondrían solo una si se hiciera el join directo contra documento_items.
+  if v_doc.pedido_id is null then
+    update producto_variantes pv
+      set stock = pv.stock + agg.cantidad
+      from (
+        select variante_id, sum(cantidad) as cantidad
+        from documento_items
+        where documento_id = v_doc.id and variante_id is not null
+        group by variante_id
+      ) agg
+      where agg.variante_id = pv.id and pv.stock is not null;
+    update productos pr
+      set stock = pr.stock + agg.cantidad
+      from (
+        select producto_id, sum(cantidad) as cantidad
+        from documento_items
+        where documento_id = v_doc.id and variante_id is null and producto_id is not null
+        group by producto_id
+      ) agg
+      where agg.producto_id = pr.id and pr.stock is not null;
+
+    insert into movimientos_inventario (producto_id, variante_id, tipo, cantidad, costo_resultante, referencia)
+    select di.producto_id, di.variante_id, 'devolucion', di.cantidad,
+      coalesce(pv.costo, pr.costo), 'documento:' || v_doc.id
+    from documento_items di
+    left join producto_variantes pv on pv.id = di.variante_id
+    left join productos pr on pr.id = di.producto_id
+    where di.documento_id = v_doc.id and di.producto_id is not null
+      and (case when di.variante_id is not null then pv.stock else pr.stock end) is not null;
+  end if;
+
+  update documentos set estado = 'anulado', anulado_motivo = trim(p_motivo), anulado_at = now()
+    where id = v_doc.id;
+end;
+$$;
+grant execute on function anular_comprobante(uuid, text) to authenticated;
+revoke execute on function anular_comprobante(uuid, text) from public, anon;
+
+-- I1 (importante): P5a redefinió documento_saldos.saldo = credito_total −
+-- cobrado − nc_cxc (punto 6), pero `registrar_cobro` (2026-08-09-pos-p4c-
+-- cuentas-por-cobrar.sql) validaba el techo del cobro por documento con
+-- v_saldo := v_credito − v_cobrado, sin nc_cxc. Se re-crea COMPLETA (mismo
+-- cuerpo vigente) restando también las devoluciones cxc no anuladas del
+-- documento antes de validar r.monto > v_saldo.
+create or replace function registrar_cobro(p jsonb)
+returns uuid language plpgsql security invoker set search_path = public as $$
+declare
+  v_cli uuid := (p->>'cliente_id')::uuid;
+  v_fecha date := coalesce((p->>'fecha')::date, current_date);
+  v_metodo text := p->>'metodo';
+  v_ref text := p->>'referencia';
+  v_notas text := p->>'notas';
+  v_sesion uuid := nullif(p->>'sesion_id','')::uuid;
+  v_usuario text := p->>'usuario';
+  r record;
+  v_cli_doc uuid; v_estado text; v_credito numeric; v_cobrado numeric; v_saldo numeric;
+  v_nc_cxc numeric;
+  v_suma numeric := 0; v_cobro_id uuid; v_numero text;
+begin
+  if v_cli is null then raise exception 'Falta el cliente'; end if;
+  if jsonb_array_length(coalesce(p->'aplicaciones','[]'::jsonb)) = 0 then
+    raise exception 'El cobro no tiene aplicaciones';
+  end if;
+
+  for r in
+    select (e->>'documento_id')::uuid as documento_id, sum((e->>'monto')::numeric) as monto
+    from jsonb_array_elements(p->'aplicaciones') e
+    group by (e->>'documento_id')::uuid
+    order by (e->>'documento_id')::uuid
+  loop
+    if r.monto is null or r.monto <= 0 then raise exception 'Monto de aplicacion invalido'; end if;
+    select cliente_id, estado into v_cli_doc, v_estado from documentos where id = r.documento_id for update;
+    if not found then raise exception 'Documento no encontrado'; end if;
+    if v_cli_doc <> v_cli then raise exception 'El documento no pertenece al cliente'; end if;
+    if v_estado = 'anulado' then raise exception 'El documento esta anulado'; end if;
+
+    select coalesce(sum(dp.monto) filter (where m.tipo = 'credito'),0)
+      into v_credito
+      from documento_pagos dp join metodos_pago m on m.id = dp.metodo_id
+      where dp.documento_id = r.documento_id;
+    if v_credito <= 0 then raise exception 'El documento no tiene credito por cobrar'; end if;
+    select coalesce(sum(monto),0) into v_cobrado from cobro_aplicaciones where documento_id = r.documento_id;
+    -- [P5a] documento_saldos.saldo también resta nc_cxc (devoluciones
+    -- acreditadas a la cuenta por cobrar del documento); el techo de
+    -- validación debe reflejar el mismo saldo, o un cobro podría exceder lo
+    -- realmente pendiente tras una devolución parcial.
+    select coalesce(sum(ncr.monto),0) into v_nc_cxc
+      from documentos doc join nota_credito_reembolsos ncr on ncr.documento_id = doc.id
+      where doc.documento_origen_id = r.documento_id and doc.estado <> 'anulado' and ncr.tipo = 'cxc';
+    v_saldo := v_credito - v_cobrado - v_nc_cxc;
+    if r.monto > v_saldo then raise exception 'El cobro excede el saldo del documento'; end if;
+    v_suma := v_suma + r.monto;
+  end loop;
+
+  v_numero := 'COBRO-' || lpad(nextval('cobro_numero_seq')::text, 8, '0');
+  insert into cobros (numero, cliente_id, fecha, monto, metodo, referencia, notas, sesion_id, usuario)
+  values (v_numero, v_cli, v_fecha, v_suma, v_metodo, v_ref, v_notas, v_sesion, v_usuario)
+  returning id into v_cobro_id;
+
+  insert into cobro_aplicaciones (cobro_id, documento_id, monto)
+  select v_cobro_id, (e->>'documento_id')::uuid, sum((e->>'monto')::numeric)
+  from jsonb_array_elements(p->'aplicaciones') e
+  group by (e->>'documento_id')::uuid;
+
+  return v_cobro_id;
+end; $$;
+revoke all on function registrar_cobro(jsonb) from public, anon;
+grant execute on function registrar_cobro(jsonb) to authenticated;

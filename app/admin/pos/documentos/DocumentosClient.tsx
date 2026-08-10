@@ -166,7 +166,18 @@ export default function DocumentosClient({ documentos, sesiones, cajas }: Props)
                 <td>
                   <div className={styles.accionesCell}>
                     {d.tipo === 'comprobante' && d.estado === 'emitido' && (
-                      <button className={styles.btnAnular} onClick={() => setAnulando(d)}>Anular</button>
+                      <button
+                        className={styles.btnAnular}
+                        onClick={() => setAnulando(d)}
+                        disabled={d.estadoDevolucion !== 'ninguna'}
+                        title={
+                          d.estadoDevolucion !== 'ninguna'
+                            ? 'No se puede anular un comprobante con devoluciones'
+                            : undefined
+                        }
+                      >
+                        Anular
+                      </button>
                     )}
                     {puedeDevolverDocumento(d.tipo, d.estado, d.estadoDevolucion) && (
                       <button className={styles.btnDevolver} onClick={() => setDevolviendo(d)}>Devolver</button>

@@ -59,7 +59,13 @@ function traducirError(mensaje: string | undefined | null): string {
 function aCxcFila(saldo: DocumentoSaldo, hoy: Date): CxcFila {
   const fechaVenc = new Date(`${saldo.fecha_vencimiento}T00:00:00Z`)
   const diasVencido = diasEntre(fechaVenc, hoy)
-  const estado = estadoPago(saldo.credito_total, saldo.cobrado, fechaVenc, hoy)
+  // POS P5a: `nc_cxc` (devoluciones acreditadas a la cuenta por cobrar) ya
+  // está restado en `saldo.saldo`, pero no en `credito_total`. Se resta aquí
+  // del "total" que ve estadoPago (no de `cobrado`) para que su cálculo
+  // interno (total - pagado) reproduzca el saldo real sin sobreestimar lo
+  // pendiente de un documento parcialmente devuelto, preservando a la vez la
+  // distinción 'parcial' vs 'pendiente' (que depende de `cobrado` real).
+  const estado = estadoPago(saldo.credito_total - saldo.nc_cxc, saldo.cobrado, fechaVenc, hoy)
   const bucket = bucketAntiguedad(fechaVenc, hoy)
   return {
     ...saldo,

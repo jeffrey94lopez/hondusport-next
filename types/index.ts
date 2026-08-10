@@ -627,6 +627,9 @@ export interface DocumentoSaldo {
   fecha_vencimiento: string
   credito_total: number
   cobrado: number
+  // POS P5a: suma de reembolsos tipo 'cxc' de devoluciones no anuladas del
+  // documento (ya restada en `saldo` por la vista, ver 2026-08-09-pos-p5a-devoluciones.sql).
+  nc_cxc: number
   saldo: number
 }
 

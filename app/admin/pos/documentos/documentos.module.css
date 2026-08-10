@@ -131,6 +131,8 @@
   transition: all 0.12s;
 }
 .btnAnular:hover { border-color: var(--danger); }
+.btnAnular:disabled { opacity: 0.5; cursor: not-allowed; }
+.btnAnular:disabled:hover { border-color: transparent; }
 
 .btnDevolver {
   background: var(--warning-bg);
