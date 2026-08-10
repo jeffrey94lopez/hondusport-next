@@ -1,9 +1,11 @@
 'use client'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import Modal from '@/components/admin/Modal'
 import { emitirVenta } from '../actions'
 import { validarPagos, cambioPago, validarEmision, montosPagoAlAgregar } from '@/lib/pos/emision'
 import { sugerenciasEfectivo } from '@/lib/pos/carrito'
+import { saldoAplicable, validarGastoSaldo } from '@/lib/pos/saldo-favor'
+import { obtenerSaldoFavorCliente } from '@/app/admin/cuentas-por-cobrar/saldo-favor-actions'
 import { formatPrice } from '@/lib/store/format'
 import { round2, parseMoneyInput, valorMostrado } from '../pos-helpers'
 import type { LineaPos, PagoPos, MetodoPago, Cliente } from '@/types'
@@ -65,6 +67,30 @@ export default function CobroModal({
   const [identIdentidad, setIdentIdentidad] = useState('')
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
+
+  // Saldo a favor disponible del cliente registrado actual (0 si es
+  // CONSUMIDOR FINAL o si el cliente nunca generó saldo). Se recarga cada vez
+  // que cambia el cliente — no en cada tecleo — porque es el mismo balance
+  // para toda la sesión de cobro, no algo que dependa de los pagos en curso.
+  // El resultado se guarda junto con el clienteId que lo pidió: así, si
+  // clienteActual cambia (o se limpia) antes de que resuelva el fetch, el
+  // derivado de abajo no muestra el saldo de un cliente que ya no es el
+  // actual (sin necesitar un setState síncrono en el cuerpo del efecto).
+  const [saldoCliente, setSaldoCliente] = useState<{ clienteId: string; saldo: number } | null>(null)
+
+  useEffect(() => {
+    if (!clienteActual) return
+    let vigente = true
+    obtenerSaldoFavorCliente(clienteActual.id).then(saldo => {
+      if (vigente) setSaldoCliente({ clienteId: clienteActual.id, saldo })
+    })
+    return () => {
+      vigente = false
+    }
+  }, [clienteActual])
+
+  const saldoDisponible =
+    clienteActual && saldoCliente?.clienteId === clienteActual.id ? saldoCliente.saldo : 0
 
   function alternarMetodo(m: MetodoPago) {
     if (isPending) return
@@ -185,6 +211,49 @@ export default function CobroModal({
     })
   }
 
+  // Chip "Saldo a favor": agrega (o quita, si ya estaba) un pago del método
+  // por saldoAplicable(saldoDisponible, pendiente) — topeado al saldo del
+  // cliente y a lo que falta cubrir, nunca genera cambio. Simétrico a
+  // dejarRestanteACredito, pero el tope viene del saldo, no del total.
+  function alternarSaldoFavor(m: MetodoPago) {
+    if (isPending || !clienteActual || saldoDisponible <= 0) return
+    const yaSeleccionado = pagos.some(p => p.metodo_id === m.id)
+    if (yaSeleccionado) {
+      setPagos(prev => prev.filter(p => p.metodo_id !== m.id))
+      return
+    }
+    setPagos(prev => {
+      const otros = prev.filter(p => p.metodo_id !== m.id)
+      const sumaOtros = round2(otros.reduce((s, p) => s + p.monto, 0))
+      const pendiente = Math.max(0, round2(total - sumaOtros))
+      const monto = saldoAplicable(saldoDisponible, pendiente)
+      const nuevo: PagoUi = {
+        metodo_id: m.id,
+        tipo: m.tipo,
+        monto,
+        monto_usd: null,
+        tasa: null,
+        referencia: null,
+        montoTexto: valorMostrado(monto),
+        montoUsdTexto: '',
+      }
+      return [...otros, nuevo]
+    })
+  }
+
+  // Tope en vivo de una fila de saldo_favor: no puede exceder el saldo del
+  // cliente (validarGastoSaldo) ni lo que falta cubrir tras los demás pagos
+  // (pendienteParaFila) — este último no lo cubre validarGastoSaldo, que solo
+  // conoce el saldo, no el resto de los pagos de este cobro.
+  function errorSaldoFavor(p: PagoUi): string | null {
+    if (p.tipo !== 'saldo_favor') return null
+    const errorSaldo = validarGastoSaldo(saldoDisponible, p.monto)
+    if (errorSaldo) return errorSaldo
+    const pendiente = pendienteParaFila(p.metodo_id)
+    if (p.monto > pendiente + 0.01) return 'El monto no puede superar lo que falta por cobrar.'
+    return null
+  }
+
   function chipsSugerencia(p: PagoUi): ChipSugerencia[] {
     const pendiente = pendienteParaFila(p.metodo_id)
     // "Restante" solo aporta algo distinto de "Total" cuando hay más de un
@@ -194,6 +263,21 @@ export default function CobroModal({
     if (p.tipo === 'efectivo_usd') {
       const chips: ChipSugerencia[] = [{ label: 'Total', onClick: () => fijarPagoUsd(p.metodo_id, total) }]
       if (mostrarRestante) chips.push({ label: 'Restante', onClick: () => fijarPagoUsd(p.metodo_id, pendiente) })
+      return chips
+    }
+
+    if (p.tipo === 'saldo_favor') {
+      // Mismos chips que el resto (Total/Restante), pero topeados al saldo
+      // disponible: nunca hay vuelto en saldo a favor.
+      const chips: ChipSugerencia[] = [
+        { label: 'Total', onClick: () => fijarPagoLps(p.metodo_id, saldoAplicable(saldoDisponible, total)) },
+      ]
+      if (mostrarRestante) {
+        chips.push({
+          label: 'Restante',
+          onClick: () => fijarPagoLps(p.metodo_id, saldoAplicable(saldoDisponible, pendiente)),
+        })
+      }
       return chips
     }
 
@@ -307,6 +391,27 @@ export default function CobroModal({
       return
     }
 
+    // Gasto de saldo a favor: exige cliente registrado y no puede exceder ni
+    // el saldo disponible ni lo que falta cubrir. El server vuelve a validar
+    // el balance bajo lock (HS_SALDO) — esto es solo UX temprana.
+    const pagoSaldoFavor = pagosParaEnvio.find(p => p.tipo === 'saldo_favor')
+    if (pagoSaldoFavor) {
+      if (!clienteActual) {
+        setError('Un pago con saldo a favor requiere un cliente registrado.')
+        return
+      }
+      const errorSaldo = validarGastoSaldo(saldoDisponible, pagoSaldoFavor.monto)
+      if (errorSaldo) {
+        setError(errorSaldo)
+        return
+      }
+      const pendiente = pendienteParaFila(pagoSaldoFavor.metodo_id)
+      if (pagoSaldoFavor.monto > pendiente + 0.01) {
+        setError('El monto de saldo a favor no puede superar lo que falta por cobrar.')
+        return
+      }
+    }
+
     startTransition(async () => {
       const result = await emitirVenta({
         tipo,
@@ -384,18 +489,27 @@ export default function CobroModal({
                 {metodos.map(m => {
                   const seleccionado = pagos.some(p => p.metodo_id === m.id)
                   const sinTasa = m.tipo === 'efectivo_usd' && tasaCambioUsd <= 0
+                  const esSaldoFavor = m.tipo === 'saldo_favor'
+                  const sinSaldoFavor = esSaldoFavor && (!clienteActual || saldoDisponible <= 0)
                   return (
                     <button
                       key={m.id}
                       type="button"
                       className="btnMerlinChip"
                       aria-pressed={seleccionado}
-                      onClick={() => alternarMetodo(m)}
-                      disabled={isPending || sinTasa}
-                      title={sinTasa ? 'Sin tasa de cambio configurada' : undefined}
+                      onClick={() => (esSaldoFavor ? alternarSaldoFavor(m) : alternarMetodo(m))}
+                      disabled={isPending || sinTasa || sinSaldoFavor}
+                      title={
+                        sinTasa
+                          ? 'Sin tasa de cambio configurada'
+                          : sinSaldoFavor
+                            ? 'Elegí un cliente con saldo a favor'
+                            : undefined
+                      }
                     >
                       {m.nombre}
                       {sinTasa ? ' (sin tasa)' : ''}
+                      {esSaldoFavor && clienteActual ? ` (disp. ${formatPrice(saldoDisponible)})` : ''}
                     </button>
                   )
                 })}
@@ -460,6 +574,10 @@ export default function CobroModal({
                             </button>
                           ))}
                         </div>
+
+                        {p.tipo === 'saldo_favor' && errorSaldoFavor(p) && (
+                          <div className={styles.formError}>{errorSaldoFavor(p)}</div>
+                        )}
 
                         {(p.tipo === 'tarjeta' || p.tipo === 'transferencia') && (
                           <label className={styles.formLabel}>
