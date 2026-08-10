@@ -861,3 +861,20 @@ export interface TotalesLibroVentas {
   exento: number; exonerado: number; gravado15: number; isv15: number
   gravado18: number; isv18: number; total: number
 }
+
+export interface FilaReporteVenta {
+  id: string
+  numero: string
+  fecha: string
+  cliente: string
+  vendedor: string
+  caja: string
+  tipo: 'factura' | 'comprobante' | 'nota_credito' | 'devolucion'
+  total: number
+  items: { descripcion: string; cantidad: number; precio: number; importe: number }[]
+}
+export interface FiltrosReporteVentas {
+  desde: string; hasta: string
+  tipo?: 'factura' | 'comprobante' | 'nota_credito' | 'devolucion'
+  clienteId?: string; vendedorId?: string; cajaId?: string; metodoId?: string
+}
