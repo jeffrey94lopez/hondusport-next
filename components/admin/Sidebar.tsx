@@ -65,9 +65,15 @@ export default function Sidebar({ pendingOrders }: Props) {
   // "Documentos" (/admin/pos/documentos) anida bajo "POS" (/admin/pos): con un
   // simple prefix-match ambos quedarían activos a la vez. Se elige el href más
   // específico (más largo) entre los que matchean, para que solo uno resalte.
-  const ALL_HREFS = [INICIO.href, ...NAV_GROUPS.flatMap(g => g.items.map(i => i.href))]
+  // OJO: /admin (Inicio) NO va aquí — es prefijo de TODAS las rutas admin y se
+  // trata como match exacto aparte en isActive, para no "tragarse" ninguna otra
+  // ruta (p. ej. /admin/configuracion, que no está en este arreglo).
+  const ALL_HREFS = NAV_GROUPS.flatMap(g => g.items.map(i => i.href))
 
   function isActive(href: string) {
+    // Inicio (/admin) es prefijo de todas las rutas admin: activo solo en la ruta exacta,
+    // fuera del prefix-matching, para no "tragarse" ninguna otra ruta.
+    if (href === '/admin') return pathname === '/admin'
     const matches = ALL_HREFS.filter(h => pathname === h || pathname.startsWith(h + '/'))
     if (matches.length === 0) return pathname === href
     return matches.reduce((a, b) => (b.length > a.length ? b : a)) === href
