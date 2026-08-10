@@ -1,103 +1,87 @@
-import { createClient } from '@/lib/supabase-server'
+import { obtenerDashboardData } from './dashboard-data'
+import { etiquetaRango } from '@/lib/dashboard/rango'
+import { ticketPromedio } from '@/lib/dashboard/metricas'
+import { formatPrice } from '@/lib/store/format'
+import type { PresetRango } from '@/types'
+import FiltroFechas from './FiltroFechas'
+import DashboardGraficos from './DashboardGraficos'
+import Link from 'next/link'
 import styles from './dashboard.module.css'
-import type { EstadoPedido } from '@/types'
-import { stockEfectivo } from '@/lib/store/variantes'
-import { ESTADO_COLOR } from '@/app/admin/estadoColor'
 
-interface PedidoReciente {
-  id: string
-  numero: number
-  nombre_cliente: string
-  total: number
-  estado: EstadoPedido
-  created_at: string
-}
+const PRESETS_VALIDOS: PresetRango[] = ['hoy', 'semana', 'mes', 'anio', 'personalizado']
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const todayISO = today.toISOString()
-
-  const [
-    { count: totalPedidosHoy },
-    { count: pedidosPendientes },
-    { count: totalProductos },
-    { data: productosStock },
-    { data: pedidosRecientes },
-    ventasHoyResult,
-  ] = await Promise.all([
-    supabase.from('pedidos').select('*', { count: 'exact', head: true }).gte('created_at', todayISO),
-    supabase.from('pedidos').select('*', { count: 'exact', head: true }).eq('estado', 'recibido'),
-    supabase.from('productos').select('*', { count: 'exact', head: true }).eq('activo', true),
-    supabase.from('productos').select('id, stock, activo, producto_variantes(stock, activo)').eq('activo', true).limit(5000),
-    supabase.from('pedidos').select('id, numero, nombre_cliente, total, estado, created_at').order('created_at', { ascending: false }).limit(5),
-    supabase.from('pedidos').select('total').gte('created_at', todayISO),
-  ])
-
-  const ventasHoy = (ventasHoyResult.data ?? []).reduce((sum, p) => sum + (p.total ?? 0), 0)
-
-  const stockBajo = (productosStock ?? []).filter(p => {
-    const stock = stockEfectivo(p.stock, (p.producto_variantes ?? []).filter(v => v.activo))
-    return stock != null && stock < 5
-  }).length
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preset?: string; desde?: string; hasta?: string }>
+}) {
+  const sp = await searchParams
+  const preset: PresetRango = PRESETS_VALIDOS.includes(sp.preset as PresetRango)
+    ? (sp.preset as PresetRango) : 'semana'
+  const data = await obtenerDashboardData(preset, sp.desde, sp.hasta)
+  const { resumen, stockBajo } = data
+  const ticket = ticketPromedio(resumen.ventas_netas, resumen.num_documentos)
 
   return (
     <div className={styles.page}>
       <div className={styles.topbar}>
-        <h1 className={styles.title}>Dashboard</h1>
-        <span className={styles.date}>
-          {new Date().toLocaleDateString('es-HN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </span>
+        <h1 className={styles.title}>Inicio</h1>
       </div>
 
+      <FiltroFechas preset={preset} desde={sp.desde} hasta={sp.hasta} etiqueta={etiquetaRango(preset, data.rango)} />
+
+      <h2 className={styles.filaTitulo}>En el rango</h2>
       <div className={styles.stats}>
-        <div className={styles.stat}>
-          <div className={styles.statNum}>{totalPedidosHoy ?? 0}</div>
-          <div className={styles.statLabel}>Pedidos hoy</div>
-        </div>
-        <div className={`${styles.stat} ${(pedidosPendientes ?? 0) > 0 ? styles.statAlert : ''}`}>
-          <div className={styles.statNum}>{pedidosPendientes ?? 0}</div>
-          <div className={styles.statLabel}>Sin procesar</div>
-        </div>
-        <div className={styles.stat}>
-          <div className={styles.statNum}>L. {ventasHoy.toLocaleString()}</div>
-          <div className={styles.statLabel}>Ventas hoy</div>
-        </div>
-        <div className={`${styles.stat} ${(stockBajo ?? 0) > 0 ? styles.statWarn : ''}`}>
-          <div className={styles.statNum}>{stockBajo ?? 0}</div>
-          <div className={styles.statLabel}>Stock bajo (&lt;5)</div>
-        </div>
-        <div className={styles.stat}>
-          <div className={styles.statNum}>{totalProductos ?? 0}</div>
-          <div className={styles.statLabel}>Productos activos</div>
-        </div>
+        <Kpi num={formatPrice(resumen.ventas_netas)} label="Ventas netas (POS)" />
+        <Kpi num={String(resumen.num_documentos)} label="Documentos" />
+        <Kpi num={formatPrice(ticket)} label="Ticket promedio" />
+        <Kpi num={String(resumen.pedidos_web)} label="Pedidos web" badge={resumen.pedidos_sin_procesar} badgeLabel="sin procesar" alert={resumen.pedidos_sin_procesar > 0} />
       </div>
+
+      <h2 className={styles.filaTitulo}>Ahora mismo</h2>
+      <div className={styles.stats}>
+        <Kpi num={formatPrice(resumen.cxc_pendiente)} label="Por cobrar (CxC)" />
+        <Kpi num={formatPrice(resumen.cxp_pendiente)} label="Por pagar (CxP)" />
+        <Kpi num={`${resumen.cotizaciones_abiertas} · ${formatPrice(resumen.cotizaciones_monto)}`} label="Cotizaciones abiertas" />
+        <Kpi num={String(stockBajo)} label="Stock bajo (<5)" warn={stockBajo > 0} />
+      </div>
+
+      <DashboardGraficos
+        ventasPorDia={data.ventasPorDia}
+        topItems={data.topItems}
+        topClientes={data.topClientes}
+      />
 
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Últimos pedidos</h2>
+        <h2 className={styles.sectionTitle}>Últimos documentos</h2>
         <div className={styles.pedidosList}>
-          {(pedidosRecientes ?? []).map((p: PedidoReciente) => (
-            <div key={p.id} className={styles.pedidoRow}>
-              <span className={styles.pedidoNum}>#{p.numero}</span>
-              <span className={styles.pedidoCliente}>{p.nombre_cliente}</span>
-              <span className={styles.pedidoTotal}>L. {p.total.toLocaleString()}</span>
-              <span
-                className={styles.pedidoEstado}
-                style={{ color: ESTADO_COLOR[p.estado] }}
-              >
-                {p.estado}
-              </span>
+          {data.ultimosDocumentos.map(d => (
+            <Link key={d.id} href={`/admin/pos/documento/${d.id}`} className={styles.pedidoRow}>
+              <span className={styles.pedidoNum}>{d.numero}</span>
+              <span className={styles.pedidoCliente}>{d.cliente_nombre}</span>
+              <span className={styles.pedidoTotal}>{formatPrice(d.total)}</span>
+              <span className={styles.pedidoEstado}>{d.tipo === 'factura' ? 'Factura' : 'Comprobante'}</span>
               <span className={styles.pedidoFecha}>
-                {new Date(p.created_at).toLocaleTimeString('es-HN', { hour: '2-digit', minute: '2-digit' })}
+                {new Date(d.created_at).toLocaleTimeString('es-HN', { hour: '2-digit', minute: '2-digit' })}
               </span>
-            </div>
+            </Link>
           ))}
-          {!pedidosRecientes?.length && (
-            <div className={styles.empty}>No hay pedidos hoy aún.</div>
-          )}
+          {data.ultimosDocumentos.length === 0 && <div className={styles.empty}>Sin documentos aún.</div>}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function Kpi({ num, label, badge, badgeLabel, alert, warn }: {
+  num: string; label: string; badge?: number; badgeLabel?: string; alert?: boolean; warn?: boolean
+}) {
+  return (
+    <div className={`${styles.stat} ${alert ? styles.statAlert : ''} ${warn ? styles.statWarn : ''}`}>
+      <div className={styles.statNum}>{num}</div>
+      <div className={styles.statLabel}>
+        {label}
+        {badge != null && badge > 0 && <span className={styles.kpiBadge}> · {badge} {badgeLabel}</span>}
       </div>
     </div>
   )

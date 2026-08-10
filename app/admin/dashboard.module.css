@@ -56,3 +56,23 @@
 .pedidoFecha { font-size: 0.75rem; color: var(--text-muted); width: 50px; text-align: right; flex-shrink: 0; }
 
 .empty { padding: 1.5rem 0; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+/* P6: filtro de fechas */
+.filtro { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.presets { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.presetBtn {
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted);
+  border-radius: var(--radius-input); padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+.presetOn { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.rangoLibre { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
+.rangoLibre input { border: 1px solid var(--border); border-radius: var(--radius-input); padding: 0.25rem 0.5rem; }
+.filtroEtiqueta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-left: auto; }
+
+/* P6: títulos de fila de KPIs */
+.filaTitulo { font-size: 0.78rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin: 0.5rem 0; }
+.kpiBadge { color: var(--info); font-weight: 700; }
+
+/* P6: grid de gráficos */
+.graficosGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.graficoCard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.25rem; }
