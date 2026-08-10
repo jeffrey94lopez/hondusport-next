@@ -1,7 +1,7 @@
 'use client'
 import { numeroDocumento } from '@/lib/pos/documentos'
 import { formatPrice } from '@/lib/store/format'
-import type { Cliente, Cobro, CobroAplicacion, CobroMetodo, ConfigMap, CxcFila, EstadoPago } from '@/types'
+import type { Cliente, Cobro, CobroAplicacion, ConfigMap, CxcFila, EstadoPago } from '@/types'
 import styles from './estado.module.css'
 
 type CobroConAplicaciones = Cobro & { aplicaciones: CobroAplicacion[] }
@@ -22,12 +22,20 @@ const ESTADO_LABEL: Record<EstadoPago, string> = {
   vencida: 'Vencida',
 }
 
-const METODO_LABEL: Record<CobroMetodo, string> = {
+// `Record<string, ...>` (no `Record<CobroMetodo, ...>`): desde POS P5b un
+// cobro puede venir de aplicar saldo a favor (`cobros.metodo = 'saldo_favor'`,
+// ver migración 2026-08-09-pos-p5b-gasto-saldo-favor.sql), valor que el tipo
+// `CobroMetodo` de types/index.ts todavía no declara (ese tipo lo comparten
+// otros Records exhaustivos como el arqueo de lib/pos/emision.ts, que no se
+// tocan aquí). Con `Record<string,...>` se cubre ese método sin ensanchar el
+// tipo compartido.
+const METODO_LABEL: Record<string, string> = {
   efectivo: 'Efectivo',
   transferencia: 'Transferencia',
   tarjeta: 'Tarjeta',
   cheque: 'Cheque',
   otro: 'Otro',
+  saldo_favor: 'Saldo a favor',
 }
 
 function fechaCorta(isoDate: string | null): string {
