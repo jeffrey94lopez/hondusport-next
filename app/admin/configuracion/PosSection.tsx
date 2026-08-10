@@ -30,6 +30,7 @@ const TIPO_LABEL: Record<MetodoPagoTipo, string> = {
   transferencia: 'Transferencia / Depósito',
   otro: 'Otro',
   credito: 'Crédito',
+  saldo_favor: 'Saldo a favor',
 }
 
 const EMPTY_CAJA: CajaForm = { nombre: '', punto_emision: '001', formato_impresion: '80mm', activo: true }

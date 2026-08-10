@@ -287,7 +287,7 @@ export interface Vendedor {
   updated_at: string
 }
 
-export type MetodoPagoTipo = 'efectivo_lps' | 'efectivo_usd' | 'tarjeta' | 'transferencia' | 'otro' | 'credito'
+export type MetodoPagoTipo = 'efectivo_lps' | 'efectivo_usd' | 'tarjeta' | 'transferencia' | 'otro' | 'credito' | 'saldo_favor'
 
 export interface MetodoPago {
   id: string
@@ -712,8 +712,9 @@ export interface SaldoFavorMovimiento {
   id: string
   cliente_id: string
   monto: number
-  tipo: 'devolucion'
+  tipo: 'devolucion' | 'venta' | 'cobro'
   documento_id: string | null
+  cobro_id: string | null
   notas: string | null
   usuario: string | null
   created_at: string

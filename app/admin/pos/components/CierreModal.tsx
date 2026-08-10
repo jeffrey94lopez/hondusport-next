@@ -15,6 +15,7 @@ const NOMBRES_METODO: Record<MetodoPagoTipo, string> = {
   transferencia: 'Transferencia',
   otro: 'Otro',
   credito: 'Crédito',
+  saldo_favor: 'Saldo a favor',
 }
 
 const NOMBRES_COBRO: Record<CobroMetodo, string> = {

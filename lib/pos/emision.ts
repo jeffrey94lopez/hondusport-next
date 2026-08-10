@@ -78,7 +78,8 @@ export function tasaUsdDePagos(pagos: PagoPos[]): number | null {
  * cobros en efectivo suman al efectivo esperado — el resto (transferencia,
  * tarjeta, cheque, otro) queda solo en `cobrosPorMetodo`, informativo. El
  * crédito otorgado en ventas (porMetodo.credito) tampoco es efectivo: es
- * saldo por cobrar, no dinero en caja.
+ * saldo por cobrar, no dinero en caja. Lo mismo aplica a saldo_favor: es
+ * saldo del cliente, no efectivo en caja.
  */
 export function esperadoCaja(
   montoInicial: number,
@@ -98,6 +99,7 @@ export function esperadoCaja(
     transferencia: 0,
     otro: 0,
     credito: 0,
+    saldo_favor: 0,
   }
   const cobrosPorMetodo: Record<CobroMetodo, number> = {
     efectivo: 0,
