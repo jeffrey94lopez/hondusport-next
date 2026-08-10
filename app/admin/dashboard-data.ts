@@ -87,10 +87,6 @@ export async function obtenerDashboardData(
     cxc_pendiente: Number(resumenCrudo.cxc_pendiente),
     cxp_pendiente: Number(resumenCrudo.cxp_pendiente),
     cotizaciones_monto: Number(resumenCrudo.cotizaciones_monto),
-    ventas_sin_isv: Number(resumenCrudo.ventas_sin_isv),
-    costo_ventas: Number(resumenCrudo.costo_ventas),
-    cxc_cobrado: Number(resumenCrudo.cxc_cobrado),
-    cxp_pagado: Number(resumenCrudo.cxp_pagado),
   }
 
   return {
