@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ticketPromedio, ordenarPorMetrica, maxValor } from '../metricas'
+import { ticketPromedio, ordenarPorMetrica, maxValor, utilidadNeta, margen } from '../metricas'
 
 describe('ticketPromedio', () => {
   it('divide ventas entre documentos, redondeado a 2', () => {
@@ -38,5 +38,23 @@ describe('maxValor', () => {
   })
   it('lista vacía → 1', () => {
     expect(maxValor([] as { v: number }[], f => f.v)).toBe(1)
+  })
+})
+
+describe('utilidadNeta', () => {
+  it('ventas menos costo, redondeado a 2', () => {
+    expect(utilidadNeta(1000, 600)).toBe(400)
+  })
+  it('puede ser negativa', () => {
+    expect(utilidadNeta(500, 800)).toBe(-300)
+  })
+})
+
+describe('margen', () => {
+  it('utilidad sobre ventas en %, redondeado a 2', () => {
+    expect(margen(1000, 400)).toBe(40)
+  })
+  it('ventas 0 → 0 (sin división por cero)', () => {
+    expect(margen(0, 0)).toBe(0)
   })
 })

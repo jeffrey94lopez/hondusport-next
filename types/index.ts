@@ -784,6 +784,18 @@ export interface DashboardResumen {
   cxp_pendiente: number
   cotizaciones_abiertas: number
   cotizaciones_monto: number
+  // P6.1
+  ventas_sin_isv: number
+  costo_ventas: number
+  facturas: number
+  comprobantes: number
+  cotizaciones_ganadas: number
+  cotizaciones_perdidas: number
+  cxc_nuevo: number
+  cxc_cobrado: number
+  cxp_nuevo: number
+  cxp_pagado: number
+  productos_nuevos: number
 }
 
 export interface VentaPorDia {

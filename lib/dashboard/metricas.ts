@@ -17,3 +17,11 @@ export function maxValor<T>(filas: T[], selector: (f: T) => number): number {
   const m = filas.reduce((acc, f) => Math.max(acc, selector(f)), 0)
   return m > 0 ? m : 1
 }
+
+export function utilidadNeta(ventasSinIsv: number, costoVentas: number): number {
+  return round2(ventasSinIsv - costoVentas)
+}
+
+export function margen(ventasSinIsv: number, utilidad: number): number {
+  return ventasSinIsv > 0 ? round2((utilidad / ventasSinIsv) * 100) : 0
+}

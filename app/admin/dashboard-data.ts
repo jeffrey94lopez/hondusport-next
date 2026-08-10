@@ -10,6 +10,10 @@ import { numeroDocumento } from '@/lib/pos/documentos'
 const RESUMEN_VACIO: DashboardResumen = {
   ventas_netas: 0, num_documentos: 0, pedidos_web: 0, pedidos_sin_procesar: 0,
   cxc_pendiente: 0, cxp_pendiente: 0, cotizaciones_abiertas: 0, cotizaciones_monto: 0,
+  // P6.1
+  ventas_sin_isv: 0, costo_ventas: 0, facturas: 0, comprobantes: 0,
+  cotizaciones_ganadas: 0, cotizaciones_perdidas: 0,
+  cxc_nuevo: 0, cxc_cobrado: 0, cxp_nuevo: 0, cxp_pagado: 0, productos_nuevos: 0,
 }
 
 export async function obtenerDashboardData(
@@ -83,6 +87,10 @@ export async function obtenerDashboardData(
     cxc_pendiente: Number(resumenCrudo.cxc_pendiente),
     cxp_pendiente: Number(resumenCrudo.cxp_pendiente),
     cotizaciones_monto: Number(resumenCrudo.cotizaciones_monto),
+    ventas_sin_isv: Number(resumenCrudo.ventas_sin_isv),
+    costo_ventas: Number(resumenCrudo.costo_ventas),
+    cxc_cobrado: Number(resumenCrudo.cxc_cobrado),
+    cxp_pagado: Number(resumenCrudo.cxp_pagado),
   }
 
   return {
