@@ -100,11 +100,18 @@ as $$
       select count(*) from cotizaciones c join cotizacion_etapas e on e.id = c.etapa_id
       where e.tipo = 'perdida' and c.created_at >= p_desde and c.created_at < p_hasta
     ), 0)::integer as cotizaciones_perdidas,
-    -- CxC nuevo: crédito otorgado en el rango (por día local del documento).
+    -- CxC nuevo: crédito otorgado en el rango. Replica credito_total de
+    -- documento_saldos (sum(dp.monto) filter tipo='credito') pero filtrando por
+    -- created_at (timestamptz) en vez de documento_saldos.fecha (d.created_at::date,
+    -- que usa el TimeZone de sesión = UTC, no Honduras).
     coalesce((
-      select sum(s.credito_total) from documento_saldos s
-      where s.fecha >= (p_desde at time zone 'America/Tegucigalpa')::date
-        and s.fecha <  (p_hasta at time zone 'America/Tegucigalpa')::date
+      select sum(dp.monto)
+      from documento_pagos dp
+      join documentos d on d.id = dp.documento_id
+      join metodos_pago m on m.id = dp.metodo_id
+      where m.tipo = 'credito'
+        and d.estado <> 'anulado'
+        and d.created_at >= p_desde and d.created_at < p_hasta
     ), 0)::numeric as cxc_nuevo,
     coalesce((
       select sum(co.monto) from cobros co
