@@ -87,6 +87,19 @@ export async function obtenerDashboardData(
     cxc_pendiente: Number(resumenCrudo.cxc_pendiente),
     cxp_pendiente: Number(resumenCrudo.cxp_pendiente),
     cotizaciones_monto: Number(resumenCrudo.cotizaciones_monto),
+    // P6.1: campos nuevos con guarda defensiva
+    ventas_sin_isv: Number(resumenCrudo.ventas_sin_isv ?? 0),
+    costo_ventas: Number(resumenCrudo.costo_ventas ?? 0),
+    cxc_nuevo: Number(resumenCrudo.cxc_nuevo ?? 0),
+    cxc_cobrado: Number(resumenCrudo.cxc_cobrado ?? 0),
+    cxp_nuevo: Number(resumenCrudo.cxp_nuevo ?? 0),
+    cxp_pagado: Number(resumenCrudo.cxp_pagado ?? 0),
+    // conteos (integer) ya llegan como number; Number() defensivo por si acaso:
+    facturas: Number(resumenCrudo.facturas ?? 0),
+    comprobantes: Number(resumenCrudo.comprobantes ?? 0),
+    cotizaciones_ganadas: Number(resumenCrudo.cotizaciones_ganadas ?? 0),
+    cotizaciones_perdidas: Number(resumenCrudo.cotizaciones_perdidas ?? 0),
+    productos_nuevos: Number(resumenCrudo.productos_nuevos ?? 0),
   }
 
   return {
