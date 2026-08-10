@@ -374,6 +374,71 @@ git commit -m "feat(saldo-favor): aplicar saldo a favor a CxC + historial en est
 
 ---
 
+### Task 6: Reversa del saldo a favor al anular un comprobante
+
+**Files:**
+- Modify: `supabase/migrations/2026-08-09-pos-p5b-gasto-saldo-favor.sql` (agregar tipo `'reverso'` al ledger; re-crear `anular_comprobante` con el re-crédito)
+- Modify: `supabase/smoke-pos-p5b.sql` (verificar el tipo `reverso`)
+
+**Interfaces:**
+- Consumes: `saldo_favor_movimientos` (tipos), `documento_pagos`, `metodos_pago`, el cuerpo vigente de `anular_comprobante`.
+- Produces: `anular_comprobante` re-acredita el saldo a favor gastado en el comprobante que se anula.
+
+**Contexto:** hoy, si un comprobante se paga con saldo a favor y luego se anula, el gasto `'venta'` NO se revierte → el cliente pierde ese saldo. El caso factura/NC ya está cubierto por P5a (el reembolso `saldo_favor` re-acredita). Esta tarea cierra el hueco del comprobante. La migración P5b aún no se aplicó, así que se edita en el mismo archivo.
+
+- [ ] **Step 1: Agregar el tipo `'reverso'` al ledger**
+
+En la migración P5b, en el bloque `do $$` que recrea el check de `saldo_favor_movimientos.tipo` (paso 1 de la migración), cambiar:
+
+```sql
+  alter table saldo_favor_movimientos add constraint saldo_favor_movimientos_tipo_chk
+    check (tipo in ('devolucion','venta','cobro','reverso'));
+```
+
+- [ ] **Step 2: Re-crear `anular_comprobante` con el re-crédito**
+
+Al final de la migración P5b (después de `aplicar_saldo_favor_cxc` y de `emitir_documento`), re-crear `anular_comprobante(uuid, text)` COMPLETA — **copiando su cuerpo VIGENTE de `supabase/migrations/2026-08-09-pos-p5a-devoluciones.sql`** (la versión de P5a, que ya tiene el guard "no anular un comprobante con devoluciones" y la reposición de stock agrupada) — agregando, DESPUÉS de la reposición de stock/kardex y ANTES del `update documentos set estado='anulado'`, este bloque:
+
+```sql
+  -- [P5b] Re-acreditar el saldo a favor gastado en este comprobante (reversa).
+  declare v_saldo_pagado numeric;
+  begin
+    select coalesce(sum(dp.monto),0) into v_saldo_pagado
+      from documento_pagos dp join metodos_pago m on m.id = dp.metodo_id
+      where dp.documento_id = v_doc.id and m.tipo = 'saldo_favor';
+    if v_saldo_pagado > 0 and v_doc.cliente_id is not null then
+      insert into saldo_favor_movimientos (cliente_id, monto, tipo, documento_id, usuario)
+      values (v_doc.cliente_id, v_saldo_pagado, 'reverso', v_doc.id, trim(p_motivo));
+    end if;
+  end;
+```
+
+NO cambiar nada más del cuerpo vigente (guard de devoluciones, reposición de stock, kardex `'devolucion'`, `update estado`, grant/revoke). `v_doc` ya existe en el declare (es `documentos%rowtype`). `create or replace` idempotente.
+
+- [ ] **Step 3: Smoke**
+
+En `supabase/smoke-pos-p5b.sql`, en el bloque de verificación del tipo del ledger, incluir `reverso`:
+
+```sql
+  if not exists (
+    select 1 from pg_constraint where conrelid='saldo_favor_movimientos'::regclass and contype='c'
+      and pg_get_constraintdef(oid) like '%reverso%'
+  ) then raise exception 'FALLO: el tipo del ledger no incluye reverso'; end if;
+```
+
+- [ ] **Step 4: Revisar consistencia**
+
+Verificar: el tipo `reverso` está en el check; `anular_comprobante` re-creada conserva TODO su cuerpo vigente de P5a (guard de devoluciones, reposición agrupada, kardex, update estado) + el re-crédito; el re-crédito es positivo (`+v_saldo_pagado`), tipo `reverso`, solo si hubo pago saldo_favor y hay cliente; no toca `emitir_documento`/`emitir_nota_credito`. El reviewer valida (no hay BD local).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add supabase/migrations/2026-08-09-pos-p5b-gasto-saldo-favor.sql supabase/smoke-pos-p5b.sql
+git commit -m "feat(saldo-favor): anular_comprobante re-acredita el saldo a favor gastado (reversa)"
+```
+
+---
+
 ## Verificación final (antes de entrega)
 
 - `npx vitest run --exclude "**/.claude/**"` — toda la suite verde (incluye `lib/pos/saldo-favor`).
