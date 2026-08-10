@@ -1,0 +1,11 @@
+.page { padding: 1.5rem; }
+.title { font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.card {
+  display: block; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.25rem;
+  text-decoration: none; color: inherit; transition: border-color 0.12s;
+}
+.card:hover { border-color: var(--accent); }
+.cardTitulo { font-size: 0.98rem; font-weight: 800; color: var(--accent); margin-bottom: 0.4rem; }
+.cardDesc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }

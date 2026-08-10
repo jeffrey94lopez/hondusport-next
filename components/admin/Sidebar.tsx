@@ -27,6 +27,7 @@ const NAV_GROUPS = [
       { href: '/admin/cotizaciones', icon: 'cotizaciones', label: 'Cotizaciones' },
       { href: '/admin/pedidos', icon: 'pedidos', label: 'Pedidos', badge: true },
       { href: '/admin/cuentas-por-cobrar', icon: 'cxc', label: 'Cuentas por cobrar' },
+      { href: '/admin/reportes', icon: 'reportes', label: 'Reportes' },
     ],
   },
   {
