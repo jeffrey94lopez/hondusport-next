@@ -108,7 +108,8 @@ as $$
     sum(signo * cantidad)::numeric as cantidad,
     sum(signo * importe)::numeric as monto
   from lineas
-  group by producto_id, variante_id, descripcion
+  group by producto_id, variante_id,
+    case when producto_id is null then descripcion else null end
   order by monto desc
   limit p_limite;
 $$;
