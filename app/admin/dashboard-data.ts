@@ -1,0 +1,73 @@
+import { createClient } from '@/lib/supabase-server'
+import { stockEfectivo } from '@/lib/store/variantes'
+import { rangoDesdePreset } from '@/lib/dashboard/rango'
+import type {
+  PresetRango, DashboardData, DashboardResumen, VentaPorDia,
+  TopItem, TopCliente, DashboardUltimoDocumento,
+} from '@/types'
+import { numeroDocumento } from '@/lib/pos/documentos'
+
+const RESUMEN_VACIO: DashboardResumen = {
+  ventas_netas: 0, num_documentos: 0, pedidos_web: 0, pedidos_sin_procesar: 0,
+  cxc_pendiente: 0, cxp_pendiente: 0, cotizaciones_abiertas: 0, cotizaciones_monto: 0,
+}
+
+export async function obtenerDashboardData(
+  preset: PresetRango, desde?: string, hasta?: string,
+): Promise<DashboardData> {
+  const rango = rangoDesdePreset(preset, new Date(), desde, hasta)
+  const supabase = await createClient()
+  const args = { p_desde: rango.desde, p_hasta: rango.hasta }
+
+  const [
+    { data: resumenRows },
+    { data: ventasDia },
+    { data: topItems },
+    { data: topClientes },
+    { data: productosStock },
+    { data: ultimosRows },
+  ] = await Promise.all([
+    supabase.rpc('dashboard_resumen', args),
+    supabase.rpc('dashboard_ventas_por_dia', args),
+    supabase.rpc('dashboard_top_items', { ...args, p_limite: 10 }),
+    supabase.rpc('dashboard_top_clientes', { ...args, p_limite: 10 }),
+    supabase.from('productos')
+      .select('id, stock, activo, producto_variantes(stock, activo)')
+      .eq('activo', true).limit(5000),
+    supabase.from('documentos')
+      .select('id, tipo, correlativo, numero_comprobante, cliente_nombre, total, created_at')
+      .in('tipo', ['factura', 'comprobante']).neq('estado', 'anulado')
+      .order('created_at', { ascending: false }).limit(8),
+  ])
+
+  // Stock bajo: mismo criterio que el dashboard previo (stockEfectivo por
+  // producto/variante). Se calcula en el server, no en SQL (evita replicar la
+  // lógica padre/variante en Postgres). Umbral: < 5 (como el dashboard actual).
+  const stockBajo = (productosStock ?? []).filter(p => {
+    const s = stockEfectivo(p.stock, (p.producto_variantes ?? []).filter(v => v.activo))
+    return s != null && s < 5
+  }).length
+
+  const ultimosDocumentos: DashboardUltimoDocumento[] = (ultimosRows ?? []).map(d => ({
+    id: d.id,
+    tipo: d.tipo as 'factura' | 'comprobante',
+    numero: numeroDocumento({
+      tipo: d.tipo as 'factura' | 'comprobante',
+      correlativo: d.correlativo,
+      numero_comprobante: d.numero_comprobante,
+    }),
+    cliente_nombre: d.cliente_nombre,
+    total: Number(d.total),
+    created_at: d.created_at,
+  }))
+
+  const resumen = (resumenRows?.[0] as DashboardResumen | undefined) ?? RESUMEN_VACIO
+
+  return {
+    preset, rango, resumen, stockBajo,
+    ventasPorDia: (ventasDia ?? []) as VentaPorDia[],
+    topItems: (topItems ?? []) as TopItem[],
+    topClientes: (topClientes ?? []) as TopCliente[],
+    ultimosDocumentos,
+  }
+}
