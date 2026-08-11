@@ -34,13 +34,13 @@ export default async function DashboardPage({
       <FiltroFechas preset={preset} desde={sp.desde} hasta={sp.hasta} etiqueta={etiquetaRango(preset, data.rango)} />
 
       <div className={styles.segmentos}>
-        <KpiSegmento icon="💵" titulo="Ventas" metricas={[
+        <KpiSegmento icon="ventas" titulo="Ventas" metricas={[
           { label: 'Ventas (sin ISV)', valor: formatPrice(resumen.ventas_sin_isv) },
           { label: 'Costo de ventas', valor: formatPrice(resumen.costo_ventas) },
           { label: `Utilidad neta (${pctMargen}%)`, valor: formatPrice(utilidad), alerta: utilidad < 0 },
           { label: 'Ticket promedio', valor: formatPrice(ticket) },
         ]} />
-        <KpiSegmento icon="📄" titulo="Documentos" metricas={[
+        <KpiSegmento icon="documentos" titulo="Documentos" metricas={[
           { label: 'Total', valor: String(resumen.num_documentos) },
           { label: 'Facturas', valor: String(resumen.facturas) },
           { label: 'Comprobantes', valor: String(resumen.comprobantes) },
@@ -49,22 +49,22 @@ export default async function DashboardPage({
             ? [{ label: 'Sin procesar', valor: String(resumen.pedidos_sin_procesar), alerta: true }]
             : []),
         ]} />
-        <KpiSegmento icon="📝" titulo="Cotizaciones" metricas={[
+        <KpiSegmento icon="cotizaciones" titulo="Cotizaciones" metricas={[
           { label: 'Abiertas', valor: String(resumen.cotizaciones_abiertas) },
           { label: 'Ganadas', valor: String(resumen.cotizaciones_ganadas) },
           { label: 'Perdidas', valor: String(resumen.cotizaciones_perdidas) },
         ]} />
-        <KpiSegmento icon="📈" titulo="Cuentas por cobrar" metricas={[
+        <KpiSegmento icon="cxc" titulo="Cuentas por cobrar" metricas={[
           { label: 'Crédito nuevo', valor: formatPrice(resumen.cxc_nuevo) },
           { label: 'Cobrado', valor: formatPrice(resumen.cxc_cobrado) },
           { label: 'Acumulado', valor: formatPrice(resumen.cxc_pendiente) },
         ]} />
-        <KpiSegmento icon="🧾" titulo="Cuentas por pagar" metricas={[
+        <KpiSegmento icon="cxp" titulo="Cuentas por pagar" metricas={[
           { label: 'Crédito nuevo', valor: formatPrice(resumen.cxp_nuevo) },
           { label: 'Pagado', valor: formatPrice(resumen.cxp_pagado) },
           { label: 'Acumulado', valor: formatPrice(resumen.cxp_pendiente) },
         ]} />
-        <KpiSegmento icon="📦" titulo="Ítems" metricas={[
+        <KpiSegmento icon="productos" titulo="Ítems" metricas={[
           { label: 'Stock bajo (<5)', valor: String(stockBajo), alerta: stockBajo > 0 },
           { label: 'Ítems nuevos', valor: String(resumen.productos_nuevos) },
         ]} />

@@ -71,6 +71,9 @@ export const IconSalir = ({ className }: IconProps) =>
 export const IconReportes = ({ className }: IconProps) =>
   base(<><path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-7" /><path d="M21 20H3" /></>, className)
 
+export const IconVentas = ({ className }: IconProps) =>
+  base(<><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01M18 12h.01" /></>, className)
+
 export const ICONOS = {
   inicio: IconInicio,
   productos: IconProductos,
@@ -91,6 +94,7 @@ export const ICONOS = {
   config: IconConfig,
   salir: IconSalir,
   reportes: IconReportes,
+  ventas: IconVentas,
 } as const
 
 export type IconoKey = keyof typeof ICONOS

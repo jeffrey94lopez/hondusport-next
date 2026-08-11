@@ -1,3 +1,4 @@
+import { ICONOS, type IconoKey } from '@/components/admin/icons'
 import styles from './dashboard.module.css'
 
 interface Metrica {
@@ -7,16 +8,17 @@ interface Metrica {
 }
 
 interface Props {
-  icon: string
+  icon: IconoKey
   titulo: string
   metricas: Metrica[]
 }
 
 export default function KpiSegmento({ icon, titulo, metricas }: Props) {
+  const Icono = ICONOS[icon]
   return (
     <div className={styles.segmento}>
       <div className={styles.segmentoHead}>
-        <span className={styles.segmentoIcon}>{icon}</span>
+        <span className={styles.segmentoIcon}><Icono className="iconoMerlin" /></span>
         {titulo}
       </div>
       <div className={styles.segmentoMetricas}>
