@@ -54,43 +54,208 @@
   color: var(--text);
 }
 
-.deliveryOptions {
+/* Barra de progreso de pasos */
+
+.progressBar {
   display: flex;
-  gap: 10px;
-  margin-bottom: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 1.75rem;
 }
 
-.deliveryOptionBtn {
-  display: inline-flex;
+.progressItem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 2px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  opacity: 0.5;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 1px;
-  transition: 0.2s;
-  border-radius: var(--radius-input);
   flex: 1;
-  justify-content: center;
 }
 
-.deliveryOptionBtnActive {
+.progressDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  transition: 0.2s;
+  z-index: 1;
+}
+
+.progressDotActive {
   border-color: var(--primary);
   color: var(--primary);
-  opacity: 1;
   background: var(--brand-bg);
+}
+
+.progressDotDone {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.progressLabel {
+  margin-top: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.progressLine {
+  position: absolute;
+  top: 13px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.progressLineDone {
+  background: var(--primary);
+}
+
+/* Layout de dos columnas: paso actual + resumen siempre visible */
+
+.stepsAndSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stepPane {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: var(--text-subtitle);
+  margin-bottom: 1.1rem;
+}
+
+.stepTitle i {
+  color: var(--primary);
+}
+
+.fieldLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.form input,
+.form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  margin-bottom: 1.1rem;
+  border-radius: var(--radius-input);
+  transition: 0.2s;
+  display: block;
+}
+
+.form input:focus,
+.form textarea:focus {
+  border-color: var(--primary);
+}
+
+.form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Método de envío: cards seleccionables */
+
+.envioGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 1.1rem;
+}
+
+.envioCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-input);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s;
+}
+
+.envioCard:hover {
+  border-color: var(--primary);
+}
+
+.envioCardActive {
+  border-color: var(--primary);
+  background: var(--brand-bg);
+}
+
+.envioCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.envioCardHeader i {
+  color: var(--primary);
+}
+
+.envioCardName {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.envioCardPrice {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.envioCardBadge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--estado-success-text);
 }
 
 .pickupInfo {
   padding: 1rem;
   border: 1.5px dashed var(--primary);
+  border-radius: var(--radius-input);
   background: var(--brand-bg);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.1rem;
 }
 
 .pickupInfoTitle {
@@ -104,43 +269,89 @@
   opacity: 0.8;
 }
 
-.pickupDiscountBadge {
-  display: block;
-  margin-top: 10px;
-  color: var(--estado-success-text);
-  font-weight: 700;
-  font-size: 0.75rem;
-}
+/* Paso confirmar */
 
-.form input,
-.form textarea {
-  width: 100%;
-  padding: 10px 4px;
-  border: none;
-  border-bottom: 2px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  font-size: 0.85rem;
-  outline: none;
-  margin-bottom: 1.2rem;
+.confirmSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--hover-input);
   border-radius: var(--radius-input);
-  transition: 0.2s;
-  display: block;
+  margin-bottom: 1.1rem;
+  font-size: 0.85rem;
 }
 
-.form input:focus,
-.form textarea:focus {
-  border-bottom-color: var(--primary);
+.confirmSummary p {
+  margin: 0;
 }
 
-.form textarea {
-  resize: vertical;
-  min-height: 80px;
+.whatsappNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--brand-bg);
+  border-radius: var(--radius-input);
+  margin-bottom: 1.1rem;
+}
+
+.whatsappNotice i {
+  color: var(--estado-success-text);
+  margin-top: 2px;
+}
+
+.whatsappNotice p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Resumen del pedido: siempre visible, colapsable en móvil */
+
+.summaryCol {
+  order: -1;
+}
+
+.summaryToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-input);
+  background: var(--hover-input);
+  color: var(--text);
+  font: var(--text-subtitle);
+  cursor: pointer;
+}
+
+.summaryToggleTotal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.previewTitle {
+  display: none;
+  font: var(--text-subtitle);
+  margin-bottom: 0.9rem;
 }
 
 .preview {
-  margin-bottom: 1.2rem;
+  display: none;
   font-size: 0.85rem;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  margin-top: 10px;
+}
+
+.previewOpen {
+  display: block;
 }
 
 .previewRow {
@@ -169,12 +380,37 @@
   text-align: center;
 }
 
+/* Navegación entre pasos */
+
+.navRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 0.5rem;
+}
+
+.backBtn {
+  padding: 14px 20px;
+  background: var(--hover-input);
+  color: var(--text);
+  border: none;
+  border-radius: var(--radius-btn);
+  font: var(--text-subtitle);
+  cursor: pointer;
+  transition: 0.2s;
+  flex-shrink: 0;
+}
+
+.backBtn:hover {
+  background: var(--border);
+}
+
+.nextBtn,
 .submitBtn {
+  flex: 1;
   display: block;
-  width: 100%;
   padding: 14px;
-  background: var(--primary);
-  color: white;
+  background: var(--btn-bg);
+  color: var(--btn-text);
   border: none;
   border-radius: var(--radius-btn);
   font: var(--text-subtitle);
@@ -182,10 +418,51 @@
   transition: 0.2s;
 }
 
+.nextBtn:hover,
+.submitBtn:hover:not(:disabled) {
+  background: var(--btn-hover);
+}
+
 .submitBtn:disabled {
   background: var(--cta-disabled-bg);
   color: var(--cta-disabled-text);
   cursor: not-allowed;
+}
+
+@media (min-width: 769px) {
+  .content {
+    max-width: 860px;
+  }
+
+  .stepsAndSummary {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 2.5rem;
+  }
+
+  .stepContent {
+    flex: 1;
+  }
+
+  .summaryCol {
+    order: 0;
+    flex: 0 0 300px;
+    position: sticky;
+    top: 0;
+  }
+
+  .summaryToggle {
+    display: none;
+  }
+
+  .previewTitle {
+    display: block;
+  }
+
+  .preview {
+    display: block;
+    background: var(--hover-input);
+  }
 }
 
 @media (max-width: 768px) {
