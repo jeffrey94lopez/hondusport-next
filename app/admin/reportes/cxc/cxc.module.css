@@ -1,0 +1,31 @@
+.page { padding: 1.25rem; }
+.controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.filtro { border: 1px solid var(--border); border-radius: var(--radius-input); padding: 0.3rem 0.6rem; font-size: 0.85rem; }
+.etiqueta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.acciones { display: flex; gap: 0.5rem; }
+.btnAccion { padding: 0.4rem 0.9rem; display: inline-flex; align-items: center; }
+.hoja { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; overflow-x: auto; }
+.titulo { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.75rem; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.tabla th, .tabla td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; text-align: left; white-space: nowrap; }
+.tabla th { background: var(--bg-hover); font-weight: 700; }
+.num { text-align: right; }
+.vacio { text-align: center; color: var(--text-muted); padding: 1rem; }
+.grupo { border-bottom: 1px solid var(--border); }
+.clienteRow { display: flex; align-items: center; gap: 0.75rem; width: 100%; background: none; border: none; cursor: pointer; padding: 0.6rem 0.4rem; text-align: left; font-size: 0.88rem; }
+.clienteRow:hover { background: var(--bg-hover); }
+.caret { width: 1rem; color: var(--text-muted); }
+.clienteNombre { font-weight: 700; flex: 1; }
+.clienteMeta { color: var(--text-muted); font-size: 0.78rem; }
+.clienteTotal { font-weight: 800; color: var(--accent); white-space: nowrap; }
+.docs { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin: 0 0 0.5rem 1.5rem; }
+.docs th, .docs td { border: 1px solid var(--border); padding: 0.3rem 0.5rem; text-align: left; white-space: nowrap; }
+.docs th { background: var(--bg-hover); }
+.vencido { color: var(--error-strong); }
+@media print {
+  .noPrint { display: none; }
+  .page { padding: 0; }
+  .hoja { border: none; box-shadow: none; padding: 0; }
+  .docs { display: table !important; }
+  .caret { display: none; }
+}

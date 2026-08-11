@@ -6,6 +6,7 @@ const REPORTES = [
   { href: '/admin/reportes/ventas', titulo: 'Reporte de ventas', desc: 'Ventas por documento con filtros (fecha, tipo, cliente, vendedor, caja, método) y detalle de ítems. Exportable a Excel.' },
   { href: '/admin/reportes/ganancias', titulo: 'Ganancias por ítem', desc: 'Ventas, costos y ganancia por producto/variante en un período, con margen %. Exportable a Excel.' },
   { href: '/admin/reportes/contactos', titulo: 'Clientes y proveedores', desc: 'Directorio con total transado en el período y saldo actual (CxC/CxP), filtrable por rol. Exportable a Excel.' },
+  { href: '/admin/reportes/cxc', titulo: 'Cuentas por cobrar', desc: 'Deuda pendiente por cliente, navegable en cascada hasta sus documentos y días vencidos. Exportable a Excel.' },
 ]
 
 export default function ReportesIndexPage() {
