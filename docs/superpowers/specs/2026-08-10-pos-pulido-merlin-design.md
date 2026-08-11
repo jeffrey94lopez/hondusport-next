@@ -69,11 +69,23 @@ reference, `--bg-input: var(--page)` en `globals.css`); los pills/tags y botones
 quedan más redondeados (`--radius-tag: 100px` = totalmente redondeados). No se
 tocan los tokens de estado (error/success/warning/info) — el sync no los cambió.
 
+**Arreglo de hover del chip activo (bug real de producción):** hoy
+`.btnMerlinChip:hover:not(:disabled) { background: var(--hover-input) }` se aplica
+también a los chips activos (`[aria-pressed="true"]`, que tienen fondo `--cta` y
+**texto blanco**): al pasar el mouse el fondo se aclara a `--hover-input` pero el
+texto sigue blanco → **el texto desaparece**. Fix: que el hover claro NO aplique al
+estado activo, y darle al activo su propio hover que conserve el contraste, p. ej.:
+```css
+.btnMerlinChip:not([aria-pressed="true"]):hover:not(:disabled) { background: var(--hover-input); }
+.btnMerlinChip[aria-pressed="true"]:hover:not(:disabled) { background: var(--cta); }
+```
+
 **Verificación de contraste (obligatoria):** revisar en el navegador que
 `.btnMerlinPrimary/:hover/:disabled`, `.btnMerlinSecondary`, `.btnMerlinTertiary`,
-`.btnMerlinChip[aria-pressed]` y los estados de foco de inputs mantengan texto
-legible con los valores nuevos. Si algún hover deja texto sobre fondo del mismo
-tono (p. ej. gris deshabilitado), ajustar el token o el estado puntual.
+`.btnMerlinChip` (normal Y activo, incl. hover), `.btnMerlinIcon[aria-pressed]` y
+los estados de foco de inputs mantengan texto legible con los valores nuevos. Si
+algún otro hover deja texto sobre fondo del mismo tono, ajustar el token o el
+estado puntual.
 
 ## 2. Control de cantidad del POS
 
