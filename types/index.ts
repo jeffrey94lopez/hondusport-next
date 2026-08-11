@@ -247,6 +247,18 @@ export interface ConfigEntry {
 
 export type ConfigMap = Record<string, string>
 
+export type DescuentoPresetTipo = 'porcentaje' | 'monto'
+
+export interface DescuentoPreset {
+  id: string
+  etiqueta: string
+  tipo: DescuentoPresetTipo
+  valor: number
+  activo: boolean
+  orden: number
+  created_at?: string
+}
+
 export interface ActionResult {
   error?: string
   // Aviso no bloqueante: la acción tuvo éxito pero ignoró algo (p.ej. un

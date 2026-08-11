@@ -1,4 +1,4 @@
-import type { LineaPos } from '@/types'
+import type { LineaPos, DescuentoPresetTipo } from '@/types'
 
 export type DescuentoModo = 'monto' | 'porcentaje'
 
@@ -44,6 +44,15 @@ export function clampDescuentoGlobal(next: LineaVenta[], descuentoGlobal: number
 export function descuentoDesdePorcentaje(l: LineaVenta, pct: number): number {
   const p = Math.min(Math.max(pct, 0), 100)
   return round2(brutoLinea(l) * (p / 100))
+}
+
+/**
+ * Convierte un preset de descuento (porcentaje o monto) a un monto en L.,
+ * recortado a [0, bruto]. Reusado por los chips global y por línea del POS.
+ */
+export function presetToDescuento(preset: { tipo: DescuentoPresetTipo; valor: number }, bruto: number): number {
+  const raw = preset.tipo === 'porcentaje' ? (bruto * preset.valor) / 100 : preset.valor
+  return round2(Math.min(Math.max(raw, 0), bruto))
 }
 
 // Tope de cantidad de una línea: el stock disponible, salvo que la línea ya

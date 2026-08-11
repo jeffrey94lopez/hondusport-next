@@ -3,6 +3,7 @@ import {
   brutoLinea, clampDescuentoLinea, brutoTotalLineas, clampDescuentoGlobal,
   descuentoDesdePorcentaje, topeCantidad, sugerenciasEfectivo,
   pestanaVacia, siguienteNombrePestana, accionPersistencia,
+  presetToDescuento,
   type LineaVenta, type PestanaVenta,
 } from '../carrito'
 
@@ -107,4 +108,25 @@ describe('accionPersistencia', () => {
   it('pestaña con líneas y espera → actualizar', () =>
     expect(accionPersistencia(pestana({ lineas: [linea()], esperaId: 'e1' })))
       .toEqual({ tipo: 'actualizar', esperaId: 'e1' }))
+})
+
+describe('presetToDescuento', () => {
+  it('porcentaje: aplica el % sobre el bruto', () => {
+    expect(presetToDescuento({ tipo: 'porcentaje', valor: 10 }, 200)).toBe(20)
+  })
+  it('monto: devuelve el monto tal cual si cabe en el bruto', () => {
+    expect(presetToDescuento({ tipo: 'monto', valor: 50 }, 200)).toBe(50)
+  })
+  it('recorta el monto al bruto', () => {
+    expect(presetToDescuento({ tipo: 'monto', valor: 500 }, 200)).toBe(200)
+  })
+  it('recorta el porcentaje al bruto (nunca lo supera)', () => {
+    expect(presetToDescuento({ tipo: 'porcentaje', valor: 150 }, 200)).toBe(200)
+  })
+  it('bruto 0 -> 0', () => {
+    expect(presetToDescuento({ tipo: 'porcentaje', valor: 10 }, 0)).toBe(0)
+  })
+  it('nunca negativo', () => {
+    expect(presetToDescuento({ tipo: 'monto', valor: -10 }, 200)).toBe(0)
+  })
 })
