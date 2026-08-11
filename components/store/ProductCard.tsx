@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import styles from './ProductCard.module.css'
-import { formatPrice, getBadgeColor } from '@/lib/store/format'
+import { formatPrice, getBadgeColor, getDiscountPercent } from '@/lib/store/format'
 import { getOfferSecondsRemaining } from '@/lib/store/offerTimer'
 import { precioDesde, stockEfectivo, estaAgotado } from '@/lib/store/variantes'
 import { useWishlist } from '@/lib/store/wishlist-context'
@@ -16,6 +16,23 @@ function formatTimer(totalSeconds: number): string {
   const m = Math.floor((totalSeconds % 3600) / 60)
   const s = totalSeconds % 60
   return `⏳ ${pad(h)}:${pad(m)}:${pad(s)}`
+}
+
+interface TagInfo {
+  label: string
+  className: string
+  color?: string
+}
+
+// Prioridad del tag superior-izquierda: agotado > descuento > "Nuevo" > resto de badges
+// existentes (Oferta/Más Vendido/Sustentable/Últimas unidades), que conservan su color
+// original vía getBadgeColor para no perder esa señal.
+function getTag(producto: StoreProducto, agotado: boolean, discountPercent: number | null): TagInfo | null {
+  if (agotado) return { label: 'AGOTADO', className: styles.tagError }
+  if (discountPercent != null) return { label: `-${discountPercent}%`, className: styles.tagError }
+  if (producto.badge === 'Nuevo') return { label: 'NUEVO', className: styles.tagBrand }
+  if (producto.badge) return { label: producto.badge.toUpperCase(), className: '', color: getBadgeColor(producto.badge) }
+  return null
 }
 
 interface ProductCardProps {
@@ -47,27 +64,16 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
   const stock = stockEfectivo(producto.stock, producto.variantes)
   const agotado = estaAgotado(producto.stock, producto.variantes)
 
+  const discountPercent = !desde.varia ? getDiscountPercent(producto.precio, producto.precioOriginal) : null
+  const showOriginalPrice = discountPercent != null
   const showStockWarning = !agotado && stock != null && stock > 0 && stock <= STOCK_LIMITE
-  const showOriginalPrice = !desde.varia && producto.precioOriginal != null && producto.precioOriginal > producto.precio
   const imagen = producto.imagenes[0] ?? ''
+  const categoria = producto.subcat ?? producto.cat
+  const ratingValue = producto.rating || 5
+  const tag = getTag(producto, agotado, discountPercent)
 
   return (
     <article className={styles.card}>
-      {rank != null && <span className={styles.rank}>{rank}</span>}
-      {producto.badge && (
-        <span className={styles.badge} style={{ background: getBadgeColor(producto.badge) }}>
-          {producto.badge}
-        </span>
-      )}
-
-      <button
-        className={`${styles.wishlistBtn} ${isWished ? styles.wishlistBtnActive : ''}`}
-        onClick={() => toggle(producto.id)}
-        aria-label={isWished ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-      >
-        <i className={`${isWished ? 'fa-solid' : 'fa-regular'} fa-heart`} />
-      </button>
-
       <div className={styles.imgContainer} onClick={() => onOpen?.(producto.slug)}>
         {imagen && (
           <Image
@@ -78,6 +84,19 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
             sizes="(max-width: 768px) 50vw, 200px"
           />
         )}
+        {tag && (
+          <span className={`${styles.tag} ${tag.className}`} style={tag.color ? { background: tag.color } : undefined}>
+            {tag.label}
+          </span>
+        )}
+        {rank != null && <span className={styles.rank}>{rank}</span>}
+        <button
+          className={`${styles.wishlistBtn} ${isWished ? styles.wishlistBtnActive : ''}`}
+          onClick={() => toggle(producto.id)}
+          aria-label={isWished ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+        >
+          <i className={`${isWished ? 'fa-solid' : 'fa-regular'} fa-heart`} />
+        </button>
         {producto.badge === 'Oferta' && secondsRemaining > 0 && (
           <div className={styles.offerTimer}>{formatTimer(secondsRemaining)}</div>
         )}
@@ -86,36 +105,28 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
       <div className={styles.info}>
         <div onClick={() => onOpen?.(producto.slug)} style={{ cursor: 'pointer' }}>
           <div className={styles.stars}>
-            {'★'.repeat(producto.rating || 5)}
-            {'☆'.repeat(5 - (producto.rating || 5))}
+            <span className={styles.starsFilled}>{'★'.repeat(ratingValue)}</span>
+            <span className={styles.starsEmpty}>{'☆'.repeat(5 - ratingValue)}</span>
           </div>
           <h3>{producto.nombre}</h3>
-          <p className={styles.price}>
+          {categoria && <p className={styles.category}>{categoria}</p>}
+        </div>
+        <div className={styles.priceRow}>
+          <p className={`${styles.price} ${showOriginalPrice ? styles.priceDiscounted : ''}`}>
             {showOriginalPrice && (
               <span className={styles.originalPrice}>{formatPrice(producto.precioOriginal as number)}</span>
             )}
             {desde.varia ? `Desde ${formatPrice(desde.min)}` : formatPrice(producto.precio)}
           </p>
-          {agotado ? (
-            <span className={styles.outOfStock}>AGOTADO</span>
-          ) : (
-            showStockWarning && <span className={styles.stockWarning}>ÚLTIMAS {stock} UNIDADES</span>
-          )}
-        </div>
-        <div className={styles.btnRow}>
-          <button className={`${styles.btnAddMain} ${styles.btnHalf}`} onClick={() => onOpen?.(producto.slug)}>
-            VER
-          </button>
           <button
-            className={`${styles.btnAddMain} ${styles.btnHalf} ${styles.btnAddCart}`}
+            className={styles.addBtn}
             onClick={() => onQuickAdd?.(producto.id)}
+            aria-label="Agregar al carrito"
           >
-            + CARRITO
+            <i className="fa-solid fa-plus" />
           </button>
         </div>
-        <button className={styles.cardMobileAddBtn} onClick={() => onQuickAdd?.(producto.id)}>
-          + CARRITO
-        </button>
+        {showStockWarning && <span className={styles.stockWarning}>ÚLTIMAS {stock} UNIDADES</span>}
       </div>
     </article>
   )

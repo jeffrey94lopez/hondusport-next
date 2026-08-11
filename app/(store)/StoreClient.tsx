@@ -110,6 +110,30 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
         onOpenWishlist={() => setWishlistOpen(true)}
       />
       <HeroCarousel banners={banners} />
+      {catsNav.length > 0 && (
+        <section className={styles.categorySection}>
+          <h2 className={styles.categoryTitle}>Explorar por categoría</h2>
+          <div className={styles.categoryGrid}>
+            {catsNav.map(cat => (
+              <button
+                key={cat.id}
+                type="button"
+                className={styles.categoryCard}
+                style={cat.imagen ? { backgroundImage: `url('${cat.imagen}')` } : undefined}
+                onClick={() => handleCatLink(cat.valor)}
+              >
+                <span className={styles.categoryOverlay} />
+                <span className={styles.categoryText}>
+                  <span className={styles.categoryName}>{cat.valor}</span>
+                  <span className={styles.categoryLink}>
+                    Ver todo <i className="fa-solid fa-arrow-right" />
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       <CategoryBar
         cats={catsNav}
         subcats={subcats}

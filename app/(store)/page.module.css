@@ -14,6 +14,79 @@
   margin: 0 auto;
 }
 
+.categorySection {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2.5rem 5% 1rem;
+}
+
+.categoryTitle {
+  margin: 0 0 1.5rem;
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.categoryCard {
+  position: relative;
+  height: 300px;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  background-color: var(--hover-input);
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--shadow-card);
+  transition: var(--transition);
+}
+
+.categoryCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-pop);
+}
+
+.categoryOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.15) 55%, rgba(0, 0, 0, 0) 100%);
+}
+
+.categoryText {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.categoryName {
+  color: #fff;
+  font: var(--text-subtitle);
+  font-size: 1.3rem;
+}
+
+.categoryLink {
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 768px) {
+  .categoryCard {
+    height: 220px;
+  }
+}
+
 .catalogLayout {
   display: grid;
   grid-template-columns: 220px 1fr;

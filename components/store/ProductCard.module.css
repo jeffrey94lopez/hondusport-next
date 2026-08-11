@@ -1,5 +1,5 @@
 .card {
-  background: transparent;
+  background: var(--card);
   border: none;
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
 }
 
 .card:hover {
@@ -20,11 +21,9 @@
   max-height: 320px;
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: var(--radius-card);
   position: relative;
   cursor: pointer;
   background: var(--hover-input);
-  border: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -40,153 +39,117 @@
 }
 
 .info {
-  padding: 1rem 0 0.5rem 0;
+  padding: 1rem 1.1rem 1.1rem;
   background: transparent;
   display: flex;
   flex-direction: column;
   flex: 1;
-  height: 100%;
-}
-
-.btnRow {
-  display: flex;
   gap: 4px;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-top: auto;
-}
-
-@media (min-width: 769px) {
-  .info {
-    position: relative;
-    padding-bottom: 2.2rem;
-  }
-
-  .btnRow {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .btnRow {
-    display: none;
-  }
+  padding-top: 8px;
 }
 
 .price {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--text);
+  margin: 0;
+}
+
+.priceDiscounted {
+  color: var(--error-strong);
 }
 
 .originalPrice {
   font-size: 0.8rem;
-  opacity: 0.5;
+  font-weight: 400;
+  color: var(--text-muted);
   text-decoration: line-through;
   margin-right: 8px;
 }
 
+.category {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0 0 2px;
+}
+
 .stars {
-  font-size: 0.65rem;
-  opacity: 0.6;
-  margin-bottom: 0.5rem;
+  font-size: 0.7rem;
+  margin-bottom: 0.4rem;
+}
+
+.starsFilled {
+  color: var(--warning-star);
+}
+
+.starsEmpty {
+  color: var(--ink-disabled);
 }
 
 .stockWarning {
   color: var(--primary);
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   display: block;
   margin-top: 4px;
 }
 
-.outOfStock {
-  color: var(--error-strong);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  display: block;
-  margin-top: 4px;
-}
-
-.btnAddMain {
-  display: block;
-  width: 100%;
-  padding: 8px 10px;
+.addBtn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--btn-bg);
   color: var(--btn-text);
   border: none;
-  border-radius: var(--radius-btn);
-  font-weight: 700;
-  font-size: 0.65rem;
-  letter-spacing: 1px;
-  transition: 0.3s;
-  margin-top: 10px;
+  border-radius: 50%;
+  font-size: 0.8rem;
   cursor: pointer;
+  transition: 0.2s;
 }
 
-.btnAddMain:hover {
+.addBtn:hover {
   background: var(--btn-hover);
-  opacity: 0.9;
 }
 
-.btnAddCart {
-  background: var(--primary);
-  color: white;
-}
-
-.btnHalf {
-  width: 50%;
-  margin-top: 0;
-  border-radius: 0;
-}
-
-.cardMobileAddBtn {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .cardMobileAddBtn {
-    display: block;
-    width: 100%;
-    padding: 8px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: var(--radius-btn);
-    font-weight: 700;
-    font-size: 0.7rem;
-    letter-spacing: 1px;
-    cursor: pointer;
-    margin-top: 6px;
-    transition: opacity 0.2s;
-  }
-
-  .cardMobileAddBtn:hover {
-    opacity: 0.85;
-  }
-}
-
-.badge {
+.tag {
   position: absolute;
   top: 10px;
   left: 10px;
-  color: white;
+  color: #fff;
   padding: 5px 14px;
   font-size: 0.7rem;
   font-weight: 700;
   border-radius: var(--radius-tag);
   z-index: 2;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
   box-shadow: var(--shadow-card);
+}
+
+.tagBrand {
+  background: var(--primary);
+}
+
+.tagError {
+  background: var(--error-strong);
 }
 
 .rank {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  bottom: 8px;
+  left: 8px;
   background: var(--primary);
   color: white;
   width: 22px;
@@ -204,7 +167,7 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  background: white;
+  background: var(--card);
   border: none;
   border-radius: 50%;
   width: 30px;
