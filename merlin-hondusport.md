@@ -1,5 +1,5 @@
-# Merlin Hondusport — Referencia de estilos
-> Generado con el Editor Visual Merlin · 2026-08-06
+# Merlin Design System - Hondusport — Referencia de estilos
+> Generado con el Editor Visual Merlin · 2026-08-10
 
 ---
 
@@ -24,11 +24,11 @@
   --blue-10: #faf6ed;   /* Fondo botón Tertiary */
 
   /* ── Coral / CTA ── */
-  --coral-hover: #080808;   /* Hover CTA */
-  --coral-100: #0a0a0a;   /* CTA primario, destructivo */
-  --coral-60: #6c6c6c;   /* Deshabilitado fondo */
-  --coral-30: #b6b6b6;   /* Deshabilitado texto */
-  --coral-10: #e7e7e7;
+  --coral-hover: #000000;   /* Hover CTA */
+  --coral-100: #000000;   /* CTA primario, destructivo */
+  --coral-60: #666666;   /* Deshabilitado fondo */
+  --coral-30: #b3b3b3;   /* Deshabilitado texto */
+  --coral-10: #e6e6e6;
 
   /* ── Neutrals ── */
   --black-100: #1e1e1e;   /* Texto body principal */
@@ -38,7 +38,7 @@
   --black-0: #ffffff;   /* Cards, botón secondary */
 
   /* ── Background ── */
-  --background-page: #f7f8fb;   /* Fondo pantalla, inputs */
+  --background-page: #dbdce1;   /* Fondo pantalla, inputs */
 
   /* ── Error ── */
   --error-200: #610017;
@@ -65,8 +65,8 @@
   --info-10: #f1f9ff;
 
   /* ── Gradientes ── */
-  --gradient-horizontal: linear-gradient(to right, #c9a84c, #0a0a0a);
-  --gradient-vertical: linear-gradient(to bottom, #0a0a0a, #c9a84c);
+  --gradient-horizontal: linear-gradient(to right, #c9a84c, #000000);
+  --gradient-vertical: linear-gradient(to bottom, #000000, #c9a84c);
 
   /* ── Tamaños de fuente ── */
   --font-size-header: 48px;
@@ -76,12 +76,12 @@
   --font-size-caption: 12px;
 
   /* ── Border radius ── */
-  --radius-sm: 9px;   /* Inputs, botones Action */
-  --radius-md: 9px;   /* Cards, alerts, toasts */
-  --radius-lg: 9px;
-  --radius-xl: 10px;
-  --radius-pill: 25px;   /* Botones WEB, drop up */
-  --radius-full: 26px;   /* Botones APP, tags */
+  --radius-sm: 12px;   /* Inputs, botones Action */
+  --radius-md: 16px;   /* Cards, alerts, toasts */
+  --radius-lg: 18px;
+  --radius-xl: 20px;
+  --radius-pill: 32px;   /* Botones WEB, drop up */
+  --radius-full: 100px;   /* Botones APP, tags */
 
   /* ── Sombras ── */
   --shadow-2: 0px 4px 12px 0px rgba(18,30,108,0.08);
@@ -104,17 +104,17 @@
 | Brand Blue | `--blue-30` | `#efe5c9` | Deshabilitado / subtle |
 | Brand Blue | `--blue-20` | `#f4eedb` | — |
 | Brand Blue | `--blue-10` | `#faf6ed` | Fondo botón Tertiary |
-| Coral / CTA | `--coral-hover` | `#080808` | Hover CTA |
-| Coral / CTA | `--coral-100` | `#0a0a0a` | CTA primario, destructivo |
-| Coral / CTA | `--coral-60` | `#6c6c6c` | Deshabilitado fondo |
-| Coral / CTA | `--coral-30` | `#b6b6b6` | Deshabilitado texto |
-| Coral / CTA | `--coral-10` | `#e7e7e7` | — |
+| Coral / CTA | `--coral-hover` | `#000000` | Hover CTA |
+| Coral / CTA | `--coral-100` | `#000000` | CTA primario, destructivo |
+| Coral / CTA | `--coral-60` | `#666666` | Deshabilitado fondo |
+| Coral / CTA | `--coral-30` | `#b3b3b3` | Deshabilitado texto |
+| Coral / CTA | `--coral-10` | `#e6e6e6` | — |
 | Neutrals | `--black-100` | `#1e1e1e` | Texto body principal |
 | Neutrals | `--black-60` | `#606060` | Placeholder, helper |
 | Neutrals | `--black-40` | `#969696` | Texto deshabilitado |
 | Neutrals | `--black-10` | `#f3f3f3` | Hover inputs |
 | Neutrals | `--black-0` | `#ffffff` | Cards, botón secondary |
-| Background | `--background-page` | `#f7f8fb` | Fondo pantalla, inputs |
+| Background | `--background-page` | `#dbdce1` | Fondo pantalla, inputs |
 | Error | `--error-200` | `#610017` | — |
 | Error | `--error-150` | `#910022` | Border y texto de error |
 | Error | `--error-100` | `#c31a2f` | — |
@@ -152,12 +152,12 @@
 
 | Token | Valor | Uso |
 |---|---|---|
-| `--radius-sm` | 9px | Inputs, botones Action |
-| `--radius-md` | 9px | Cards, alerts, toasts |
-| `--radius-lg` | 9px | — |
-| `--radius-xl` | 10px | — |
-| `--radius-pill` | 25px | Botones WEB, drop up |
-| `--radius-full` | 26px | Botones APP, tags |
+| `--radius-sm` | 12px | Inputs, botones Action |
+| `--radius-md` | 16px | Cards, alerts, toasts |
+| `--radius-lg` | 18px | — |
+| `--radius-xl` | 20px | — |
+| `--radius-pill` | 32px | Botones WEB, drop up |
+| `--radius-full` | 100px | Botones APP, tags |
 
 ---
 
@@ -176,7 +176,7 @@
 
 | Variante | Fondo | Texto | Border |
 |---|---|---|---|
-| Primary | `--coral-100` (#0a0a0a) | `--black-0` (#ffffff) | — |
-| Secondary | `--blue-10` (#faf6ed) | `--blue-100` (#c9a84c) | — |
-| Tertiary | `--black-10` (#f3f3f3) | `--blue-100` (#c9a84c) | — |
-| Primary Disabled | `--coral-60` (#6c6c6c) | `--coral-30` (#b6b6b6) | — |
+| Primary | `--coral-100` (#000000) | `--black-0` (#ffffff) | — |
+| Secondary | `--black-0` (#ffffff) | `--coral-100` (#000000) | — |
+| Tertiary | `--blue-10` (#faf6ed) | `--blue-100` (#c9a84c) | — |
+| Primary Disabled | `--coral-60` (#666666) | `--coral-30` (#b3b3b3) | — |

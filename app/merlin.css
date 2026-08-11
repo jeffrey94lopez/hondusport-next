@@ -8,18 +8,18 @@
   --brand-subtle: #efe5c9;
   --brand-bg: #faf6ed;
   /* CTA (negro) */
-  --cta: #0a0a0a;
-  --cta-hover: #080808;
-  --cta-disabled-bg: #6c6c6c;
-  --cta-disabled-text: #b6b6b6;
+  --cta: #000000;
+  --cta-hover: #000000;
+  --cta-disabled-bg: #666666;
+  --cta-disabled-text: #b3b3b3;
   /* Superficies y texto */
-  --page: #f7f8fb;
+  --page: #dbdce1;
   --card: #ffffff;
   --ink: #1e1e1e;
   --ink-muted: #606060;
   --ink-disabled: #969696;
   --hover-input: #f3f3f3;
-  --line: #e7e7e7;
+  --line: #e6e6e6;
   /* Estados */
   --error: #910022;
   --error-deep: #610017;
@@ -38,18 +38,18 @@
   --info-strong: #227ad1;
   --info-bg: #f1f9ff;
   /* Forma */
-  --radius-input: 9px;
-  --radius-card: 9px;
-  --radius-btn: 25px;
-  --radius-tag: 26px;
+  --radius-input: 12px;
+  --radius-card: 16px;
+  --radius-btn: 32px;
+  --radius-tag: 100px;
   /* Sombras */
   --shadow-card: 0px 4px 12px 0px rgba(18, 30, 108, 0.08);
   --shadow-raised: 0px 4px 16px 0px rgba(18, 30, 108, 0.08);
   --shadow-pop: 0px 8px 20px 0px rgba(18, 30, 108, 0.08);
   --shadow-modal: 0px 12px 28px 0px rgba(18, 30, 108, 0.08);
   /* Gradientes */
-  --gradient-h: linear-gradient(to right, #c9a84c, #0a0a0a);
-  --gradient-v: linear-gradient(to bottom, #0a0a0a, #c9a84c);
+  --gradient-h: linear-gradient(to right, #c9a84c, #000000);
+  --gradient-v: linear-gradient(to bottom, #000000, #c9a84c);
   /* Tipografía (shorthands para font:) */
   --text-header: 500 clamp(32px, 5vw, 48px)/1.08 var(--font-poppins), sans-serif;
   --text-title: 400 28px/32px var(--font-poppins), sans-serif;
@@ -110,6 +110,11 @@
 .btnMerlinIcon[aria-pressed="true"] { color: var(--cta); }
 .btnMerlinIcon:disabled { opacity: .5; cursor: not-allowed; }
 
+/* Modificador compacto de .btnMerlinIcon (−/+ de cantidad en la fila del
+   carrito del POS). Se compone: className="btnMerlinIcon btnMerlinIconSm".
+   Solo reduce tamaño/fuente; hereda fondo/borde/radio/estados. */
+.btnMerlinIconSm { width: 32px; height: 32px; font-size: 0.9rem; }
+
 /* Fix round 1 (revisión de Task 12): modificador para acciones destructivas
    (quitar línea) — hereda tamaño/fondo/radio de btnMerlinIcon y solo cambia
    el color a --error, el token real de peligro de este archivo (la capa
@@ -129,7 +134,8 @@
   cursor: pointer; white-space: nowrap;
   transition: background .15s, color .15s, border-color .15s;
 }
-.btnMerlinChip:hover:not(:disabled) { background: var(--hover-input); }
+.btnMerlinChip:not([aria-pressed="true"]):hover:not(:disabled) { background: var(--hover-input); }
+.btnMerlinChip[aria-pressed="true"]:hover:not(:disabled) { background: var(--cta); }
 .btnMerlinChip[aria-pressed="true"] {
   /* Merlin no define un token "texto sobre acento": btnMerlinPrimary ya
      resuelve el mismo caso (texto sobre --cta) con #ffffff literal en vez
