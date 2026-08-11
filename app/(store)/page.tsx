@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap, toStoreProducto } from '@/lib/store/adapters'
+import { nombreComercial } from '@/lib/empresa/perfil'
 import StoreClient from './StoreClient'
 
 const PRODUCTO_SELECT =
@@ -11,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const { data } = await supabase.from('configuracion').select('key,value')
   const c = toConfigMap(data ?? [])
-  const title = c.site_name + (c.eslogan ? ` | ${c.eslogan}` : '')
+  const title = (nombreComercial(c) || 'Hondusport') + (c.eslogan ? ` | ${c.eslogan}` : '')
 
   return {
     title,

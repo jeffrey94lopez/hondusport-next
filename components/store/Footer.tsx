@@ -1,6 +1,7 @@
 'use client'
 import styles from './Footer.module.css'
 import type { Categoria, ConfigMap } from '@/types/store'
+import { nombreComercial } from '@/lib/empresa/perfil'
 
 const REDES: Array<{ key: string; icon: string }> = [
   { key: 'facebook_url', icon: 'fa-facebook-f' },
@@ -18,7 +19,7 @@ interface FooterProps {
 }
 
 export default function Footer({ config, categorias, onFilterClick }: FooterProps) {
-  const nombreNegocio = config.nombre_negocio || 'HONDU SPORT'
+  const nombreNegocio = nombreComercial(config) || 'HONDU SPORT'
   const año = new Date().getFullYear()
   const redesActivas = REDES.filter(r => config[r.key]?.trim())
 

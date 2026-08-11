@@ -2,6 +2,7 @@ import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap, toStoreProducto } from '@/lib/store/adapters'
+import { nombreComercial } from '@/lib/empresa/perfil'
 import { esUuid } from '@/lib/store/productoSlug'
 import { isConfigActivo, resolveFreeShippingThreshold } from '@/lib/store/freeShipping'
 import ProductPageShell from '@/components/store/ProductPageShell'
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   if (!producto) return {}
 
   const configMap = toConfigMap(config ?? [])
-  const title = `${producto.nombre} | ${configMap.site_name || 'Hondu Sport'}`
+  const title = `${producto.nombre} | ${nombreComercial(configMap) || 'Hondu Sport'}`
   const ogImage = producto.imagenes?.[0]
 
   return {
@@ -106,7 +107,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           relacionados={relacionados}
           tallaFiltros={tallaFiltros}
           allProductos={allProductos}
-          siteName={configMap.site_name}
+          siteName={nombreComercial(configMap)}
           freeShippingActivo={freeShippingActivo}
           freeShippingThreshold={freeShippingThreshold}
         />
