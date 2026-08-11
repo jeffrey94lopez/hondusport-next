@@ -54,6 +54,9 @@ export default async function PosPage({
     { data: esperas },
     { data: sesionesCerradas },
     { data: categorias },
+    // R2b Task 5: presets de descuento por línea (chips del modal Editar
+    // Ítem) y del descuento global (Task 6) — mismo listado para ambos.
+    { data: descuentos },
   ] = await Promise.all([
     supabase.from('cajas').select('*').eq('activo', true).order('nombre'),
     supabase.from('sesiones_caja').select('*').eq('estado', 'abierta'),
@@ -71,6 +74,7 @@ export default async function PosPage({
       .eq('activo', true)
       .in('tipo', ['cat', 'subcat'])
       .order('orden'),
+    supabase.from('descuentos_preset').select('*').eq('activo', true).order('orden'),
   ])
 
   // Documentos de las sesiones actualmente abiertas (todas las cajas), con sus
@@ -121,6 +125,7 @@ export default async function PosPage({
         documentosPorSesion={documentosPorSesion}
         categorias={categorias ?? []}
         cotizacionPrefill={cotizacionPrefill}
+        descuentos={descuentos ?? []}
       />
     </div>
   )

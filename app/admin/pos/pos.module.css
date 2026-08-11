@@ -504,12 +504,42 @@
 }
 .btnEditarLinea:hover { color: var(--accent); }
 
+/* R2b Task 5: chips de descuento (look Stitch, pill dorada) — "Ninguno",
+   un chip por preset activo y "Otro". Reusados por Task 6 para los chips del
+   descuento global en el pie del carrito. */
+.chipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.chip {
+  padding: 0.45rem 0.95rem;
+  border-radius: var(--radius-tag);
+  border: 1px solid var(--text);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.chip:hover { background: var(--bg-hover); }
+.chipActivo,
+.chipActivo:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
 /* LineaEditorModal: campos a ancho completo (heredado de .formLabel, que es
    un flex column sin align-items — los hijos se estiran solos). El grupo de
    descuento necesita su propia fila porque combina input + selector L./%. */
 .editorDescuentoRow {
   display: flex;
   gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 .editorDescuentoInput { flex: 1; min-width: 0; }
 .editorModoSelect { width: 90px; flex-shrink: 0; }

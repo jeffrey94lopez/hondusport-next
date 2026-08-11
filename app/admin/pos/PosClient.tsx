@@ -39,6 +39,7 @@ import type {
   VentaEspera,
   DocumentoParaArqueo,
   Categoria,
+  DescuentoPreset,
 } from '@/types'
 import styles from './pos.module.css'
 
@@ -67,6 +68,10 @@ interface Props {
   // Task 8 (POS P3): prefill al abrir /admin/pos?cotizacion=<id>. Opcional —
   // el flujo normal del POS (sin query) lo recibe como null y lo ignora.
   cotizacionPrefill?: CotizacionPrefillPos | null
+  // R2b Task 5: presets activos de descuento (chips de LineaEditorModal y,
+  // Task 6, del descuento global en el pie del carrito). Se resuelven una
+  // sola vez en el server component; ninguna pantalla del POS los edita.
+  descuentos: DescuentoPreset[]
 }
 
 // Contrato de carrito para Task 11 (cobro/emisión, consume) y Task 12
@@ -214,6 +219,7 @@ export default function PosClient({
   documentosPorSesion,
   categorias,
   cotizacionPrefill,
+  descuentos,
 }: Props) {
   const router = useRouter()
   const [cajaId, setCajaId] = useState<string | null>(() => leerCajaGuardada(cajas))
@@ -1133,6 +1139,7 @@ export default function PosClient({
         <CarritoPanel
           lineas={lineas}
           descuentoGlobal={descuentoGlobal}
+          descuentos={descuentos}
           clientes={clientesLocal}
           vendedores={vendedores}
           clienteId={clienteId}
@@ -1167,6 +1174,7 @@ export default function PosClient({
           <LineaEditorModal
             linea={linea}
             stockDisponible={topeStock(linea, productosPorId)}
+            descuentos={descuentos}
             onGuardar={guardarLineaEditada}
             onCerrar={() => setLineaEditando(null)}
           />

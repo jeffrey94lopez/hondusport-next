@@ -4,7 +4,7 @@ import { brutoLinea, brutoTotalLineas } from '@/lib/pos/carrito'
 import type { LineaVenta } from '@/lib/pos/carrito'
 import { formatPrice } from '@/lib/store/format'
 import { topeStock, parseMoneyInput, valorMostrado } from '../pos-helpers'
-import type { Cliente, Vendedor, Producto, TotalesDocumento } from '@/types'
+import type { Cliente, Vendedor, Producto, TotalesDocumento, DescuentoPreset } from '@/types'
 import styles from '../pos.module.css'
 
 // Contrato ajustado sobre el mínimo del brief (task-3-brief.md):
@@ -25,6 +25,10 @@ import styles from '../pos.module.css'
 export interface CarritoPanelProps {
   lineas: LineaVenta[]
   descuentoGlobal: number
+  // R2b Task 5: presets activos de descuento, cargados en PosClient. Esta
+  // tarea solo deja el contrato listo (recibe y tipa la prop); los chips del
+  // descuento global los consume Task 6 (pie del carrito).
+  descuentos: DescuentoPreset[]
   clientes: Cliente[]
   vendedores: Vendedor[]
   clienteId: string | null

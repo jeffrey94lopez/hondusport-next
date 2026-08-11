@@ -1,22 +1,26 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import Modal from '@/components/admin/Modal'
 import {
   brutoLinea,
   clampDescuentoLinea,
   descuentoDesdePorcentaje,
+  presetToDescuento,
   topeCantidad,
 } from '@/lib/pos/carrito'
 import type { LineaVenta, DescuentoModo } from '@/lib/pos/carrito'
 import { formatPrice } from '@/lib/store/format'
 import { round2, parseMoneyInput, valorMostrado } from '../pos-helpers'
-import type { IsvTipo } from '@/types'
+import type { DescuentoPreset, IsvTipo } from '@/types'
 import styles from '../pos.module.css'
 
 export interface LineaEditorModalProps {
   linea: LineaVenta
   stockDisponible: number | null // null = ilimitado
+  // R2b Task 5: presets activos para los chips de descuento (0%/5%/10%/…).
+  // "Ninguno" y "Otro" no vienen de aquí — son fijos, ver debajo.
+  descuentos: DescuentoPreset[]
   onGuardar: (linea: LineaVenta) => void
   onCerrar: () => void
 }
@@ -24,7 +28,7 @@ export interface LineaEditorModalProps {
 // Los ítems libres (producto_id null) editan además descripción e ISV; los
 // de inventario no (su descripción/ISV vienen del catálogo, no se editan
 // aquí). El resto de los campos (cantidad, precio, descuento) son comunes.
-export default function LineaEditorModal({ linea, stockDisponible, onGuardar, onCerrar }: LineaEditorModalProps) {
+export default function LineaEditorModal({ linea, stockDisponible, descuentos, onGuardar, onCerrar }: LineaEditorModalProps) {
   const [borrador, setBorrador] = useState<LineaVenta>(linea)
   const [formError, setFormError] = useState('')
 
@@ -51,11 +55,25 @@ export default function LineaEditorModal({ linea, stockDisponible, onGuardar, on
     valorMostrado(linea.descuentoModo === 'monto' ? linea.descuento : pctActual),
   )
   const [editandoDescuento, setEditandoDescuento] = useState(false)
+  // Chip "Otro": no guarda estado propio — solo enfoca el input manual (ya
+  // siempre visible bajo los chips, como en la referencia Stitch) para que
+  // el cajero pueda teclear un monto/porcentaje libre de inmediato.
+  const descuentoInputRef = useRef<HTMLInputElement>(null)
 
   const precioMostrado = editandoPrecio ? precioTexto : valorMostrado(borrador.precio_unitario)
   const descuentoMostrado = editandoDescuento
     ? descuentoTexto
     : valorMostrado(borrador.descuentoModo === 'monto' ? borrador.descuento : pctActual)
+
+  // Chip activo: se deriva del descuento actual (nunca de un estado propio)
+  // para que escribir en el input manual "apague" el chip automáticamente
+  // sin duplicar la fuente de verdad. "Ninguno" gana si el descuento es 0;
+  // un preset gana si el borrador está en modo monto y coincide con lo que
+  // ese preset produciría sobre el bruto actual; "Otro" es el resto.
+  const presetActivo = (p: DescuentoPreset) =>
+    borrador.descuentoModo === 'monto' && round2(borrador.descuento) === presetToDescuento(p, bruto)
+  const ningunoActivo = borrador.descuento === 0
+  const otroActivo = !ningunoActivo && !descuentos.some(presetActivo)
 
   function handleCantidad(valor: string) {
     const n = Number(valor)
@@ -143,8 +161,40 @@ export default function LineaEditorModal({ linea, stockDisponible, onGuardar, on
 
         <label className={styles.formLabel}>
           Descuento
+          <div className={styles.chipsRow}>
+            <button
+              type="button"
+              className={`${styles.chip} ${ningunoActivo ? styles.chipActivo : ''}`}
+              aria-pressed={ningunoActivo}
+              onClick={() => setBorrador(b => ({ ...b, descuento: 0 }))}
+            >
+              Ninguno
+            </button>
+            {descuentos.map(p => (
+              <button
+                key={p.id}
+                type="button"
+                className={`${styles.chip} ${presetActivo(p) ? styles.chipActivo : ''}`}
+                aria-pressed={presetActivo(p)}
+                onClick={() =>
+                  setBorrador(b => ({ ...b, descuentoModo: 'monto', descuento: presetToDescuento(p, brutoLinea(b)) }))
+                }
+              >
+                {p.etiqueta}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`${styles.chip} ${otroActivo ? styles.chipActivo : ''}`}
+              aria-pressed={otroActivo}
+              onClick={() => descuentoInputRef.current?.focus()}
+            >
+              Otro
+            </button>
+          </div>
           <div className={styles.editorDescuentoRow}>
             <input
+              ref={descuentoInputRef}
               type="text"
               inputMode="decimal"
               placeholder="0.00"
