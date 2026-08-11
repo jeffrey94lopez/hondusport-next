@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 import { toConfigMap } from '@/lib/store/adapters'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { estaVencida, hoyHonduras } from '@/lib/cotizaciones/cotizaciones'
+import { nombreComercial, razonSocial, rtn, telefonoEmpresa, domicilioFiscal, logoEmpresa } from '@/lib/empresa/perfil'
 import type { LineaPos } from '@/types'
 import { obtenerCotizacion } from '../../actions'
 import CotizacionPdfView, { type EstiloCotizacion, type EmpresaPdf } from './CotizacionPdfView'
@@ -78,12 +79,12 @@ export default async function CotizacionPdfPage({ params, searchParams }: Props)
   }
 
   const empresa: EmpresaPdf = {
-    nombre: config.fiscal_nombre_comercial || config.fiscal_razon_social || 'Hondusport',
-    razonSocial: config.fiscal_razon_social || null,
-    rtn: config.fiscal_rtn || null,
-    domicilio: config.fiscal_domicilio || null,
-    telefono: config.fiscal_telefono || null,
-    logoUrl: config.logo_url || null,
+    nombre: nombreComercial(config) || 'Hondusport',
+    razonSocial: razonSocial(config) || null,
+    rtn: rtn(config) || null,
+    domicilio: domicilioFiscal(config) || null,
+    telefono: telefonoEmpresa(config) || null,
+    logoUrl: logoEmpresa(config) || null,
   }
 
   const vencida = estaVencida(new Date(cotizacion.valido_hasta + 'T00:00:00Z'), hoyHonduras(new Date()))

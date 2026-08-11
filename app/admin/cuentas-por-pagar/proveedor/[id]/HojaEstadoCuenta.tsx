@@ -1,5 +1,6 @@
 'use client'
 import { formatPrice } from '@/lib/store/format'
+import { nombreComercial, razonSocial, rtn, telefonoEmpresa, domicilioFiscal, logoEmpresa } from '@/lib/empresa/perfil'
 import type { Cliente, ConfigMap, CxpFila, EstadoPago, PagoAplicacion, PagoMetodo, PagoProveedor } from '@/types'
 import styles from './estado.module.css'
 
@@ -44,6 +45,13 @@ function hoyCorta(): string {
 // "Imprimir" en la vista de pantalla); una vez montada, "Volver" regresa a esa
 // vista y el botón real de impresión (window.print()) vive aquí.
 export default function HojaEstadoCuenta({ proveedor, compras, pagos, totalAdeudado, config, onVolver }: Props) {
+  const emisorNombre = nombreComercial(config) || 'Hondusport'
+  const emisorRazon = razonSocial(config)
+  const emisorRtn = rtn(config)
+  const emisorDomicilio = domicilioFiscal(config)
+  const emisorTelefono = telefonoEmpresa(config)
+  const emisorLogo = logoEmpresa(config)
+
   return (
     <>
       <style>{'@page { size: letter; }'}</style>
@@ -70,18 +78,18 @@ export default function HojaEstadoCuenta({ proveedor, compras, pagos, totalAdeud
         <div className={styles.pageBg}>
           <div className={styles.hojaCarta}>
             <header className={styles.header}>
-              {config.logo_url && (
+              {emisorLogo && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={config.logo_url} alt="Logo" className={styles.logo} />
+                <img src={emisorLogo} alt="Logo" className={styles.logo} />
               )}
               <div className={styles.emisor}>
                 <div className={styles.emisorNombre}>
-                  {config.fiscal_nombre_comercial || config.fiscal_razon_social || 'Hondusport'}
+                  {emisorNombre}
                 </div>
-                {config.fiscal_razon_social && <div>{config.fiscal_razon_social}</div>}
-                <div>RTN: {config.fiscal_rtn || '—'}</div>
-                {config.fiscal_domicilio && <div>{config.fiscal_domicilio}</div>}
-                {config.fiscal_telefono && <div>Tel: {config.fiscal_telefono}</div>}
+                {emisorRazon && emisorRazon !== emisorNombre && <div>{emisorRazon}</div>}
+                <div>RTN: {emisorRtn || '—'}</div>
+                {emisorDomicilio && <div>{emisorDomicilio}</div>}
+                {emisorTelefono && <div>Tel: {emisorTelefono}</div>}
               </div>
             </header>
 

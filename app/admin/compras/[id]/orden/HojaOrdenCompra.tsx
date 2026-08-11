@@ -1,5 +1,6 @@
 'use client'
 import { formatPrice } from '@/lib/store/format'
+import { nombreComercial, razonSocial, rtn, telefonoEmpresa, domicilioFiscal, logoEmpresa } from '@/lib/empresa/perfil'
 import type { CompraConDatos, CompraMoneda, ConfigMap } from '@/types'
 import styles from './orden.module.css'
 
@@ -28,6 +29,13 @@ export default function HojaOrdenCompra({ compra, config }: Props) {
   const esUsd = compra.moneda === 'USD'
   const subtotalMoneda = compra.items.reduce((s, it) => s + it.cantidad_ordenada * it.costo_unitario, 0)
 
+  const emisorNombre = nombreComercial(config) || 'Hondusport'
+  const emisorRazon = razonSocial(config)
+  const emisorRtn = rtn(config)
+  const emisorDomicilio = domicilioFiscal(config)
+  const emisorTelefono = telefonoEmpresa(config)
+  const emisorLogo = logoEmpresa(config)
+
   return (
     <>
       <style>{'@page { size: letter; }'}</style>
@@ -35,18 +43,18 @@ export default function HojaOrdenCompra({ compra, config }: Props) {
       <div className={styles.pageBg}>
         <div className={styles.hojaCarta}>
           <header className={styles.header}>
-            {config.logo_url && (
+            {emisorLogo && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={config.logo_url} alt="Logo" className={styles.logo} />
+              <img src={emisorLogo} alt="Logo" className={styles.logo} />
             )}
             <div className={styles.emisor}>
               <div className={styles.emisorNombre}>
-                {config.fiscal_nombre_comercial || config.fiscal_razon_social || 'Hondusport'}
+                {emisorNombre}
               </div>
-              {config.fiscal_razon_social && <div>{config.fiscal_razon_social}</div>}
-              <div>RTN: {config.fiscal_rtn || '—'}</div>
-              {config.fiscal_domicilio && <div>{config.fiscal_domicilio}</div>}
-              {config.fiscal_telefono && <div>Tel: {config.fiscal_telefono}</div>}
+              {emisorRazon && emisorRazon !== emisorNombre && <div>{emisorRazon}</div>}
+              <div>RTN: {emisorRtn || '—'}</div>
+              {emisorDomicilio && <div>{emisorDomicilio}</div>}
+              {emisorTelefono && <div>Tel: {emisorTelefono}</div>}
             </div>
           </header>
 
