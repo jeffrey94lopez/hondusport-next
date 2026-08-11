@@ -4,6 +4,7 @@ import styles from './reportes.module.css'
 const REPORTES = [
   { href: '/admin/reportes/libro-ventas', titulo: 'Libro de ventas (SAR)', desc: 'Registro fiscal de facturas y notas de crédito, con desglose de base e ISV por tasa. Exportable a Excel.' },
   { href: '/admin/reportes/ventas', titulo: 'Reporte de ventas', desc: 'Ventas por documento con filtros (fecha, tipo, cliente, vendedor, caja, método) y detalle de ítems. Exportable a Excel.' },
+  { href: '/admin/reportes/ganancias', titulo: 'Ganancias por ítem', desc: 'Ventas, costos y ganancia por producto/variante en un período, con margen %. Exportable a Excel.' },
 ]
 
 export default function ReportesIndexPage() {

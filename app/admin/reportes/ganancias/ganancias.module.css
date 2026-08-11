@@ -1,0 +1,26 @@
+.page { padding: 1.25rem; }
+.controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.presets { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.presetBtn { border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); border-radius: var(--radius-input); padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.presetOn { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.rangoLibre { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
+.rangoLibre input { border: 1px solid var(--border); border-radius: var(--radius-input); padding: 0.25rem 0.5rem; }
+.etiqueta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.acciones { display: flex; gap: 0.5rem; }
+.btnAccion { padding: 0.4rem 0.9rem; display: inline-flex; align-items: center; }
+.hoja { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; overflow-x: auto; }
+.titulo { font-size: 1.1rem; font-weight: 800; }
+.totales { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.totales > div { display: flex; flex-direction: column; }
+.totLabel { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+.totVal { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.tabla th, .tabla td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; text-align: left; white-space: nowrap; }
+.tabla th { background: var(--bg-hover); font-weight: 700; }
+.num { text-align: right; }
+.vacio { text-align: center; color: var(--text-muted); padding: 1rem; }
+@media print {
+  .noPrint { display: none; }
+  .page { padding: 0; }
+  .hoja { border: none; box-shadow: none; padding: 0; }
+}
