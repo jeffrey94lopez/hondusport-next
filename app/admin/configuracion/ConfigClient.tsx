@@ -2,11 +2,12 @@
 import { useState, useTransition } from 'react'
 import ImageUpload from '@/components/admin/ImageUpload'
 import Toggle from '@/components/admin/Toggle'
-import { IconCotizaciones, IconDocumentos, IconEmpresa, IconMetodosPago, IconPos, IconTienda } from '@/components/admin/icons'
+import { IconCotizaciones, IconDescuentos, IconDocumentos, IconEmpresa, IconMetodosPago, IconPos, IconTienda } from '@/components/admin/icons'
 import { validarRtn } from '@/lib/pos/fiscal'
-import type { CaiAutorizacion, Caja, ConfigMap, CotizacionEtapa, MetodoPago, Vendedor } from '@/types'
+import type { CaiAutorizacion, Caja, ConfigMap, CotizacionEtapa, DescuentoPreset, MetodoPago, Vendedor } from '@/types'
 import { saveConfig } from './actions'
 import CaisSection from './CaisSection'
+import DescuentosSection from './DescuentosSection'
 import EtapasSection from './EtapasSection'
 import MetodosPagoSection from './MetodosPagoSection'
 import PosSection from './PosSection'
@@ -30,6 +31,7 @@ interface Props {
   cajas: Caja[]
   vendedores: Vendedor[]
   metodos: MetodoPago[]
+  descuentos: DescuentoPreset[]
   etapas: CotizacionEtapa[]
 }
 
@@ -41,6 +43,7 @@ const PESTANAS = [
   { id: 'empresa', label: 'Empresa / Facturador', icon: IconEmpresa },
   { id: 'cais', label: 'CAIs', icon: IconDocumentos },
   { id: 'metodos', label: 'Métodos de pago', icon: IconMetodosPago },
+  { id: 'descuentos', label: 'Descuentos', icon: IconDescuentos },
   { id: 'pos', label: 'POS', icon: IconPos },
   { id: 'cotizaciones', label: 'Cotizaciones / Etapas', icon: IconCotizaciones },
   { id: 'tienda', label: 'Tienda', icon: IconTienda },
@@ -67,7 +70,7 @@ const DEFAULTS: ConfigMap = {
   fiscal_leyenda: 'LA FACTURA ES BENEFICIO DE TODOS, EXÍJALA',
 }
 
-export default function ConfigClient({ config: initial, cais, cajas, vendedores, metodos, etapas }: Props) {
+export default function ConfigClient({ config: initial, cais, cajas, vendedores, metodos, descuentos, etapas }: Props) {
   const [pestana, setPestana] = useState<PestanaId>('empresa')
   const [tab, setTab] = useState<SectionId>('identidad')
   const [cfg, setCfg] = useState<ConfigMap>({ ...DEFAULTS, ...initial })
@@ -401,6 +404,11 @@ export default function ConfigClient({ config: initial, cais, cajas, vendedores,
           {pestana === 'metodos' && (
             <div className={styles.card}>
               <MetodosPagoSection metodos={metodos} />
+            </div>
+          )}
+          {pestana === 'descuentos' && (
+            <div className={styles.card}>
+              <DescuentosSection descuentos={descuentos} />
             </div>
           )}
           {pestana === 'pos' && (

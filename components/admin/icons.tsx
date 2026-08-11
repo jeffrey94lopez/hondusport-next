@@ -85,6 +85,10 @@ export const IconMetodosPago = ({ className }: IconProps) =>
 export const IconTienda = ({ className }: IconProps) =>
   base(<><path d="M6 8h12l-1 12H7z" /><path d="M9 8V6a3 3 0 016 0v2" /></>, className)
 
+// R2b Task 4: icono de etiqueta/porcentaje para la pestaña "Descuentos".
+export const IconDescuentos = ({ className }: IconProps) =>
+  base(<><path d="M20.59 13.41L11 3.83A2 2 0 009.59 3.2L4 3a1 1 0 00-1 1l.2 5.59a2 2 0 00.58 1.4l9.59 9.59a2 2 0 002.83 0l4.39-4.39a2 2 0 000-2.83z" /><circle cx="7.5" cy="7.5" r="1.2" /></>, className)
+
 export const ICONOS = {
   inicio: IconInicio,
   productos: IconProductos,

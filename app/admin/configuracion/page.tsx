@@ -4,12 +4,13 @@ import type { ConfigMap, CotizacionEtapa } from '@/types'
 
 export default async function ConfiguracionPage() {
   const supabase = await createClient()
-  const [{ data }, { data: cais }, { data: cajas }, { data: vendedores }, { data: metodos }, { data: etapas }] = await Promise.all([
+  const [{ data }, { data: cais }, { data: cajas }, { data: vendedores }, { data: metodos }, { data: descuentos }, { data: etapas }] = await Promise.all([
     supabase.from('configuracion').select('key, value'),
     supabase.from('cai_autorizaciones').select('*').order('created_at', { ascending: false }),
     supabase.from('cajas').select('*').order('created_at', { ascending: false }),
     supabase.from('vendedores').select('*').order('created_at', { ascending: false }),
     supabase.from('metodos_pago').select('*').order('orden', { ascending: true }),
+    supabase.from('descuentos_preset').select('*').order('orden', { ascending: true }),
     supabase.from('cotizacion_etapas').select('*').order('orden', { ascending: true }),
   ])
   const config: ConfigMap = {}
@@ -21,6 +22,7 @@ export default async function ConfiguracionPage() {
       cajas={cajas ?? []}
       vendedores={vendedores ?? []}
       metodos={metodos ?? []}
+      descuentos={descuentos ?? []}
       etapas={(etapas ?? []) as CotizacionEtapa[]}
     />
   )
