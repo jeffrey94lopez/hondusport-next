@@ -37,14 +37,20 @@ as $$
     ) m
     group by m.producto_id, m.variante_id
   )
+  -- LEFT JOIN (no FULL): `ventas` es superconjunto de `costos` — todo movimiento
+  -- venta_pos/devolucion nace de la misma venta que produce la línea de
+  -- documento_items, así que cada fila de costos tiene su fila en ventas. Se usa
+  -- LEFT porque Postgres NO admite `is not distinct from` en un FULL JOIN
+  -- (no es hash/merge-joinable); LEFT sí lo permite (nested loop) y conserva el
+  -- match null-safe de variante_id null (productos planos sin variante).
   select
-    coalesce(v.producto_id, c.producto_id) as producto_id,
-    coalesce(v.variante_id, c.variante_id) as variante_id,
-    coalesce(v.cantidad, 0)::numeric as cantidad,
-    coalesce(v.ventas, 0)::numeric as ventas,
+    v.producto_id,
+    v.variante_id,
+    v.cantidad::numeric as cantidad,
+    v.ventas::numeric as ventas,
     coalesce(c.costo, 0)::numeric as costo
   from ventas v
-  full outer join costos c
+  left join costos c
     on v.producto_id is not distinct from c.producto_id
    and v.variante_id is not distinct from c.variante_id
   order by coalesce(v.ventas, 0) desc;
