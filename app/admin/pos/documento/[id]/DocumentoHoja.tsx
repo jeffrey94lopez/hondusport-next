@@ -1,6 +1,7 @@
 'use client'
 import { formatearCorrelativo } from '@/lib/pos/fiscal'
 import { formatPrice } from '@/lib/store/format'
+import { nombreComercial, razonSocial, rtn, telefonoEmpresa, domicilioFiscal, logoEmpresa } from '@/lib/empresa/perfil'
 import type { Documento, DocumentoItem, CaiAutorizacion, ConfigMap, DocumentoPagoConMetodo } from '@/types'
 import styles from '../documento.module.css'
 
@@ -45,6 +46,13 @@ export default function DocumentoHoja({ documento, items, pagos, cai, config, fo
   const anulado = documento.estado === 'anulado'
   const paperClass = formato === '80mm' ? styles.hoja80 : styles.hojaCarta
 
+  const emisorNombre = nombreComercial(config) || 'Hondusport'
+  const emisorRazon = razonSocial(config)
+  const emisorRtn = rtn(config)
+  const emisorDomicilio = domicilioFiscal(config)
+  const emisorTelefono = telefonoEmpresa(config)
+  const emisorLogo = logoEmpresa(config)
+
   return (
     <>
       {/* @page es global (no puede scopearse a una clase CSS): se reescribe
@@ -65,18 +73,16 @@ export default function DocumentoHoja({ documento, items, pagos, cai, config, fo
           {anulado && <div className={styles.watermark}>ANULADO</div>}
 
           <header className={styles.header}>
-            {formato === 'carta' && config.logo_url && (
+            {formato === 'carta' && emisorLogo && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={config.logo_url} alt="Logo" className={styles.logo} />
+              <img src={emisorLogo} alt="Logo" className={styles.logo} />
             )}
             <div className={styles.emisor}>
-              <div className={styles.emisorNombre}>
-                {config.fiscal_nombre_comercial || config.fiscal_razon_social || 'Hondusport'}
-              </div>
-              {config.fiscal_razon_social && <div>{config.fiscal_razon_social}</div>}
-              <div>RTN: {config.fiscal_rtn || '—'}</div>
-              {config.fiscal_domicilio && <div>{config.fiscal_domicilio}</div>}
-              {config.fiscal_telefono && <div>Tel: {config.fiscal_telefono}</div>}
+              <div className={styles.emisorNombre}>{emisorNombre}</div>
+              {emisorRazon && emisorRazon !== emisorNombre && <div>{emisorRazon}</div>}
+              <div>RTN: {emisorRtn || '—'}</div>
+              {emisorDomicilio && <div>{emisorDomicilio}</div>}
+              {emisorTelefono && <div>Tel: {emisorTelefono}</div>}
             </div>
           </header>
 
