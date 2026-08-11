@@ -878,3 +878,46 @@ export interface FiltrosReporteVentas {
   tipo?: 'factura' | 'comprobante' | 'nota_credito' | 'devolucion'
   clienteId?: string; vendedorId?: string; cajaId?: string; metodoId?: string
 }
+
+// ── POS P7b: Reportes Ola 2 ─────────────────────────────────────────
+export interface FilaGananciaItem {
+  codigo: string
+  nombre: string
+  variante: string
+  categoria: string
+  cantidad: number
+  ventas: number
+  costo: number
+  ganancia: number
+  margen: number
+}
+export interface TotalesGanancias {
+  ventas: number; costo: number; ganancia: number; margen: number
+}
+export type RolContacto = 'cliente' | 'proveedor' | 'ambos'
+export interface FilaContacto {
+  id: string
+  nombre: string
+  rtn: string
+  identidad: string
+  es_cliente: boolean
+  es_proveedor: boolean
+  total_ventas: number
+  total_compras: number
+  saldo_cxc: number
+  saldo_cxp: number
+}
+export interface DocCxc {
+  documento_id: string
+  numero: string
+  fecha: string
+  vencimiento: string
+  diasVencido: number
+  saldo: number
+}
+export interface GrupoCxc {
+  clienteId: string
+  cliente: string
+  total: number
+  docs: DocCxc[]
+}
