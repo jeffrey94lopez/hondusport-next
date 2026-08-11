@@ -71,7 +71,7 @@ export default function LineaEditorModal({ linea, stockDisponible, descuentos, o
   // un preset gana si el borrador está en modo monto y coincide con lo que
   // ese preset produciría sobre el bruto actual; "Otro" es el resto.
   const presetActivo = (p: DescuentoPreset) =>
-    borrador.descuentoModo === 'monto' && round2(borrador.descuento) === presetToDescuento(p, bruto)
+    bruto > 0 && borrador.descuentoModo === 'monto' && round2(borrador.descuento) === presetToDescuento(p, bruto)
   const ningunoActivo = borrador.descuento === 0
   const otroActivo = !ningunoActivo && !descuentos.some(presetActivo)
 
@@ -120,7 +120,7 @@ export default function LineaEditorModal({ linea, stockDisponible, descuentos, o
   }
 
   return (
-    <Modal title="Editar línea" onClose={onCerrar}>
+    <Modal title="Editar ítem" onClose={onCerrar}>
       <form className={styles.form} onSubmit={handleSubmit}>
         {esLibre && (
           <label className={styles.formLabel}>

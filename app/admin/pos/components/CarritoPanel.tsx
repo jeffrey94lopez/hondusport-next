@@ -116,7 +116,7 @@ export default function CarritoPanel({
   // coincide con lo que ese preset produciría sobre el bruto total actual;
   // "Otro" es el resto.
   const presetActivo = (p: DescuentoPreset) =>
-    round2(descuentoGlobal) === presetToDescuento(p, brutoTotalActual)
+    brutoTotalActual > 0 && round2(descuentoGlobal) === presetToDescuento(p, brutoTotalActual)
   const ningunoActivo = descuentoGlobal === 0
   const otroActivo = !ningunoActivo && !descuentos.some(presetActivo)
 
@@ -247,7 +247,7 @@ export default function CarritoPanel({
                 type="button"
                 className={`${styles.chip} ${presetActivo(p) ? styles.chipActivo : ''}`}
                 aria-pressed={presetActivo(p)}
-                onClick={() => onDescuentoGlobal(presetToDescuento(p, brutoTotalLineas(lineas)))}
+                onClick={() => onDescuentoGlobal(presetToDescuento(p, brutoTotalActual))}
               >
                 {p.etiqueta}
               </button>
