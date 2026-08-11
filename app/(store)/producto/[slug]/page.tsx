@@ -10,6 +10,15 @@ import ProductDetail from '@/components/store/ProductDetail'
 const PRODUCTO_SELECT =
   '*, categorias!productos_categoria_id_fkey(valor), subcategorias:categorias!productos_subcategoria_id_fkey(valor), producto_variantes(*)'
 const RELACIONADOS_LIMIT = 2
+const DEFAULT_FREE_SHIPPING_THRESHOLD = 999
+
+// Mismo cálculo que ProductPageShell (CartDrawer/CheckoutModal ya lo reciben así);
+// se duplica aquí (patrón ya usado en 3 archivos) para que la caja de info de
+// ProductDetail muestre el umbral real de `configuracion`, no un valor inventado.
+function isConfigActivo(value: string | undefined, defaultValue: boolean): boolean {
+  if (value === undefined) return defaultValue
+  return value.toUpperCase() !== 'FALSE'
+}
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>
@@ -85,6 +94,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const catsNav = (categorias ?? []).filter(c => c.tipo === 'cat')
   const tallaFiltros = (categorias ?? []).filter(c => c.tipo === 'talla')
 
+  const freeShippingActivo = isConfigActivo(configMap.free_shipping_activo, true)
+  const parsedThreshold = Number(configMap.free_shipping_minimo)
+  const freeShippingThreshold =
+    configMap.free_shipping_minimo && Number.isFinite(parsedThreshold) ? parsedThreshold : DEFAULT_FREE_SHIPPING_THRESHOLD
+
   return (
     <ProductPageShell
       logoUrl={configMap.logo_url}
@@ -103,6 +117,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
           tallaFiltros={tallaFiltros}
           allProductos={allProductos}
           siteName={configMap.site_name}
+          freeShippingActivo={freeShippingActivo}
+          freeShippingThreshold={freeShippingThreshold}
         />
       </main>
       <Footer config={configMap} categorias={catsNav} />

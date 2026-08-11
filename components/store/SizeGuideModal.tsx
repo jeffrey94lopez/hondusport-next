@@ -15,9 +15,9 @@ export default function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps)
       <div className={`${styles.overlay} ${isOpen ? styles.overlayActive : ''}`} onClick={onClose} />
       <div className={`${styles.modal} ${isOpen ? styles.modalActive : ''}`} role="dialog" aria-label="Guía de tallas">
         <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">
-          ✕
+          <i className="fa-solid fa-xmark" />
         </button>
-        <h2 className={styles.heading}>GUÍA DE TALLAS</h2>
+        <h2 className={styles.heading}>Guía de tallas</h2>
 
         <div className={styles.tableSection}>
           <h4>ROPA DEPORTIVA</h4>
