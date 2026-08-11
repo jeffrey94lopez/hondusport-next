@@ -1,29 +1,19 @@
 'use client'
-import { useState } from 'react'
 import { ThemeContext, type Theme } from '@/lib/store/theme-context'
-
-const STORAGE_KEY = 'hs_theme'
 
 interface ThemeRootProps {
   accent?: string
   children: React.ReactNode
 }
 
-function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'light'
-  const saved = localStorage.getItem(STORAGE_KEY)
-  return saved === 'light' || saved === 'dark' ? saved : 'light'
-}
+// R1: la tienda queda fija en tema claro (el toggle está oculto). Se mantiene
+// la infraestructura de tema (ThemeContext, data-theme) para poder revertir
+// esto sin tocar el resto del árbol.
+const theme: Theme = 'light'
 
 export default function ThemeRoot({ accent, children }: ThemeRootProps) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme)
-
   function toggle() {
-    setTheme(prev => {
-      const next: Theme = prev === 'light' ? 'dark' : 'light'
-      localStorage.setItem(STORAGE_KEY, next)
-      return next
-    })
+    // No-op: tema fijado en claro para R1 (toggle oculto en la UI).
   }
 
   return (
