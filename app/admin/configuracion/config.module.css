@@ -10,6 +10,36 @@
 .tab:hover { color: var(--text); }
 .tabActive { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
+/* Sub-nav lateral de pestañas (Task 6, R2a): una pestaña = su contenido a la
+   derecha. Reemplaza los antiguos grupos top-tab. */
+.layout { display: flex; gap: 1.5rem; align-items: flex-start; }
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 0.65rem;
+}
+.navItem {
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-input);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.navItem:hover { color: var(--text); background: var(--bg-hover); }
+.navItemActive { background: var(--accent-dim); color: var(--accent); }
+.content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
+
 .form { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 1.5rem; }
 .section { display: flex; flex-direction: column; gap: 1rem; }
 .formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
@@ -20,3 +50,8 @@
 .toggleRow { display: flex; flex-direction: column; gap: 0.75rem; padding: 0.9rem; background: var(--bg-hover); border-radius: var(--radius-card); border: 1px solid var(--border); }
 .formError { font-size: 0.8rem; color: var(--danger); margin-top: 0.5rem; }
 .helpText { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+
+@media (max-width: 720px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
+}
