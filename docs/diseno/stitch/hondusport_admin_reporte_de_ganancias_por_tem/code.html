@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ganancias por ítem - Hondusport Athletics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#f8f9fe",
+                        "primary-container": "#c9a84c",
+                        "surface": "#f8f9fe",
+                        "error-container": "#ffdad6",
+                        "on-surface": "#191c1f",
+                        "secondary": "#5e5e5e",
+                        "surface-dim": "#d9dadf",
+                        "background": "#f8f9fe",
+                        "tertiary-container": "#aeaba3",
+                        "primary-fixed-dim": "#e6c364",
+                        "secondary-container": "#e2e2e2",
+                        "surface-container-high": "#e7e8ed",
+                        "primary": "#755b00",
+                        "tertiary": "#605e58",
+                        "surface-container-lowest": "#ffffff",
+                        "text-main": "#1e1e1e",
+                        "on-primary-container": "#503d00",
+                        "on-primary-fixed-variant": "#584400",
+                        "on-tertiary-fixed": "#1c1c16",
+                        "on-secondary-container": "#646464",
+                        "outline": "#7e7665",
+                        "on-secondary-fixed-variant": "#474747",
+                        "surface-container-highest": "#e1e2e7",
+                        "on-background": "#191c1f",
+                        "on-surface-variant": "#4d4637",
+                        "on-tertiary-container": "#414039",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#ffe08f",
+                        "white": "#ffffff",
+                        "surface-variant": "#e1e2e7",
+                        "on-primary-fixed": "#241a00",
+                        "inverse-on-surface": "#f0f0f5",
+                        "secondary-fixed": "#e2e2e2",
+                        "surface-container-low": "#f2f3f8",
+                        "inverse-primary": "#e6c364",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#d0c5b2",
+                        "inverse-surface": "#2e3134",
+                        "surface-tint": "#755b00",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "tertiary-fixed-dim": "#c9c6be",
+                        "success": "#1b8959",
+                        "error": "#910022",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#484741",
+                        "surface-container": "#edeef3",
+                        "text-muted": "#606060",
+                        "tertiary-fixed": "#e6e2d9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "1rem",
+                        "stack-sm": "0.5rem",
+                        "stack-lg": "2rem",
+                        "margin-mobile": "1rem",
+                        "gutter": "1rem",
+                        "margin-desktop": "2.5rem"
+                    },
+                    "fontFamily": {
+                        "header": ["Be Vietnam Pro"],
+                        "title": ["Be Vietnam Pro"],
+                        "header-mobile": ["Be Vietnam Pro"],
+                        "caption": ["Be Vietnam Pro"],
+                        "body": ["Be Vietnam Pro"],
+                        "subtitle": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "header": ["48px", { "lineHeight": "52px", "fontWeight": "500" }],
+                        "title": ["28px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "header-mobile": ["32px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "subtitle": ["16px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-bg-white { background-color: white !important; box-shadow: none !important; border: 1px solid #e1e2e7; }
+        }
+    </style>
+</head>
+<body class="bg-surface-dim min-h-screen text-on-surface">
+<!-- Top Navigation Placeholder (Hidden for this specific report view, but part of standard shell) -->
+<div class="hidden">
+<!-- Kept hidden as this is a focused report page where nav might be suppressed, but ensuring structural consistency if needed -->
+</div>
+<main class="w-full max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+<!-- Header & Toolbar -->
+<header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+<div class="flex items-center gap-4">
+<button class="no-print p-2 rounded-full hover:bg-surface-container-highest transition-colors flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[24px]" data-icon="arrow_back">arrow_back</span>
+</button>
+<div>
+<h1 class="font-title text-title text-on-surface">Ganancias por ítem</h1>
+<p class="font-body text-body text-on-surface-variant mt-1">Reporte detallado de rendimiento de inventario</p>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 no-print w-full md:w-auto">
+<div class="flex items-center bg-surface-container-lowest border border-surface-container-high rounded-full px-4 py-2 shadow-sm text-on-surface-variant">
+<span class="material-symbols-outlined mr-2 text-[20px]" data-icon="calendar_month">calendar_month</span>
+<span class="font-subtitle text-sm">01/10/2023 - 31/10/2023</span>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center px-6 py-2.5 bg-surface-container-lowest text-on-surface border border-surface-container-high rounded-full hover:bg-surface-container-high transition-colors shadow-sm font-subtitle text-sm">
+<span class="material-symbols-outlined mr-2 text-[20px]" data-icon="download">download</span>
+                        Exportar Excel
+                    </button>
+<button class="flex items-center justify-center px-6 py-2.5 bg-on-surface text-surface-container-lowest rounded-full hover:opacity-90 transition-opacity shadow-sm font-subtitle text-sm" onclick="window.print()">
+<span class="material-symbols-outlined mr-2 text-[20px]" data-icon="print">print</span>
+                        Imprimir
+                    </button>
+</div>
+</div>
+</header>
+<!-- Summary Cards Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<!-- Card 1: Total Ventas -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-container-highest flex flex-col print-bg-white">
+<div class="flex justify-between items-start mb-4">
+<p class="font-body text-body text-on-surface-variant">Total Ventas</p>
+<div class="p-2 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="shopping_cart">shopping_cart</span>
+</div>
+</div>
+<h2 class="font-title text-[32px] font-semibold text-on-surface mb-1">L. 150,450.00</h2>
+<div class="flex items-center text-success mt-auto font-subtitle text-sm">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="trending_up">trending_up</span>
+<span>+12.5% vs mes anterior</span>
+</div>
+</div>
+<!-- Card 2: Total Costos -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-container-highest flex flex-col print-bg-white">
+<div class="flex justify-between items-start mb-4">
+<p class="font-body text-body text-on-surface-variant">Total Costos</p>
+<div class="p-2 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="inventory_2">inventory_2</span>
+</div>
+</div>
+<h2 class="font-title text-[32px] font-semibold text-on-surface mb-1">L. 85,200.00</h2>
+<div class="flex items-center text-on-surface-variant mt-auto font-subtitle text-sm">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="info">info</span>
+<span>Costo de bienes vendidos</span>
+</div>
+</div>
+<!-- Card 3: Total Ganancias -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-primary-container relative overflow-hidden flex flex-col print-bg-white">
+<div class="absolute -right-6 -top-6 w-24 h-24 bg-primary-container opacity-10 rounded-full blur-xl pointer-events-none"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<p class="font-body text-body text-on-surface-variant">Total Ganancias</p>
+<div class="p-2 bg-primary-container bg-opacity-20 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="payments">payments</span>
+</div>
+</div>
+<h2 class="font-title text-[32px] font-bold text-success mb-1 relative z-10">L. 65,250.00</h2>
+<div class="flex justify-between items-center mt-auto relative z-10">
+<div class="flex items-center text-success font-subtitle text-sm bg-success bg-opacity-10 px-2 py-1 rounded-md">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="arrow_upward">arrow_upward</span>
+<span>Margen: 43.4%</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Data Table Section -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-highest overflow-hidden print-bg-white">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container border-b border-surface-container-highest font-subtitle text-sm text-on-surface-variant">
+<th class="py-4 px-4 whitespace-nowrap">Código</th>
+<th class="py-4 px-4 min-w-[200px]">Nombre</th>
+<th class="py-4 px-4 whitespace-nowrap">Variante</th>
+<th class="py-4 px-4 whitespace-nowrap">Categoría</th>
+<th class="py-4 px-4 text-right whitespace-nowrap">Cant.</th>
+<th class="py-4 px-4 text-right whitespace-nowrap">Ventas (L.)</th>
+<th class="py-4 px-4 text-right whitespace-nowrap">Costos (L.)</th>
+<th class="py-4 px-4 text-right whitespace-nowrap">Ganancia (L.)</th>
+<th class="py-4 px-4 text-right whitespace-nowrap">% Gan.</th>
+</tr>
+</thead>
+<tbody class="font-body text-sm text-on-surface divide-y divide-surface-container-highest">
+<!-- Row 1 -->
+<tr class="hover:bg-surface transition-colors">
+<td class="py-3 px-4 text-on-surface-variant font-mono text-xs">SKU-9921</td>
+<td class="py-3 px-4 font-subtitle">Nike Air Zoom Pegasus 39</td>
+<td class="py-3 px-4">Negro / 42</td>
+<td class="py-3 px-4">Calzado</td>
+<td class="py-3 px-4 text-right">24</td>
+<td class="py-3 px-4 text-right">84,000.00</td>
+<td class="py-3 px-4 text-right">48,000.00</td>
+<td class="py-3 px-4 text-right text-success font-medium">36,000.00</td>
+<td class="py-3 px-4 text-right font-medium">42.8%</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface transition-colors">
+<td class="py-3 px-4 text-on-surface-variant font-mono text-xs">SKU-7714</td>
+<td class="py-3 px-4 font-subtitle">Adidas Ultraboost 22</td>
+<td class="py-3 px-4">Blanco / 40</td>
+<td class="py-3 px-4">Calzado</td>
+<td class="py-3 px-4 text-right">15</td>
+<td class="py-3 px-4 text-right">52,500.00</td>
+<td class="py-3 px-4 text-right">31,500.00</td>
+<td class="py-3 px-4 text-right text-success font-medium">21,000.00</td>
+<td class="py-3 px-4 text-right font-medium">40.0%</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface transition-colors">
+<td class="py-3 px-4 text-on-surface-variant font-mono text-xs">SKU-3320</td>
+<td class="py-3 px-4 font-subtitle">Puma RS-X³</td>
+<td class="py-3 px-4">Azul / 41</td>
+<td class="py-3 px-4">Calzado</td>
+<td class="py-3 px-4 text-right">8</td>
+<td class="py-3 px-4 text-right">13,950.00</td>
+<td class="py-3 px-4 text-right">5,700.00</td>
+<td class="py-3 px-4 text-right text-success font-medium">8,250.00</td>
+<td class="py-3 px-4 text-right font-medium text-primary-container">59.1%</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="bg-surface-container-high border-t-2 border-on-surface font-subtitle text-on-surface">
+<td class="py-4 px-4 text-right uppercase text-xs tracking-wider" colspan="4">Totales de Reporte</td>
+<td class="py-4 px-4 text-right">47</td>
+<td class="py-4 px-4 text-right">150,450.00</td>
+<td class="py-4 px-4 text-right">85,200.00</td>
+<td class="py-4 px-4 text-right text-success">65,250.00</td>
+<td class="py-4 px-4 text-right">43.4%</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<!-- Pagination / Footer for Table (Optional, kept minimal for report view) -->
+<div class="px-6 py-4 border-t border-surface-container-highest flex justify-between items-center text-sm text-on-surface-variant no-print">
+<span>Mostrando 1 a 3 de 124 ítems</span>
+<div class="flex gap-2">
+<button class="p-1 rounded hover:bg-surface-container-high disabled:opacity-50"><span class="material-symbols-outlined text-[20px]" data-icon="chevron_left">chevron_left</span></button>
+<button class="p-1 rounded hover:bg-surface-container-high"><span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span></button>
+</div>
+</div>
+</section>
+</main>
+</body></html>

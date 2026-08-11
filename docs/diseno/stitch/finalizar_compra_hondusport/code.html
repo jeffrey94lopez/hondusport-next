@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hondusport - Checkout</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#2e3134",
+                        "inverse-on-surface": "#f0f0f5",
+                        "on-primary-fixed": "#241a00",
+                        "on-primary-fixed-variant": "#584400",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#edeef3",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#e6c364",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "on-tertiary-fixed": "#1c1c16",
+                        "primary-fixed": "#ffe08f",
+                        "tertiary": "#605e58",
+                        "tertiary-fixed-dim": "#c9c6be",
+                        "error": "#910022",
+                        "on-surface": "#191c1f",
+                        "surface-container-low": "#f2f3f8",
+                        "primary": "#755b00",
+                        "on-primary-container": "#503d00",
+                        "primary-container": "#c9a84c",
+                        "on-tertiary-container": "#414039",
+                        "on-background": "#191c1f",
+                        "secondary": "#5e5e5e",
+                        "surface-container-highest": "#e1e2e7",
+                        "outline": "#7e7665",
+                        "text-muted": "#606060",
+                        "surface-variant": "#e1e2e7",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface": "#f8f9fe",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#474747",
+                        "surface-tint": "#755b00",
+                        "background": "#f8f9fe",
+                        "primary-fixed-dim": "#e6c364",
+                        "text-main": "#1e1e1e",
+                        "secondary-container": "#e2e2e2",
+                        "on-secondary-container": "#646464",
+                        "secondary-fixed": "#e2e2e2",
+                        "outline-variant": "#d0c5b2",
+                        "on-surface-variant": "#4d4637",
+                        "on-tertiary-fixed-variant": "#484741",
+                        "tertiary-fixed": "#e6e2d9",
+                        "tertiary-container": "#aeaba3",
+                        "success": "#1b8959",
+                        "surface-dim": "#d9dadf",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "surface-bright": "#f8f9fe",
+                        "white": "#ffffff",
+                        "surface-container-high": "#e7e8ed",
+                        "app-bg": "#dbdce1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "card": "16px",
+                        "input": "12px"
+                    },
+                    "spacing": {
+                        "stack-sm": "0.5rem",
+                        "margin-mobile": "1rem",
+                        "margin-desktop": "2.5rem",
+                        "stack-lg": "2rem",
+                        "stack-md": "1rem",
+                        "gutter": "1rem"
+                    },
+                    "fontFamily": {
+                        "caption": ["Be Vietnam Pro"],
+                        "header-mobile": ["Be Vietnam Pro"],
+                        "title": ["Be Vietnam Pro"],
+                        "body": ["Be Vietnam Pro"],
+                        "header": ["Be Vietnam Pro"],
+                        "subtitle": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "header-mobile": ["32px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "title": ["28px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "header": ["48px", { "lineHeight": "52px", "fontWeight": "500" }],
+                        "subtitle": ["16px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    },
+                    "boxShadow": {
+                        "ambient-1": "0 2px 4px rgba(18,30,108,0.08)",
+                        "ambient-2": "0 4px 8px rgba(18,30,108,0.08)"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .input-gold-focus:focus {
+            border-color: #c9a84c;
+            box-shadow: 0 0 0 1px #c9a84c;
+        }
+        .icon-gold {
+            color: #c9a84c;
+            font-variation-settings: 'wght' 300, 'FILL' 0;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-app-bg text-on-surface font-body font-body antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Bar - Contextually Suppressed for Transactional Checkout Page -->
+<header class="bg-surface-container-lowest shadow-sm w-full top-0 z-50">
+<div class="flex justify-between items-center w-full px-margin-desktop py-4 max-w-[1280px] mx-auto">
+<a class="font-header text-title text-primary tracking-tighter" href="#">Hondusport</a>
+<a class="flex items-center gap-2 text-secondary hover:text-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+<span class="font-subtitle text-subtitle hidden md:inline">Volver a la tienda</span>
+</a>
+</div>
+</header>
+<main class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+<div class="mb-stack-lg">
+<h1 class="font-header text-header-mobile md:text-header text-on-surface">Finalizar Compra</h1>
+<p class="font-body text-body text-secondary mt-2">Completa tu información para procesar el pedido.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-margin-desktop items-start">
+<!-- Left Column (Form) -->
+<div class="lg:col-span-7 space-y-stack-lg">
+<!-- Contact Information -->
+<section class="bg-surface-container-lowest rounded-card p-6 shadow-ambient-1 hover:shadow-ambient-2 transition-shadow duration-300">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined icon-gold">mail</span>
+<h2 class="font-title text-title text-on-surface">Datos de contacto</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="flex flex-col gap-1">
+<label class="font-caption text-caption text-secondary" for="email">Correo Electrónico</label>
+<input class="w-full bg-app-bg border border-transparent rounded-input px-4 py-3 font-body text-body text-on-surface placeholder:text-text-muted focus:outline-none input-gold-focus transition-all duration-200" id="email" placeholder="tucorreo@ejemplo.com" type="email"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-caption text-caption text-secondary" for="phone">Teléfono</label>
+<input class="w-full bg-app-bg border border-transparent rounded-input px-4 py-3 font-body text-body text-on-surface placeholder:text-text-muted focus:outline-none input-gold-focus transition-all duration-200" id="phone" placeholder="+504 9999-9999" type="tel"/>
+</div>
+</div>
+</section>
+<!-- Shipping Address -->
+<section class="bg-surface-container-lowest rounded-card p-6 shadow-ambient-1 hover:shadow-ambient-2 transition-shadow duration-300">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined icon-gold">local_shipping</span>
+<h2 class="font-title text-title text-on-surface">Dirección de envío</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="flex flex-col gap-1 md:col-span-2">
+<label class="font-caption text-caption text-secondary" for="fullname">Nombre Completo</label>
+<input class="w-full bg-app-bg border border-transparent rounded-input px-4 py-3 font-body text-body text-on-surface placeholder:text-text-muted focus:outline-none input-gold-focus transition-all duration-200" id="fullname" placeholder="Juan Pérez" type="text"/>
+</div>
+<div class="flex flex-col gap-1 md:col-span-2">
+<label class="font-caption text-caption text-secondary" for="address">Dirección Exacta</label>
+<input class="w-full bg-app-bg border border-transparent rounded-input px-4 py-3 font-body text-body text-on-surface placeholder:text-text-muted focus:outline-none input-gold-focus transition-all duration-200" id="address" placeholder="Colonia, Calle, Número de Casa" type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-caption text-caption text-secondary" for="city">Ciudad</label>
+<input class="w-full bg-app-bg border border-transparent rounded-input px-4 py-3 font-body text-body text-on-surface placeholder:text-text-muted focus:outline-none input-gold-focus transition-all duration-200" id="city" placeholder="San Pedro Sula" type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-caption text-caption text-secondary" for="department">Departamento</label>
+<select class="w-full bg-app-bg border border-transparent rounded-input px-4 py-3 font-body text-body text-on-surface focus:outline-none input-gold-focus transition-all duration-200 appearance-none" id="department">
+<option disabled="" selected="" value="">Selecciona un departamento</option>
+<option value="francisco_morazan">Francisco Morazán</option>
+<option value="cortes">Cortés</option>
+<option value="atlantida">Atlántida</option>
+</select>
+</div>
+</div>
+</section>
+<!-- Shipping Method -->
+<section class="bg-surface-container-lowest rounded-card p-6 shadow-ambient-1 hover:shadow-ambient-2 transition-shadow duration-300">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined icon-gold">airport_shuttle</span>
+<h2 class="font-title text-title text-on-surface">Método de envío</h2>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<label class="cursor-pointer relative">
+<input checked="" class="peer sr-only" name="shipping_method" type="radio" value="standard"/>
+<div class="w-full bg-app-bg rounded-input p-4 border-2 border-transparent peer-checked:border-primary-container peer-checked:bg-white transition-all duration-200">
+<div class="flex justify-between items-center mb-1">
+<span class="font-subtitle text-subtitle text-on-surface">Estándar</span>
+<span class="material-symbols-outlined text-primary-container opacity-0 peer-checked:opacity-100 transition-opacity">check_circle</span>
+</div>
+<span class="font-body text-body text-success">Gratis</span>
+<p class="font-caption text-caption text-secondary mt-2 font-normal">3-5 días hábiles</p>
+</div>
+</label>
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="shipping_method" type="radio" value="express"/>
+<div class="w-full bg-app-bg rounded-input p-4 border-2 border-transparent peer-checked:border-primary-container peer-checked:bg-white transition-all duration-200">
+<div class="flex justify-between items-center mb-1">
+<span class="font-subtitle text-subtitle text-on-surface">Express</span>
+<span class="material-symbols-outlined text-primary-container opacity-0 peer-checked:opacity-100 transition-opacity">check_circle</span>
+</div>
+<span class="font-body text-body text-on-surface">L. 150.00</span>
+<p class="font-caption text-caption text-secondary mt-2 font-normal">1-2 días hábiles</p>
+</div>
+</label>
+</div>
+</section>
+<!-- Payment Method -->
+<section class="bg-surface-container-lowest rounded-card p-6 shadow-ambient-1 hover:shadow-ambient-2 transition-shadow duration-300">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined icon-gold">credit_card</span>
+<h2 class="font-title text-title text-on-surface">Método de pago</h2>
+</div>
+<div class="space-y-4">
+<label class="cursor-pointer flex items-center gap-4 p-4 rounded-input border border-surface-variant hover:bg-surface-container-low transition-colors duration-200">
+<input checked="" class="form-radio text-primary-container focus:ring-primary-container h-5 w-5 border-secondary" name="payment_method" type="radio" value="card"/>
+<div class="flex flex-col">
+<span class="font-subtitle text-subtitle text-on-surface">Tarjeta de Crédito / Débito</span>
+<span class="font-body text-body text-secondary text-sm">Pago seguro en línea</span>
+</div>
+</label>
+<label class="cursor-pointer flex items-center gap-4 p-4 rounded-input border border-surface-variant hover:bg-surface-container-low transition-colors duration-200">
+<input class="form-radio text-primary-container focus:ring-primary-container h-5 w-5 border-secondary" name="payment_method" type="radio" value="transfer"/>
+<div class="flex flex-col">
+<span class="font-subtitle text-subtitle text-on-surface">Transferencia Bancaria</span>
+<span class="font-body text-body text-secondary text-sm">BAC, Banco Atlántida, Ficohsa</span>
+</div>
+</label>
+</div>
+</section>
+</div>
+<!-- Right Column (Order Summary Card) -->
+<div class="lg:col-span-5">
+<aside class="bg-surface-container-lowest rounded-card p-6 shadow-ambient-1 sticky top-6">
+<h3 class="font-title text-title text-on-surface mb-6 border-b border-surface-variant pb-4">Resumen del Pedido</h3>
+<!-- Items -->
+<div class="space-y-4 mb-6 max-h-[300px] overflow-y-auto hide-scrollbar">
+<div class="flex gap-4 items-center">
+<div class="w-16 h-16 bg-surface-container-low rounded-lg overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A detailed product shot of a premium, black athletic running shoe with gold accents resting on a clean, light gray surface. The lighting is studio quality, highlighting the sleek contours and high-end materials of the sportswear. The mood is modern, crisp, and high-performance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcXDWRF5KykfuGvj3lkio6Z96Wn1f6-Wg4DTMu2vVjBmj0sdoHPXQ7sHgXe3ZdyVPh-TheoPTFe8TsttMjvfOCalyWhKT9E_GG6yoQzMxnCmT626q93DOYYMrmRwozsXW3Q3K_b8CoEZu_GhxBzC0bhIIPtBhrOoxqrDnzllhwx9ByT2sWx8wdntwxHoaHZQhCpr99XcI-6Cwqee9TalImAr79BVReHBPUACk2OgodP3tP7IZrok41"/>
+</div>
+<div class="flex-1">
+<h4 class="font-subtitle text-subtitle text-on-surface line-clamp-1">Tenis Running Pro Max</h4>
+<p class="font-caption text-caption text-secondary">Talla: 42 | Color: Negro/Dorado</p>
+</div>
+<div class="font-subtitle text-subtitle text-on-surface whitespace-nowrap">L. 2,150.00</div>
+</div>
+<div class="flex gap-4 items-center">
+<div class="w-16 h-16 bg-surface-container-low rounded-lg overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A meticulously lit studio product photograph of a breathable athletic t-shirt in deep black. The fabric texture is clearly visible, conveying premium quality and performance. The background is a soft, cool gray, aligning with a high-end corporate retail aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApnSzKxlj7mrAI7c3ZoG2VHUuiQs7F_2jQXud98GEwRMZ1DZetsX_51gefMoADNmKnGccTSY0X8xhfPu3_e7MZhHJzOR2SgYb_NLhWpEa2zVAL2oE4OVPWbXVNVoyKbVB9evNWiDZAOh1fmmBHWxCJ9wJ95wUd3dJfQfuuhlhl_L08W2T-FFHpODjd0BC8T8yI8rU2CYy4RYelzZA1y_1mHHlV5EqFqtcnC9sLq9hoZL_ol1JUtv08"/>
+</div>
+<div class="flex-1">
+<h4 class="font-subtitle text-subtitle text-on-surface line-clamp-1">Camiseta Performance</h4>
+<p class="font-caption text-caption text-secondary">Talla: M | Color: Negro</p>
+</div>
+<div class="font-subtitle text-subtitle text-on-surface whitespace-nowrap">L. 300.00</div>
+</div>
+</div>
+<!-- Financials -->
+<div class="border-t border-surface-variant pt-4 space-y-2 mb-6">
+<div class="flex justify-between font-body text-body text-secondary">
+<span>Subtotal</span>
+<span>L. 2,450.00</span>
+</div>
+<div class="flex justify-between font-body text-body text-secondary">
+<span>Envío</span>
+<span class="text-success">Gratis</span>
+</div>
+<div class="flex justify-between font-body text-body text-secondary">
+<span>ISV (15%)</span>
+<span>L. 367.50</span>
+</div>
+</div>
+<div class="flex justify-between items-end mb-8 border-t border-surface-variant pt-4">
+<span class="font-title text-title text-on-surface">Total</span>
+<span class="font-header text-header-mobile text-on-surface font-bold text-right">L. 2,817.50</span>
+</div>
+<button class="w-full bg-black text-white font-subtitle text-subtitle py-4 px-6 rounded-full hover:bg-gray-800 transition-colors duration-300 shadow-md flex justify-center items-center gap-2 mb-4 group" type="button">
+                        Finalizar Pedido
+                        <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<div class="flex gap-2 items-start bg-[#faf6ed] p-3 rounded-lg">
+<span class="material-symbols-outlined text-primary-container text-[20px] mt-0.5">info</span>
+<p class="font-caption text-caption text-on-surface-variant leading-tight">Tu pedido será confirmado vía WhatsApp para coordinar la entrega.</p>
+</div>
+</aside>
+</div>
+</div>
+</main>
+<!-- Footer - Simplified for Transactional Context -->
+<footer class="w-full mt-stack-lg bg-surface-container-highest">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-margin-desktop py-stack-lg max-w-[1280px] mx-auto">
+<span class="font-header text-title text-primary">Hondusport</span>
+<span class="font-body text-body text-secondary mt-4 md:mt-0">© 2024 Hondusport Athletics. All rights reserved.</span>
+</div>
+</footer>
+</body></html>

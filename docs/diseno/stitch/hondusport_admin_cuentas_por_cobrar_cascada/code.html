@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hondusport Admin - Reporte de Cuentas por Cobrar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-tertiary-fixed": "#1c1c16",
+                            "surface-variant": "#e1e2e7",
+                            "surface-tint": "#755b00",
+                            "inverse-on-surface": "#f0f0f5",
+                            "surface-container-low": "#f2f3f8",
+                            "primary-container": "#c9a84c",
+                            "on-error": "#ffffff",
+                            "secondary-fixed": "#e2e2e2",
+                            "primary-fixed-dim": "#e6c364",
+                            "white": "#ffffff",
+                            "surface-container-lowest": "#ffffff",
+                            "surface-bright": "#f8f9fe",
+                            "on-tertiary-fixed-variant": "#484741",
+                            "surface-container-highest": "#e1e2e7",
+                            "text-muted": "#606060",
+                            "outline-variant": "#d0c5b2",
+                            "background": "#f8f9fe",
+                            "on-error-container": "#93000a",
+                            "on-surface-variant": "#4d4637",
+                            "tertiary-fixed-dim": "#c9c6be",
+                            "tertiary-fixed": "#e6e2d9",
+                            "inverse-surface": "#2e3134",
+                            "text-main": "#1e1e1e",
+                            "primary": "#755b00",
+                            "tertiary": "#605e58",
+                            "on-secondary-fixed-variant": "#474747",
+                            "secondary": "#5e5e5e",
+                            "error-container": "#ffdad6",
+                            "surface-dim": "#d9dadf",
+                            "error": "#910022",
+                            "on-secondary-fixed": "#1b1b1b",
+                            "surface": "#f8f9fe",
+                            "on-tertiary": "#ffffff",
+                            "surface-container": "#edeef3",
+                            "on-background": "#191c1f",
+                            "on-surface": "#191c1f",
+                            "on-primary-container": "#503d00",
+                            "on-primary": "#ffffff",
+                            "secondary-fixed-dim": "#c6c6c6",
+                            "inverse-primary": "#e6c364",
+                            "on-primary-fixed": "#241a00",
+                            "outline": "#7e7665",
+                            "on-secondary": "#ffffff",
+                            "surface-container-high": "#e7e8ed",
+                            "on-tertiary-container": "#414039",
+                            "secondary-container": "#e2e2e2",
+                            "on-primary-fixed-variant": "#584400",
+                            "primary-fixed": "#ffe08f",
+                            "tertiary-container": "#aeaba3",
+                            "on-secondary-container": "#646464",
+                            "success": "#1b8959"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "gutter": "1rem",
+                            "stack-lg": "2rem",
+                            "margin-mobile": "1rem",
+                            "stack-md": "1rem",
+                            "margin-desktop": "2.5rem",
+                            "stack-sm": "0.5rem"
+                    },
+                    "fontFamily": {
+                            "title": ["Be Vietnam Pro"],
+                            "subtitle": ["Be Vietnam Pro"],
+                            "body": ["Be Vietnam Pro"],
+                            "header-mobile": ["Be Vietnam Pro"],
+                            "caption": ["Be Vietnam Pro"],
+                            "header": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                            "title": ["28px", {"lineHeight": "32px", "fontWeight": "400"}],
+                            "subtitle": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                            "body": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "header-mobile": ["32px", {"lineHeight": "36px", "fontWeight": "600"}],
+                            "caption": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                            "header": ["48px", {"lineHeight": "52px", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #dbdce1; } /* Fallback/override to enforce specific Soft Gray */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(18, 30, 108, 0.08), 0 2px 4px -1px rgba(18, 30, 108, 0.04);
+        }
+        .accordion-content {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 500px; /* Arbitrary large number to allow content */
+            opacity: 1;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        .chevron { transition: transform 0.3s ease; }
+        .open .chevron { transform: rotate(180deg); }
+    </style>
+</head>
+<body class="font-body text-body text-on-surface antialiased min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="bg-on-tertiary-fixed dark:bg-on-tertiary-fixed h-screen w-64 fixed left-0 top-0 border-r border-outline-variant shadow-md flex flex-col py-6 z-50">
+<!-- Brand -->
+<div class="px-6 mb-8">
+<h1 class="text-title font-title font-bold text-primary-container">Hondusport</h1>
+<p class="font-caption text-caption text-tertiary-fixed-dim uppercase tracking-wider mt-1">Premium Athletics</p>
+</div>
+<!-- Navigation Tabs -->
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-secondary-fixed-dim hover:text-white mx-2 hover:bg-on-tertiary-fixed-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary-fixed-dim hover:text-white mx-2 hover:bg-on-tertiary-fixed-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">inventory_2</span>
+<span>Inventory</span>
+</a>
+<!-- Active Tab: Reports matches Intent of "Cuentas por Cobrar" Report -->
+<a class="flex items-center gap-3 px-4 py-3 bg-primary text-on-primary rounded-lg mx-2 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" style="color: #ffffff;">analytics</span>
+<span>Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary-fixed-dim hover:text-white mx-2 hover:bg-on-tertiary-fixed-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">payments</span>
+<span>Financials</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary-fixed-dim hover:text-white mx-2 hover:bg-on-tertiary-fixed-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<!-- Footer Actions -->
+<div class="mt-auto px-4 space-y-2 border-t border-outline-variant/20 pt-4">
+<button class="w-full flex items-center justify-center gap-2 py-2.5 bg-[#faf6ed] text-primary-container rounded-lg font-subtitle text-subtitle hover:bg-white transition-colors duration-200">
+                View Storefront
+            </button>
+<a class="flex items-center gap-3 px-4 py-2 text-secondary-fixed-dim hover:text-white transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">help</span>
+<span class="font-caption text-caption">Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-secondary-fixed-dim hover:text-white transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">logout</span>
+<span class="font-caption text-caption">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-64 flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim w-full h-16 sticky top-0 z-40 shadow-sm flex items-center justify-between px-8">
+<div class="flex items-center gap-4">
+<span class="font-subtitle text-subtitle font-bold text-on-surface">Hondusport Admin</span>
+</div>
+<div class="flex items-center gap-6">
+<!-- Search on right -->
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" style="color: #c9a84c;">search</span>
+<input class="bg-[#dbdce1] border-transparent focus:border-primary-container focus:ring-0 rounded-xl pl-10 pr-4 py-2 font-body text-body w-64 transition-colors" placeholder="Buscar..." type="text"/>
+</div>
+<!-- Trailing Actions -->
+<button class="text-secondary hover:text-primary transition-colors hover:bg-surface-container-low p-2 rounded-full">
+<span class="material-symbols-outlined" style="color: #c9a84c;">notifications</span>
+</button>
+<button class="text-secondary hover:text-primary transition-colors hover:bg-surface-container-low p-1 rounded-full border-2 border-transparent hover:border-primary-container">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A small, circular avatar portrait of an athletic professional looking directly at the camera. Professional studio lighting, modern minimalist style, set against a dark gray background to fit a premium dashboard UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKNuYNMVOELCNE6eOw95V-Q_Ekssix4bKYxfk6H9rQyAKI6qw-iZshIYHRfwHt67FJOTyKEaM23GRpbO2wGuwZGCaxWGOwjTXscLcrBilXa0e9XsF-cl2NgtV3574vulrdCca6-d0TWnDgOkJafDGWyb6ym21ASN1xbd0cT7bRGNUqy3zSQiSa4P9HaqMOy7caJSGtyMMJyuzEbZTIUzA6zWq9iTfMpijbTENVrURrx9MTr4Y0ihOS"/>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-margin-desktop overflow-y-auto">
+<!-- Page Header -->
+<div class="mb-stack-lg flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-title text-title text-on-surface mb-1">Cuentas por Cobrar</h2>
+<p class="font-body text-body text-text-muted">Detalle de saldos pendientes por cliente</p>
+</div>
+<!-- Toolbar Actions -->
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 bg-white text-primary-container border border-primary-container/20 px-4 py-2 rounded-lg font-subtitle text-subtitle hover:shadow-md transition-shadow">
+<span class="material-symbols-outlined text-sm">download</span>
+                        Exportar Excel
+                    </button>
+<button class="flex items-center gap-2 bg-black text-white px-6 py-2 rounded-full font-subtitle text-subtitle hover:shadow-lg transition-shadow">
+<span class="material-symbols-outlined text-sm">print</span>
+                        Imprimir
+                    </button>
+</div>
+</div>
+<!-- Main Data Panel (Glassmorphism/Card) -->
+<div class="glass-panel rounded-2xl overflow-hidden">
+<!-- Table Header -->
+<div class="grid grid-cols-12 gap-4 p-6 border-b border-surface-variant bg-white/50 text-tertiary font-subtitle text-subtitle">
+<div class="col-span-6">Cliente</div>
+<div class="col-span-2 text-center"># Documentos</div>
+<div class="col-span-3 text-right">Total Pendiente</div>
+<div class="col-span-1"></div>
+</div>
+<!-- Table Rows (Accordion Cascade) -->
+<!-- Row 1: Expanded Default -->
+<div class="border-b border-surface-variant bg-white group">
+<!-- Parent Row -->
+<div class="grid grid-cols-12 gap-4 p-6 items-center cursor-pointer hover:bg-surface-bright transition-colors" onclick="toggleAccordion('row1', this)">
+<div class="col-span-6 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary-container font-subtitle text-subtitle border border-surface-variant">
+                                AM
+                            </div>
+<span class="font-subtitle text-subtitle text-on-surface">Athletic Masters S.A.</span>
+</div>
+<div class="col-span-2 text-center font-body text-body text-on-surface-variant">
+                            3
+                        </div>
+<div class="col-span-3 text-right font-subtitle text-subtitle text-on-surface">
+                            L. 145,500.00
+                        </div>
+<div class="col-span-1 flex justify-end">
+<span class="material-symbols-outlined text-tertiary chevron transform rotate-180 transition-transform">expand_more</span>
+</div>
+</div>
+<!-- Sub-table (Expanded) -->
+<div class="accordion-content open bg-surface-bright/50 px-6 rounded-lg mx-4" id="row1">
+<div class="grid grid-cols-12 gap-4 py-3 border-b border-outline-variant/30 text-caption font-caption text-tertiary uppercase">
+<div class="col-span-3">Número</div>
+<div class="col-span-3">Fecha</div>
+<div class="col-span-2">Vencimiento</div>
+<div class="col-span-2 text-center">Días Vencido</div>
+<div class="col-span-2 text-right">Saldo</div>
+</div>
+<div class="grid grid-cols-12 gap-4 py-3 border-b border-outline-variant/20 hover:bg-white transition-colors text-body font-body">
+<div class="col-span-3 text-on-surface font-subtitle text-subtitle">FAC-2023-0891</div>
+<div class="col-span-3 text-on-surface-variant">15/09/2023</div>
+<div class="col-span-2 text-on-surface-variant">15/10/2023</div>
+<div class="col-span-2 text-center text-error font-subtitle text-subtitle">12</div>
+<div class="col-span-2 text-right text-on-surface font-subtitle text-subtitle">L. 45,000.00</div>
+</div>
+<div class="grid grid-cols-12 gap-4 py-3 border-b border-outline-variant/20 hover:bg-white transition-colors text-body font-body">
+<div class="col-span-3 text-on-surface font-subtitle text-subtitle">FAC-2023-0904</div>
+<div class="col-span-3 text-on-surface-variant">22/09/2023</div>
+<div class="col-span-2 text-on-surface-variant">22/10/2023</div>
+<div class="col-span-2 text-center text-error font-subtitle text-subtitle">5</div>
+<div class="col-span-2 text-right text-on-surface font-subtitle text-subtitle">L. 65,500.00</div>
+</div>
+<div class="grid grid-cols-12 gap-4 py-3 hover:bg-white transition-colors text-body font-body">
+<div class="col-span-3 text-on-surface font-subtitle text-subtitle">FAC-2023-0945</div>
+<div class="col-span-3 text-on-surface-variant">10/10/2023</div>
+<div class="col-span-2 text-on-surface-variant">10/11/2023</div>
+<div class="col-span-2 text-center text-success font-subtitle text-subtitle">0</div>
+<div class="col-span-2 text-right text-on-surface font-subtitle text-subtitle">L. 35,000.00</div>
+</div>
+</div>
+</div>
+<!-- Row 2: Collapsed -->
+<div class="border-b border-surface-variant bg-white group">
+<div class="grid grid-cols-12 gap-4 p-6 items-center cursor-pointer hover:bg-surface-bright transition-colors" onclick="toggleAccordion('row2', this)">
+<div class="col-span-6 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary-container font-subtitle text-subtitle border border-surface-variant">
+                                GT
+                            </div>
+<span class="font-subtitle text-subtitle text-on-surface">Gimnasios Titan</span>
+</div>
+<div class="col-span-2 text-center font-body text-body text-on-surface-variant">
+                            1
+                        </div>
+<div class="col-span-3 text-right font-subtitle text-subtitle text-on-surface">
+                            L. 12,300.00
+                        </div>
+<div class="col-span-1 flex justify-end">
+<span class="material-symbols-outlined text-tertiary chevron transition-transform">expand_more</span>
+</div>
+</div>
+<!-- Sub-table (Collapsed) -->
+<div class="accordion-content bg-surface-bright/50 px-6 rounded-lg mx-4" id="row2">
+<div class="grid grid-cols-12 gap-4 py-3 border-b border-outline-variant/30 text-caption font-caption text-tertiary uppercase">
+<div class="col-span-3">Número</div>
+<div class="col-span-3">Fecha</div>
+<div class="col-span-2">Vencimiento</div>
+<div class="col-span-2 text-center">Días Vencido</div>
+<div class="col-span-2 text-right">Saldo</div>
+</div>
+<div class="grid grid-cols-12 gap-4 py-3 hover:bg-white transition-colors text-body font-body">
+<div class="col-span-3 text-on-surface font-subtitle text-subtitle">FAC-2023-0988</div>
+<div class="col-span-3 text-on-surface-variant">15/10/2023</div>
+<div class="col-span-2 text-on-surface-variant">15/11/2023</div>
+<div class="col-span-2 text-center text-success font-subtitle text-subtitle">0</div>
+<div class="col-span-2 text-right text-on-surface font-subtitle text-subtitle">L. 12,300.00</div>
+</div>
+</div>
+</div>
+<!-- Row 3: Collapsed -->
+<div class="bg-white group">
+<div class="grid grid-cols-12 gap-4 p-6 items-center cursor-pointer hover:bg-surface-bright transition-colors" onclick="toggleAccordion('row3', this)">
+<div class="col-span-6 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary-container font-subtitle text-subtitle border border-surface-variant">
+                                FC
+                            </div>
+<span class="font-subtitle text-subtitle text-on-surface">FitCenter Honduras</span>
+</div>
+<div class="col-span-2 text-center font-body text-body text-on-surface-variant">
+                            2
+                        </div>
+<div class="col-span-3 text-right font-subtitle text-subtitle text-on-surface">
+                            L. 89,000.00
+                        </div>
+<div class="col-span-1 flex justify-end">
+<span class="material-symbols-outlined text-tertiary chevron transition-transform">expand_more</span>
+</div>
+</div>
+<!-- Sub-table (Collapsed) -->
+<div class="accordion-content bg-surface-bright/50 px-6 rounded-lg mx-4" id="row3">
+<div class="grid grid-cols-12 gap-4 py-3 border-b border-outline-variant/30 text-caption font-caption text-tertiary uppercase">
+<div class="col-span-3">Número</div>
+<div class="col-span-3">Fecha</div>
+<div class="col-span-2">Vencimiento</div>
+<div class="col-span-2 text-center">Días Vencido</div>
+<div class="col-span-2 text-right">Saldo</div>
+</div>
+<div class="grid grid-cols-12 gap-4 py-3 border-b border-outline-variant/20 hover:bg-white transition-colors text-body font-body">
+<div class="col-span-3 text-on-surface font-subtitle text-subtitle">FAC-2023-0801</div>
+<div class="col-span-3 text-on-surface-variant">01/08/2023</div>
+<div class="col-span-2 text-on-surface-variant">01/09/2023</div>
+<div class="col-span-2 text-center text-error font-subtitle text-subtitle">56</div>
+<div class="col-span-2 text-right text-on-surface font-subtitle text-subtitle">L. 50,000.00</div>
+</div>
+<div class="grid grid-cols-12 gap-4 py-3 hover:bg-white transition-colors text-body font-body">
+<div class="col-span-3 text-on-surface font-subtitle text-subtitle">FAC-2023-0850</div>
+<div class="col-span-3 text-on-surface-variant">20/08/2023</div>
+<div class="col-span-2 text-on-surface-variant">20/09/2023</div>
+<div class="col-span-2 text-center text-error font-subtitle text-subtitle">37</div>
+<div class="col-span-2 text-right text-on-surface font-subtitle text-subtitle">L. 39,000.00</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+        function toggleAccordion(id, headerElement) {
+            const content = document.getElementById(id);
+            const parent = headerElement.parentElement;
+            
+            // Toggle current
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                parent.classList.remove('open');
+            } else {
+                // Optional: Close others (accordion behavior)
+                // document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('open'));
+                // document.querySelectorAll('.border-b.group').forEach(el => el.classList.remove('open'));
+                
+                content.classList.add('open');
+                parent.classList.add('open');
+            }
+        }
+    </script>
+</body></html>

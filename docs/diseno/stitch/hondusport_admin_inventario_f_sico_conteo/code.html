@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hondusport Admin - Inventario Físico</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#1c1c16",
+                        "surface-variant": "#e1e2e7",
+                        "surface-tint": "#755b00",
+                        "inverse-on-surface": "#f0f0f5",
+                        "surface-container-low": "#f2f3f8",
+                        "primary-container": "#c9a84c",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#e2e2e2",
+                        "primary-fixed-dim": "#e6c364",
+                        "white": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f8f9fe",
+                        "on-tertiary-fixed-variant": "#484741",
+                        "surface-container-highest": "#e1e2e7",
+                        "text-muted": "#606060",
+                        "outline-variant": "#d0c5b2",
+                        "background": "#f8f9fe",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#4d4637",
+                        "tertiary-fixed-dim": "#c9c6be",
+                        "tertiary-fixed": "#e6e2d9",
+                        "inverse-surface": "#2e3134",
+                        "text-main": "#1e1e1e",
+                        "primary": "#755b00",
+                        "tertiary": "#605e58",
+                        "on-secondary-fixed-variant": "#474747",
+                        "secondary": "#5e5e5e",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#d9dadf",
+                        "error": "#910022",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "surface": "#f8f9fe",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#edeef3",
+                        "on-background": "#191c1f",
+                        "on-surface": "#191c1f",
+                        "on-primary-container": "#503d00",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "inverse-primary": "#e6c364",
+                        "on-primary-fixed": "#241a00",
+                        "outline": "#7e7665",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e7e8ed",
+                        "on-tertiary-container": "#414039",
+                        "secondary-container": "#e2e2e2",
+                        "on-primary-fixed-variant": "#584400",
+                        "primary-fixed": "#ffe08f",
+                        "tertiary-container": "#aeaba3",
+                        "on-secondary-container": "#646464",
+                        "success": "#1b8959"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "2xl": "1rem"
+                    },
+                    "spacing": {
+                        "gutter": "1rem",
+                        "stack-lg": "2rem",
+                        "margin-mobile": "1rem",
+                        "stack-md": "1rem",
+                        "margin-desktop": "2.5rem",
+                        "stack-sm": "0.5rem"
+                    },
+                    "fontFamily": {
+                        "title": ["Be Vietnam Pro"],
+                        "subtitle": ["Be Vietnam Pro"],
+                        "body": ["Be Vietnam Pro"],
+                        "header-mobile": ["Be Vietnam Pro"],
+                        "caption": ["Be Vietnam Pro"],
+                        "header": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "title": ["28px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "subtitle": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "header-mobile": ["32px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "header": ["48px", { "lineHeight": "52px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #dbdce1; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-gold { color: #c9a84c; }
+        .bg-gold { background-color: #c9a84c; }
+        .bg-black-solid { background-color: #000000; }
+        .text-black-solid { color: #000000; }
+        .card-radius { border-radius: 16px; }
+        .input-bg { background-color: #dbdce1; }
+        
+        /* Interactive styles */
+        .hover-shadow:hover { box-shadow: 0 10px 15px -3px rgba(18,30,108,0.1), 0 4px 6px -2px rgba(18,30,108,0.05); }
+        .focus-gold:focus { border-color: #c9a84c; outline: none; box-shadow: 0 0 0 1px #c9a84c; }
+    </style>
+</head>
+<body class="font-body text-body text-on-surface flex bg-[#dbdce1]">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex bg-on-tertiary-fixed dark:bg-on-tertiary-fixed font-title text-title font-subtitle text-subtitle h-screen w-64 fixed left-0 top-0 border-r border-outline-variant shadow-md flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<h1 class="text-title font-title font-bold text-primary-container">Hondusport</h1>
+<p class="font-caption text-caption text-tertiary-fixed-dim uppercase tracking-wider mt-1">Premium Athletics</p>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 text-secondary-fixed-dim hover:text-white mx-2 hover:bg-on-tertiary-fixed-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined icon-gold">dashboard</span>
+<span class="font-subtitle text-subtitle">Dashboard</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-4 py-3 bg-primary text-on-primary rounded-lg mx-2 active:scale-95 transition-transform shadow-sm" href="#">
+<span class="material-symbols-outlined icon-gold" style="color: white;">inventory_2</span>
+<span class="font-subtitle text-subtitle">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary-fixed-dim hover:text-white mx-2 hover:bg-on-tertiary-fixed-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined icon-gold">payments</span>
+<span class="font-subtitle text-subtitle">Financials</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary-fixed-dim hover:text-white mx-2 hover:bg-on-tertiary-fixed-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined icon-gold">analytics</span>
+<span class="font-subtitle text-subtitle">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary-fixed-dim hover:text-white mx-2 hover:bg-on-tertiary-fixed-variant transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined icon-gold">settings</span>
+<span class="font-subtitle text-subtitle">Settings</span>
+</a>
+</div>
+<div class="px-4 mt-auto">
+<button class="w-full bg-primary-container text-on-primary-container font-subtitle text-subtitle py-3 rounded-lg hover:bg-primary-fixed-dim transition-colors mb-6 shadow-sm">
+                View Storefront
+            </button>
+<div class="flex flex-col gap-2 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 px-4 py-2 text-secondary-fixed-dim hover:text-white hover:bg-on-tertiary-fixed-variant transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-subtitle text-subtitle text-sm">Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-secondary-fixed-dim hover:text-white hover:bg-on-tertiary-fixed-variant transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-subtitle text-subtitle text-sm">Logout</span>
+</a>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
+<!-- TopAppBar (Shared Component) -->
+<header class="bg-surface dark:bg-surface-dim font-subtitle text-subtitle w-full h-16 sticky top-0 z-40 shadow-sm flex items-center justify-between px-8">
+<div class="flex items-center gap-4">
+<span class="md:hidden font-title text-subtitle font-bold text-on-surface">Hondusport Admin</span>
+</div>
+<div class="flex items-center gap-6">
+<!-- Search -->
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary">search</span>
+<input class="input-bg border-none rounded-lg pl-10 pr-4 py-2 text-sm focus-gold w-64" placeholder="Buscar..." type="text"/>
+</div>
+<div class="flex items-center gap-4 border-l border-surface-variant pl-4">
+<button class="text-secondary hover:text-primary transition-colors cursor-pointer p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center gap-2 text-secondary hover:text-primary transition-colors cursor-pointer p-1 pr-3 rounded-full hover:bg-surface-container-low border border-surface-variant">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A small, circular profile picture of an athletic administrative user, focused expression, high quality corporate headshot style, neutral grey background, crisp lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_VbDUms2sx01vcWP5uXM55vYiILlrXqa-sZ_D5J_NaVRTxVSL1Hfv1WaHyram3v4zY38iOx-k-LO71xWbn-45Ns9C1ZjJvgNv0O0v41vNz72AELpe9LQvNuSLNdG26kMoI1sYGABpDxOjl5tNBDdyzHcVe5EXNpr-dUn58IxPAgdq3xO-jahbF_vc3Xz3Z0cv-YaVAaSx3gEkN0solFkzEb2Up1LWTvb3gGYfQLfjCMZQZW2_Ikqr"/>
+<span class="font-subtitle text-subtitle text-sm">Admin</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<main class="flex-1 p-margin-mobile md:p-margin-desktop overflow-y-auto">
+<!-- Page Header -->
+<div class="mb-stack-lg flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+<div>
+<h2 class="font-title text-title text-text-main mb-1">Inventario Físico</h2>
+<p class="font-body text-body text-text-muted">Auditoría y ajuste de existencias</p>
+</div>
+<div class="flex items-center gap-3 bg-white p-1.5 rounded-lg shadow-sm border border-surface-variant w-fit">
+<button class="flex items-center gap-2 px-4 py-2 rounded-md bg-surface-container-low text-primary font-subtitle text-sm transition-colors" id="btn-table">
+<span class="material-symbols-outlined text-sm">table_rows</span>
+                        Vista Tabla
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-md text-secondary hover:bg-surface-container-low transition-colors font-subtitle text-sm" id="btn-carousel">
+<span class="material-symbols-outlined text-sm">view_carousel</span>
+                        Modo Carrusel
+                    </button>
+</div>
+</div>
+<!-- Toolbar -->
+<div class="bg-white p-6 card-radius shadow-sm mb-stack-lg flex flex-col md:flex-row gap-4 items-center border border-surface-variant hover-shadow transition-shadow">
+<div class="relative flex-1 w-full">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 icon-gold text-2xl">barcode_scanner</span>
+<input autofocus="" class="w-full input-bg border-none rounded-xl pl-14 pr-4 py-4 font-subtitle text-lg focus-gold shadow-inner" placeholder="Escaneo SKU o Código de Barras..." type="text"/>
+</div>
+<div class="w-full md:w-64 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary">filter_list</span>
+<select class="w-full input-bg border-none rounded-xl pl-10 pr-4 py-4 font-body text-body text-text-main focus-gold appearance-none cursor-pointer">
+<option>Todas las Categorías</option>
+<option>Calzado Deportivo</option>
+<option>Ropa de Entrenamiento</option>
+<option>Accesorios</option>
+</select>
+</div>
+<button class="bg-black-solid text-white font-subtitle text-subtitle px-8 py-4 rounded-xl hover:bg-gray-800 transition-colors w-full md:w-auto flex items-center justify-center gap-2 shadow-md">
+<span class="material-symbols-outlined text-sm">sync</span>
+                    Sincronizar
+                </button>
+</div>
+<!-- View 1: Table Mode -->
+<div class="bg-white card-radius shadow-sm border border-surface-variant overflow-hidden hover-shadow transition-shadow" id="view-table">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-bright border-b border-surface-variant">
+<th class="font-subtitle text-caption text-secondary uppercase tracking-wider py-4 px-6">SKU</th>
+<th class="font-subtitle text-caption text-secondary uppercase tracking-wider py-4 px-6">Producto / Variante</th>
+<th class="font-subtitle text-caption text-secondary uppercase tracking-wider py-4 px-6 text-center">Sistema (Qty)</th>
+<th class="font-subtitle text-caption text-secondary uppercase tracking-wider py-4 px-6 text-center">Conteo Físico</th>
+<th class="font-subtitle text-caption text-secondary uppercase tracking-wider py-4 px-6 text-center">Diferencia</th>
+</tr>
+</thead>
+<tbody class="font-body text-body text-text-main divide-y divide-surface-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-mono text-sm text-text-muted">NK-ZPG-001</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-md bg-surface-dim overflow-hidden border border-surface-variant flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A high-end, studio quality product photograph of a Nike Air Zoom Pegasus running shoe, sleek black with gold accents, pure white background, dramatic lighting emphasizing texture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVcxr002AM-hpgsvpRcJWVuo6PLbxjpxXHlPCKnz_j5uyRIABrkpvW5P9vW2kbNvGiWHHLzs7FPdKv8R84TNfhsmdkeeWru0pnB9DguxMeoL8rjMyB6yaaDFxuTmm2J6V7Y5h49AGgR_g7RDQtkuZieGiIi3qGG00qg69dr1n4fx2e3QgomrzL1GQs0r5D1mn-zKAurd6OJhC8c91hA_kkQKN0FWYMuyz1RRhocNjMLkCb_hOX1pR0"/>
+</div>
+<div>
+<p class="font-subtitle text-sm">Nike Air Zoom Pegasus 39</p>
+<p class="text-xs text-text-muted">Talla: 42 | Color: Black/Gold</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-center font-subtitle">24</td>
+<td class="py-4 px-6 text-center">
+<input class="w-20 text-center input-bg border-none rounded-lg py-2 focus-gold font-subtitle mx-auto" type="number" value="24"/>
+</td>
+<td class="py-4 px-6 text-center">
+<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-subtitle bg-[#e8f5e9] text-[#1b8959] border border-[#c8e6c9]">
+                                        0
+                                    </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-mono text-sm text-text-muted">AD-UB-045</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-md bg-surface-dim overflow-hidden border border-surface-variant flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A premium studio shot of an Adidas Ultraboost sneaker in pristine white with subtle metallic details, isolated on a light grey background, sharp focus, professional e-commerce style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYTosT_ZvZRZ4aJ145AVtE0D4afCfKLinHJTPz3wZsmVIKjdz7ZNB3U4r6O4pg-CWzGK1Dv17iiPpeN_lerRgbia8Q6pcNZs8A55riYdBPfzopf6rSb1pOthvxujNlxypi7LEdgdbR-1_hiUAUj-pSFlJPLklbb5tvLhIyatEEvQKlI4_wcHBApfquxuxNXpeCkYgRuRRblTL40EESXFsOp53yVlW2yIdt5jeJqV9UICozgDJtVcLQ"/>
+</div>
+<div>
+<p class="font-subtitle text-sm">Adidas Ultraboost 22</p>
+<p class="text-xs text-text-muted">Talla: 40 | Color: Core White</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-center font-subtitle">12</td>
+<td class="py-4 px-6 text-center">
+<input class="w-20 text-center input-bg border-none rounded-lg py-2 focus-gold font-subtitle mx-auto" type="number" value="10"/>
+</td>
+<td class="py-4 px-6 text-center">
+<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-subtitle bg-error-container text-error border border-[#ffb4ab]">
+                                        -2
+                                    </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-6 font-mono text-sm text-text-muted">PU-FR-012</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-md bg-surface-dim overflow-hidden border border-surface-variant flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="High quality athletic apparel photography, Puma training shirt in charcoal grey folded neatly, crisp lighting, clean modern presentation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWJvTFWEj-zIrBI8Zi17jOwgTHC4WQIm-H38uJDdTiRtwD883WOhaTQIB2i9_B6IGgoEOvizT9IGC86CGjtHayaCZ_G55509YvfZz_N1HHYPXb2dM5VOuRuSmzGCpEPX-3xAPVieGzeJMSWixgzoj98hZPVEzY0rQYsm87nxC38RYGZdxtD7I3GjjaG2phuJmMP2Vk5iOOOb1OSVyt69Dc7_9aXpL-8JKu62wiYN-f89zMOIH1oMII"/>
+</div>
+<div>
+<p class="font-subtitle text-sm">Puma Fit Training Tee</p>
+<p class="text-xs text-text-muted">Talla: M | Color: Charcoal</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-center font-subtitle">45</td>
+<td class="py-4 px-6 text-center">
+<input class="w-20 text-center input-bg border-none rounded-lg py-2 focus-gold font-subtitle mx-auto" type="number" value="46"/>
+</td>
+<td class="py-4 px-6 text-center">
+<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-subtitle bg-[#fff8e1] text-[#f57f17] border border-[#ffecb3]">
+                                        +1
+                                    </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 border-t border-surface-variant flex items-center justify-between bg-surface-bright">
+<p class="text-sm text-text-muted">Mostrando 1 a 3 de 156 productos</p>
+<div class="flex gap-2">
+<button class="p-2 border border-surface-variant rounded-md hover:bg-surface-container-low text-secondary"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="p-2 border border-surface-variant rounded-md hover:bg-surface-container-low text-secondary"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+<!-- View 2: Carousel Mode (Hidden by default) -->
+<div class="hidden" id="view-carousel">
+<div class="max-w-4xl mx-auto flex flex-col md:flex-row gap-8 items-center bg-white p-8 card-radius shadow-lg border border-surface-variant hover-shadow transition-shadow relative">
+<!-- Navigation Chevrons -->
+<button class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center border border-surface-variant text-secondary hover:text-primary hover:bg-surface-bright z-10 hidden md:flex">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</button>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center border border-surface-variant text-secondary hover:text-primary hover:bg-surface-bright z-10 hidden md:flex">
+<span class="material-symbols-outlined">arrow_forward_ios</span>
+</button>
+<!-- Product Image -->
+<div class="w-full md:w-1/2 aspect-square bg-surface-container-low rounded-2xl overflow-hidden border border-surface-variant flex items-center justify-center relative p-4">
+<span class="absolute top-4 left-4 bg-primary-container text-on-primary-container text-xs font-subtitle px-3 py-1 rounded-full z-10 shadow-sm">SKU: NK-ZPG-001</span>
+<img class="w-full h-full object-contain mix-blend-multiply" data-alt="A highly detailed, dramatic studio shot of a Nike Air Zoom Pegasus running shoe in black and gold. Floating slightly against a soft studio backdrop. Premium commercial photography style, crisp details, soft shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4ClTNmDNIk28HnswfRsrIbtt7n6kLfh-N1fXSA6AJyyXWud-5X_btsi-UD5X6TiaTOcp5olC6hXD5u9UJYBG50BN2XLDa0ALr44w826j_6xzO6N8Dc310VDRtcwSy1_JcWPhWwFXNc8kZERPMnsOtCItVRnynTWkFOfYKrBlNpjZgWbAP-NUK1l7nRzYlW---MjtdeOVsRV7ZQr5zeQwqRTcULnaxBlekzwZiqNMm-NQh1zwuzSnI"/>
+</div>
+<!-- Input Section -->
+<div class="w-full md:w-1/2 flex flex-col gap-6">
+<div>
+<h3 class="font-title text-title text-text-main mb-2">Nike Air Zoom Pegasus 39</h3>
+<p class="text-text-muted font-body mb-4">Talla: 42 | Color: Black/Gold</p>
+<div class="flex items-center gap-4 p-4 bg-surface-bright rounded-xl border border-surface-variant">
+<div class="flex-1">
+<p class="text-xs text-text-muted uppercase tracking-wider font-subtitle mb-1">Sistema Espera</p>
+<p class="font-title text-2xl text-secondary">24<span class="text-sm ml-1 text-text-muted">unidades</span></p>
+</div>
+<div class="w-px h-12 bg-surface-variant"></div>
+<div class="flex-1 text-right">
+<p class="text-xs text-text-muted uppercase tracking-wider font-subtitle mb-1">Precio Unitario</p>
+<p class="font-subtitle text-lg text-text-main">L. 3,499.00</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-2xl border border-surface-variant mt-2 text-center">
+<label class="block text-sm font-subtitle text-text-muted uppercase tracking-wider mb-4">Conteo Actual</label>
+<input class="w-full max-w-[200px] text-center bg-white border-2 border-surface-variant rounded-xl py-4 text-5xl font-title text-text-main focus:border-primary-container focus:ring-0 shadow-inner mx-auto mb-4 transition-colors" type="number" value="24"/>
+<div class="flex justify-center gap-2">
+<button class="w-12 h-12 rounded-full border border-surface-variant bg-white flex items-center justify-center text-text-main hover:bg-surface-bright shadow-sm">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<button class="w-12 h-12 rounded-full border border-surface-variant bg-white flex items-center justify-center text-text-main hover:bg-surface-bright shadow-sm">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<div class="flex gap-4 mt-auto">
+<button class="flex-1 border border-surface-variant text-text-main bg-white font-subtitle py-3 rounded-xl hover:bg-surface-bright transition-colors shadow-sm">Saltar</button>
+<button class="flex-1 bg-black-solid text-white font-subtitle py-3 rounded-xl hover:bg-gray-800 transition-colors shadow-md flex items-center justify-center gap-2">
+                                Guardar y Siguiente
+                                <span class="material-symbols-outlined text-sm">east</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Simple JS for toggling views (Micro-interaction) -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnTable = document.getElementById('btn-table');
+            const btnCarousel = document.getElementById('btn-carousel');
+            const viewTable = document.getElementById('view-table');
+            const viewCarousel = document.getElementById('view-carousel');
+
+            function setTableActive() {
+                // Style buttons
+                btnTable.classList.add('bg-surface-container-low', 'text-primary');
+                btnTable.classList.remove('text-secondary');
+                btnCarousel.classList.remove('bg-surface-container-low', 'text-primary');
+                btnCarousel.classList.add('text-secondary');
+                
+                // Show/Hide views
+                viewTable.classList.remove('hidden');
+                viewCarousel.classList.add('hidden');
+            }
+
+            function setCarouselActive() {
+                // Style buttons
+                btnCarousel.classList.add('bg-surface-container-low', 'text-primary');
+                btnCarousel.classList.remove('text-secondary');
+                btnTable.classList.remove('bg-surface-container-low', 'text-primary');
+                btnTable.classList.add('text-secondary');
+                
+                // Show/Hide views
+                viewCarousel.classList.remove('hidden');
+                viewTable.classList.add('hidden');
+            }
+
+            btnTable.addEventListener('click', setTableActive);
+            btnCarousel.addEventListener('click', setCarouselActive);
+        });
+    </script>
+</body></html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html><html class="h-full" lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Hondusport Admin - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-high": "#e7e8ed",
+                        "inverse-on-surface": "#f0f0f5",
+                        "on-tertiary-fixed-variant": "#484741",
+                        "on-error-container": "#93000a",
+                        "text-muted": "#606060",
+                        "tertiary-fixed-dim": "#c9c6be",
+                        "on-primary-fixed-variant": "#584400",
+                        "surface-dim": "#d9dadf",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e1e2e7",
+                        "primary-container": "#c9a84c",
+                        "tertiary": "#605e58",
+                        "secondary-container": "#e2e2e2",
+                        "on-background": "#191c1f",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#d0c5b2",
+                        "on-tertiary-fixed": "#1c1c16",
+                        "surface-container": "#edeef3",
+                        "surface-bright": "#f8f9fe",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "tertiary-container": "#aeaba3",
+                        "inverse-surface": "#2e3134",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-surface-variant": "#4d4637",
+                        "on-surface": "#191c1f",
+                        "surface-container-low": "#f2f3f8",
+                        "surface": "#f8f9fe",
+                        "secondary": "#5e5e5e",
+                        "background": "#f8f9fe",
+                        "success": "#1b8959",
+                        "on-error": "#ffffff",
+                        "text-main": "#1e1e1e",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#241a00",
+                        "inverse-primary": "#e6c364",
+                        "primary-fixed-dim": "#e6c364",
+                        "tertiary-fixed": "#e6e2d9",
+                        "outline": "#7e7665",
+                        "on-primary-container": "#503d00",
+                        "on-secondary": "#ffffff",
+                        "surface-tint": "#755b00",
+                        "primary": "#755b00",
+                        "primary-fixed": "#ffe08f",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-secondary-container": "#646464",
+                        "surface-variant": "#e1e2e7",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "white": "#ffffff",
+                        "error": "#910022",
+                        "on-tertiary-container": "#414039"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "stack-lg": "2rem",
+                        "gutter": "1rem",
+                        "margin-desktop": "2.5rem",
+                        "margin-mobile": "1rem",
+                        "stack-sm": "0.5rem",
+                        "stack-md": "1rem"
+                    },
+                    fontFamily: {
+                        "subtitle": ["Poppins", "sans-serif"],
+                        "caption": ["Poppins", "sans-serif"],
+                        "header-mobile": ["Poppins", "sans-serif"],
+                        "header": ["Poppins", "sans-serif"],
+                        "body": ["Poppins", "sans-serif"],
+                        "title": ["Poppins", "sans-serif"]
+                    },
+                    fontSize: {
+                        "subtitle": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "header-mobile": ["32px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "header": ["48px", { "lineHeight": "52px", "fontWeight": "500" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "title": ["28px", { "lineHeight": "32px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Poppins', sans-serif; background-color: #dbdce1; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            color: #c9a84c;
+        }
+        .metric-card {
+            box-shadow: 0 4px 6px -1px rgba(18, 30, 108, 0.08), 0 2px 4px -1px rgba(18, 30, 108, 0.04);
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        .metric-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(18, 30, 108, 0.12), 0 4px 6px -2px rgba(18, 30, 108, 0.05);
+        }
+        .segment-btn.active {
+            background-color: #191c1f;
+            color: white;
+        }
+    </style>
+</head>
+<body class="flex h-full overflow-hidden text-on-surface">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen flex flex-col z-40 w-64 bg-surface-container-lowest dark:bg-surface-container-low border-r border-outline-variant dark:border-on-primary-fixed-variant">
+<div class="p-6">
+<h1 class="font-label-caps text-label-caps tracking-widest text-secondary dark:text-secondary-fixed">Hondusport Admin</h1>
+<p class="text-xs text-text-muted mt-1">Panel de Control</p>
+</div>
+<div class="flex flex-col gap-2 px-2 mt-4 flex-1">
+<a class="bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed rounded-lg mx-2 my-1 flex items-center px-4 py-3 translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="text-on-surface-variant dark:text-tertiary-fixed-dim hover:bg-surface-container-high dark:hover:bg-primary-container rounded-lg mx-2 my-1 flex items-center px-4 py-3 hover:text-primary dark:hover:text-primary-fixed transition-all" href="#">
+<span class="material-symbols-outlined mr-3">inventory_2</span>
+<span class="font-body-md text-body-md">Inventario</span>
+</a>
+<a class="text-on-surface-variant dark:text-tertiary-fixed-dim hover:bg-surface-container-high dark:hover:bg-primary-container rounded-lg mx-2 my-1 flex items-center px-4 py-3 hover:text-primary dark:hover:text-primary-fixed transition-all" href="#">
+<span class="material-symbols-outlined mr-3">point_of_sale</span>
+<span class="font-body-md text-body-md">Ventas/POS</span>
+</a>
+<a class="text-on-surface-variant dark:text-tertiary-fixed-dim hover:bg-surface-container-high dark:hover:bg-primary-container rounded-lg mx-2 my-1 flex items-center px-4 py-3 hover:text-primary dark:hover:text-primary-fixed transition-all" href="#">
+<span class="material-symbols-outlined mr-3">group</span>
+<span class="font-body-md text-body-md">Clientes</span>
+</a>
+<a class="text-on-surface-variant dark:text-tertiary-fixed-dim hover:bg-surface-container-high dark:hover:bg-primary-container rounded-lg mx-2 my-1 flex items-center px-4 py-3 hover:text-primary dark:hover:text-primary-fixed transition-all" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+<span class="font-body-md text-body-md">Reportes</span>
+</a>
+<a class="text-on-surface-variant dark:text-tertiary-fixed-dim hover:bg-surface-container-high dark:hover:bg-primary-container rounded-lg mx-2 my-1 flex items-center px-4 py-3 hover:text-primary dark:hover:text-primary-fixed transition-all" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-body-md text-body-md">Configuración</span>
+</a>
+</div>
+<div class="p-4 border-t border-outline-variant flex items-center">
+<img alt="Admin User Avatar" class="w-10 h-10 rounded-full object-cover mr-3" data-alt="A small circular profile picture of an administrative user in a corporate sportswear setting. The user looks professional, dressed in a sleek black polo shirt. The lighting is soft and modern, highlighting a clean, efficient workspace background in cool grays." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWC7YGZBx-SsBUYU69bLwEZ6IQab2OeA2UCNvWjeplTDgvBrTTk97pf8AZfIP0mp1E2MB1KaDsWPffWjidh56NX0x0ut4DHbWiBRgAQLqWk6XhgxAi_VEzNoroS72C61cRHEL_cFeb4kohPq9Yfjh4WFHNYvEXxSgAL6_PkFSyFo6FDhgVKuCS7AMFIrX1USkl0ltIaW3uw1-vIcqBMnPcv25xqUft0Olo5cq2V96K2LCj3T0H-W2z">
+<div>
+<p class="font-subtitle text-sm">Admin User</p>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="ml-64 flex-1 flex flex-col h-screen overflow-y-auto">
+<div class="px-margin-desktop py-8 max-w-7xl mx-auto w-full">
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+<h2 class="font-title text-title font-bold text-on-background">Inicio</h2>
+<!-- Date Filter -->
+<div class="bg-surface-container-lowest p-1 rounded-full flex shadow-sm border border-outline-variant">
+<button class="segment-btn active px-4 py-1.5 rounded-full text-sm font-medium transition-colors">Hoy</button>
+<button class="segment-btn px-4 py-1.5 rounded-full text-sm font-medium text-text-muted hover:bg-surface-container-low transition-colors">Semana</button>
+<button class="segment-btn px-4 py-1.5 rounded-full text-sm font-medium text-text-muted hover:bg-surface-container-low transition-colors">Mes</button>
+<button class="segment-btn px-4 py-1.5 rounded-full text-sm font-medium text-text-muted hover:bg-surface-container-low transition-colors">Año</button>
+<button class="segment-btn px-4 py-1.5 rounded-full text-sm font-medium text-text-muted hover:bg-surface-container-low transition-colors flex items-center">
+<span class="material-symbols-outlined !text-current text-[18px] mr-1">calendar_today</span> Personalizado
+                    </button>
+</div>
+</div>
+<!-- Metrics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+<!-- Ventas -->
+<div class="metric-card bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden"><div class="flex items-center justify-between mb-6"><h3 class="font-subtitle text-subtitle text-text-muted">Ventas</h3><span class="material-symbols-outlined text-2xl">point_of_sale</span></div><div class="space-y-4"><div class="mb-2"><p class="font-bold text-2xl">L. 45,230.00</p><p class="text-xs text-text-muted mt-1">Ventas sin ISV</p></div><div class="flex justify-between items-center pt-2 border-t border-surface-variant"><p class="text-sm text-text-muted">Costo: <span class="text-on-surface font-medium">L. 22,110.00</span></p><p class="text-sm font-medium text-success">Utilidad: 51%</p></div></div></div>
+<!-- Documentos -->
+<div class="metric-card bg-surface-container-lowest rounded-xl p-6"><div class="flex items-center justify-between mb-6"><h3 class="font-subtitle text-subtitle text-text-muted">Documentos</h3><span class="material-symbols-outlined text-2xl">description</span></div><div class="space-y-4"><div class="mb-2"><p class="font-bold text-2xl">142</p><p class="text-xs text-text-muted mt-1">Total emitidos</p></div><div class="flex gap-4 pt-2 border-t border-surface-variant"><p class="text-sm text-text-muted">Facturas: <span class="text-on-surface font-medium">128</span></p><p class="text-sm text-text-muted">Comprobantes: <span class="text-on-surface font-medium">14</span></p></div></div></div>
+<!-- Cotizaciones -->
+<div class="metric-card bg-surface-container-lowest rounded-xl p-6"><div class="flex items-center justify-between mb-6"><h3 class="font-subtitle text-subtitle text-text-muted">Cotizaciones</h3><span class="material-symbols-outlined text-2xl">request_quote</span></div><div class="space-y-4"><div class="mb-2"><p class="font-bold text-2xl text-primary-container">35</p><p class="text-xs text-text-muted mt-1">Abiertas</p></div><div class="flex gap-4 pt-2 border-t border-surface-variant"><p class="text-sm text-success font-medium">22 <span class="text-xs text-text-muted font-normal">Ganadas</span></p><p class="text-sm text-error font-medium">8 <span class="text-xs text-text-muted font-normal">Perdidas</span></p></div></div></div>
+<!-- CXC -->
+<div class="metric-card bg-surface-container-lowest rounded-xl p-6"><div class="flex items-center justify-between mb-6"><h3 class="font-subtitle text-subtitle text-text-muted">Cuentas por cobrar</h3><span class="material-symbols-outlined text-2xl">account_balance_wallet</span></div><div class="space-y-4"><div class="mb-2"><p class="font-bold text-2xl">L. 12,000.00</p><p class="text-xs text-text-muted mt-1">Crédito nuevo</p></div><div class="flex justify-between items-center pt-2 border-t border-surface-variant"><p class="text-sm text-success font-medium">Cobrado: L. 8,500.00</p><p class="text-sm font-semibold">Total: L. 25,400.00</p></div></div></div>
+<!-- CXP -->
+<div class="metric-card bg-surface-container-lowest rounded-xl p-6"><div class="flex items-center justify-between mb-6"><h3 class="font-subtitle text-subtitle text-text-muted">Cuentas por pagar</h3><span class="material-symbols-outlined text-2xl">payments</span></div><div class="space-y-4"><div class="mb-2"><p class="font-bold text-2xl">L. 5,000.00</p><p class="text-xs text-text-muted mt-1">Crédito nuevo</p></div><div class="flex justify-between items-center pt-2 border-t border-surface-variant"><p class="text-sm text-success font-medium">Pagado: L. 4,200.00</p><p class="text-sm font-semibold">Total: L. 15,300.00</p></div></div></div>
+<!-- Ítems -->
+<div class="metric-card bg-surface-container-lowest rounded-xl p-6"><div class="flex items-center justify-between mb-6"><h3 class="font-subtitle text-subtitle text-text-muted">Ítems</h3><span class="material-symbols-outlined text-2xl">inventory</span></div><div class="space-y-3"><div class="bg-error-container text-on-error-container p-3 rounded-lg flex items-center justify-between"><div class="flex items-center"><span class="material-symbols-outlined !text-on-error-container mr-2 text-xl">warning</span><span class="font-medium text-sm">Stock bajo</span></div><span class="font-bold text-lg">12</span></div><div class="bg-surface-container p-3 rounded-lg flex items-center justify-between"><span class="text-sm font-medium">Ítems nuevos</span><span class="font-bold">4</span></div></div></div>
+</div>
+<!-- Bottom Section (Tables) -->
+<div class="bg-surface-container-lowest rounded-xl p-6 metric-card mb-8">
+<h3 class="font-subtitle text-subtitle mb-4">Últimos documentos</h3>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-variant text-text-muted text-sm">
+<th class="py-3 px-4 font-medium">Fecha</th>
+<th class="py-3 px-4 font-medium">Cliente</th>
+<th class="py-3 px-4 font-medium">Tipo</th>
+<th class="py-3 px-4 font-medium text-right">Total</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-4">24 Oct, 2023</td>
+<td class="py-3 px-4 font-medium">Club Deportivo Olimpia</td>
+<td class="py-3 px-4"><span class="bg-secondary-container text-on-secondary-container px-2 py-1 rounded text-xs">Factura</span></td>
+<td class="py-3 px-4 text-right font-semibold">L. 12,500.00</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-4">24 Oct, 2023</td>
+<td class="py-3 px-4 font-medium">Gimnasio FitLife</td>
+<td class="py-3 px-4"><span class="bg-surface-variant px-2 py-1 rounded text-xs">Comprobante</span></td>
+<td class="py-3 px-4 text-right font-semibold">L. 3,200.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple tab switching logic for the demo
+        document.querySelectorAll('.segment-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.segment-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-[#191c1f]', 'text-white');
+                    b.classList.add('text-text-muted');
+                });
+                this.classList.add('active');
+                this.classList.remove('text-text-muted');
+            });
+        });
+    </script>
+
+
+</body></html>

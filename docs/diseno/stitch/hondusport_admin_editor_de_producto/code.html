@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hondusport Admin - Editor de Producto</title>
+<!-- Google Fonts: Be Vietnam Pro (used across all typography tokens) -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration (Design System Tokens) -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d9dadf",
+                    "on-surface": "#191c1f",
+                    "secondary": "#5e5e5e",
+                    "success": "#1b8959",
+                    "on-secondary-container": "#646464",
+                    "outline-variant": "#d0c5b2",
+                    "inverse-primary": "#e6c364",
+                    "primary": "#755b00",
+                    "on-tertiary-container": "#414039",
+                    "on-primary-fixed": "#241a00",
+                    "tertiary-fixed": "#e6e2d9",
+                    "surface-container-highest": "#e1e2e7",
+                    "background": "#f8f9fe",
+                    "on-background": "#191c1f",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed-dim": "#e6c364",
+                    "surface-container-low": "#f2f3f8",
+                    "surface-variant": "#e1e2e7",
+                    "on-tertiary-fixed-variant": "#484741",
+                    "secondary-fixed": "#e2e2e2",
+                    "primary-container": "#c9a84c",
+                    "surface-container": "#edeef3",
+                    "on-primary-fixed-variant": "#584400",
+                    "surface": "#f8f9fe",
+                    "tertiary-container": "#aeaba3",
+                    "white": "#ffffff",
+                    "on-secondary-fixed-variant": "#474747",
+                    "error-container": "#ffdad6",
+                    "primary-fixed": "#ffe08f",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#e2e2e2",
+                    "outline": "#7e7665",
+                    "tertiary": "#605e58",
+                    "surface-container-high": "#e7e8ed",
+                    "surface-tint": "#755b00",
+                    "on-error": "#ffffff",
+                    "text-muted": "#606060",
+                    "surface-bright": "#f8f9fe",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "secondary-fixed-dim": "#c6c6c6",
+                    "on-secondary-fixed": "#1b1b1b",
+                    "on-surface-variant": "#4d4637",
+                    "error": "#910022",
+                    "on-tertiary-fixed": "#1c1c16",
+                    "text-main": "#1e1e1e",
+                    "inverse-on-surface": "#f0f0f5",
+                    "tertiary-fixed-dim": "#c9c6be",
+                    "inverse-surface": "#2e3134",
+                    "on-primary-container": "#503d00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-sm": "0.5rem",
+                    "stack-md": "1rem",
+                    "stack-lg": "2rem",
+                    "margin-mobile": "1rem",
+                    "margin-desktop": "2.5rem",
+                    "gutter": "1rem"
+            },
+            "fontFamily": {
+                    "caption": ["Be Vietnam Pro"],
+                    "body": ["Be Vietnam Pro"],
+                    "header-mobile": ["Be Vietnam Pro"],
+                    "subtitle": ["Be Vietnam Pro"],
+                    "title": ["Be Vietnam Pro"],
+                    "header": ["Be Vietnam Pro"]
+            },
+            "fontSize": {
+                    "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                    "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                    "header-mobile": ["32px", { "lineHeight": "36px", "fontWeight": "600" }],
+                    "subtitle": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                    "title": ["28px", { "lineHeight": "32px", "fontWeight": "400" }],
+                    "header": ["48px", { "lineHeight": "52px", "fontWeight": "500" }]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Custom Utilities for Input Fields based on Style Guidance */
+        .premium-input {
+            @apply w-full bg-surface-variant text-on-surface rounded-xl px-4 py-3 border border-transparent outline-none transition-all duration-200 font-body text-body;
+        }
+        .premium-input:focus {
+            @apply border-primary-container bg-surface-container-lowest shadow-[0_0_0_2px_rgba(201,168,76,0.2)];
+        }
+        .premium-label {
+            @apply font-subtitle text-subtitle text-on-surface block mb-2;
+        }
+        .premium-card {
+            @apply bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-highest p-6 hover:shadow-md transition-shadow duration-300;
+        }
+        /* Hide scrollbar for cleaner UI on side nav */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body antialiased min-h-screen flex">
+<!-- Shared Component: SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest shadow-md z-40 hidden md:flex">
+<div class="flex flex-col h-full py-6 px-4 border-r border-outline-variant w-full overflow-y-auto no-scrollbar">
+<!-- Brand Header -->
+<div class="mb-8 px-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-inverse-primary" style="font-variation-settings: 'FILL' 1;">sports_score</span>
+</div>
+<div>
+<h2 class="font-title text-title font-bold text-on-surface leading-none">Hondusport</h2>
+<span class="font-caption text-caption text-secondary">Admin Panel</span>
+</div>
+</div>
+</div>
+<!-- CTA -->
+<div class="mb-6 px-2">
+<button class="w-full bg-on-surface hover:bg-inverse-surface text-white font-subtitle text-subtitle py-3 rounded-full flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 shadow-md">
+<span class="material-symbols-outlined">add</span>
+                    New Sale
+                </button>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col gap-2 font-body text-body font-subtitle text-subtitle">
+<!-- Dashboard -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">dashboard</span>
+                        Dashboard
+                    </a>
+</li>
+<!-- Inventory (ACTIVE - Context match for Product Editor) -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-primary rounded-lg font-bold transition-all duration-200 active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+                        Inventory
+                    </a>
+</li>
+<!-- POS -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">point_of_sale</span>
+                        POS
+                    </a>
+</li>
+<!-- Clients -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">group</span>
+                        Clients
+                    </a>
+</li>
+<!-- Reports -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">assessment</span>
+                        Reports
+                    </a>
+</li>
+<!-- Configuration -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary-container transition-colors">settings</span>
+                        Configuration
+                    </a>
+</li>
+</ul>
+<!-- User Profile (Bottom) -->
+<div class="mt-auto px-4 pt-6 border-t border-surface-container">
+<div class="flex items-center gap-3 cursor-pointer group">
+<img alt="Admin User Profile" class="w-10 h-10 rounded-full object-cover border-2 border-transparent group-hover:border-primary-container transition-colors" data-alt="A professional close-up headshot of a modern retail manager with a friendly, welcoming expression, high-key lighting, bright white background, corporate athletic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-b0WQGQt9ZuwRU77C0AM0O1AMj5lSrnqjbCo14ZEHDNwdYcLONZ-vbUFhF_K-rvHPx_LZekHbChkn7WsDn4w6M0ZCmdDv_EZKT30UV4Z5yBxbZKezWoetrRNKoR4LevO1nuFqImktWK7F9ssu95nE1qvr__MnKUE6NY-j4SgVY2MJudqWqb9sGSBmMs-PVTBhtl6lL9m9bNZLPboyUZSvxP9bVw-lPTF7w0nkpqpYhtYhTziezPRh"/>
+<div>
+<p class="font-subtitle text-subtitle text-on-surface">Admin User</p>
+<p class="font-caption text-caption text-secondary">View Profile</p>
+</div>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col min-w-0 md:ml-64">
+<!-- Shared Component: TopAppBar -->
+<header class="docked full-width top-0 sticky bg-white shadow-sm z-30 h-16 px-margin-desktop flex justify-between items-center w-full">
+<!-- Brand / Mobile Menu (Hidden on desktop as requested by spacing, but good practice to have) -->
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface">
+<span class="material-symbols-outlined text-[24px]">menu</span>
+</button>
+<h1 class="font-title text-title font-black text-on-surface hidden md:block">Hondusport Athletics</h1>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80 p-2 rounded-full hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80 p-2 rounded-full hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-[24px]">help</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80 p-2 rounded-full hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-[24px]">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Page Canvas -->
+<main class="p-margin-desktop flex-1 overflow-y-auto">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+<div>
+<nav aria-label="Breadcrumb" class="flex text-sm text-secondary mb-2 font-body text-caption">
+<ol class="inline-flex items-center space-x-1 md:space-x-3">
+<li class="inline-flex items-center">
+<a class="hover:text-primary-container transition-colors" href="#">Inventario</a>
+</li>
+<li>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<span class="text-on-surface ml-1 font-subtitle">Editar Producto</span>
+</div>
+</li>
+</ol>
+</nav>
+<h2 class="font-header text-header-mobile md:text-header text-on-surface">Editar Producto</h2>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2 rounded-full border border-outline text-on-surface font-subtitle text-subtitle hover:bg-surface-container-highest transition-colors">
+                        Cancelar
+                    </button>
+<button class="px-6 py-2 rounded-full bg-on-surface text-white font-subtitle text-subtitle hover:bg-inverse-surface shadow-md transition-all active:scale-95 flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                        Guardar Cambios
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- LEFT COLUMN (Main Data) -->
+<div class="md:col-span-8 flex flex-col gap-8">
+<!-- Section 1: General Information -->
+<section class="premium-card">
+<h3 class="font-title text-title text-on-surface mb-6 flex items-center gap-2 border-b border-surface-variant pb-4">
+<span class="material-symbols-outlined text-primary-container">info</span>
+                            Información General
+                        </h3>
+<div class="space-y-6">
+<div>
+<label class="premium-label" for="product-name">Nombre del producto</label>
+<input class="premium-input" id="product-name" placeholder="Ej. Camiseta Pro Elite V2" type="text" value="Camiseta Pro Elite V2"/>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="premium-label" for="category">Categoría</label>
+<div class="relative">
+<select class="premium-input appearance-none" id="category">
+<option>Ropa Deportiva</option>
+<option>Calzado</option>
+<option>Accesorios</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-secondary pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="premium-label" for="subcategory">Subcategoría</label>
+<div class="relative">
+<select class="premium-input appearance-none" id="subcategory">
+<option>Camisetas Transpirables</option>
+<option>Pantalones Cortos</option>
+<option>Compresión</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-secondary pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<div>
+<label class="premium-label mb-3">Descripción</label>
+<textarea class="premium-input resize-none" placeholder="Descripción detallada del producto..." rows="4">Camiseta de alto rendimiento fabricada con tecnología de absorción de humedad, ideal para entrenamientos intensos y competiciones.</textarea>
+</div>
+</div>
+</section>
+<!-- Section 2: Pricing -->
+<section class="premium-card">
+<h3 class="font-title text-title text-on-surface mb-6 flex items-center gap-2 border-b border-surface-variant pb-4">
+<span class="material-symbols-outlined text-primary-container">payments</span>
+                            Precios
+                        </h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div>
+<label class="premium-label" for="price-sale">Precio de venta</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary font-subtitle">L.</span>
+<input class="premium-input pl-10" id="price-sale" type="number" value="850.00"/>
+</div>
+</div>
+<div>
+<label class="premium-label" for="price-reseller">Precio revendedor</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary font-subtitle">L.</span>
+<input class="premium-input pl-10" id="price-reseller" type="number" value="600.00"/>
+</div>
+</div>
+<div>
+<label class="premium-label" for="price-cost">Costo</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary font-subtitle">L.</span>
+<input class="premium-input pl-10" id="price-cost" type="number" value="450.00"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 5: Variants Table -->
+<section class="premium-card">
+<div class="flex justify-between items-center mb-6 border-b border-surface-variant pb-4">
+<h3 class="font-title text-title text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">style</span>
+                                Variantes
+                            </h3>
+<button class="text-primary-container hover:text-primary font-subtitle text-subtitle flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                                Agregar Variante
+                            </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body text-body">
+<thead>
+<tr>
+<th class="pb-3 font-subtitle text-secondary border-b border-surface-variant font-medium">Nombre</th>
+<th class="pb-3 font-subtitle text-secondary border-b border-surface-variant font-medium">SKU</th>
+<th class="pb-3 font-subtitle text-secondary border-b border-surface-variant font-medium">Precio (L.)</th>
+<th class="pb-3 font-subtitle text-secondary border-b border-surface-variant font-medium">Stock</th>
+<th class="pb-3 border-b border-surface-variant"></th>
+</tr>
+</thead>
+<tbody class="text-on-surface">
+<tr class="group hover:bg-surface-container-lowest transition-colors border-b border-surface-variant last:border-0">
+<td class="py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center font-subtitle text-sm">S</div>
+<span>Talla S - Negro</span>
+</div>
+</td>
+<td class="py-4 text-secondary font-mono text-sm">HND-PE2-S-BLK</td>
+<td class="py-4">850.00</td>
+<td class="py-4">
+<input class="w-20 bg-surface-variant rounded-lg px-2 py-1 text-center border-transparent focus:border-primary-container outline-none" type="number" value="24"/>
+</td>
+<td class="py-4 text-right">
+<button class="text-secondary hover:text-error transition-colors p-2">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-lowest transition-colors border-b border-surface-variant last:border-0">
+<td class="py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center font-subtitle text-sm">M</div>
+<span>Talla M - Negro</span>
+</div>
+</td>
+<td class="py-4 text-secondary font-mono text-sm">HND-PE2-M-BLK</td>
+<td class="py-4">850.00</td>
+<td class="py-4">
+<input class="w-20 bg-surface-variant rounded-lg px-2 py-1 text-center border-transparent focus:border-primary-container outline-none" type="number" value="56"/>
+</td>
+<td class="py-4 text-right">
+<button class="text-secondary hover:text-error transition-colors p-2">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-lowest transition-colors border-b border-surface-variant last:border-0">
+<td class="py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center font-subtitle text-sm">L</div>
+<span>Talla L - Negro</span>
+</div>
+</td>
+<td class="py-4 text-secondary font-mono text-sm">HND-PE2-L-BLK</td>
+<td class="py-4">850.00</td>
+<td class="py-4">
+<input class="w-20 bg-surface-variant rounded-lg px-2 py-1 text-center border-transparent focus:border-primary-container outline-none" type="number" value="12"/>
+</td>
+<td class="py-4 text-right">
+<button class="text-secondary hover:text-error transition-colors p-2">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- RIGHT COLUMN (Images, Meta, Settings) -->
+<div class="md:col-span-4 flex flex-col gap-8">
+<!-- Section 4: Images -->
+<section class="premium-card">
+<h3 class="font-title text-title text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">image</span>
+                            Imágenes
+                        </h3>
+<p class="font-body text-body text-secondary mb-6 text-sm">Sube imágenes en formato cuadrado (1080x1080px) para mejor visualización.</p>
+<!-- Primary Image Dropzone -->
+<div class="relative group cursor-pointer w-full aspect-square bg-surface-variant rounded-xl border-2 border-dashed border-outline-variant hover:border-primary-container transition-colors mb-4 flex flex-col items-center justify-center overflow-hidden">
+<!-- Background Image Placeholder (simulating uploaded state) -->
+<div class="absolute inset-0 bg-cover bg-center z-0 opacity-80 group-hover:opacity-100 transition-opacity" data-alt="A pristine, highly detailed studio shot of a premium black athletic t-shirt for men, featuring subtle gold branding on the chest. High contrast, clean white background, dramatic side lighting emphasizing the fabric texture. Modern sports retail aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD2WaFVe_7xs3CosEWl_Qu1c6k3sWbY8Lh_Q2p-F9hgja6-AVT6BGZhxyDE_Fi__m2oRSYl8TyHqag5PVGZKjfx7A--_E4Oq4jc03KlS6AviJk7ffZJOWgQa7vEk4qHeoOIi7rY9xF-OdBvhl3JZkpSCiWNFTGKsWqr5OeR3ZV-GZQi3iTVMM2DkOKy7xnMVmvOsn5gTwz8eAHn6rahMahLVCaXvU_ZeLk2SPaQOFITbE1_Vq2OdLop')"></div>
+<!-- Overlay actions -->
+<div class="relative z-10 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+<span class="material-symbols-outlined text-on-surface text-[20px]">edit</span>
+<span class="font-subtitle text-sm text-on-surface">Cambiar Principal</span>
+</div>
+</div>
+<!-- Secondary Images Grid -->
+<div class="grid grid-cols-4 gap-3">
+<div class="aspect-square rounded-lg bg-surface-variant border border-surface-container overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-primary-container transition-all">
+<img alt="Detail 1" class="w-full h-full object-cover" data-alt="Close up detail shot of breathable athletic mesh fabric on a black sports shirt, highlighting premium stitching and high-performance material texture. Crisp studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBl4EeH_sD7WLrkFscSqv6bIkzLRn9PrYjG-KPK0g8NT-J4dN0697Mc8VXKFBFO3fcJUq9j-VOuYPa759m0-_KIapWdHysUL88CKy0h4PW9l5clx9SJUSzaDd_HgwAj6LLmCSt70k5VJ0udbpO62sPImsZhiIsvKHTluFpBFow0nMMqegk2_RuVIfm1pSz89SkX_kNZFTtbBEswXTW0M_nRZW3i0ONtHSDF_4bEIoZo9z6S0tqpkkcX"/>
+</div>
+<div class="aspect-square rounded-lg bg-surface-variant border border-surface-container overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-primary-container transition-all">
+<img alt="Detail 2" class="w-full h-full object-cover" data-alt="Back view of a black athletic t-shirt on a ghost mannequin, showcasing an ergonomic cut and a subtle gold reflective strip down the spine. Modern performance wear context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDh-zmHwt7Kg9FpRvPkTx2Le6kyRAnVurUZm-ObRU23TZKW2HxVV4vZbTdVAJk-QGIDgd-f13DqNXERAIGXO0RbhfbuXx13zSiMJFeSLSxTYf-7wv3M1Ewcdz0NJczbE0balaJA_qPykekGM7bHuiOFVnB4x99yL9nyAbRfQUm7gGkEkwntKPQj4N8SokY7Xeie2wVomVrPYTX4TbyMtcYvLtXBVgYXIB71sXnTgWXqCtYL7XNukRZ"/>
+</div>
+<div class="aspect-square rounded-lg bg-surface-variant border border-dashed border-outline flex flex-col items-center justify-center text-secondary hover:text-primary-container hover:bg-surface-container-highest cursor-pointer transition-all">
+<span class="material-symbols-outlined">add_photo_alternate</span>
+</div>
+</div>
+</section>
+<!-- Section 3: Inventory (Base) -->
+<section class="premium-card">
+<h3 class="font-title text-title text-on-surface mb-6 flex items-center gap-2 border-b border-surface-variant pb-4">
+<span class="material-symbols-outlined text-primary-container">inventory_2</span>
+                            Inventario Base
+                        </h3>
+<div class="space-y-6">
+<div>
+<label class="premium-label" for="sku-base">SKU Principal</label>
+<input class="premium-input font-mono text-sm uppercase" id="sku-base" type="text" value="HND-PE2-BLK"/>
+<p class="text-xs text-secondary mt-1">Este SKU se usa como prefijo para las variantes.</p>
+</div>
+<div>
+<label class="premium-label" for="stock-initial">Stock Total (Calculado)</label>
+<input class="premium-input bg-surface-container-highest text-secondary" disabled="" id="stock-initial" readonly="" type="text" value="92"/>
+</div>
+</div>
+</section>
+<!-- Section: Channel / Visibility -->
+<section class="premium-card">
+<h3 class="font-title text-title text-on-surface mb-6 flex items-center gap-2 border-b border-surface-variant pb-4">
+<span class="material-symbols-outlined text-primary-container">storefront</span>
+                            Canal de Venta
+                        </h3>
+<div class="space-y-4 font-body text-body">
+<!-- Custom Radio Chips -->
+<label class="flex items-center p-4 border rounded-xl cursor-pointer transition-all hover:bg-surface-container-highest border-primary-container bg-surface-container-lowest ring-1 ring-primary-container shadow-[0_0_0_2px_rgba(201,168,76,0.1)]">
+<input checked="" class="w-5 h-5 text-primary-container bg-white border-outline focus:ring-primary-container focus:ring-2" name="channel" type="radio" value="tienda"/>
+<div class="ml-4 flex flex-col">
+<span class="font-subtitle text-on-surface">Tienda Online &amp; Mostrador</span>
+<span class="font-caption text-caption text-secondary mt-1">Disponible en todos los canales.</span>
+</div>
+</label>
+<label class="flex items-center p-4 border border-surface-container rounded-xl cursor-pointer transition-all hover:bg-surface-container-highest">
+<input class="w-5 h-5 text-primary-container bg-white border-outline focus:ring-primary-container focus:ring-2" name="channel" type="radio" value="mostrador"/>
+<div class="ml-4 flex flex-col">
+<span class="font-subtitle text-on-surface">Solo Mostrador (POS)</span>
+<span class="font-caption text-caption text-secondary mt-1">Oculto en la tienda online.</span>
+</div>
+</label>
+</div>
+</section>
+</div>
+</div>
+<!-- Bottom padding for breathing room -->
+<div class="h-12"></div>
+</main>
+</div>
+</body></html>

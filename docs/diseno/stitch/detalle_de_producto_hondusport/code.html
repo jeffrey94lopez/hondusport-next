@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hondusport Athletics - Detalle de Producto</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e1e2e7",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#e2e2e2",
+                        "surface-container-low": "#f2f3f8",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-tertiary-fixed-variant": "#484741",
+                        "primary-fixed-dim": "#e6c364",
+                        "tertiary-container": "#aeaba3",
+                        "tertiary": "#605e58",
+                        "primary-fixed": "#ffe08f",
+                        "text-muted": "#606060",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "surface": "#dbdce1", /* Customized to #dbdce1 based on prompt */
+                        "on-secondary-fixed": "#1b1b1b",
+                        "error": "#910022",
+                        "on-error": "#ffffff",
+                        "surface-container": "#edeef3",
+                        "on-background": "#191c1f",
+                        "primary-container": "#c9a84c",
+                        "on-primary-container": "#503d00",
+                        "on-secondary": "#ffffff",
+                        "primary": "#755b00",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#584400",
+                        "inverse-primary": "#e6c364",
+                        "surface-dim": "#d9dadf",
+                        "inverse-surface": "#2e3134",
+                        "white": "#ffffff",
+                        "outline": "#7e7665",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#1c1c16",
+                        "on-surface-variant": "#4d4637",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#c9c6be",
+                        "on-secondary-container": "#646464",
+                        "on-primary-fixed": "#241a00",
+                        "surface-container-lowest": "#ffffff",
+                        "text-main": "#1e1e1e",
+                        "background": "#dbdce1", /* Customized */
+                        "tertiary-fixed": "#e6e2d9",
+                        "surface-tint": "#755b00",
+                        "surface-container-high": "#e7e8ed",
+                        "success": "#1b8959",
+                        "outline-variant": "#d0c5b2",
+                        "inverse-on-surface": "#f0f0f5",
+                        "on-surface": "#191c1f",
+                        "on-tertiary-container": "#414039",
+                        "surface-variant": "#e1e2e7",
+                        "surface-bright": "#f8f9fe",
+                        "secondary-container": "#e2e2e2",
+                        "secondary": "#5e5e5e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1rem", /* 16px as requested */
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "0.5rem",
+                        "stack-lg": "2rem",
+                        "stack-md": "1rem",
+                        "gutter": "1rem",
+                        "margin-desktop": "2.5rem",
+                        "margin-mobile": "1rem"
+                    },
+                    "fontFamily": {
+                        "header-mobile": ["Poppins", "sans-serif"],
+                        "caption": ["Poppins", "sans-serif"],
+                        "header": ["Poppins", "sans-serif"],
+                        "subtitle": ["Poppins", "sans-serif"],
+                        "body": ["Poppins", "sans-serif"],
+                        "title": ["Poppins", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "header-mobile": ["32px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "caption": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "header": ["48px", {"lineHeight": "52px", "fontWeight": "500"}],
+                        "subtitle": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "body": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "title": ["28px", {"lineHeight": "32px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { background-color: #dbdce1; font-family: 'Poppins', sans-serif; color: #1e1e1e; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-text-main antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="bg-surface dark:bg-inverse-surface fixed top-0 w-full z-50 shadow-sm border-b border-outline-variant transition-all">
+<div class="flex justify-between items-center px-margin-desktop py-4 max-w-[1280px] mx-auto">
+<!-- Brand Logo -->
+<a class="flex items-center gap-2 group" href="#">
+<img alt="HS Logo" class="h-10 w-auto object-contain transition-transform group-hover:scale-105 duration-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChGITe8FPkN2kCDyti5XlU_5P4n0JLSPe3h0xgH71qONSARJAsLw2coDQ9pmkPg2UDRsN9zOI4G496xVeixLfwW9t4voyJHoiUqMa8Wu53yhKd_sj18F6LXBH0cYo_E41c1yPUFzV4UcbMDjwDwaNw-K3nb6tJOqvIcb1PBlS_AwcvbVI5ljsZcDGiwFxNnzOiAc8G9vzZ3D5GMjdktd1Y3k2vffbP1WhreiY8wFY-lSrqLn8T-G79"/>
+<span class="font-header text-title font-bold text-primary dark:text-primary-fixed hidden sm:block">Hondusport Athletics</span>
+</a>
+<!-- Navigation Links (Desktop) -->
+<ul class="hidden md:flex items-center gap-8">
+<li><a class="font-body text-body text-secondary hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-all" href="#">Hombre</a></li>
+<li><a class="font-body text-body text-secondary hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-all" href="#">Mujer</a></li>
+<li><a class="font-body text-body text-secondary hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-all" href="#">Accesorios</a></li>
+<li><a class="font-body text-body text-primary font-bold border-b-2 border-primary pb-1 transition-all" href="#">Ofertas</a></li>
+</ul>
+<!-- Actions (Search & Icons) -->
+<div class="flex items-center gap-4">
+<!-- Search Bar -->
+<div class="hidden sm:flex relative group">
+<input class="bg-surface-container-highest border border-outline-variant text-text-main text-sm rounded-full pl-4 pr-10 py-2 w-48 focus:w-64 transition-all duration-300 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container placeholder-text-muted" placeholder="Buscar..." type="text"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+</button>
+</div>
+<button class="text-primary dark:text-primary-fixed hover:text-primary dark:hover:text-primary-fixed transition-all scale-105 transition-transform duration-200">
+<span class="material-symbols-outlined">person</span>
+</button>
+<button class="text-primary dark:text-primary-fixed hover:text-primary dark:hover:text-primary-fixed transition-all scale-105 transition-transform duration-200 relative">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="absolute -top-1 -right-1 bg-primary-container text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">2</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-[100px] pb-stack-lg px-margin-mobile md:px-margin-desktop max-w-[1280px] mx-auto w-full">
+<!-- Product Details Bento/Asymmetric Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-stack-lg">
+<!-- Left: Image Gallery (Span 7) -->
+<div class="lg:col-span-7 flex flex-col gap-4">
+<!-- Main Image -->
+<div class="bg-white rounded-xl shadow-[0_4px_24px_rgba(18,30,108,0.08)] overflow-hidden aspect-[4/3] w-full relative group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed, professional product shot of a premium, modern running shoe in a sleek black and gold colorway. The shoe is positioned on a clean white pedestal against a minimalist light gray studio backdrop. Soft, high-key lighting emphasizes the texture of the breathable mesh and the glossy finish of the gold accents. The aesthetic is high-end athletic retail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEubs7SeHO2j4KAIkEgmWoW0XnAtFrWsv8V_CTLTPGon5fXCmwW--Niqb125Sv0zHBgbP_IS6cSDJzoS-QKwGid3Vxn00w7LLuJ9P6llpKogixEPOEKc-O8bx162y4Rz_07fF0tXyIUApaVqWMFpXv0UqShsgWmxXKk6flm6kU2h98AAriHImQAuQq4MM2WltzlLhkq6tcIv52TT0isBCVw1jHJeNe1-IJYxRV2gF7G7YpLRkkg3dX"/>
+<!-- Badges -->
+<div class="absolute top-4 left-4 flex flex-col gap-2">
+<span class="bg-primary-container text-white font-caption text-caption px-3 py-1 rounded-full uppercase shadow-sm">Nuevo</span>
+</div>
+</div>
+<!-- Thumbnails -->
+<div class="grid grid-cols-4 gap-4">
+<div class="bg-white rounded-lg shadow-sm overflow-hidden aspect-square border-2 border-primary-container cursor-pointer opacity-100 transition-opacity">
+<img class="w-full h-full object-cover" data-alt="A highly detailed, professional product shot of a premium, modern running shoe in a sleek black and gold colorway. Side profile view. Soft, high-key lighting, minimalist light gray studio backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUO1LO7ghBgARr_7_vGGEDVqolAx0QScwQDlFjHvNG7BVBkTrEHsDhN70xEfKBeDm6kdqCfHlhMa9-Ywg_gvuJfEsUUv9DQ1c1NnQEOF8SEhod547HzIvCPRKwAeQj_IMiu2m74VwACK1T1sZipMT4ryB6XCwtgDgnG-wi2RUxXXuzfOD0PgpCIj8B-w7qea4BOIv5c0CRnNonFJsnQgWrCqmv0uKNRNc3G2azVEKyTWVrCxHS7feL"/>
+</div>
+<div class="bg-white rounded-lg shadow-sm overflow-hidden aspect-square border border-transparent hover:border-outline-variant cursor-pointer opacity-70 hover:opacity-100 transition-all">
+<img class="w-full h-full object-cover" data-alt="A highly detailed, professional product shot of a premium, modern running shoe in a sleek black and gold colorway. Top down view showing the laces and inner sole. Soft, high-key lighting, minimalist light gray studio backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB52Bbd8zPU5dzFmGVucB9NIZV-1lPLgDA8n_PHk_9TTNTHNyagQ34LQcBh7lfGcBPgByVe-TvGl6KEGGOsWrHHWUfIItlmD6s5fD7sUvSGDo01ayvB9YSSbNg0AOdsDGfCKam9UDmU2XZwx1CapXnuVE1JTsxa-Se4omOQbmQ5ZEbfQDYYB6blbY3bLnlsYit2u_WnLypZhpUDLq-Msp53mdJeilqb1bSio_KMf5dKZ3qB1qMUylFV"/>
+</div>
+<div class="bg-white rounded-lg shadow-sm overflow-hidden aspect-square border border-transparent hover:border-outline-variant cursor-pointer opacity-70 hover:opacity-100 transition-all">
+<img class="w-full h-full object-cover" data-alt="A highly detailed, professional product shot of a premium, modern running shoe in a sleek black and gold colorway. Rear heel view highlighting the cushioning technology. Soft, high-key lighting, minimalist light gray studio backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPbTNQzIA10e0tSpPRqQ_PbX7HQo_IY7-BnXyL84w7HktJn2UhoQw17lUk0OTgl7b0-AdCwmqrBCnghb3v4cZkOPbCx_83OsTCCiLwqI6alZ5Q3wB3gEeetFUwnnlcnzwt4KfjLKwIWG4v9LsxInA7UmfLRk6waSPDmiV3tHCWyw4SNlUsa1ahc7ZLL6_ERCdgltTVZwlZJxLNEkBFOq0sAko5cGgnlUGGpSi-Toj_ki2zbn_RdrfD"/>
+</div>
+<div class="bg-white rounded-lg shadow-sm overflow-hidden aspect-square border border-transparent hover:border-outline-variant cursor-pointer opacity-70 hover:opacity-100 transition-all">
+<img class="w-full h-full object-cover" data-alt="A highly detailed, professional product shot of a premium, modern running shoe in a sleek black and gold colorway. Angled dynamic view, as if mid-stride. Soft, high-key lighting, minimalist light gray studio backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMC0x1cakPJMKKf0TAKgqu-ZPOf2LKOlIAd5bQcyagZ9d7xPH2F6mXgWRXeL8EYyRx-xNSYNZHF1BguDBONFP4uAjkYS6KzqUBWrJuNzkhwMrUK4WzkUqc7udLv9kkirkv3EKYzApDeCSpr835oFeRhDnSWmbZyHTYTxB24WqFVFLpzvR6mBPmBHfvynfGwdTwgBqD8IlwdWS6BYQClWwVqCAm3E_zZkK28SZVDgnLx2Vgh8Hog-Zs"/>
+</div>
+</div>
+</div>
+<!-- Right: Product Info (Span 5) -->
+<div class="lg:col-span-5 flex flex-col justify-start">
+<div class="bg-white rounded-xl shadow-[0_4px_24px_rgba(18,30,108,0.08)] p-6 md:p-8 sticky top-[120px]">
+<!-- Brand/Category -->
+<p class="font-caption text-caption text-primary tracking-widest uppercase mb-2">Running Elite</p>
+<!-- Title -->
+<h1 class="font-header text-header-mobile md:text-header text-[#1e1e1e] mb-4 leading-tight">Tenis de Running Pro Velocity</h1>
+<!-- Rating & Reviews -->
+<div class="flex items-center gap-3 mb-6">
+<div class="flex items-center text-primary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-weight: 200;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-weight: 200;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-weight: 200;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-weight: 200;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-weight: 200;">star_half</span>
+</div>
+<span class="font-body text-sm text-text-muted">(128 Reseñas)</span>
+</div>
+<!-- Price -->
+<div class="mb-6 pb-6 border-b border-surface-container-highest">
+<span class="font-header text-3xl font-semibold text-[#1e1e1e]">L. 2,450.00</span>
+</div>
+<!-- Description -->
+<p class="font-body text-body text-text-muted mb-8 leading-relaxed">
+                        Diseñados para la máxima velocidad y comodidad. Los Pro Velocity cuentan con tecnología de amortiguación reactiva y una malla superior ultraligera para mantener tus pies frescos kilómetro tras kilómetro.
+                    </p>
+<!-- Size Selector -->
+<div class="mb-8">
+<div class="flex justify-between items-center mb-3">
+<span class="font-subtitle text-subtitle text-[#1e1e1e]">Talla (US)</span>
+<button class="text-sm text-primary hover:underline font-medium">Guía de tallas</button>
+</div>
+<div class="flex flex-wrap gap-3">
+<button class="w-12 h-12 rounded-full border border-outline-variant font-body text-text-main flex items-center justify-center hover:border-primary-container transition-colors">7</button>
+<button class="w-12 h-12 rounded-full border border-outline-variant font-body text-text-main flex items-center justify-center hover:border-primary-container transition-colors">8</button>
+<button class="w-12 h-12 rounded-full bg-primary-container text-white border border-primary-container font-body font-semibold shadow-md flex items-center justify-center">9</button>
+<button class="w-12 h-12 rounded-full border border-outline-variant font-body text-text-main flex items-center justify-center hover:border-primary-container transition-colors">10</button>
+<button class="w-12 h-12 rounded-full border border-surface-container-highest bg-surface-container-low text-text-muted cursor-not-allowed font-body flex items-center justify-center relative overflow-hidden">
+                                11
+                                <span class="absolute w-full h-[1px] bg-outline-variant rotate-45 top-1/2 left-0"></span>
+</button>
+</div>
+</div>
+<!-- Quantity & Actions -->
+<div class="flex flex-col sm:flex-row gap-4 mb-6">
+<!-- Quantity -->
+<div class="flex items-center justify-between border border-outline-variant rounded-full px-4 py-2 w-full sm:w-32 bg-white">
+<button class="text-text-main hover:text-primary-container transition-colors"><span class="material-symbols-outlined" style="font-size: 18px;">remove</span></button>
+<span class="font-subtitle text-subtitle">1</span>
+<button class="text-text-main hover:text-primary-container transition-colors"><span class="material-symbols-outlined" style="font-size: 18px;">add</span></button>
+</div>
+<!-- Add to Cart -->
+<button class="flex-grow bg-[#1e1e1e] hover:bg-black text-white font-subtitle text-subtitle rounded-full py-3 px-6 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group">
+<span>Agregar al carrito</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<!-- Favorite -->
+<button class="w-14 h-[50px] border border-primary-container text-primary-container hover:bg-[#faf6ed] rounded-full flex items-center justify-center transition-colors shadow-sm">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<!-- Delivery Info -->
+<div class="bg-surface-container-low rounded-lg p-4 flex flex-col gap-3">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary-container" style="font-weight: 300;">local_shipping</span>
+<p class="font-body text-sm text-text-muted">Envío gratis en órdenes mayores a L. 1,500.</p>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary-container" style="font-weight: 300;">assignment_return</span>
+<p class="font-body text-sm text-text-muted">Devoluciones fáciles en 30 días.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Related Products Section -->
+<section class="mt-16 mb-8">
+<div class="flex justify-between items-end mb-6 px-2">
+<h2 class="font-header text-title font-semibold text-[#1e1e1e]">Productos relacionados</h2>
+<div class="flex gap-2">
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-text-main hover:bg-white hover:shadow-sm transition-all"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-text-main hover:bg-white hover:shadow-sm transition-all"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+<!-- Horizontal Carousel -->
+<div class="flex gap-6 overflow-x-auto pb-6 hide-scrollbar snap-x px-2">
+<!-- Card 1 -->
+<div class="min-w-[280px] w-[280px] bg-white rounded-xl shadow-[0_4px_16px_rgba(18,30,108,0.06)] hover:shadow-[0_8px_24px_rgba(18,30,108,0.12)] transition-shadow duration-300 overflow-hidden flex flex-col group snap-start cursor-pointer">
+<div class="h-[240px] bg-surface-container-low relative overflow-hidden p-4 flex items-center justify-center">
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed, professional product shot of a premium athletic running shirt in a sleek black color. Positioned flat on a clean white surface. Soft, high-key lighting, minimalist light gray studio backdrop. High-end retail aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIGZoMSf704rZDRNQSd9Ydsc286D3VF9HS0vNNY3-892qTAAZPuecDxa6THUpCnvPYdZ6AvbwQF-SBJ2oMn47D8RBdSWQJK8wHgwduCnQ6GaWvYnG4RdfOEd4R5pN0bnUurrJB_0oCLfJx1t0D3SL9DgyQ0FRE-KMel3pL7IV6BcAhMwCMgEulyFXy_iJjeybhQhcA594ZSIGS2SopZeG8gtKwooWdn2hxZT6mpyhg7p3iAgFz07hz"/>
+<button class="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-secondary hover:text-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined" style="font-size: 18px;">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex items-center gap-1 text-primary-container mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star_half</span>
+<span class="text-xs text-text-muted ml-1">(45)</span>
+</div>
+<h3 class="font-subtitle text-subtitle text-[#1e1e1e] line-clamp-1 mb-1">Camiseta AeroSwift</h3>
+<p class="font-body text-sm text-text-muted mb-4">Ropa de rendimiento</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="font-subtitle font-bold text-lg text-[#1e1e1e]">L. 850.00</span>
+<button class="w-8 h-8 bg-[#1e1e1e] text-white rounded-full flex items-center justify-center hover:bg-black transition-colors"><span class="material-symbols-outlined" style="font-size: 18px;">add</span></button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="min-w-[280px] w-[280px] bg-white rounded-xl shadow-[0_4px_16px_rgba(18,30,108,0.06)] hover:shadow-[0_8px_24px_rgba(18,30,108,0.12)] transition-shadow duration-300 overflow-hidden flex flex-col group snap-start cursor-pointer">
+<div class="h-[240px] bg-surface-container-low relative overflow-hidden p-4 flex items-center justify-center">
+<span class="absolute top-3 left-3 bg-error text-white font-caption text-[10px] px-2 py-0.5 rounded-full uppercase z-10">-20%</span>
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed, professional product shot of premium athletic running shorts in dark grey. Positioned flat on a clean white surface. Soft, high-key lighting, minimalist light gray studio backdrop. High-end retail aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnvd1wxFY67ZLwot2Ifnnz8g0tK4HOviNVXL_pe-3pAnrhMoiULItv-eze7jP5ldPo2Cwh5xTNebjB1zXkCr2kIC_8t6aFmlWJqR-rNG62FzwF1nzvf_wGB9DLNbJ_hbbBmsWkTm8pCx54eQxuGlSD-HsEHNcLnt1kX1Vcxyf16hY8YkgJ50fg-nCJrBM0nmrIOiF3rqPWW9X6MloTFmTxFXnD2URfqtawhNQa74OiVaAEeZHN2pyS"/>
+<button class="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-secondary hover:text-primary-container transition-colors shadow-sm z-10">
+<span class="material-symbols-outlined" style="font-size: 18px;">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex items-center gap-1 text-primary-container mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">star</span>
+<span class="text-xs text-text-muted ml-1">(89)</span>
+</div>
+<h3 class="font-subtitle text-subtitle text-[#1e1e1e] line-clamp-1 mb-1">Shorts Flex Pro</h3>
+<p class="font-body text-sm text-text-muted mb-4">Entrenamiento</p>
+<div class="mt-auto flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-subtitle font-bold text-lg text-error">L. 680.00</span>
+<span class="text-sm text-text-muted line-through">L. 850.00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="min-w-[280px] w-[280px] bg-white rounded-xl shadow-[0_4px_16px_rgba(18,30,108,0.06)] hover:shadow-[0_8px_24px_rgba(18,30,108,0.12)] transition-shadow duration-300 overflow-hidden flex flex-col group snap-start cursor-pointer">
+<div class="h-[240px] bg-surface-container-low relative overflow-hidden p-4 flex items-center justify-center">
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed, professional product shot of a premium athletic smart watch with a black band and gold bezel. Positioned dynamically on a clean white pedestal. Soft, high-key lighting, minimalist light gray studio backdrop. High-end retail aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPziWpwCX2pOSZVRe2WZwbFJUjdnWL-AzC0GgfLT-Wjq2A2SDzcEBWNL2EvKIWI_ilK5iT6SEI6-JAwJRKJ-rKtrDbEJlrIIadOyf0m6qjG-u7x5ibyQzE-uOXM_DYud-6T7ukba7Q9tw72o-_KYmCSIw_v5v1biSz7AWl_GY0-6aUh0Xfbxjr_7EPwi4zW-9LxW85sPPMmrVdJV2PQ77KuTYztlUyd4s2AAgo8Pgcc2XqRx3uTnlL"/>
+<button class="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-secondary hover:text-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined" style="font-size: 18px;">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex items-center gap-1 text-primary-container mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 14px;">star</span>
+<span class="text-xs text-text-muted ml-1">(210)</span>
+</div>
+<h3 class="font-subtitle text-subtitle text-[#1e1e1e] line-clamp-1 mb-1">Reloj TrackFit G2</h3>
+<p class="font-body text-sm text-text-muted mb-4">Accesorios</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="font-subtitle font-bold text-lg text-[#1e1e1e]">L. 3,200.00</span>
+<button class="w-8 h-8 bg-[#1e1e1e] text-white rounded-full flex items-center justify-center hover:bg-black transition-colors"><span class="material-symbols-outlined" style="font-size: 18px;">add</span></button>
+</div>
+</div>
+</div>
+<!-- Card 4 (Partial to show scroll) -->
+<div class="min-w-[280px] w-[280px] bg-white rounded-xl shadow-[0_4px_16px_rgba(18,30,108,0.06)] hover:shadow-[0_8px_24px_rgba(18,30,108,0.12)] transition-shadow duration-300 overflow-hidden flex flex-col group snap-start cursor-pointer">
+<div class="h-[240px] bg-surface-container-low relative overflow-hidden p-4 flex items-center justify-center">
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed, professional product shot of premium athletic socks in white with gold stripes. Positioned flat on a clean white surface. Soft, high-key lighting, minimalist light gray studio backdrop. High-end retail aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAodhGdJzNhLc6za375PmHzZZaq9di6VMItdCTu-SDok8O-pGq5BulIjyol7n2tXAPmQG5xhj1cJQYOUZmdhS5GxVFssmlRgu-PXYNTL7pks9marjFHnaa0BRD9cAC9p72NgOGKIiOgeuD5Ftxyn6X9MEzvq3NvqC5xlOfNDi5pX7q_wAKdRHuIaDEchaRd0tc8zFXBw5KjUiJekHSijKUnJsxu4QFtJyFkkjd2YeRvPBH6JAtLjQys"/>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<h3 class="font-subtitle text-subtitle text-[#1e1e1e] line-clamp-1 mb-1">Calcetines Elite (3 Par)</h3>
+<p class="font-body text-sm text-text-muted mb-4">Accesorios</p>
+<div class="mt-auto">
+<span class="font-subtitle font-bold text-lg text-[#1e1e1e]">L. 350.00</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-highest dark:bg-inverse-surface w-full bg-surface-container-low dark:bg-inverse-surface mt-stack-lg flat no shadows">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop py-stack-lg max-w-[1280px] mx-auto">
+<!-- Brand Column -->
+<div class="flex flex-col gap-4">
+<span class="font-header text-subtitle font-bold text-on-surface">Hondusport Athletics</span>
+<p class="font-body text-caption text-primary dark:text-primary-fixed opacity-80">© 2024 Hondusport Athletics. Todos los derechos reservados. Precios en Lempiras (L.)</p>
+</div>
+<!-- Links Columns -->
+<div class="flex flex-col gap-2">
+<a class="font-body text-caption text-on-surface-variant hover:text-primary hover:underline decoration-primary opacity-80 hover:opacity-100 transition-opacity" href="#">Envíos y Entregas</a>
+<a class="font-body text-caption text-on-surface-variant hover:text-primary hover:underline decoration-primary opacity-80 hover:opacity-100 transition-opacity" href="#">Devoluciones</a>
+</div>
+<div class="flex flex-col gap-2">
+<a class="font-body text-caption text-on-surface-variant hover:text-primary hover:underline decoration-primary opacity-80 hover:opacity-100 transition-opacity" href="#">Preguntas Frecuentes</a>
+<a class="font-body text-caption text-on-surface-variant hover:text-primary hover:underline decoration-primary opacity-80 hover:opacity-100 transition-opacity" href="#">Contacto</a>
+</div>
+<div class="flex flex-col gap-2">
+<a class="font-body text-caption text-on-surface-variant hover:text-primary hover:underline decoration-primary opacity-80 hover:opacity-100 transition-opacity" href="#">Términos de Servicio</a>
+</div>
+</div>
+</footer>
+</body></html>

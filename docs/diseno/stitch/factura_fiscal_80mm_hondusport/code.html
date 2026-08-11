@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hondusport - Documento Fiscal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e1e2e7",
+                    "text-main": "#1e1e1e",
+                    "on-primary": "#ffffff",
+                    "on-secondary-container": "#646464",
+                    "surface-container-high": "#e7e8ed",
+                    "surface-tint": "#755b00",
+                    "success": "#1b8959",
+                    "on-primary-container": "#503d00",
+                    "tertiary-fixed": "#e6e2d9",
+                    "tertiary-fixed-dim": "#c9c6be",
+                    "error-container": "#ffdad6",
+                    "on-background": "#191c1f",
+                    "inverse-primary": "#e6c364",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed": "#1b1b1b",
+                    "on-primary-fixed": "#241a00",
+                    "text-muted": "#606060",
+                    "primary-fixed-dim": "#e6c364",
+                    "surface-variant": "#e1e2e7",
+                    "on-primary-fixed-variant": "#584400",
+                    "primary-fixed": "#ffe08f",
+                    "on-tertiary-container": "#414039",
+                    "surface-bright": "#f8f9fe",
+                    "tertiary": "#605e58",
+                    "secondary-fixed": "#e2e2e2",
+                    "primary": "#755b00",
+                    "background": "#f8f9fe",
+                    "outline-variant": "#d0c5b2",
+                    "inverse-on-surface": "#f0f0f5",
+                    "secondary": "#5e5e5e",
+                    "error": "#910022",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#e2e2e2",
+                    "surface-container": "#edeef3",
+                    "on-surface-variant": "#4d4637",
+                    "inverse-surface": "#2e3134",
+                    "white": "#ffffff",
+                    "outline": "#7e7665",
+                    "surface-dim": "#d9dadf",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#aeaba3",
+                    "surface": "#f8f9fe",
+                    "secondary-fixed-dim": "#c6c6c6",
+                    "primary-container": "#c9a84c",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#474747",
+                    "on-tertiary-fixed-variant": "#484741",
+                    "surface-container-low": "#f2f3f8",
+                    "on-tertiary-fixed": "#1c1c16",
+                    "on-surface": "#191c1f",
+                    "on-tertiary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "1rem",
+                    "gutter": "1rem",
+                    "stack-sm": "0.5rem",
+                    "stack-md": "1rem",
+                    "margin-desktop": "2.5rem",
+                    "stack-lg": "2rem"
+            },
+            "fontFamily": {
+                    "subtitle": ["Poppins", "sans-serif"],
+                    "caption": ["Poppins", "sans-serif"],
+                    "title": ["Poppins", "sans-serif"],
+                    "body": ["Poppins", "sans-serif"],
+                    "header-mobile": ["Poppins", "sans-serif"],
+                    "header": ["Poppins", "sans-serif"]
+            },
+            "fontSize": {
+                    "subtitle": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "title": ["28px", {"lineHeight": "32px", "fontWeight": "400"}],
+                    "body": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "header-mobile": ["32px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "header": ["48px", {"lineHeight": "52px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Poppins', sans-serif; }
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 8rem;
+            color: rgba(0, 0, 0, 0.03);
+            pointer-events: none;
+            z-index: 0;
+            font-weight: 700;
+        }
+        @media print {
+            body { background: white !important; }
+            #admin-toolbar { display: none !important; }
+            #printable-area { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#dbdce1] min-h-screen flex flex-col">
+<!-- Admin Toolbar (Non-printable) -->
+<header class="bg-surface sticky top-0 w-full z-50 flex justify-between items-center px-margin-desktop py-4 shadow-sm" id="admin-toolbar">
+<a class="text-text-main flex items-center gap-2 hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+<span class="font-subtitle text-subtitle">Documentos</span>
+</a>
+<div class="flex items-center gap-2 bg-surface-container-high rounded-full p-1"><button class="px-4 py-1 text-sm font-medium rounded-full text-text-muted hover:text-text-main transition-colors">Carta</button><button class="px-4 py-1 text-sm font-medium rounded-full bg-white shadow-sm text-text-main">80mm</button></div>
+<div class="flex gap-4">
+<button class="px-6 py-2 rounded-full border border-primary-container text-primary-container font-medium hover:bg-primary-container hover:text-white transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="undo">undo</span>
+                Devolver / Nota de crédito
+            </button>
+<button class="px-6 py-2 rounded-full bg-text-main text-white font-medium hover:bg-black transition-colors flex items-center gap-2" onclick="window.print()">
+<span class="material-symbols-outlined" data-icon="print">print</span>
+                Imprimir
+            </button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow p-margin-desktop flex justify-center">
+<!-- Printable Document (White Sheet) -->
+<div class="bg-white w-full max-w-[380px] min-h-fit shadow-lg rounded-DEFAULT p-6 relative overflow-hidden text-xs" id="printable-area">
+<div class="watermark" style="font-size: 4rem; opacity: 0.05;">ORIGINAL</div>
+<!-- Header -->
+<div class="flex flex-col items-center text-center mb-6 relative z-10 border-b border-dashed border-black pb-4"><div class="w-12 h-12 bg-text-main text-primary-container flex items-center justify-center font-bold text-xl rounded-lg mb-2">HS</div><h1 class="font-bold text-lg text-text-main">Hondusport Athletics</h1><p class="text-text-muted text-[10px]">Gimnasio y Ropa Deportiva de Alto Rendimiento</p><div class="mt-2 text-text-main space-y-0.5"><p class="font-bold">RTN: 08019012345678</p><p>Plaza Comercial El Dorado, Local 12</p><p>Tegucigalpa, Honduras</p><p>Tel: +504 2233-4455</p></div><div class="mt-4"><h2 class="font-bold uppercase">Factura</h2><p class="font-bold">000-001-01-00000145</p></div></div>
+<!-- Fiscal Block -->
+<div class="space-y-4 mb-6 relative z-10 text-[10px]"><div class="border-b border-dashed border-surface-container-highest pb-2"><p><span class="font-bold">Fecha:</span> 24/10/2023 14:35</p><p><span class="font-bold">Cajero:</span> Juan Pérez</p></div><div class="border-b border-dashed border-surface-container-highest pb-2"><p><span class="font-bold">Cliente:</span> Consumidor Final</p><p><span class="font-bold">RTN/ID:</span> -</p></div><div class="text-text-muted uppercase"><p class="font-bold">Datos Fiscales SAR</p><p class="break-all">CAI: 1A2B3C-4D5E6F-7G8H9I-0J1K2L-3M4N5O-P</p><p>Rango: 000-001-01-00000001 al 5000</p><p>Límite: 31/12/2024</p></div></div>
+<!-- Client Info -->
+<!-- Table -->
+<table class="w-full mb-4 relative z-10 text-[11px]"><thead><tr class="border-y border-black text-left"><th class="py-1">Desc.</th><th class="py-1 text-center">Cant</th><th class="py-1 text-right">Total</th></tr></thead><tbody><tr class="border-b border-dashed border-surface-container-highest"><td class="py-2">Camiseta Pro Running - M</td><td class="py-2 text-center">2</td><td class="py-2 text-right">L. 1,100.00</td></tr><tr class="border-b border-dashed border-surface-container-highest"><td class="py-2">Tenis Entrenamiento Ultra Grip</td><td class="py-2 text-center">1</td><td class="py-2 text-right">L. 1,350.00</td></tr></tbody></table>
+<!-- Totals -->
+<div class="relative z-10 space-y-2"><div class="text-[10px] space-y-1 border-b border-dashed border-black pb-2"><div class="flex justify-between"><span>Gravado 15%:</span><span>L. 2,450.00</span></div><div class="flex justify-between"><span>ISV 15%:</span><span>L. 367.50</span></div></div><div class="flex justify-between items-center py-2"><span class="font-bold uppercase">Total:</span><span class="font-bold text-lg">L. 2,817.50</span></div><div class="text-[9px] italic text-center pt-2"><p>SON: DOS MIL OCHOCIENTOS DIECISIETE LEMPIRAS CON 50/100</p></div></div>
+<!-- Footer -->
+<div class="mt-8 text-center text-[9px] text-text-muted relative z-10 border-t border-dashed border-black pt-4">
+<p class="mb-2"><span class="font-medium text-text-main">Método de Pago:</span> Tarjeta de Crédito (*1234)</p>
+<p>"La factura es beneficio de todos, exíjala"</p>
+<p>Documento Fiscal válido conforme al Régimen de Facturación de SAR.</p>
+</div>
+</div>
+</main>
+</body></html>

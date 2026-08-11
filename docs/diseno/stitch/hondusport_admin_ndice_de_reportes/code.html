@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reportes - Hondusport Athletics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-bright": "#f8f9fe",
+                      "primary-container": "#c9a84c",
+                      "surface": "#f8f9fe",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#191c1f",
+                      "secondary": "#5e5e5e",
+                      "surface-dim": "#d9dadf",
+                      "background": "#f8f9fe",
+                      "tertiary-container": "#aeaba3",
+                      "primary-fixed-dim": "#e6c364",
+                      "secondary-container": "#e2e2e2",
+                      "surface-container-high": "#e7e8ed",
+                      "primary": "#755b00",
+                      "tertiary": "#605e58",
+                      "surface-container-lowest": "#ffffff",
+                      "text-main": "#1e1e1e",
+                      "on-primary-container": "#503d00",
+                      "on-primary-fixed-variant": "#584400",
+                      "on-tertiary-fixed": "#1c1c16",
+                      "on-secondary-container": "#646464",
+                      "outline": "#7e7665",
+                      "on-secondary-fixed-variant": "#474747",
+                      "surface-container-highest": "#e1e2e7",
+                      "on-background": "#191c1f",
+                      "on-surface-variant": "#4d4637",
+                      "on-tertiary-container": "#414039",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed-dim": "#c6c6c6",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed": "#ffe08f",
+                      "white": "#ffffff",
+                      "surface-variant": "#e1e2e7",
+                      "on-primary-fixed": "#241a00",
+                      "inverse-on-surface": "#f0f0f5",
+                      "secondary-fixed": "#e2e2e2",
+                      "surface-container-low": "#f2f3f8",
+                      "inverse-primary": "#e6c364",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "outline-variant": "#d0c5b2",
+                      "inverse-surface": "#2e3134",
+                      "surface-tint": "#755b00",
+                      "on-secondary-fixed": "#1b1b1b",
+                      "tertiary-fixed-dim": "#c9c6be",
+                      "success": "#1b8959",
+                      "error": "#910022",
+                      "on-error": "#ffffff",
+                      "on-tertiary-fixed-variant": "#484741",
+                      "surface-container": "#edeef3",
+                      "text-muted": "#606060",
+                      "tertiary-fixed": "#e6e2d9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-md": "1rem",
+                      "stack-sm": "0.5rem",
+                      "stack-lg": "2rem",
+                      "margin-mobile": "1rem",
+                      "gutter": "1rem",
+                      "margin-desktop": "2.5rem"
+              },
+              "fontFamily": {
+                      "header": [
+                              "Be Vietnam Pro"
+                      ],
+                      "title": [
+                              "Be Vietnam Pro"
+                      ],
+                      "header-mobile": [
+                              "Be Vietnam Pro"
+                      ],
+                      "caption": [
+                              "Be Vietnam Pro"
+                      ],
+                      "body": [
+                              "Be Vietnam Pro"
+                      ],
+                      "subtitle": [
+                              "Be Vietnam Pro"
+                      ]
+              },
+              "fontSize": {
+                      "header": [
+                              "48px",
+                              {
+                                      "lineHeight": "52px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "title": [
+                              "28px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "header-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "subtitle": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+           font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-[#dbdce1] text-on-surface font-body text-body min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-inverse-surface text-primary dark:text-primary-fixed-dim font-body text-body font-header text-title font-bold text-on-surface dark:text-inverse-on-surface h-screen w-64 fixed left-0 top-0 shadow-sm transition-all duration-200 ease-in-out flex flex-col h-full py-stack-lg z-50">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high flex-shrink-0">
+<img alt="Hondusport Admin Profile" class="w-full h-full object-cover" data-alt="A minimalist logo for a high-end sportswear brand featuring a sleek geometric monogram. The design utilizes a stark contrast between deep black and pristine white, emphasizing athletic momentum and premium retail quality. The mood is authoritative and modern." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDejFTt7wgWxxVqzFY4Df0fdYjYcYA3KI97B28YE1flK8L9NVUisA8tOml3fMzuvXgierNwxFLY1JOVFim8lEY8wH9-R33uprdRWS6txEjKcoBayobEgpDP4R98cMRnPp4LHmzy1aQHrOh8rcZZ1GS4bQgn9YrExVBRswx5DLYqEapQW8SYonpxVLZoqDMotcuC7NyvUv4NK_ia-LH-8UToGYM8v30CspvvaFu4xhFPbQoLyG8qCSq2"/>
+</div>
+<div>
+<h1 class="font-header text-title font-bold text-on-surface dark:text-inverse-on-surface leading-tight text-lg">Hondusport</h1>
+<p class="font-caption text-caption text-secondary">Admin Terminal</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:text-primary hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:icon-fill transition-all">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:text-primary hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:icon-fill transition-all">inventory_2</span>
+<span>Inventory</span>
+</a>
+<!-- Active Tab -->
+<a aria-current="page" class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary-fixed-dim font-subtitle border-r-4 border-primary bg-surface-container-high/50 group" href="#">
+<span class="material-symbols-outlined icon-fill">analytics</span>
+<span>Sales Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:text-primary hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:icon-fill transition-all">group</span>
+<span>Customers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:text-primary hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:icon-fill transition-all">sports_handball</span>
+<span>Team Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:text-primary hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:icon-fill transition-all">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="px-6 py-4">
+<button class="w-full bg-on-surface text-white hover:bg-black transition-colors rounded-lg py-3 font-subtitle text-sm flex items-center justify-center gap-2 shadow-sm mb-6">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                 Generate Report
+             </button>
+</div>
+<div class="px-4 space-y-1 pt-4 border-t border-surface-container-high dark:border-surface-container-highest">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:text-primary hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors group" href="#">
+<span class="material-symbols-outlined text-sm">help</span>
+<span class="text-sm">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:text-primary hover:bg-surface-container-high dark:hover:bg-secondary-container transition-colors group" href="#">
+<span class="material-symbols-outlined text-sm">logout</span>
+<span class="text-sm">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 min-h-screen flex flex-col relative">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-background text-primary dark:text-primary-fixed-dim font-title text-title font-header font-black text-on-surface dark:text-on-background docked full-width top-0 sticky z-40 flat no shadows flex justify-between items-center w-full px-margin-desktop py-stack-md max-w-[calc(100%-16rem)] ml-0 border-b border-surface-dim/30">
+<div class="flex items-center gap-8">
+<div class="text-xl font-header font-bold tracking-tight">Reportes</div>
+<nav class="hidden md:flex items-center gap-6 text-sm">
+<a class="text-on-surface-variant dark:text-secondary-fixed-dim hover:text-primary-container dark:hover:text-primary-fixed transition-all" href="#">Daily</a>
+<a class="text-on-surface-variant dark:text-secondary-fixed-dim hover:text-primary-container dark:hover:text-primary-fixed transition-all" href="#">Weekly</a>
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary pb-1 font-subtitle" href="#">Monthly</a>
+<a class="text-on-surface-variant dark:text-secondary-fixed-dim hover:text-primary-container dark:hover:text-primary-fixed transition-all" href="#">Quarterly</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm">search</span>
+<input class="bg-surface-container-high text-sm rounded-full pl-10 pr-4 py-2 border-none focus:ring-1 focus:ring-primary-container w-64 transition-all" placeholder="Buscar reportes..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+<button class="bg-white text-primary-container border border-primary-container hover:bg-[#faf6ed] transition-colors rounded-lg px-4 py-2 font-subtitle text-sm ml-2 shadow-sm">
+                    Export Data
+                </button>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-margin-desktop max-w-[1280px] w-full mx-auto flex-1">
+<div class="mb-8">
+<h2 class="font-header text-header text-on-surface tracking-tight mb-2">Catálogo de Reportes</h2>
+<p class="text-secondary font-body text-body max-w-2xl">Seleccione el tipo de reporte que desea generar. Todos los datos están actualizados en tiempo real según la última sincronización del sistema.</p>
+</div>
+<!-- Bento Grid Layout for Reports -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Report Card 1 -->
+<a class="group block bg-white rounded-[16px] p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-surface-dim relative overflow-hidden flex flex-col justify-between h-full" href="#">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-container/5 rounded-bl-[100px] -z-0 transition-transform group-hover:scale-110"></div>
+<div class="relative z-10 flex-1">
+<div class="w-12 h-12 rounded-full bg-[#faf6ed] flex items-center justify-center mb-4 text-primary-container">
+<span class="material-symbols-outlined">receipt_long</span>
+</div>
+<h3 class="text-[#c9a84c] font-subtitle text-xl mb-2 group-hover:text-primary transition-colors">Libro de ventas (SAR)</h3>
+<p class="text-secondary font-body text-sm leading-relaxed">Detalle de transacciones para fines fiscales. Generación de estructura compatible con requerimientos de la autoridad tributaria.</p>
+</div>
+<div class="relative z-10 mt-6 flex justify-end">
+<span class="material-symbols-outlined text-[#c9a84c] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+<!-- Report Card 2 -->
+<a class="group block bg-white rounded-[16px] p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-surface-dim relative overflow-hidden flex flex-col justify-between h-full lg:col-span-2" href="#">
+<div class="absolute bottom-0 right-0 w-48 h-48 bg-surface-container-high/20 rounded-tl-[100px] -z-0 transition-transform group-hover:scale-110"></div>
+<div class="relative z-10 flex-1">
+<div class="w-12 h-12 rounded-full bg-[#faf6ed] flex items-center justify-center mb-4 text-primary-container">
+<span class="material-symbols-outlined">monitoring</span>
+</div>
+<h3 class="text-[#c9a84c] font-subtitle text-xl mb-2 group-hover:text-primary transition-colors">Reporte de ventas</h3>
+<p class="text-secondary font-body text-sm leading-relaxed max-w-lg">Resumen de ventas por canal y vendedor. Visualice el rendimiento de las sucursales, plataformas digitales y ejecutivos de cuenta en un período específico.</p>
+</div>
+<div class="relative z-10 mt-6 flex justify-end">
+<span class="material-symbols-outlined text-[#c9a84c] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+<!-- Report Card 3 -->
+<a class="group block bg-white rounded-[16px] p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-surface-dim relative overflow-hidden flex flex-col justify-between h-full lg:row-span-2" href="#">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary-container/5 rounded-full blur-2xl -z-0 transition-opacity opacity-0 group-hover:opacity-100"></div>
+<div class="relative z-10 flex-1">
+<div class="w-12 h-12 rounded-full bg-[#faf6ed] flex items-center justify-center mb-4 text-primary-container">
+<span class="material-symbols-outlined">pie_chart</span>
+</div>
+<h3 class="text-[#c9a84c] font-subtitle text-xl mb-2 group-hover:text-primary transition-colors">Ganancias por ítem</h3>
+<p class="text-secondary font-body text-sm leading-relaxed">Análisis de rentabilidad por producto y variante. Identifique los artículos de mayor margen y el costo de bienes vendidos (COGS) por línea deportiva.</p>
+</div>
+<div class="relative z-10 mt-6 flex justify-end">
+<span class="material-symbols-outlined text-[#c9a84c] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+<!-- Report Card 4 -->
+<a class="group block bg-white rounded-[16px] p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-surface-dim relative overflow-hidden flex flex-col justify-between h-full" href="#">
+<div class="relative z-10 flex-1">
+<div class="w-12 h-12 rounded-full bg-[#faf6ed] flex items-center justify-center mb-4 text-primary-container">
+<span class="material-symbols-outlined">contact_page</span>
+</div>
+<h3 class="text-[#c9a84c] font-subtitle text-xl mb-2 group-hover:text-primary transition-colors">Clientes y proveedores</h3>
+<p class="text-secondary font-body text-sm leading-relaxed">Directorio y saldos de relaciones comerciales. Historial de compras corporativas e institucionales.</p>
+</div>
+<div class="relative z-10 mt-6 flex justify-end">
+<span class="material-symbols-outlined text-[#c9a84c] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+<!-- Report Card 5 -->
+<a class="group block bg-white rounded-[16px] p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-transparent hover:border-surface-dim relative overflow-hidden flex flex-col justify-between h-full" href="#">
+<div class="relative z-10 flex-1">
+<div class="w-12 h-12 rounded-full bg-[#faf6ed] flex items-center justify-center mb-4 text-primary-container">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+<h3 class="text-[#c9a84c] font-subtitle text-xl mb-2 group-hover:text-primary transition-colors">Cuentas por cobrar</h3>
+<p class="text-secondary font-body text-sm leading-relaxed">Seguimiento de créditos otorgados a clientes. Antigüedad de saldos y proyecciones de flujo de efectivo por cobros pendientes.</p>
+</div>
+<div class="relative z-10 mt-6 flex justify-end">
+<span class="material-symbols-outlined text-[#c9a84c] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+</div>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-dim dark:bg-surface-container-highest text-primary dark:text-primary-fixed-dim font-caption text-caption font-header font-bold text-on-surface flat no shadows flex justify-between items-center px-margin-desktop py-stack-sm w-full mt-auto border-t border-surface-container-high">
+<div>
+                © 2024 Hondusport Athletics. All Rights Reserved.
+            </div>
+<div class="flex gap-4">
+<a class="text-secondary hover:text-primary hover:underline opacity-80 hover:opacity-100 transition-all" href="#">Privacy Policy</a>
+<a class="text-secondary hover:text-primary hover:underline opacity-80 hover:opacity-100 transition-all" href="#">Terms of Service</a>
+<a class="text-secondary hover:text-primary hover:underline opacity-80 hover:opacity-100 transition-all" href="#">API Documentation</a>
+</div>
+</footer>
+</main>
+</body></html>

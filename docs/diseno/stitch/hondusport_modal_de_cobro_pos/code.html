@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cobrar - Hondusport POS</title>
+<!-- Google Fonts: Be Vietnam Pro (from config) -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config injected from system prompt -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary": "#ffffff",
+                      "background": "#f8f9fe",
+                      "on-secondary-fixed": "#1b1b1b",
+                      "surface-container-low": "#f2f3f8",
+                      "outline": "#7e7665",
+                      "error-container": "#ffdad6",
+                      "text-main": "#1e1e1e",
+                      "surface": "#f8f9fe",
+                      "primary-fixed-dim": "#e6c364",
+                      "tertiary-fixed": "#e6e2d9",
+                      "inverse-primary": "#e6c364",
+                      "surface-container-lowest": "#ffffff",
+                      "on-background": "#191c1f",
+                      "on-tertiary-container": "#414039",
+                      "on-surface": "#191c1f",
+                      "on-tertiary-fixed-variant": "#484741",
+                      "tertiary-fixed-dim": "#c9c6be",
+                      "primary": "#755b00",
+                      "surface-container-high": "#e7e8ed",
+                      "on-secondary-container": "#646464",
+                      "secondary-fixed-dim": "#c6c6c6",
+                      "surface-container-highest": "#e1e2e7",
+                      "surface-bright": "#f8f9fe",
+                      "white": "#ffffff",
+                      "secondary": "#5e5e5e",
+                      "primary-container": "#c9a84c",
+                      "on-primary-fixed-variant": "#584400",
+                      "on-primary": "#ffffff",
+                      "tertiary-container": "#aeaba3",
+                      "primary-fixed": "#ffe08f",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed": "#1c1c16",
+                      "surface-dim": "#d9dadf",
+                      "on-error": "#ffffff",
+                      "success": "#1b8959",
+                      "on-secondary-fixed-variant": "#474747",
+                      "inverse-surface": "#2e3134",
+                      "inverse-on-surface": "#f0f0f5",
+                      "secondary-container": "#e2e2e2",
+                      "surface-container": "#edeef3",
+                      "surface-tint": "#755b00",
+                      "surface-variant": "#e1e2e7",
+                      "on-primary-container": "#503d00",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed": "#241a00",
+                      "outline-variant": "#d0c5b2",
+                      "error": "#910022",
+                      "on-surface-variant": "#4d4637",
+                      "tertiary": "#605e58",
+                      "secondary-fixed": "#e2e2e2",
+                      "text-muted": "#606060"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-md": "1rem",
+                      "margin-mobile": "1rem",
+                      "stack-sm": "0.5rem",
+                      "stack-lg": "2rem",
+                      "margin-desktop": "2.5rem",
+                      "gutter": "1rem"
+              },
+              "fontFamily": {
+                      "header": [
+                              "Be Vietnam Pro"
+                      ],
+                      "subtitle": [
+                              "Be Vietnam Pro"
+                      ],
+                      "title": [
+                              "Be Vietnam Pro"
+                      ],
+                      "caption": [
+                              "Be Vietnam Pro"
+                      ],
+                      "header-mobile": [
+                              "Be Vietnam Pro"
+                      ],
+                      "body": [
+                              "Be Vietnam Pro"
+                      ]
+              },
+              "fontSize": {
+                      "header": [
+                              "48px",
+                              {
+                                      "lineHeight": "52px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "subtitle": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "title": [
+                              "28px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "header-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for horizontal chips */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Remove spinner from number input */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-body text-on-surface h-screen w-screen overflow-hidden flex items-center justify-center relative">
+<!-- Dimmed Background (simulating POS behind) -->
+<div class="absolute inset-0 bg-[#dbdce1] flex flex-col z-0 opacity-50 blur-sm pointer-events-none">
+<div class="bg-cover bg-center w-full h-full opacity-30" data-alt="A blurred, out of focus image of a modern Point of Sale system interface in a luxury athletic wear store. The interface shows a grid of products on the left and a shopping cart summary on the right. The color palette is primarily cool white and light gray, with occasional gold accents. The lighting is bright and clean, typical of a high-end retail environment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCm9cNHLcbiZMCAJtw5ShuAhSzHA3fDiyb_3pS_RJDCWI0ms2ps3zLJPOhGFdBXB2bgLFmUT3bzlCpxiZ5tSnODtwEDv1mTNm9AmjAZSy4FhVeF0tG4bOrOqXoQju0wIpl0ayfKa0rtf0YMReO5v_s1uXrFEDeRWqvHPR9jmllrsbGKoJU0pRP2RsB50N1FHtdU8cEP4GRFq9wJ138Dd24wu8U-TszN8c5Q2Yl4QlOMXlegZevTl-D9')"></div>
+</div>
+<!-- Backdrop Overlay -->
+<div class="absolute inset-0 bg-on-background/40 z-10 backdrop-blur-[2px]"></div>
+<!-- Modal Container -->
+<div class="relative z-20 w-[95%] max-w-[640px] bg-white rounded-[16px] shadow-[0_8px_30px_rgba(18,30,108,0.12)] overflow-hidden flex flex-col max-h-[921px]">
+<!-- Header -->
+<div class="px-8 py-6 flex items-center justify-between border-b border-surface-container-high">
+<h2 class="font-title text-title text-on-surface">Cobrar</h2>
+<button class="p-2 rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Scrollable Content -->
+<div class="px-8 py-6 overflow-y-auto">
+<!-- Featured Amount -->
+<div class="flex flex-col items-center justify-center mb-8">
+<span class="font-caption text-caption text-on-surface-variant uppercase mb-2">Monto a Pagar</span>
+<div class="font-header text-header text-primary font-bold">L. 3,500.00</div>
+</div>
+<!-- Payment Method Selector -->
+<div class="mb-8">
+<label class="font-caption text-caption text-on-surface-variant block mb-3 uppercase">M\u00e9todo de Pago</label>
+<div class="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-on-background text-white font-subtitle text-subtitle shadow-md transition-all">
+                        Efectivo
+                    </button>
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest transition-all font-body text-body">
+                        Tarjeta
+                    </button>
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest transition-all font-body text-body">
+                        Transferencia
+                    </button>
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest transition-all font-body text-body">
+                        Cr\u00e9dito
+                    </button>
+<button class="flex-shrink-0 px-6 py-2 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest transition-all font-body text-body">
+                        Saldo a favor
+                    </button>
+</div>
+</div>
+<!-- Payment Input Area (Efectivo) -->
+<div class="mb-8 bg-surface p-6 rounded-xl border border-surface-container-high">
+<label class="font-caption text-caption text-on-surface-variant block mb-3 uppercase">Monto Recibido</label>
+<div class="relative mb-4">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 font-subtitle text-subtitle text-on-surface-variant">L.</span>
+<input class="w-full bg-[#dbdce1] rounded-[12px] py-4 pl-10 pr-4 font-title text-title text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container focus:bg-white transition-colors border-none text-right" placeholder="0.00" type="number" value="4000"/>
+</div>
+<!-- Quick Action Chips -->
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-1.5 rounded-full bg-white border border-outline-variant text-on-surface-variant hover:border-primary-container hover:text-primary transition-colors font-body text-body text-sm">
+                        L. 50
+                    </button>
+<button class="px-4 py-1.5 rounded-full bg-white border border-outline-variant text-on-surface-variant hover:border-primary-container hover:text-primary transition-colors font-body text-body text-sm">
+                        L. 100
+                    </button>
+<button class="px-4 py-1.5 rounded-full bg-white border border-outline-variant text-on-surface-variant hover:border-primary-container hover:text-primary transition-colors font-body text-body text-sm">
+                        L. 500
+                    </button>
+<button class="px-4 py-1.5 rounded-full bg-white border border-outline-variant text-on-surface-variant hover:border-primary-container hover:text-primary transition-colors font-body text-body text-sm">
+                        Total
+                    </button>
+<button class="px-4 py-1.5 rounded-full bg-white border border-outline-variant text-on-surface-variant hover:border-primary-container hover:text-primary transition-colors font-body text-body text-sm">
+                        Restante
+                    </button>
+</div>
+</div>
+<!-- Calculations Summary -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container-high flex flex-col gap-3">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-body text-body">Subtotal</span>
+<span class="font-subtitle text-subtitle">L. 3,043.48</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-body text-body">ISV (15%)</span>
+<span class="font-subtitle text-subtitle">L. 456.52</span>
+</div>
+<div class="h-px w-full bg-outline-variant my-1"></div>
+<div class="flex justify-between items-center text-on-surface">
+<span class="font-subtitle text-subtitle">Total</span>
+<span class="font-title text-title text-xl">L. 3,500.00</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant mt-2">
+<span class="font-body text-body">Pagado</span>
+<span class="font-subtitle text-subtitle">L. 4,000.00</span>
+</div>
+<!-- Restante (Red if > 0, otherwise hidden/zero styling. Shown zero here) -->
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-body text-body">Restante</span>
+<span class="font-subtitle text-subtitle">L. 0.00</span>
+</div>
+<!-- Vuelto (Gold if > 0) -->
+<div class="flex justify-between items-center text-primary-container mt-2 bg-[#faf6ed] p-3 rounded-lg border border-[#f0e6cc]">
+<span class="font-subtitle text-subtitle">Vuelto</span>
+<span class="font-title text-title text-2xl font-bold">L. 500.00</span>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="p-6 border-t border-surface-container-high bg-white flex gap-4 mt-auto">
+<button class="flex-1 py-4 px-6 rounded-full border-2 border-primary-container text-primary-container font-subtitle text-subtitle hover:bg-[#faf6ed] transition-colors flex justify-center items-center">
+                Cancelar
+            </button>
+<button class="flex-[2] py-4 px-6 rounded-full bg-on-background text-white font-subtitle text-subtitle hover:bg-on-surface-variant shadow-lg hover:shadow-xl transition-all flex justify-center items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+                Emitir Factura
+            </button>
+</div>
+</div>
+</body></html>

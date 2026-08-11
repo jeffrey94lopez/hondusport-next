@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Hondusport - Editar Ítem</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed-dim": "#c9c6be",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "on-tertiary-fixed": "#1c1c16",
+                        "inverse-primary": "#e6c364",
+                        "secondary": "#5e5e5e",
+                        "primary-fixed": "#ffe08f",
+                        "surface": "#f8f9fe",
+                        "text-main": "#1e1e1e",
+                        "primary-container": "#c9a84c",
+                        "on-tertiary-container": "#414039",
+                        "inverse-surface": "#2e3134",
+                        "outline": "#7e7665",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f8f9fe",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "inverse-on-surface": "#f0f0f5",
+                        "success": "#1b8959",
+                        "secondary-container": "#e2e2e2",
+                        "on-primary-fixed": "#241a00",
+                        "error": "#910022",
+                        "on-surface": "#191c1f",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#e6e2d9",
+                        "surface-dim": "#d9dadf",
+                        "surface-container": "#edeef3",
+                        "on-tertiary-fixed-variant": "#484741",
+                        "background": "#f8f9fe",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#605e58",
+                        "tertiary-container": "#aeaba3",
+                        "on-secondary-fixed-variant": "#474747",
+                        "surface-tint": "#755b00",
+                        "on-surface-variant": "#4d4637",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "text-muted": "#606060",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#584400",
+                        "surface-variant": "#e1e2e7",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f2f3f8",
+                        "white": "#ffffff",
+                        "on-background": "#191c1f",
+                        "primary": "#755b00",
+                        "surface-container-highest": "#e1e2e7",
+                        "surface-container-high": "#e7e8ed",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-secondary-container": "#646464",
+                        "primary-fixed-dim": "#e6c364",
+                        "on-primary-container": "#503d00",
+                        "outline-variant": "#d0c5b2"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "gutter": "1rem",
+                        "stack-sm": "0.5rem",
+                        "margin-desktop": "2.5rem",
+                        "stack-md": "1rem",
+                        "stack-lg": "2rem",
+                        "margin-mobile": "1rem"
+                    },
+                    fontFamily: {
+                        "header-mobile": ["Be Vietnam Pro"],
+                        "title": ["Be Vietnam Pro"],
+                        "header": ["Be Vietnam Pro"],
+                        "body": ["Be Vietnam Pro"],
+                        "caption": ["Be Vietnam Pro"],
+                        "subtitle": ["Be Vietnam Pro"]
+                    },
+                    fontSize: {
+                        "header-mobile": ["32px", { lineHeight: "36px", fontWeight: "600" }],
+                        "title": ["28px", { lineHeight: "32px", fontWeight: "400" }],
+                        "header": ["48px", { lineHeight: "52px", fontWeight: "500" }],
+                        "body": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "caption": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "700" }],
+                        "subtitle": ["16px", { lineHeight: "24px", fontWeight: "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-text-main h-screen w-full overflow-hidden relative">
+<!-- Background Context (Dimmed POS Screen) -->
+<div class="absolute inset-0 z-0">
+<img alt="" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs7gZxHtYDiD4tsUi-SBiOXHFOad4DQj7urhhpxJzDLTwzreS7UC2CiUOfwUZnw6L6fF87oASpdkg-ypvqME95soXwDWvnU7DqyD5l9ezmaj1tMUlHqFqu8w8BZIhsMV8VHMoVpwX68eNVvD8Au8dhuAxG6EkTtO9iFMxIZS62PjG1E6gQBYTbp0zjMP8Q4pDqT60AhpnqHFDCY0scHHhMcU-z4a5KyA3w7DukJ8b9XcTl1fj0leSy">
+<!-- Overlay Dimming -->
+<div class="absolute inset-0 bg-inverse-surface/60 backdrop-blur-sm"></div>
+</div>
+<!-- Modal Container -->
+<div class="absolute inset-0 z-10 flex items-center justify-center p-4">
+<!-- Modal Card -->
+<div class="bg-surface-container-lowest rounded-[16px] w-full max-w-lg shadow-[0_8px_32px_rgba(18,30,108,0.12)] flex flex-col overflow-hidden transform transition-all">
+<!-- Modal Header -->
+<div class="flex justify-between items-center px-6 py-5 border-b border-surface-variant">
+<h2 class="font-title text-[22px] leading-tight text-text-main font-bold">Editar Ítem</h2>
+<button class="text-on-surface-variant hover:text-text-main transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 300;">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-6 space-y-6">
+<!-- Product Info -->
+<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+<div>
+<h3 class="font-subtitle text-subtitle text-text-main">Nike Air Zoom Pegasus 39</h3>
+</div>
+<div class="text-left sm:text-right">
+<span class="font-subtitle text-[20px] text-text-main font-bold">L. 3,250.00</span>
+</div>
+</div>
+<!-- Cantidad (Quantity) -->
+<div class="space-y-stack-sm">
+<label class="font-caption text-caption text-text-muted uppercase">Cantidad</label>
+<div class="flex items-center space-x-3">
+<button class="w-12 h-12 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high text-primary-container transition-colors border border-transparent">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 400;">remove</span>
+</button>
+<input aria-label="Cantidad" class="w-24 h-12 text-center bg-surface-container rounded-xl font-subtitle text-subtitle focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container border border-transparent text-text-main transition-all" type="text" value="1">
+<button class="w-12 h-12 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high text-primary-container transition-colors border border-transparent">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 400;">add</span>
+</button>
+</div>
+</div>
+<!-- Descuento (Discount) -->
+<div class="space-y-stack-sm">
+<label class="font-caption text-caption text-text-muted uppercase">Descuento</label>
+<div class="flex flex-wrap gap-2">
+<!-- Active Chip -->
+<button class="px-4 py-2 rounded-full bg-primary-container text-surface-container-lowest font-subtitle text-[14px] font-semibold transition-colors flex items-center justify-center">
+                            0%
+                        </button>
+<!-- Inactive Chips -->
+<button class="px-4 py-2 rounded-full border border-text-main text-text-main bg-transparent hover:bg-surface-container-low font-subtitle text-[14px] transition-colors flex items-center justify-center">
+                            5%
+                        </button>
+<button class="px-4 py-2 rounded-full border border-text-main text-text-main bg-transparent hover:bg-surface-container-low font-subtitle text-[14px] transition-colors flex items-center justify-center">
+                            10%
+                        </button>
+<button class="px-4 py-2 rounded-full border border-text-main text-text-main bg-transparent hover:bg-surface-container-low font-subtitle text-[14px] transition-colors flex items-center justify-center">
+                            15%
+                        </button>
+<button class="px-4 py-2 rounded-full border border-text-main text-text-main bg-transparent hover:bg-surface-container-low font-subtitle text-[14px] transition-colors flex items-center justify-center">
+                            Otro
+                        </button>
+</div>
+<div class="mt-3 relative flex items-center">
+<span class="absolute left-4 text-text-muted font-subtitle select-none">L.</span>
+<input aria-label="Monto de descuento" class="w-full pl-10 pr-4 py-3 bg-surface-container rounded-xl font-body text-body focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container border border-transparent transition-all text-text-main" placeholder="0.00" type="text" value="0.00">
+</div>
+</div>
+<!-- Observaciones (Notes) -->
+<div class="space-y-stack-sm">
+<label class="font-caption text-caption text-text-muted uppercase">Observaciones</label>
+<textarea aria-label="Observaciones especiales" class="w-full p-4 bg-surface-container rounded-xl font-body text-body focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container border border-transparent transition-all resize-none text-text-main" placeholder="Ej. Empaque de regalo" rows="2"></textarea>
+</div>
+<!-- Subtotal -->
+<div class="space-y-stack-sm">
+<label class="font-caption text-caption text-text-muted uppercase">Personalización</label>
+<div class="relative">
+<input aria-label="Personalización" class="w-full p-4 bg-surface-container rounded-xl font-body text-body focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container border border-transparent transition-all text-text-main" placeholder="Ej. Nombre o Número en dorsal" type="text">
+<div class="mt-2 flex items-center gap-2">
+<input class="w-4 h-4 rounded border-surface-variant text-primary-container focus:ring-primary-container" id="extra-cost" type="checkbox">
+<label class="text-caption text-text-muted font-body" for="extra-cost">Incluye costo adicional</label>
+</div>
+</div>
+</div><div class="bg-surface-container-low px-5 py-4 rounded-xl flex justify-between items-center border border-surface-variant shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+<span class="font-subtitle text-subtitle text-text-muted">Subtotal del ítem</span>
+<span class="font-title text-[24px] leading-none text-text-main font-bold">L. 3,250.00</span>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="px-6 py-5 border-t border-surface-variant flex justify-end space-x-3 bg-surface-container-lowest">
+<button class="px-6 py-3 rounded-xl border border-primary-container text-primary-container font-subtitle text-subtitle hover:bg-[#faf6ed] transition-colors bg-surface-container-lowest">
+                    Cancelar
+                </button>
+<button class="px-6 py-3 rounded-xl bg-text-main text-white font-subtitle text-subtitle hover:bg-black transition-colors shadow-[0_4px_14px_rgba(30,30,30,0.25)]">
+                    Guardar Cambios
+                </button>
+</div>
+</div>
+</div>
+
+
+</body></html>

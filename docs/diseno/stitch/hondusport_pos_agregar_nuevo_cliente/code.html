@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nuevo Cliente - Vanguard Sports POS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#1b1b1b",
+                    "primary-fixed": "#e2e2e2",
+                    "primary-fixed-dim": "#c6c6c6",
+                    "on-secondary-fixed-variant": "#584400",
+                    "background": "#f8f9fe",
+                    "error": "#910022",
+                    "tertiary-fixed": "#e2e2e2",
+                    "tertiary": "#000000",
+                    "on-tertiary-fixed-variant": "#454747",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#e1e2e7",
+                    "secondary": "#755b00",
+                    "on-background": "#191c1f",
+                    "gold-hover": "#a58a3e",
+                    "on-tertiary-container": "#838484",
+                    "on-error": "#ffffff",
+                    "primary": "#000000",
+                    "on-tertiary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f2f3f8",
+                    "on-secondary-fixed": "#241a00",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "secondary-fixed": "#ffe08f",
+                    "outline-variant": "#cfc4c5",
+                    "on-secondary-container": "#785d00",
+                    "inverse-primary": "#c6c6c6",
+                    "surface-dim": "#d9dadf",
+                    "gold-light": "#faf6ed",
+                    "outline": "#7e7576",
+                    "error-container": "#ffdad6",
+                    "on-surface": "#191c1f",
+                    "on-surface-variant": "#4c4546",
+                    "surface-tint": "#5e5e5e",
+                    "inverse-surface": "#2e3134",
+                    "inverse-on-surface": "#f0f0f5",
+                    "on-primary-container": "#848484",
+                    "text-muted": "#606060",
+                    "surface": "#f8f9fe",
+                    "on-primary-fixed-variant": "#474747",
+                    "on-primary-fixed": "#1b1b1b",
+                    "secondary-fixed-dim": "#e6c364",
+                    "secondary-container": "#fed977",
+                    "tertiary-container": "#1a1c1c",
+                    "surface-variant": "#e1e2e7",
+                    "text-main": "#1e1e1e",
+                    "surface-container": "#edeef3",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#f8f9fe",
+                    "success": "#1b8959",
+                    "surface-container-high": "#e7e8ed"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "card-padding": "24px",
+                    "input-gap": "12px",
+                    "base": "8px",
+                    "gutter": "16px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "headline-lg": [
+                            "beVietnamPro"
+                    ],
+                    "price-lg": [
+                            "beVietnamPro"
+                    ],
+                    "headline-lg-mobile": [
+                            "beVietnamPro"
+                    ],
+                    "label-caps": [
+                            "beVietnamPro"
+                    ],
+                    "body-md": [
+                            "beVietnamPro"
+                    ],
+                    "headline-md": [
+                            "beVietnamPro"
+                    ],
+                    "display-metrics": [
+                            "beVietnamPro"
+                    ],
+                    "subtitle": [
+                            "beVietnamPro"
+                    ]
+            },
+            "fontSize": {
+                    "headline-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "price-lg": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-md": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-metrics": [
+                            "64px",
+                            {
+                                    "lineHeight": "72px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "subtitle": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background h-full font-body-md text-on-surface antialiased overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-primary-container text-secondary dark:text-secondary-fixed docked left-0 h-full w-64 border-r border-outline-variant dark:border-outline flat no shadows fixed left-0 top-0 h-full flex flex-col py-6 z-40 hidden md:flex shrink-0">
+<!-- Header -->
+<div class="px-gutter mb-8 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-xl">account_circle</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed leading-tight text-lg">Vanguard Sports</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant">POS Terminal 01</p>
+</div>
+</div>
+<!-- Main Nav Tabs -->
+<ul class="flex flex-col gap-2 flex-grow px-4">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container dark:hover:bg-tertiary-container transition-colors text-on-surface-variant dark:text-on-primary-container font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container dark:hover:bg-tertiary-container transition-colors text-on-surface-variant dark:text-on-primary-container font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined" data-icon="point_of_sale">point_of_sale</span>
+                    Sales
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container dark:hover:bg-tertiary-container transition-colors text-on-surface-variant dark:text-on-primary-container font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+                    Inventory
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gold-light dark:bg-secondary-container text-secondary dark:text-on-secondary-container font-bold border-r-4 border-secondary transition-colors font-label-caps text-label-caps scale-95 duration-100" href="#">
+<span class="material-symbols-outlined icon-fill text-secondary" data-icon="group" data-weight="fill">group</span>
+                    Clients
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container dark:hover:bg-tertiary-container transition-colors text-on-surface-variant dark:text-on-primary-container font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                    Reports
+                </a>
+</li>
+</ul>
+<div class="px-4 mt-auto">
+<button class="w-full bg-primary text-on-primary rounded-full py-3 px-6 font-subtitle text-subtitle flex items-center justify-center gap-2 hover:bg-inverse-surface transition-colors shadow-sm mb-4">
+<span class="material-symbols-outlined">add</span>
+                New Sale
+            </button>
+<ul class="flex flex-col gap-1 border-t border-outline-variant pt-4">
+<li>
+<a class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-surface-container dark:hover:bg-tertiary-container transition-colors text-on-surface-variant dark:text-on-primary-container font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="help">help</span>
+                        Support
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-surface-container dark:hover:bg-tertiary-container transition-colors text-on-surface-variant dark:text-on-primary-container font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="settings">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-grow flex flex-col md:ml-64 h-full relative">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface docked full-width top-0 border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center w-full px-gutter h-16 shrink-0 z-30 sticky top-0">
+<!-- Mobile Menu Toggle (Visible only on small screens) -->
+<button class="md:hidden text-on-surface-variant p-2 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Product Name / Brand (Visible on mobile or when side nav is collapsed, normally handled by responsive logic) -->
+<div class="flex items-center gap-2 md:hidden">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed tracking-tight text-xl">Vanguard Sports POS</span>
+</div>
+<div class="hidden md:flex flex-grow max-w-xl mx-4">
+<!-- Search Bar -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl pl-10 pr-4 py-2 text-body-md font-body-md focus:border-secondary focus:ring-1 focus:ring-secondary transition-all outline-none" placeholder="Buscar cliente..." type="text"/>
+</div>
+</div>
+<!-- Trailing Icons -->
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors text-on-surface-variant hidden sm:block">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors text-error sm:hidden">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="p-2 rounded-full hover:bg-error-container transition-colors text-on-surface-variant hover:text-error">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+</button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow p-gutter md:p-container-margin overflow-y-auto bg-surface-dim flex justify-center items-start">
+<!-- Registration Form Card -->
+<div class="w-full max-w-3xl bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant p-card-padding">
+<div class="mb-8 border-b border-outline-variant pb-6 flex items-center justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary tracking-tight">Registrar Nuevo Cliente</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Ingrese los datos para registrar un nuevo comprador en el sistema.</p>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-2xl">close</span>
+</button>
+</div>
+<form class="flex flex-col gap-8">
+<!-- Información Personal Section -->
+<section>
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary icon-fill">person</span>
+<h3 class="font-subtitle text-subtitle text-primary">Información Personal</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+<!-- Nombre Completo -->
+<div class="flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="nombre">Nombre Completo *</label>
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-body-md font-body-md focus:ring-1 focus:ring-secondary focus:bg-surface-container-lowest transition-colors" id="nombre" name="nombre" placeholder="Ej. Juan Pérez" required="" type="text"/>
+</div>
+<!-- Identidad/DNI -->
+<div class="flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="identidad">Identidad / DNI *</label>
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-body-md font-body-md focus:ring-1 focus:ring-secondary focus:bg-surface-container-lowest transition-colors" id="identidad" name="identidad" placeholder="0000-0000-00000" required="" type="text"/>
+</div>
+<!-- Correo Electrónico -->
+<div class="flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="email">Correo Electrónico</label>
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-body-md font-body-md focus:ring-1 focus:ring-secondary focus:bg-surface-container-lowest transition-colors" id="email" name="email" placeholder="ejemplo@correo.com" type="email"/>
+</div>
+<!-- Teléfono -->
+<div class="flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="telefono">Teléfono</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-body-md text-body-md">+504</span>
+<input class="w-full bg-surface-container-low border-none rounded-xl pl-14 pr-4 py-3 text-body-md font-body-md focus:ring-1 focus:ring-secondary focus:bg-surface-container-lowest transition-colors" id="telefono" name="telefono" placeholder="0000-0000" type="tel"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Datos de Facturación Section -->
+<section class="pt-6 border-t border-outline-variant">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary icon-fill">receipt_long</span>
+<h3 class="font-subtitle text-subtitle text-primary">Datos de Facturación</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+<!-- Razón Social -->
+<div class="flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="razon_social">Nombre o Razón Social</label>
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-body-md font-body-md focus:ring-1 focus:ring-secondary focus:bg-surface-container-lowest transition-colors" id="razon_social" name="razon_social" placeholder="Nombre para la factura" type="text"/>
+</div>
+<!-- RTN -->
+<div class="flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="rtn">RTN</label>
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-body-md font-body-md focus:ring-1 focus:ring-secondary focus:bg-surface-container-lowest transition-colors" id="rtn" name="rtn" placeholder="14 dígitos" type="text"/>
+</div>
+</div>
+</section>
+<!-- Actions -->
+<div class="flex items-center justify-end gap-4 mt-4 pt-6 border-t border-outline-variant">
+<button class="px-6 py-3 rounded-full border border-outline bg-surface-container-lowest text-primary font-subtitle text-subtitle hover:bg-surface-container-low transition-colors" type="button">
+                            Cancelar
+                        </button>
+<button class="px-8 py-3 rounded-full bg-primary text-on-primary font-subtitle text-subtitle hover:bg-inverse-surface transition-colors flex items-center gap-2" type="submit">
+<span class="material-symbols-outlined text-sm">save</span>
+                            Guardar Cliente
+                        </button>
+</div>
+</form>
+</div>
+</main>
+</div>
+</body></html>

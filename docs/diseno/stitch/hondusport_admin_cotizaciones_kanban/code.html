@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hondusport Admin - Cotizaciones</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e6e2d9",
+                        "tertiary-fixed-dim": "#c9c6be",
+                        "on-tertiary-fixed-variant": "#484741",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#aeaba3",
+                        "on-secondary-container": "#646464",
+                        "surface-variant": "#e1e2e7",
+                        "on-tertiary-fixed": "#1c1c16",
+                        "surface-container": "#edeef3",
+                        "on-secondary-fixed-variant": "#474747",
+                        "error-container": "#ffdad6",
+                        "background": "#f8f9fe",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "on-tertiary-container": "#414039",
+                        "on-primary": "#ffffff",
+                        "text-muted": "#606060",
+                        "on-primary-container": "#503d00",
+                        "text-main": "#1e1e1e",
+                        "outline": "#7e7665",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "on-primary-fixed": "#241a00",
+                        "surface-container-highest": "#e1e2e7",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f8f9fe",
+                        "outline-variant": "#d0c5b2",
+                        "primary-container": "#c9a84c",
+                        "on-primary-fixed-variant": "#584400",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#f0f0f5",
+                        "white": "#ffffff",
+                        "surface-container-low": "#f2f3f8",
+                        "secondary-container": "#e2e2e2",
+                        "on-background": "#191c1f",
+                        "secondary": "#5e5e5e",
+                        "on-error-container": "#93000a",
+                        "error": "#910022",
+                        "inverse-surface": "#2e3134",
+                        "secondary-fixed": "#e2e2e2",
+                        "surface-dim": "#d9dadf",
+                        "on-surface-variant": "#4d4637",
+                        "primary": "#755b00",
+                        "surface": "#f8f9fe",
+                        "tertiary": "#605e58",
+                        "on-surface": "#191c1f",
+                        "surface-tint": "#755b00",
+                        "surface-container-high": "#e7e8ed",
+                        "inverse-primary": "#e6c364",
+                        "primary-fixed-dim": "#e6c364",
+                        "success": "#1b8959",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#ffe08f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "2xl": "16px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "1rem",
+                        "stack-lg": "2rem",
+                        "gutter": "1rem",
+                        "margin-desktop": "2.5rem",
+                        "stack-sm": "0.5rem",
+                        "stack-md": "1rem"
+                    },
+                    "fontFamily": {
+                        "title": ["Poppins", "sans-serif"],
+                        "body": ["Poppins", "sans-serif"],
+                        "header-mobile": ["Poppins", "sans-serif"],
+                        "subtitle": ["Poppins", "sans-serif"],
+                        "caption": ["Poppins", "sans-serif"],
+                        "header": ["Poppins", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "title": ["28px", { "lineHeight": "32px", "fontWeight": "400" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "header-mobile": ["32px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "subtitle": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "header": ["48px", { "lineHeight": "52px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .drag-over {
+            background-color: theme('colors.surface-container-high');
+            border: 2px dashed theme('colors.primary-container');
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-white dark:bg-on-background shadow-md flex flex-col h-full py-stack-lg px-gutter z-20">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center overflow-hidden">
+<img alt="Hondusport Logo" class="w-full h-full object-cover" data-alt="A modern, minimalist circular logo featuring abstract geometric shapes in deep black and vibrant gold, set against a clean white background. High-resolution, crisp vectors, corporate sportswear aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDC32EnJkpcVNmbyOIn27iFLzpdC-EfU1l9NWdir2SAsVoNDwcH4_pN1hL-RMYuTQC5ClOB_W8KMxV4CBZ0_QtAyQoFr0WAi8rzosBilvEeBqA9YrdWAFEaioJxeNfkH5medLRTkozGUEsyf6wOoyPQsT4Gn2KJvyMNEgjZVJ7iq-4AGr6fdUNHL1cao6be6xmSwdry0EUKZFMEUw7nl6D59ayy5xH1qFi6xhB5d1Zi7HRJIh67K9nb"/>
+</div>
+<div>
+<h1 class="font-title text-title font-black text-on-surface dark:text-white leading-tight">Hondusport</h1>
+<p class="font-caption text-caption text-secondary">Athletics Management</p>
+</div>
+</div>
+<button class="w-full bg-on-background text-white rounded-2xl py-3 px-4 font-subtitle text-subtitle mb-8 flex items-center justify-center gap-2 hover:bg-black transition-colors">
+<span class="material-symbols-outlined" style="color: #c9a84c;">add</span>
+            Nuevo Pedido
+        </button>
+<div class="flex-1 flex flex-col gap-2 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low transition-all duration-200 font-body text-body" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low transition-all duration-200 font-body text-body" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">inventory_2</span>
+                Inventario
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold bg-tertiary-container/20 font-body text-body" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c; font-variation-settings: 'FILL' 1;">payments</span>
+                Ventas
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low transition-all duration-200 font-body text-body" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">group</span>
+                Clientes
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low transition-all duration-200 font-body text-body" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">analytics</span>
+                Reportes
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low transition-all duration-200 font-body text-body" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">settings</span>
+                Configuración
+            </a>
+</div>
+<div class="mt-auto pt-4 border-t border-surface-variant">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-low transition-all duration-200 font-body text-body" href="#">
+<span class="material-symbols-outlined" style="color: #c9a84c;">logout</span>
+                Cerrar Sesión
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-64 flex flex-col h-screen">
+<!-- TopNavBar -->
+<header class="w-full h-16 bg-surface-container-lowest dark:bg-inverse-surface shadow-sm flex justify-between items-center px-margin-desktop z-10 shrink-0">
+<div class="font-title text-title font-bold text-on-surface dark:text-white">
+                Hondusport Admin
+            </div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button class="text-on-secondary-container dark:text-secondary-fixed-dim hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-secondary-container dark:text-secondary-fixed-dim hover:text-primary transition-colors duration-200 cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden">
+<img alt="Administrator profile photo" class="w-full h-full object-cover" data-alt="A professional headshot of a corporate administrator in a modern office setting. The lighting is soft and bright, emphasizing a clean, approachable, and trustworthy demeanor. High-resolution, corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCejRdSNVJ71MTXm9XpEWDJ2ql2heXNLVwYIxybnPfYu5zRppRt6FifuWkjtBYoZJzAPx3O9SwpbbYqW61N2pQuZZxTUixwNz7XEcq7fKxDelG5sqYecS9Jz2n7LTAPUkEQlLlhNbRsSK0SktQn5Ek9QrdpM5QVDVovWiI3mwgoNAZHqjwCna3JAItJjgfafuP2Vh2OgFZ4lXB7PlBvlVyhcxpbFSDslBjPxnOsgJMAInZOwKooO7w8"/>
+</div>
+</div>
+</header>
+<!-- Kanban Board Area -->
+<main class="flex-1 overflow-x-auto overflow-y-hidden p-8 flex flex-col">
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-8 shrink-0">
+<h2 class="font-header text-header text-on-surface">Cotizaciones</h2>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-variant border-transparent focus:border-primary-container focus:bg-white focus:ring-0 rounded-xl font-body text-body text-on-surface w-64 transition-all" placeholder="Buscar cotización..." type="text"/>
+</div>
+<button class="bg-on-background text-white rounded-full py-2 px-6 font-subtitle text-subtitle flex items-center gap-2 hover:bg-black transition-colors shadow-md">
+<span class="material-symbols-outlined text-[20px]" style="color: #c9a84c;">add</span>
+                        Nueva cotización
+                    </button>
+</div>
+</div>
+<!-- Kanban Columns -->
+<div class="flex gap-6 h-full pb-4">
+<!-- Column: Abierta -->
+<div class="flex flex-col min-w-[320px] w-[320px] bg-surface-container-low rounded-2xl p-4 shadow-sm border border-surface-variant/50">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary"></div>
+<h3 class="font-subtitle text-subtitle text-on-surface">Abierta</h3>
+</div>
+<span class="bg-surface-variant text-on-surface-variant font-caption text-caption px-2 py-1 rounded-full">3</span>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-3 pb-2 kanban-dropzone">
+<!-- Card 1 -->
+<div class="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-grab border border-surface-variant/30 relative group" draggable="true">
+<div class="flex justify-between items-start mb-2">
+<span class="font-caption text-caption text-secondary">COT-2024-042</span>
+<button class="text-secondary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<h4 class="font-subtitle text-subtitle text-on-surface mb-3 line-clamp-1">Liga Deportiva Universitaria</h4>
+<div class="flex justify-between items-end">
+<div>
+<p class="font-caption text-caption text-secondary mb-1">Vendedor</p>
+<p class="font-body text-body text-on-surface text-[14px]">Carlos Mejía</p>
+</div>
+<div class="font-subtitle text-subtitle text-primary-container">L. 45,000.00</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-grab border border-surface-variant/30 relative group" draggable="true">
+<div class="flex justify-between items-start mb-2">
+<span class="font-caption text-caption text-secondary">COT-2024-045</span>
+<button class="text-secondary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<h4 class="font-subtitle text-subtitle text-on-surface mb-3 line-clamp-1">Gimnasio Zeus</h4>
+<div class="flex justify-between items-end">
+<div>
+<p class="font-caption text-caption text-secondary mb-1">Vendedor</p>
+<p class="font-body text-body text-on-surface text-[14px]">Ana Reyes</p>
+</div>
+<div class="font-subtitle text-subtitle text-primary-container">L. 12,500.00</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Enviada -->
+<div class="flex flex-col min-w-[320px] w-[320px] bg-surface-container-low rounded-2xl p-4 shadow-sm border border-surface-variant/50">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary-container"></div>
+<h3 class="font-subtitle text-subtitle text-on-surface">Enviada</h3>
+</div>
+<span class="bg-surface-variant text-on-surface-variant font-caption text-caption px-2 py-1 rounded-full">2</span>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-3 pb-2 kanban-dropzone">
+<!-- Card 3 -->
+<div class="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-grab border border-surface-variant/30 relative group" draggable="true">
+<div class="flex justify-between items-start mb-2">
+<span class="font-caption text-caption text-secondary">COT-2024-038</span>
+<button class="text-secondary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<h4 class="font-subtitle text-subtitle text-on-surface mb-3 line-clamp-1">Club Deportivo Olimpia (Infantil)</h4>
+<div class="flex justify-between items-end">
+<div>
+<p class="font-caption text-caption text-secondary mb-1">Vendedor</p>
+<p class="font-body text-body text-on-surface text-[14px]">Carlos Mejía</p>
+</div>
+<div class="font-subtitle text-subtitle text-primary-container">L. 89,200.00</div>
+</div>
+</div>
+<!-- Card 4 (Expired) -->
+<div class="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-grab border border-error-container relative group" draggable="true">
+<div class="flex justify-between items-start mb-2">
+<span class="font-caption text-caption text-secondary">COT-2024-031</span>
+<div class="flex items-center gap-2">
+<span class="bg-error text-white font-caption text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">Vencida</span>
+<button class="text-secondary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+</div>
+<h4 class="font-subtitle text-subtitle text-on-surface mb-3 line-clamp-1">Crossfit Central</h4>
+<div class="flex justify-between items-end">
+<div>
+<p class="font-caption text-caption text-secondary mb-1">Vendedor</p>
+<p class="font-body text-body text-on-surface text-[14px]">Luis Torres</p>
+</div>
+<div class="font-subtitle text-subtitle text-primary-container">L. 34,000.00</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Ganada -->
+<div class="flex flex-col min-w-[320px] w-[320px] bg-surface-container-low rounded-2xl p-4 shadow-sm border border-surface-variant/50">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-success"></div>
+<h3 class="font-subtitle text-subtitle text-on-surface">Ganada</h3>
+</div>
+<span class="bg-surface-variant text-on-surface-variant font-caption text-caption px-2 py-1 rounded-full">1</span>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-3 pb-2 kanban-dropzone">
+<!-- Card 5 -->
+<div class="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-grab border border-success/30 relative group" draggable="true">
+<div class="flex justify-between items-start mb-2">
+<span class="font-caption text-caption text-secondary">COT-2024-025</span>
+<button class="text-secondary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<h4 class="font-subtitle text-subtitle text-on-surface mb-3 line-clamp-1">Colegio San Miguel</h4>
+<div class="flex justify-between items-end">
+<div>
+<p class="font-caption text-caption text-secondary mb-1">Vendedor</p>
+<p class="font-body text-body text-on-surface text-[14px]">Ana Reyes</p>
+</div>
+<div class="font-subtitle text-subtitle text-primary-container">L. 120,500.00</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Perdida -->
+<div class="flex flex-col min-w-[320px] w-[320px] bg-surface-container-low rounded-2xl p-4 shadow-sm border border-surface-variant/50">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-error"></div>
+<h3 class="font-subtitle text-subtitle text-on-surface">Perdida</h3>
+</div>
+<span class="bg-surface-variant text-on-surface-variant font-caption text-caption px-2 py-1 rounded-full">0</span>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-3 pb-2 kanban-dropzone">
+<!-- Empty state -->
+<div class="h-24 border-2 border-dashed border-surface-variant rounded-2xl flex items-center justify-center text-secondary font-body text-sm opacity-50">
+                            Arrastra aquí
+                        </div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+        // Simple drag and drop visual cues
+        const draggables = document.querySelectorAll('[draggable="true"]');
+        const dropzones = document.querySelectorAll('.kanban-dropzone');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => {
+                draggable.classList.add('opacity-50', 'scale-95');
+            });
+
+            draggable.addEventListener('dragend', () => {
+                draggable.classList.remove('opacity-50', 'scale-95');
+                dropzones.forEach(zone => zone.classList.remove('drag-over', 'bg-surface-container-high'));
+            });
+        });
+
+        dropzones.forEach(zone => {
+            zone.addEventListener('dragover', e => {
+                e.preventDefault();
+                zone.classList.add('drag-over', 'bg-surface-container-high', 'rounded-xl');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over', 'bg-surface-container-high', 'rounded-xl');
+            });
+
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('drag-over', 'bg-surface-container-high', 'rounded-xl');
+                // In a real app, append the dragged element here
+            });
+        });
+    </script>
+</body></html>

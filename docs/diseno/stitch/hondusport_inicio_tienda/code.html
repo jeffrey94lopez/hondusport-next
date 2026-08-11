@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hondusport - Ropa Deportiva Premium</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "primary-fixed": "#e2e2e2",
+                        "primary-container": "#1b1b1b",
+                        "on-primary-fixed-variant": "#474747",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#785d00",
+                        "tertiary-container": "#1a1c1c",
+                        "surface-container-high": "#e7e8ed",
+                        "secondary": "#755b00",
+                        "surface-variant": "#e1e2e7",
+                        "on-tertiary-container": "#838484",
+                        "inverse-primary": "#c6c6c6",
+                        "on-surface": "#191c1f",
+                        "text-muted": "#606060",
+                        "surface-container-low": "#f2f3f8",
+                        "surface-bright": "#f8f9fe",
+                        "tertiary": "#000000",
+                        "surface-dim": "#d9dadf",
+                        "surface": "#f8f9fe",
+                        "background": "#f8f9fe",
+                        "on-background": "#191c1f",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#fed977",
+                        "on-primary-fixed": "#1b1b1b",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f0f0f5",
+                        "secondary-fixed-dim": "#e6c364",
+                        "tertiary-fixed": "#e2e2e2",
+                        "surface-container": "#edeef3",
+                        "secondary-fixed": "#ffe08f",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#584400",
+                        "gold-light": "#faf6ed",
+                        "text-main": "#1e1e1e",
+                        "error": "#910022",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#cfc4c5",
+                        "surface-container-highest": "#e1e2e7",
+                        "on-secondary-fixed": "#241a00",
+                        "on-primary-container": "#848484",
+                        "primary": "#000000",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#c6c6c6",
+                        "inverse-surface": "#2e3134",
+                        "on-surface-variant": "#4c4546",
+                        "surface-tint": "#5e5e5e",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "success": "#1b8959",
+                        "outline": "#7e7576",
+                        "gold-hover": "#a58a3e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "card-padding": "24px",
+                        "gutter": "16px",
+                        "input-gap": "12px",
+                        "base": "8px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Be Vietnam Pro", "sans-serif"],
+                        "headline-lg-mobile": ["Be Vietnam Pro", "sans-serif"],
+                        "headline-lg": ["Be Vietnam Pro", "sans-serif"],
+                        "subtitle": ["Be Vietnam Pro", "sans-serif"],
+                        "price-lg": ["Be Vietnam Pro", "sans-serif"],
+                        "body-md": ["Be Vietnam Pro", "sans-serif"],
+                        "headline-md": ["Be Vietnam Pro", "sans-serif"],
+                        "display-metrics": ["Be Vietnam Pro", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "headline-lg": ["48px", { "lineHeight": "56px", "fontWeight": "600" }],
+                        "subtitle": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "price-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["28px", { "lineHeight": "36px", "fontWeight": "500" }],
+                        "display-metrics": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<nav class="sticky top-0 w-full z-50 flex justify-between items-center px-container-margin py-4 max-w-[1440px] mx-auto shadow-sm bg-surface dark:bg-surface-dim">
+<div class="flex items-center gap-8">
+<a class="font-headline-md text-headline-md font-black text-primary dark:text-primary-fixed" href="#">Hondusport</a>
+<div class="hidden md:flex gap-6">
+<a class="text-text-muted dark:text-tertiary-fixed-dim hover:text-primary dark:hover:text-primary-fixed font-subtitle text-subtitle" href="#">Hombres</a>
+<a class="text-text-muted dark:text-tertiary-fixed-dim hover:text-primary dark:hover:text-primary-fixed font-subtitle text-subtitle" href="#">Mujeres</a>
+<a class="text-text-muted dark:text-tertiary-fixed-dim hover:text-primary dark:hover:text-primary-fixed font-subtitle text-subtitle" href="#">Accesorios</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex bg-surface-container-high rounded-full px-4 py-2 items-center gap-2">
+<span class="material-symbols-outlined text-secondary">search</span>
+<input class="bg-transparent border-none outline-none font-body-md text-body-md text-on-surface placeholder:text-text-muted" placeholder="Buscar productos..." type="text"/>
+</div>
+<button class="hover:bg-gold-light dark:hover:bg-on-primary-fixed-variant transition-colors p-2 rounded-full">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+</button>
+<button class="hover:bg-gold-light dark:hover:bg-on-primary-fixed-variant transition-colors p-2 rounded-full">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">person</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-[1440px] mx-auto pb-24">
+<!-- Hero Section -->
+<section class="relative w-full h-[600px] md:h-[700px] overflow-hidden rounded-[24px] mx-4 md:mx-container-margin mt-6 mb-16 shadow-lg">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A dynamic, high-energy sports lifestyle shot featuring an athletic model mid-sprint on a sleek urban track. The lighting is cinematic, highlighting the technical fabric of the apparel. The overall aesthetic is modern premium, utilizing deep blacks, crisp whites, and a touch of warm, energetic lighting to convey speed and performance, fitting perfectly within a high-end sportswear brand context." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAt5Ar0OEJ93jZNoltrI5kVG-d-3rlMPDfshLHKXMK7wDQCjX0s9N6AcW8vINkEdg6gWw4pm7_UwGRConmJXS1CBDwHvDHKvqHUDTvokru6VN4Uk9G8o9IEMZwYSP-cuPtbWp2HHNivvxJYRlAh3wd9HFn12DPvog7sakRybuLkcDIXOKs8y0HeNf-4T7ac_u7PR62AK5ydOs4jA_2SzssXw80q6IikNVPP-Ebm3tLGtvnfRHhMUkJo')"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/50 to-transparent"></div>
+<div class="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 w-full md:w-2/3">
+<h1 class="font-display-metrics text-display-metrics text-on-primary mb-4 leading-tight">Desata tu <span class="text-secondary-fixed">Potencial</span></h1>
+<p class="font-headline-md text-headline-md text-primary-fixed mb-8 max-w-lg">Nueva colección de alto rendimiento para atletas exigentes.</p>
+<div class="flex gap-4">
+<button class="bg-secondary-fixed text-on-secondary-fixed font-subtitle text-subtitle px-8 py-4 rounded-full hover:bg-gold-hover transition-colors shadow-md">Comprar Ahora</button>
+<button class="bg-surface/20 text-on-primary backdrop-blur-md border border-outline-variant font-subtitle text-subtitle px-8 py-4 rounded-full hover:bg-surface/30 transition-colors">Ver Catálogo</button>
+</div>
+</div>
+</section>
+<div class="px-container-margin grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Bento Grid - Categories -->
+<section class="col-span-1 md:col-span-12 mb-16">
+<div class="flex justify-between items-end mb-8">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Explorar por Categoría</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Hombres -->
+<a class="relative h-[300px] rounded-[16px] overflow-hidden shadow-sm group" href="#">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="A striking portrait of a male athlete wearing modern, technical sportswear against a clean, light-mode background. The focus is on the fit and premium texture of a black performance jacket. Soft, studio lighting emphasizes the sleek, athletic build and conveys a sense of high-end corporate sport reliability." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCTbSqvTiYVbuk1aDaXE3YrSP5SOBjUUmsDS7gOAso_XwyFYf4730bGiTrLmKuYAfZsuB85Ik5G0MspmSMdutp8X9D0KpyQ5-AivJ40qB_7GqBC76wps1Lhqy3WwfrRBxnHXFNBmk3ea07B43tKXz3NR5ckcxp_4AnADELgtRAekNLCxKanI8EFzzgNIAYqMBnJazJrntpzk0-NeV1-LgJIqjbpQllK9b4TFZUQZcLVktAC8alfvpU8')"></div>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
+<div class="absolute bottom-6 left-6">
+<h3 class="font-headline-md text-headline-md text-on-primary mb-2">Hombres</h3>
+<span class="font-subtitle text-subtitle text-secondary-fixed flex items-center gap-2">Ver todo <span class="material-symbols-outlined text-sm">arrow_forward</span></span>
+</div>
+</a>
+<!-- Mujeres -->
+<a class="relative h-[300px] rounded-[16px] overflow-hidden shadow-sm group" href="#">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="A dynamic action shot of a female runner in motion, showcasing lightweight, breathable athletic wear. The aesthetic is clean and modern premium, with a bright white and soft gray environment that highlights the vibrant accents on her shoes. The image exudes confidence, speed, and tactile softness." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBtZSoE6Uv_vxHUrpAtQcOF-SBfZlUMgaVsb6_fMGIlQXaEWCDfdKMRJj0o6GuUmdqsnRA1nJ-koewUB7WWPvdh29Yf0T2CQeB3DM5hPiZJkZQGkowMN3RkNr8-uayD5612PEuvgwXc1YTW3bDgEMwTXBPxKjd9_FF8xKmSzzt84STFcLhq54xFU53Mef_FMuePpFmm5M9_W3lMY9P5gs6t1VB3G9GRDcRk0Db2BR3Co2-XuozVo8lY')"></div>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
+<div class="absolute bottom-6 left-6">
+<h3 class="font-headline-md text-headline-md text-on-primary mb-2">Mujeres</h3>
+<span class="font-subtitle text-subtitle text-secondary-fixed flex items-center gap-2">Ver todo <span class="material-symbols-outlined text-sm">arrow_forward</span></span>
+</div>
+</a>
+<!-- Accesorios -->
+<a class="relative h-[300px] rounded-[16px] overflow-hidden shadow-sm group" href="#">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="A stylish flat lay composition of premium sports accessories on a subtle gray background. Items include a sleek water bottle, a high-tech fitness tracker, and a stylish gym bag. The lighting is pristine and diffused, highlighting the modern design and tactile quality of the materials, adhering to a high-end retail aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADhsoDgylwwOmEoXADePuTJSUqY-qWXzUhHZpsdoLUBWxg3MvJZ9iWDTuJfvoLgKD2C2Qp2ys35JSVpHV2HmPqYZCaKnej_shEkuUBXfq7OWXSy4s7D00aXPqUnMjlyRhn2TkROqk_7okZhBgjnmz7svjr9YSTlR1zqR8MWddmcECqIfoh8Oj4Wiyo28JR9BbJ937j1T5BC2LoSaC4No1FtVAbkuWA9rHzJevMmXhUnJJClUL07dlX')"></div>
+<div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
+<div class="absolute bottom-6 left-6">
+<h3 class="font-headline-md text-headline-md text-on-primary mb-2">Accesorios</h3>
+<span class="font-subtitle text-subtitle text-secondary-fixed flex items-center gap-2">Ver todo <span class="material-symbols-outlined text-sm">arrow_forward</span></span>
+</div>
+</a>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-12 px-container-margin grid grid-cols-1 md:grid-cols-4 gap-gutter bg-tertiary dark:bg-on-tertiary-fixed mt-auto">
+<div>
+<h4 class="font-headline-md text-headline-md text-on-tertiary mb-4">Hondusport</h4>
+<p class="font-body-md text-body-md text-tertiary-fixed-dim">© 2024 Hondusport. Todos los derechos reservados.</p>
+</div>
+<div>
+<h5 class="font-subtitle text-subtitle text-on-tertiary mb-4">Empresa</h5>
+<ul class="space-y-2">
+<li><a class="font-body-md text-body-md text-tertiary-fixed-dim hover:text-on-tertiary hover:underline" href="#">Privacidad</a></li>
+<li><a class="font-body-md text-body-md text-tertiary-fixed-dim hover:text-on-tertiary hover:underline" href="#">Términos</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-subtitle text-subtitle text-on-tertiary mb-4">Soporte</h5>
+<ul class="space-y-2">
+<li><a class="font-body-md text-body-md text-tertiary-fixed-dim hover:text-on-tertiary hover:underline" href="#">Envíos</a></li>
+<li><a class="font-body-md text-body-md text-tertiary-fixed-dim hover:text-on-tertiary hover:underline" href="#">Contacto</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-subtitle text-subtitle text-on-tertiary mb-4">Redes Sociales</h5>
+<div class="flex gap-4">
+<a class="text-tertiary-fixed-dim hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">share</span>
+</a>
+</div>
+</div>
+</footer>
+</body></html>

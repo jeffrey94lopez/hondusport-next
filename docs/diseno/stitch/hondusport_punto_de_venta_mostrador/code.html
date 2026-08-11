@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hondusport POS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#1b1b1b",
+                        "secondary": "#755b00",
+                        "on-tertiary-container": "#838484",
+                        "primary": "#000000",
+                        "on-primary-fixed-variant": "#474747",
+                        "surface-container-highest": "#e1e2e7",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "secondary-fixed-dim": "#e6c364",
+                        "text-muted": "#606060",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-primary-fixed": "#1b1b1b",
+                        "on-secondary-container": "#785d00",
+                        "on-secondary-fixed": "#241a00",
+                        "surface-container-high": "#e7e8ed",
+                        "inverse-surface": "#2e3134",
+                        "secondary-container": "#fed977",
+                        "on-primary-container": "#848484",
+                        "surface-container-low": "#f2f3f8",
+                        "on-primary": "#ffffff",
+                        "surface": "#f8f9fe",
+                        "secondary-fixed": "#ffe08f",
+                        "gold-hover": "#a58a3e",
+                        "gold-light": "#faf6ed",
+                        "outline-variant": "#cfc4c5",
+                        "on-background": "#191c1f",
+                        "error": "#910022",
+                        "on-secondary-fixed-variant": "#584400",
+                        "surface-variant": "#e1e2e7",
+                        "outline": "#7e7576",
+                        "surface-container": "#edeef3",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f8f9fe",
+                        "inverse-on-surface": "#f0f0f5",
+                        "success": "#1b8959",
+                        "text-main": "#1e1e1e",
+                        "inverse-primary": "#c6c6c6",
+                        "on-surface": "#191c1f",
+                        "primary-fixed-dim": "#c6c6c6",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#4c4546",
+                        "primary-fixed": "#e2e2e2",
+                        "error-container": "#ffdad6",
+                        "background": "#f8f9fe",
+                        "tertiary-container": "#1a1c1c",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "tertiary": "#000000",
+                        "surface-tint": "#5e5e5e",
+                        "surface-dim": "#d9dadf",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "input-gap": "12px",
+                        "gutter": "16px",
+                        "base": "8px",
+                        "card-padding": "24px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "price-lg": ["Poppins", "sans-serif"],
+                        "subtitle": ["Poppins", "sans-serif"],
+                        "display-metrics": ["Poppins", "sans-serif"],
+                        "label-caps": ["Poppins", "sans-serif"],
+                        "headline-lg": ["Poppins", "sans-serif"],
+                        "headline-lg-mobile": ["Poppins", "sans-serif"],
+                        "headline-md": ["Poppins", "sans-serif"],
+                        "body-md": ["Poppins", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "price-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "subtitle": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "display-metrics": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg": ["48px", { "lineHeight": "56px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "headline-md": ["28px", { "lineHeight": "36px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface-container-low h-screen w-screen overflow-hidden text-on-surface">
+<!-- Top Navigation Bar -->
+<nav class="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center w-full px-container-margin h-16 shrink-0">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-primary">Vanguard Sports POS</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full hover:bg-surface-container-high transition-colors flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-surface-container-high transition-colors flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="w-10 h-10 rounded-full hover:bg-surface-container-high transition-colors flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant ml-2">
+<img alt="Employee Profile Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a female store manager in a brightly lit retail environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6Ksq6EwiJBvtDVkbmZ9BwTbqPWyjvSBbpIrm-IbMNQ-3fDRlSvH4q1aRE3X7rVYY2nIEmJadphFJuaJf2VcghQc-5S_RJzfbPsZnK2QX8r7EYbTNn16t9Kw0kr3fYVNAgEVi1EslLy1nym5czEcmzb-jyxjCTZZJRx-P0vBBSvBURLM4_snnRh4pZd6Cxu2Gd7BDSqouq19lPPbsEgYhovLcPz4TTFFQw1FlxbFGUv-1DKIuNe-YV"/>
+</div>
+</div>
+</nav>
+<!-- Main Workspace -->
+<main class="flex h-[calc(100vh-64px)] w-full overflow-hidden">
+<!-- Left Column: Product Browser -->
+<section class="flex-1 flex flex-col min-w-0 border-r border-outline-variant bg-surface-container-low">
+<!-- Sales Tabs -->
+<div class="flex items-center bg-surface-container-lowest border-b border-outline-variant px-4 pt-2 gap-2 shrink-0">
+<button class="px-6 py-2 bg-surface-container-low border border-b-0 border-outline-variant rounded-t-lg font-subtitle text-subtitle text-primary relative z-10">
+                    Venta 1
+                </button>
+<button class="px-6 py-2 text-on-surface-variant hover:bg-surface-container-highest transition-colors rounded-t-lg font-body-md text-body-md flex items-center gap-2">
+                    Venta 2
+                    <span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-highest text-on-surface-variant transition-colors ml-2 mb-1">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Search & Actions -->
+<div class="p-container-margin shrink-0 flex gap-4 items-center">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-[12px] py-3 pl-10 pr-4 text-body-md focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-shadow" placeholder="Buscar por nombre, SKU o código de barras..." type="text"/>
+</div>
+<button class="bg-surface-container-lowest border border-secondary text-secondary hover:bg-gold-light px-6 py-3 rounded-full font-subtitle text-subtitle transition-colors whitespace-nowrap flex items-center gap-2">
+<span class="material-symbols-outlined">add</span>
+                    Ítem libre
+                </button>
+</div>
+<!-- Filters -->
+<div class="px-container-margin pb-4 shrink-0 overflow-x-auto no-scrollbar flex gap-2">
+<button class="px-5 py-1.5 bg-[#c9a84c] text-white rounded-full font-subtitle text-subtitle whitespace-nowrap shadow-sm">Todos</button>
+<button class="px-5 py-1.5 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-highest transition-colors rounded-full font-body-md text-body-md whitespace-nowrap">Running</button>
+<button class="px-5 py-1.5 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-highest transition-colors rounded-full font-body-md text-body-md whitespace-nowrap">Entrenamiento</button>
+<button class="px-5 py-1.5 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-highest transition-colors rounded-full font-body-md text-body-md whitespace-nowrap">Fútbol</button>
+<button class="px-5 py-1.5 bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-highest transition-colors rounded-full font-body-md text-body-md whitespace-nowrap">Accesorios</button>
+</div>
+<!-- Product Grid -->
+<div class="flex-1 overflow-y-auto p-container-margin pt-0">
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+<!-- Product Card 1 -->
+<div class="bg-surface-container-lowest rounded-[12px] p-4 shadow-sm border border-outline-variant relative cursor-pointer hover:shadow-md transition-shadow group flex flex-col h-full">
+<button class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-low text-outline group-hover:text-[#c9a84c] transition-colors z-10">
+<span class="material-symbols-outlined text-[20px]">star</span>
+</button>
+<div class="aspect-square bg-surface-container mb-3 rounded-lg overflow-hidden relative">
+<img alt="Running Shoe" class="w-full h-full object-cover mix-blend-multiply" data-alt="A close-up studio shot of a vibrant red running shoe on a clean white background, evenly lit." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAILmTogOa6m-yoMR6MGXhqfVPw_khXOepskKFt5cAaPsnEUIoOfZa3GVDwguS0xCumGdQFfWzbWE7-OA6SAFqaGNzegiv6qX1A_AURJuTLOTCu_8Pt_0uj6XwDYqN8C7TVjj4K6cNOvdLZl0fs0oOFsmSi2N1llFcL5MGoj_i4q-u7Q_PS0cGhQAZFo_PNCzBdEI4aEDl3uisPn_cpZHxk4VBvuAmXW2vopcxAv6348vxY8lEay2bz"/>
+</div>
+<div class="flex-1 flex flex-col justify-end">
+<p class="font-subtitle text-[14px] leading-tight text-on-surface mb-1 line-clamp-2">Nike Air Zoom Pegasus 39</p>
+<p class="font-subtitle text-subtitle text-primary">L. 3,250.00</p>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="bg-surface-container-lowest rounded-[12px] p-4 shadow-sm border border-outline-variant relative cursor-pointer hover:shadow-md transition-shadow group flex flex-col h-full">
+<button class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-low text-[#c9a84c] transition-colors z-10">
+<span class="material-symbols-outlined text-[20px] fill">star</span>
+</button>
+<div class="aspect-square bg-surface-container mb-3 rounded-lg overflow-hidden relative">
+<img alt="Soccer Cleats" class="w-full h-full object-cover mix-blend-multiply" data-alt="A pair of classic green and white soccer cleats isolated on a bright, minimalist background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYcT7-O7R085hrKhAq_VGDtMfHJPTiqPjlY_yk2g-vuukQpJtgSeETbYUcLohlGxu0gmU2uLPskLppDUC_brn4GcldtgjBcf0wev3Hz_3Fc6D9FnJTBWP6sQSqHCH_T2VL2uWH4CQtsR1H004FEM115egIXNtwB9_J1lQBB4UB4rnjapYQ8Z4kUYd7NG5uFLQQdsaL_NS9Jk0RiS-l6ncEQzIIAoU2tQFZwSiWaIxhyviy0QoY9ldT"/>
+</div>
+<div class="flex-1 flex flex-col justify-end">
+<p class="font-subtitle text-[14px] leading-tight text-on-surface mb-1 line-clamp-2">Adidas Predator Edge.3 FG</p>
+<p class="font-subtitle text-subtitle text-primary">L. 2,890.00</p>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="bg-surface-container-lowest rounded-[12px] p-4 shadow-sm border border-outline-variant relative cursor-pointer hover:shadow-md transition-shadow group flex flex-col h-full">
+<button class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-low text-outline group-hover:text-[#c9a84c] transition-colors z-10">
+<span class="material-symbols-outlined text-[20px]">star</span>
+</button>
+<div class="aspect-square bg-surface-container mb-3 rounded-lg overflow-hidden relative">
+<img alt="White Sneakers" class="w-full h-full object-cover mix-blend-multiply" data-alt="A pair of clean white minimalist sneakers with subtle branding on a light gray background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo3JnA_HsjJISvrt1bWzPxGYwOYrrUZNQF9fw6FXl-7gWnG6wCpxa-d9SSr4GulAF3RXLTWyTrn8ibsghU8QUiXb69uBP5dUWQ6TbDLLDygXi9ch03dyaEkg8gYpF8CGmMdxZ_EQ82LLZcElEFbTiHWaXsp2aeuaThmuI36DJKBvw3iGz4_Go0GKvmltH6-hLahRn8dxcmB2nNLDlFX-R0DJab1jp3HNZo1T-8khTJBYzFIiXpTrOD"/>
+</div>
+<div class="flex-1 flex flex-col justify-end">
+<p class="font-subtitle text-[14px] leading-tight text-on-surface mb-1 line-clamp-2">Puma Smash V2 L</p>
+<p class="font-subtitle text-subtitle text-primary">L. 1,650.00</p>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="bg-surface-container-lowest rounded-[12px] p-4 shadow-sm border border-outline-variant relative cursor-pointer hover:shadow-md transition-shadow group flex flex-col h-full">
+<button class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-low text-outline group-hover:text-[#c9a84c] transition-colors z-10">
+<span class="material-symbols-outlined text-[20px]">star</span>
+</button>
+<div class="aspect-square bg-surface-container mb-3 rounded-lg flex items-center justify-center text-outline-variant">
+<span class="material-symbols-outlined text-[48px]">checkroom</span>
+</div>
+<div class="flex-1 flex flex-col justify-end">
+<p class="font-subtitle text-[14px] leading-tight text-on-surface mb-1 line-clamp-2">Camiseta Under Armour Tech 2.0</p>
+<p class="font-subtitle text-subtitle text-primary">L. 850.00</p>
+</div>
+</div>
+<!-- Product Card 5 -->
+<div class="bg-surface-container-lowest rounded-[12px] p-4 shadow-sm border border-outline-variant relative cursor-pointer hover:shadow-md transition-shadow group flex flex-col h-full opacity-50 grayscale">
+<div class="absolute inset-0 z-20 flex items-center justify-center">
+<span class="bg-surface/90 px-3 py-1 rounded text-xs font-bold uppercase tracking-wider shadow-sm">Agotado</span>
+</div>
+<div class="aspect-square bg-surface-container mb-3 rounded-lg flex items-center justify-center text-outline-variant">
+<span class="material-symbols-outlined text-[48px]">sports_soccer</span>
+</div>
+<div class="flex-1 flex flex-col justify-end">
+<p class="font-subtitle text-[14px] leading-tight text-on-surface mb-1 line-clamp-2">Balón Nike Pitch Training</p>
+<p class="font-subtitle text-subtitle text-primary">L. 550.00</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Cart Panel -->
+<aside class="w-[400px] xl:w-[480px] bg-surface-container-lowest flex flex-col shrink-0 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10 relative">
+<!-- Customer Selector -->
+<div class="p-4 border-b border-outline-variant shrink-0 bg-surface-container-lowest relative z-20">
+<button class="w-full flex items-center justify-between p-3 rounded-[12px] border border-outline-variant hover:border-secondary transition-colors group bg-surface-container-low/50">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="text-left">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-0.5">Cliente</p>
+<p class="font-subtitle text-subtitle text-primary line-clamp-1">CONSUMIDOR FINAL</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-secondary transition-colors">expand_more</span>
+</button>
+</div>
+<!-- Cart Items List -->
+<div class="flex-1 overflow-y-auto p-4 space-y-3 bg-surface-container-lowest">
+<!-- Cart Item 1 -->
+<div class="bg-surface border border-outline-variant rounded-[12px] p-3 flex items-center gap-3 group hover:border-[#c9a84c] transition-colors">
+<div class="w-14 h-14 bg-surface-container rounded-lg shrink-0 overflow-hidden">
+<img alt="Thumbnail" class="w-full h-full object-cover mix-blend-multiply" data-alt="Thumbnail of a red running shoe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChfrrsNGQg0raHG4NGj6LoUK6DduVy3YxW9xH99xJiXv57zDt57c5o5KzvYzSSM5s45ix8SjSkiuhSto-5I0JRxRIegXsoEQat7UTm052xmsNwIFgIiNbsJ7m2mRgGOLBXpj9NW023B31jLsNoulgjDlofQ-wyR5FplWxVYRYnHGumDU_1P4SiKBjVJ1-vzceML-SFZCtfzbTwSdtyEd3gyo2yCGPJMZj9HppRjeS5nKHASG-BCNky"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-subtitle text-[14px] leading-tight text-on-surface truncate mb-1">Nike Air Zoom Pegasus 39</p>
+<p class="font-body-md text-[13px] text-on-surface-variant">L. 3,250.00</p>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-full p-1 shrink-0">
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-subtitle text-[14px] w-4 text-center">1</span>
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<div class="text-right shrink-0 min-w-[70px]">
+<p class="font-subtitle text-[14px] text-primary mb-1">L. 3,250.00</p>
+<div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-6 h-6 rounded flex items-center justify-center text-[#c9a84c] hover:bg-gold-light transition-colors" title="Editar precio/descuento">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+<button class="w-6 h-6 rounded flex items-center justify-center text-error hover:bg-error-container transition-colors" title="Eliminar">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Cart Item 2 -->
+<div class="bg-surface border border-outline-variant rounded-[12px] p-3 flex items-center gap-3 group hover:border-[#c9a84c] transition-colors">
+<div class="w-14 h-14 bg-surface-container rounded-lg shrink-0 flex items-center justify-center text-outline-variant">
+<span class="material-symbols-outlined">checkroom</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-subtitle text-[14px] leading-tight text-on-surface truncate mb-1">Camiseta Under Armour Tech</p>
+<p class="font-body-md text-[13px] text-on-surface-variant">L. 850.00</p>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-full p-1 shrink-0">
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-subtitle text-[14px] w-4 text-center">2</span>
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<div class="text-right shrink-0 min-w-[70px]">
+<p class="font-subtitle text-[14px] text-primary mb-1">L. 1,700.00</p>
+<div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-6 h-6 rounded flex items-center justify-center text-[#c9a84c] hover:bg-gold-light transition-colors" title="Editar precio/descuento">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+<button class="w-6 h-6 rounded flex items-center justify-center text-error hover:bg-error-container transition-colors" title="Eliminar">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer / Totals -->
+<div class="p-4 bg-surface-container-lowest border-t border-outline-variant shrink-0 space-y-4 shadow-[0_-4px_16px_rgba(0,0,0,0.03)] z-20 relative">
+<div class="flex items-center justify-between">
+<button class="text-[#c9a84c] font-subtitle text-sm hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">sell</span>
+                        Aplicar descuento global
+                    </button>
+<div class="flex items-center gap-2">
+<span class="font-body-md text-xs text-on-surface-variant">Vendedor:</span>
+<span class="font-subtitle text-xs text-on-surface bg-surface-container px-2 py-1 rounded">Caja 01</span>
+</div>
+</div>
+<div class="space-y-1.5 pt-2 border-t border-outline-variant/50">
+<div class="flex justify-between items-center text-on-surface-variant font-body-md text-[14px]">
+<span>Subtotal</span>
+<span>L. 4,304.35</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-body-md text-[14px]">
+<span>ISV (15%)</span>
+<span>L. 645.65</span>
+</div>
+<div class="flex justify-between items-end pt-2">
+<span class="font-subtitle text-[18px] text-primary">Total</span>
+<span class="font-price-lg text-[32px] leading-none text-primary tracking-tight">L. 4,950.00</span>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-primary/90 text-white rounded-full py-4 font-subtitle text-[18px] flex justify-center items-center gap-2 transition-transform active:scale-[0.98] shadow-md">
+                    Cobrar
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</aside>
+</main>
+</body></html>
