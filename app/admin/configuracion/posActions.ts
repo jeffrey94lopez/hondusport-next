@@ -1,7 +1,7 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase-server'
-import type { ActionResult, MetodoPagoTipo } from '@/types'
+import type { ActionResult, MetodoPagoTipo, DescuentoPresetTipo } from '@/types'
 
 export interface CajaForm {
   nombre: string
@@ -18,6 +18,14 @@ export interface VendedorForm {
 export interface MetodoPagoForm {
   nombre: string
   tipo: MetodoPagoTipo
+  orden: number
+  activo: boolean
+}
+
+export interface DescuentoPresetForm {
+  etiqueta: string
+  tipo: DescuentoPresetTipo
+  valor: number
   orden: number
   activo: boolean
 }
@@ -177,6 +185,66 @@ export async function updateMetodoPago(id: string, form: MetodoPagoForm): Promis
 export async function toggleMetodoPagoActivo(id: string, activo: boolean): Promise<ActionResult> {
   const supabase = await createClient()
   const { error } = await supabase.from('metodos_pago').update({ activo }).eq('id', id)
+  if (error) return { error: mensajeError(error) }
+
+  revalidatePath('/admin/configuracion')
+  return {}
+}
+
+// ---------- Descuentos preset ----------
+
+function validarDescuentoPresetForm(form: DescuentoPresetForm): string | null {
+  if (!form.etiqueta.trim()) return 'La etiqueta es requerida'
+  if (form.tipo !== 'porcentaje' && form.tipo !== 'monto') return 'El tipo de descuento no es válido'
+  if (!Number.isFinite(form.valor) || form.valor < 0) return 'El valor debe ser un número mayor o igual a 0'
+  if (form.tipo === 'porcentaje' && form.valor > 100) return 'El porcentaje no puede ser mayor a 100'
+  if (!Number.isFinite(form.orden) || form.orden < 0) return 'El orden debe ser un número mayor o igual a 0'
+  return null
+}
+
+export async function createDescuentoPreset(form: DescuentoPresetForm): Promise<ActionResult> {
+  const formError = validarDescuentoPresetForm(form)
+  if (formError) return { error: formError }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('descuentos_preset').insert({
+    etiqueta: form.etiqueta.trim(),
+    tipo: form.tipo,
+    valor: form.valor,
+    orden: form.orden,
+    activo: form.activo,
+  })
+  if (error) return { error: mensajeError(error) }
+
+  revalidatePath('/admin/configuracion')
+  return {}
+}
+
+// El tipo de un descuento preset (porcentaje/monto) determina cómo se aplica
+// al total: igual que con métodos de pago, cambiarlo en un preset ya usado
+// dejaría descuentos históricos con una interpretación distinta a la que
+// tenían al aplicarse. El tipo se fija al crear y updateDescuentoPreset lo
+// ignora aunque el formulario lo envíe.
+export async function updateDescuentoPreset(id: string, form: DescuentoPresetForm): Promise<ActionResult> {
+  const formError = validarDescuentoPresetForm(form)
+  if (formError) return { error: formError }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('descuentos_preset').update({
+    etiqueta: form.etiqueta.trim(),
+    valor: form.valor,
+    orden: form.orden,
+    activo: form.activo,
+  }).eq('id', id)
+  if (error) return { error: mensajeError(error) }
+
+  revalidatePath('/admin/configuracion')
+  return {}
+}
+
+export async function toggleDescuentoPresetActivo(id: string, activo: boolean): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { error } = await supabase.from('descuentos_preset').update({ activo }).eq('id', id)
   if (error) return { error: mensajeError(error) }
 
   revalidatePath('/admin/configuracion')
