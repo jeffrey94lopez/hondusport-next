@@ -36,7 +36,7 @@ export default function MobileNav({
           {logoUrl ? (
             <Image src={logoUrl} alt="Hondusport" className={styles.drawerLogo} width={120} height={40} />
           ) : (
-            <span>HONDUSPORT</span>
+            <span className={styles.drawerLogoText}>HONDUSPORT</span>
           )}
           <button onClick={onClose} className={styles.closeBtn} aria-label="Cerrar menú">
             ✕

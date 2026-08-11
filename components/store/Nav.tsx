@@ -100,7 +100,7 @@ export default function Nav({
         </button>
         <button className={styles.iconBtn} onClick={onOpenCart} aria-label="Ver carrito">
           <i className="fa-solid fa-cart-shopping" />
-          <span className={styles.badge}>{count}</span>
+          <span className={styles.badgeGold}>{count}</span>
         </button>
       </div>
     </nav>

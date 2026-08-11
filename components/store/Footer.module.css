@@ -21,6 +21,13 @@
   margin-right: auto;
 }
 
+.brandName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0;
+}
+
 .slogan {
   opacity: 0.6;
   margin: 1rem 0;
@@ -98,9 +105,21 @@
   margin-right: auto;
 }
 
+.copyGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .copy {
   font-size: 0.8rem;
   opacity: 0.5;
+  margin: 0;
+}
+
+.pricesNote {
+  font-size: 0.75rem;
+  opacity: 0.4;
   margin: 0;
 }
 

@@ -38,15 +38,17 @@ export default function MegaSearch({ productos, categorias, isOpen, onClose, onO
     <div className={`${styles.overlay} ${isOpen ? styles.overlayActive : ''}`} onClick={onClose}>
       <div className={styles.content} onClick={e => e.stopPropagation()}>
         <div className={styles.header}>
-          <span className={styles.searchIcon}>🔍</span>
-          <input
-            type="text"
-            className={styles.input}
-            placeholder="¿Qué estás buscando?"
-            autoComplete="off"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
+          <div className={styles.searchBar}>
+            <i className={`fa-solid fa-magnifying-glass ${styles.searchIcon}`} />
+            <input
+              type="text"
+              className={styles.input}
+              placeholder="¿Qué estás buscando?"
+              autoComplete="off"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+            />
+          </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar búsqueda">
             ✕
           </button>

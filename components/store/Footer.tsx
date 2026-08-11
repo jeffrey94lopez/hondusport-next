@@ -26,6 +26,7 @@ export default function Footer({ config, categorias, onFilterClick }: FooterProp
     <footer className={styles.footer}>
       <div className={styles.grid}>
         <div>
+          <p className={styles.brandName}>{nombreNegocio}</p>
           {config.slogan && <p className={styles.slogan}>{config.slogan}</p>}
           {config.direccion && (
             <p className={styles.address}>
@@ -79,9 +80,12 @@ export default function Footer({ config, categorias, onFilterClick }: FooterProp
       <hr className={styles.divider} />
 
       <div className={styles.bottomRow}>
-        <p className={styles.copy}>
-          © {año} {nombreNegocio}. Todos los derechos reservados.
-        </p>
+        <div className={styles.copyGroup}>
+          <p className={styles.copy}>
+            © {año} {nombreNegocio}. Todos los derechos reservados.
+          </p>
+          <p className={styles.pricesNote}>Precios en Lempiras (L.)</p>
+        </div>
         {redesActivas.length > 0 && (
           <div className={styles.socialLinks}>
             {redesActivas.map(r => (

@@ -41,6 +41,13 @@
   object-fit: contain;
 }
 
+.drawerLogoText {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  color: var(--primary);
+}
+
 .closeBtn {
   background: none;
   border: none;
@@ -74,21 +81,23 @@
   text-align: left;
   background: none;
   border: none;
+  border-left: 3px solid transparent;
   color: var(--text);
   font-weight: 700;
   font-size: 0.9rem;
   letter-spacing: 1px;
-  padding: 1rem 0;
+  padding: 1rem 0 1rem 0.75rem;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.2s, border-color 0.2s;
 }
 
 .links button:hover {
   color: var(--primary);
 }
 
-.linkActive {
+.links .linkActive {
   color: var(--primary);
+  border-left-color: var(--primary);
 }
 
 .bottomNav {
@@ -139,8 +148,8 @@
   position: absolute;
   top: -5px;
   right: 5px;
-  background: var(--error-strong);
-  color: white;
+  background: var(--primary);
+  color: var(--ink);
   font-size: 9px;
   padding: 2px 5px;
   border-radius: var(--radius-tag);
