@@ -1,9 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './CheckoutModal.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { useCart } from '@/lib/store/cart-context'
 import { calculateOrderTotals, getOrderText } from '@/lib/store/orderTotals'
+import { pasosActivos, type Paso } from '@/lib/store/checkout-pasos'
 import { crearPedido } from '@/app/(store)/checkout/actions'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Envio, Cupon } from '@/types'
@@ -29,17 +30,6 @@ function readDeliveryInfo(): DeliveryInfo {
   } catch {
     return EMPTY_DELIVERY
   }
-}
-
-// Asistente de pasos del checkout. `direccion` solo aplica cuando el envío
-// seleccionado es delivery; en pickup se omite (no se pide dirección).
-type Paso = 'contacto' | 'envio' | 'direccion' | 'confirmar'
-
-function pasosActivos(tipo: 'delivery' | 'pickup' | undefined): Paso[] {
-  const base: Paso[] = ['contacto', 'envio']
-  if (tipo === 'delivery') base.push('direccion')
-  base.push('confirmar')
-  return base
 }
 
 const PASO_LABEL: Record<Paso, string> = {
@@ -83,6 +73,11 @@ export default function CheckoutModal({
   const [status, setStatus] = useState<'idle' | 'processing'>('idle')
   const [error, setError] = useState('')
   const [wasOpen, setWasOpen] = useState(false)
+  // Guarda desde qué paso ya se avanzó, para que un doble click/Enter repetido
+  // antes de que React vuelva a renderizar no dispare dos avances de paso
+  // (saltándose la validación del paso intermedio). Se limpia en cuanto el
+  // render refleja el nuevo `pasoActual`.
+  const lastAdvancedFromRef = useRef<Paso | null>(null)
 
   if (isOpen !== wasOpen) {
     setWasOpen(isOpen)
@@ -107,9 +102,20 @@ export default function CheckoutModal({
     freeShippingThreshold,
   })
 
+  // Mismo criterio de envío gratis que usa calculateOrderTotals (subtotal >=
+  // umbral): así la etiqueta de la card de envío no dice un monto distinto
+  // del que luego muestra el Resumen para ese mismo envío.
+  const envioGratisPorMonto = freeShippingActivo && totals.subtotal >= freeShippingThreshold
+
   const pasos = pasosActivos(selectedEnvio?.tipo)
   const stepIndex = Math.min(step, pasos.length - 1)
   const pasoActual = pasos[stepIndex]
+
+  useEffect(() => {
+    // El render ya refleja el paso actual: cualquier avance futuro vuelve a
+    // estar habilitado (ver siguiente()).
+    lastAdvancedFromRef.current = null
+  }, [pasoActual])
 
   function updateDelivery(field: keyof DeliveryInfo, value: string) {
     const next = { ...delivery, [field]: value }
@@ -133,13 +139,28 @@ export default function CheckoutModal({
   }
 
   function siguiente() {
+    // Ante un doble click/Enter repetido antes del re-render, el closure de
+    // esta llamada seguiría viendo el mismo `pasoActual` "viejo" — sin este
+    // guard, dos llamadas validarían el mismo paso y `setStep` avanzaría dos
+    // posiciones, saltándose la validación de un paso intermedio.
+    if (lastAdvancedFromRef.current === pasoActual) return
+
     const mensaje = validarPaso(pasoActual)
     if (mensaje) {
       setError(mensaje)
       return
     }
     setError('')
+    lastAdvancedFromRef.current = pasoActual
     setStep(s => Math.min(s + 1, pasos.length - 1))
+  }
+
+  // Dispara la validación nativa del navegador (required/type="email" de los
+  // campos del paso actual) antes de intentar avanzar, para el aviso
+  // instantáneo de campos vacíos o correo mal formado.
+  function irSiguiente(form: HTMLFormElement | null) {
+    if (form && !form.reportValidity()) return
+    siguiente()
   }
 
   function atras() {
@@ -148,12 +169,15 @@ export default function CheckoutModal({
   }
 
   function handleFormKeyDown(e: React.KeyboardEvent<HTMLFormElement>) {
-    // Enter avanza de paso en lugar de enviar el formulario, salvo en el
-    // último paso (confirmar), donde sí debe disparar el submit real.
-    if (e.key === 'Enter' && pasoActual !== 'confirmar') {
-      e.preventDefault()
-      siguiente()
-    }
+    if (e.key !== 'Enter') return
+    // En el textarea de dirección, Enter debe insertar un salto de línea
+    // normal, no avanzar de paso.
+    if ((e.target as HTMLElement).tagName === 'TEXTAREA') return
+    // En el último paso (confirmar) no hay nada que "avanzar": se deja pasar
+    // el Enter para que dispare el submit real (Finalizar pedido).
+    if (pasoActual === 'confirmar') return
+    e.preventDefault()
+    irSiguiente(e.currentTarget)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -260,6 +284,7 @@ export default function CheckoutModal({
                         id="checkout-nombre"
                         type="text"
                         placeholder="Nombre completo"
+                        required
                         value={delivery.name}
                         onChange={e => updateDelivery('name', e.target.value)}
                       />
@@ -270,6 +295,7 @@ export default function CheckoutModal({
                         id="checkout-telefono"
                         type="tel"
                         placeholder="+504 9999-9999"
+                        required
                         value={delivery.phone}
                         onChange={e => updateDelivery('phone', e.target.value)}
                       />
@@ -280,6 +306,7 @@ export default function CheckoutModal({
                         id="checkout-email"
                         type="email"
                         placeholder="tucorreo@ejemplo.com"
+                        required
                         value={delivery.email}
                         onChange={e => updateDelivery('email', e.target.value)}
                       />
@@ -304,7 +331,11 @@ export default function CheckoutModal({
                               {selectedEnvioId === envio.id && <i className="fa-solid fa-circle-check" />}
                             </div>
                             <span className={styles.envioCardPrice}>
-                              {envio.tipo === 'pickup' ? 'Retiro en tienda' : envio.costo > 0 ? formatPrice(envio.costo) : 'GRATIS'}
+                              {envio.tipo === 'pickup'
+                                ? 'Retiro en tienda'
+                                : envioGratisPorMonto || envio.costo <= 0
+                                  ? 'GRATIS'
+                                  : formatPrice(envio.costo)}
                             </span>
                             {envio.descuento > 0 && (
                               <span className={styles.envioCardBadge}>🎁 Descuento extra {envio.descuento}%</span>
@@ -392,7 +423,11 @@ export default function CheckoutModal({
                     </button>
                   )}
                   {pasoActual !== 'confirmar' ? (
-                    <button type="button" className={styles.nextBtn} onClick={siguiente}>
+                    <button
+                      type="button"
+                      className={styles.nextBtn}
+                      onClick={e => irSiguiente(e.currentTarget.form)}
+                    >
                       Siguiente
                     </button>
                   ) : (
