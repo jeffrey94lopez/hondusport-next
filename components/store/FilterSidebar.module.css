@@ -1,27 +1,40 @@
 .sidebar {
-  background: transparent;
-  padding: 0;
+  background: var(--card);
+  padding: 1.5rem;
   border: none;
-  box-shadow: none;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   position: sticky;
   top: 120px;
   height: fit-content;
-  max-width: 220px;
+  max-width: 240px;
+  width: 100%;
 }
 
 .closeBtn {
-  width: 100%;
-  text-align: right;
-  background: transparent;
-  border: none;
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  cursor: pointer;
   display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  margin-bottom: 1rem;
+  background: var(--hover-input);
+  border: none;
+  border-radius: var(--radius-tag);
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.closeBtn:hover {
+  background: var(--brand-subtle);
+  color: var(--primary);
 }
 
 .filterGroup {
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
 }
@@ -29,12 +42,23 @@
 .filterGroup:last-of-type {
   border-bottom: none;
   margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .filterGroup h4 {
   font-size: 0.7rem;
-  letter-spacing: 2px;
-  margin-bottom: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.filterGroup h4 span {
+  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .checkLabel {
@@ -88,56 +112,65 @@
 .tallaBtnGroup {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   margin-top: 8px;
 }
 
 .tallaBtn {
-  padding: 6px 12px;
+  min-width: 40px;
+  height: 36px;
+  padding: 0 14px;
   border: 1.5px solid var(--border);
-  background: transparent;
+  background: var(--card);
   color: var(--text);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
-  letter-spacing: 0.5px;
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-tag);
 }
 
-.tallaBtn:hover,
-.tallaBtnActive {
+.tallaBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.tallaBtnActive,
+.tallaBtnActive:hover {
   background: var(--primary);
   border-color: var(--primary);
-  color: white;
+  color: #fff;
 }
 
 .priceRange {
   width: 100%;
   accent-color: var(--primary);
+  margin-top: 6px;
 }
 
 .clearBtn {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background: transparent;
   border: 1.5px solid var(--border);
   color: var(--text);
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   transition: 0.2s;
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-btn);
 }
 
 .clearBtn:hover {
   border-color: var(--primary);
   color: var(--primary);
+  background: var(--brand-bg);
 }
 
 @media (max-width: 768px) {
@@ -146,13 +179,15 @@
     top: 0;
     left: -100%;
     width: 80%;
+    max-width: 320px;
     height: 100vh;
     background: var(--card);
+    border-radius: 0;
+    box-shadow: var(--shadow-modal);
     z-index: 2001;
-    padding: 2rem;
+    padding: 1.5rem;
     overflow-y: auto;
     transition: left 0.3s ease;
-    box-shadow: var(--shadow-modal);
   }
 
   .sidebarActive {
@@ -160,6 +195,6 @@
   }
 
   .closeBtn {
-    display: block;
+    display: flex;
   }
 }
