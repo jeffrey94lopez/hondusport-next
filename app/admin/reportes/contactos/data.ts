@@ -4,7 +4,7 @@ import type { FilaContacto, RolContacto } from '@/types'
 
 export async function obtenerContactos(desde: string, hasta: string, rol: RolContacto): Promise<FilaContacto[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('reporte_contactos', { p_desde: desde, p_hasta: hasta })
+  const { data, error } = await supabase.rpc('reporte_contactos', { p_desde: desde, p_hasta: hasta }).limit(5000)
   if (error) console.error('[contactos] error:', error.message)
   let filas: FilaContacto[] = (data ?? []).map(filaContacto)
   // Solo contactos con actividad o saldo (no listar inertes).

@@ -7,7 +7,7 @@ interface ProductoRow { id: string; sku: string | null; nombre: string; categori
 
 export async function obtenerGanancias(desde: string, hasta: string): Promise<FilaGananciaItem[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('reporte_ganancias_items', { p_desde: desde, p_hasta: hasta })
+  const { data, error } = await supabase.rpc('reporte_ganancias_items', { p_desde: desde, p_hasta: hasta }).limit(5000)
   if (error) console.error('[ganancias] error:', error.message)
   const rows = (data ?? []) as RowGanancia[]
 

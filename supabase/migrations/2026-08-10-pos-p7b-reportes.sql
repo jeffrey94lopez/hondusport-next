@@ -46,7 +46,8 @@ as $$
   from ventas v
   full outer join costos c
     on v.producto_id is not distinct from c.producto_id
-   and v.variante_id is not distinct from c.variante_id;
+   and v.variante_id is not distinct from c.variante_id
+  order by coalesce(v.ventas, 0) desc;
 $$;
 
 create or replace function reporte_contactos(p_desde timestamptz, p_hasta timestamptz)
@@ -75,7 +76,8 @@ as $$
     coalesce((select sum(s.saldo) from documento_saldos s where s.cliente_id = cl.id and s.saldo > 0), 0)::numeric as saldo_cxc,
     coalesce((select sum(s.saldo) from compra_saldos s where s.proveedor_id = cl.id and s.saldo > 0), 0)::numeric as saldo_cxp
   from clientes cl
-  where cl.activo = true;
+  where cl.activo = true
+  order by total_ventas desc;
 $$;
 
 revoke execute on function reporte_ganancias_items(timestamptz, timestamptz) from public, anon;
