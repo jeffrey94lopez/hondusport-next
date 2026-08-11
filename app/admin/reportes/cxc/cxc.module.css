@@ -22,10 +22,11 @@
 .docs th, .docs td { border: 1px solid var(--border); padding: 0.3rem 0.5rem; text-align: left; white-space: nowrap; }
 .docs th { background: var(--bg-hover); }
 .vencido { color: var(--error-strong); }
+.oculto { display: none; }
 @media print {
   .noPrint { display: none; }
   .page { padding: 0; }
   .hoja { border: none; box-shadow: none; padding: 0; }
-  .docs { display: table !important; }
+  .docs, .oculto { display: table !important; }
   .caret { display: none; }
 }

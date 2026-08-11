@@ -33,20 +33,18 @@ export default function CxcCascada({ grupos, total, exportHref }: { grupos: Grup
                 <span className={styles.clienteMeta}>{g.docs.length} doc(s)</span>
                 <span className={styles.clienteTotal}>{formatPrice(g.total)}</span>
               </button>
-              {(open || undefined) && (
-                <table className={styles.docs}>
-                  <thead><tr><th>Número</th><th>Fecha</th><th>Vencimiento</th><th className={styles.num}>Días vencido</th><th className={styles.num}>Saldo</th></tr></thead>
-                  <tbody>
-                    {g.docs.map(d => (
-                      <tr key={d.documento_id} className={d.diasVencido > 0 ? styles.vencido : ''}>
-                        <td>{d.numero}</td><td>{fmt(d.fecha)}</td><td>{fmt(d.vencimiento)}</td>
-                        <td className={styles.num}>{d.diasVencido > 0 ? d.diasVencido : 0}</td>
-                        <td className={styles.num}>{formatPrice(d.saldo)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+              <table className={`${styles.docs} ${open ? '' : styles.oculto}`}>
+                <thead><tr><th>Número</th><th>Fecha</th><th>Vencimiento</th><th className={styles.num}>Días vencido</th><th className={styles.num}>Saldo</th></tr></thead>
+                <tbody>
+                  {g.docs.map(d => (
+                    <tr key={d.documento_id} className={d.diasVencido > 0 ? styles.vencido : ''}>
+                      <td>{d.numero}</td><td>{fmt(d.fecha)}</td><td>{fmt(d.vencimiento)}</td>
+                      <td className={styles.num}>{d.diasVencido > 0 ? d.diasVencido : 0}</td>
+                      <td className={styles.num}>{formatPrice(d.saldo)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )
         })}
