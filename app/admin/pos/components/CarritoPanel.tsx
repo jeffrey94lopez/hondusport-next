@@ -1,9 +1,9 @@
 'use client'
-import { useState } from 'react'
-import { brutoLinea, brutoTotalLineas } from '@/lib/pos/carrito'
+import { useRef, useState } from 'react'
+import { brutoLinea, brutoTotalLineas, presetToDescuento } from '@/lib/pos/carrito'
 import type { LineaVenta } from '@/lib/pos/carrito'
 import { formatPrice } from '@/lib/store/format'
-import { topeStock, parseMoneyInput, valorMostrado } from '../pos-helpers'
+import { topeStock, parseMoneyInput, round2, valorMostrado } from '../pos-helpers'
 import type { Cliente, Vendedor, Producto, TotalesDocumento, DescuentoPreset } from '@/types'
 import styles from '../pos.module.css'
 
@@ -60,6 +60,7 @@ function partesDescripcion(l: LineaVenta): { nombre: string; variante: string | 
 export default function CarritoPanel({
   lineas,
   descuentoGlobal,
+  descuentos,
   clientes,
   vendedores,
   clienteId,
@@ -93,6 +94,9 @@ export default function CarritoPanel({
   const [descuentoTexto, setDescuentoTexto] = useState('')
   const [editandoDescuento, setEditandoDescuento] = useState(false)
   const descuentoMostrado = editandoDescuento ? descuentoTexto : valorMostrado(descuentoGlobal)
+  // Chip "Otro": no guarda estado propio — solo enfoca el input manual (mismo
+  // criterio que LineaEditorModal, Task 5).
+  const descuentoInputRef = useRef<HTMLInputElement>(null)
 
   function handleDescuentoFocus() {
     setDescuentoTexto(valorMostrado(descuentoGlobal))
@@ -104,6 +108,17 @@ export default function CarritoPanel({
     const n = parseMoneyInput(texto)
     onDescuentoGlobal(Math.min(Math.max(0, n), brutoTotalActual))
   }
+
+  // Chip activo: se deriva del descuento global actual (nunca de un estado
+  // propio) para que escribir en el input manual "apague" el chip
+  // automáticamente — mismo criterio que LineaEditorModal (Task 5).
+  // "Ninguno" gana si el descuento es 0; un preset gana si el monto actual
+  // coincide con lo que ese preset produciría sobre el bruto total actual;
+  // "Otro" es el resto.
+  const presetActivo = (p: DescuentoPreset) =>
+    round2(descuentoGlobal) === presetToDescuento(p, brutoTotalActual)
+  const ningunoActivo = descuentoGlobal === 0
+  const otroActivo = !ningunoActivo && !descuentos.some(presetActivo)
 
   const clientesFiltrados =
     clienteQuery.trim() === ''
@@ -217,7 +232,37 @@ export default function CarritoPanel({
       <div className={styles.pieCarrito}>
         <div className={styles.descuentoGlobalRow}>
           <label>Descuento global (L.)</label>
+          <div className={styles.chipsRow}>
+            <button
+              type="button"
+              className={`${styles.chip} ${ningunoActivo ? styles.chipActivo : ''}`}
+              aria-pressed={ningunoActivo}
+              onClick={() => onDescuentoGlobal(0)}
+            >
+              Ninguno
+            </button>
+            {descuentos.map(p => (
+              <button
+                key={p.id}
+                type="button"
+                className={`${styles.chip} ${presetActivo(p) ? styles.chipActivo : ''}`}
+                aria-pressed={presetActivo(p)}
+                onClick={() => onDescuentoGlobal(presetToDescuento(p, brutoTotalLineas(lineas)))}
+              >
+                {p.etiqueta}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`${styles.chip} ${otroActivo ? styles.chipActivo : ''}`}
+              aria-pressed={otroActivo}
+              onClick={() => descuentoInputRef.current?.focus()}
+            >
+              Otro
+            </button>
+          </div>
           <input
+            ref={descuentoInputRef}
             type="text"
             inputMode="decimal"
             placeholder="0.00"
