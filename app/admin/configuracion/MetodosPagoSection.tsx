@@ -1,5 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
+import { IconMetodosPago } from '@/components/admin/icons'
 import Modal from '@/components/admin/Modal'
 import Toggle from '@/components/admin/Toggle'
 import type { MetodoPago, MetodoPagoTipo } from '@/types'
@@ -83,103 +84,101 @@ export default function MetodosPagoSection({ metodos }: Props) {
   }
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.block}>
-        <div className={styles.head}>
-          <div>
-            <h2 className={styles.title}>Métodos de pago</h2>
-            <p className={styles.subtitle}>Formas de pago disponibles en caja</p>
-          </div>
-          <button type="button" className={`${styles.btnEdit} btnMerlinPrimary`} onClick={openCreate}>
-            + Nuevo método
-          </button>
+    <div className={styles.block}>
+      <div className={styles.head}>
+        <div>
+          <h2 className={styles.title}><IconMetodosPago className="iconoMerlin" />Métodos de pago</h2>
+          <p className={styles.subtitle}>Formas de pago disponibles en caja</p>
         </div>
-
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Orden</th>
-                <th>Estado</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {metodos.map(m => (
-                <tr key={m.id}>
-                  <td>{m.nombre}</td>
-                  <td>{TIPO_LABEL[m.tipo]}</td>
-                  <td className={styles.mono}>{m.orden}</td>
-                  <td>
-                    <EstadoCell activo={m.activo} onToggle={checked => handleToggle(m.id, checked)} disabled={isPending} />
-                  </td>
-                  <td>
-                    <div className={styles.rowActions}>
-                      <button type="button" className={styles.btnEdit} onClick={() => openEdit(m)}>Editar</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {metodos.length === 0 && <div className={styles.empty}>No hay métodos de pago registrados aún.</div>}
-        </div>
-
-        {modal && (
-          <Modal title={modal === 'edit' ? 'Editar método de pago' : 'Nuevo método de pago'} onClose={closeModal} maxWidth="480px">
-            <form onSubmit={handleSubmit} className={styles.form}>
-              <label className={styles.formLabel}>
-                Nombre *
-                <input
-                  type="text"
-                  value={form.nombre}
-                  onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))}
-                  placeholder="Efectivo L."
-                  required
-                />
-              </label>
-              {modal === 'edit' ? (
-                <div className={styles.formLabel}>
-                  Tipo
-                  <div className={styles.readOnlyValue}>{TIPO_LABEL[form.tipo]}</div>
-                  <span className={styles.helpText}>El tipo se fija al crear el método y no se puede cambiar.</span>
-                </div>
-              ) : (
-                <label className={styles.formLabel}>
-                  Tipo
-                  <select
-                    value={form.tipo}
-                    onChange={e => setForm(p => ({ ...p, tipo: e.target.value as MetodoPagoTipo }))}
-                  >
-                    {Object.entries(TIPO_LABEL).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <label className={styles.formLabel}>
-                Orden
-                <input
-                  type="number"
-                  min="0"
-                  value={form.orden}
-                  onChange={e => setForm(p => ({ ...p, orden: Number(e.target.value) }))}
-                />
-              </label>
-              <Toggle checked={form.activo} onChange={v => setForm(p => ({ ...p, activo: v }))} label="Activo" />
-              {formError && <p className={styles.formError}>{formError}</p>}
-              <div className={styles.formFooter}>
-                <button type="button" className={styles.btnCancel} onClick={closeModal}>Cancelar</button>
-                <button type="submit" className={`${styles.btnEdit} btnMerlinPrimary`} disabled={isPending}>
-                  {isPending ? 'Guardando…' : modal === 'edit' ? 'Guardar cambios' : 'Crear método'}
-                </button>
-              </div>
-            </form>
-          </Modal>
-        )}
+        <button type="button" className={`${styles.btnEdit} btnMerlinPrimary`} onClick={openCreate}>
+          + Nuevo método
+        </button>
       </div>
+
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Orden</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {metodos.map(m => (
+              <tr key={m.id}>
+                <td>{m.nombre}</td>
+                <td>{TIPO_LABEL[m.tipo]}</td>
+                <td className={styles.mono}>{m.orden}</td>
+                <td>
+                  <EstadoCell activo={m.activo} onToggle={checked => handleToggle(m.id, checked)} disabled={isPending} />
+                </td>
+                <td>
+                  <div className={styles.rowActions}>
+                    <button type="button" className={styles.btnEdit} onClick={() => openEdit(m)}>Editar</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {metodos.length === 0 && <div className={styles.empty}>No hay métodos de pago registrados aún.</div>}
+      </div>
+
+      {modal && (
+        <Modal title={modal === 'edit' ? 'Editar método de pago' : 'Nuevo método de pago'} onClose={closeModal} maxWidth="480px">
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <label className={styles.formLabel}>
+              Nombre *
+              <input
+                type="text"
+                value={form.nombre}
+                onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))}
+                placeholder="Efectivo L."
+                required
+              />
+            </label>
+            {modal === 'edit' ? (
+              <div className={styles.formLabel}>
+                Tipo
+                <div className={styles.readOnlyValue}>{TIPO_LABEL[form.tipo]}</div>
+                <span className={styles.helpText}>El tipo se fija al crear el método y no se puede cambiar.</span>
+              </div>
+            ) : (
+              <label className={styles.formLabel}>
+                Tipo
+                <select
+                  value={form.tipo}
+                  onChange={e => setForm(p => ({ ...p, tipo: e.target.value as MetodoPagoTipo }))}
+                >
+                  {Object.entries(TIPO_LABEL).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label className={styles.formLabel}>
+              Orden
+              <input
+                type="number"
+                min="0"
+                value={form.orden}
+                onChange={e => setForm(p => ({ ...p, orden: Number(e.target.value) }))}
+              />
+            </label>
+            <Toggle checked={form.activo} onChange={v => setForm(p => ({ ...p, activo: v }))} label="Activo" />
+            {formError && <p className={styles.formError}>{formError}</p>}
+            <div className={styles.formFooter}>
+              <button type="button" className={styles.btnCancel} onClick={closeModal}>Cancelar</button>
+              <button type="submit" className={`${styles.btnEdit} btnMerlinPrimary`} disabled={isPending}>
+                {isPending ? 'Guardando…' : modal === 'edit' ? 'Guardar cambios' : 'Crear método'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   )
 }

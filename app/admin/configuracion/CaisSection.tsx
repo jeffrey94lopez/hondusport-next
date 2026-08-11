@@ -1,5 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
+import { IconDocumentos } from '@/components/admin/icons'
 import Modal from '@/components/admin/Modal'
 import Toggle from '@/components/admin/Toggle'
 import { estadoCai, formatearCorrelativo } from '@/lib/pos/fiscal'
@@ -84,7 +85,7 @@ export default function CaisSection({ cais }: Props) {
     <div className={styles.wrap}>
       <div className={styles.head}>
         <div>
-          <h2 className={styles.title}>CAIs</h2>
+          <h2 className={styles.title}><IconDocumentos className="iconoMerlin" />CAIs</h2>
           <p className={styles.subtitle}>Autorizaciones de emisión de documentos fiscales</p>
         </div>
         <button type="button" className={`${styles.btnEdit} btnMerlinPrimary`} onClick={openCreate}>

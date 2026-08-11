@@ -1,9 +1,39 @@
 .page { padding: 1.5rem; }
-.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
-.title { font-size: 1.25rem; font-weight: 800; }
-.btnPrimary { background: var(--accent); color: var(--text); border: none; border-radius: var(--radius-input); padding: 0.55rem 1.2rem; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.2s, opacity 0.15s; }
-.btnPrimary:disabled { opacity: 0.5; }
+
+/* Header (Stitch): título + subtítulo a la izquierda, botón negro pill a la
+   derecha. Usa tokens Merlin crudos (no los alias semánticos) porque esta es
+   la referencia visual explícita del re-skin R2a Task 7. */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.headerText { display: flex; flex-direction: column; gap: 0.3rem; }
+.title { font-size: 1.6rem; font-weight: 700; color: var(--ink); }
+.subtitle { font-size: 0.88rem; color: var(--ink-muted); }
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--cta);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-btn);
+  padding: 0.7rem 1.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, opacity 0.15s;
+}
+.btnPrimary:hover:not(:disabled) { background: var(--cta-hover); }
+.btnPrimary:disabled { opacity: 0.6; cursor: not-allowed; }
 .saved { background: var(--success); }
+.btnIcon { width: 16px; height: 16px; flex-shrink: 0; }
 
 .tabs { display: flex; gap: 0.4rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
 .tab { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-input); padding: 0.4rem 1rem; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
@@ -11,36 +41,70 @@
 .tabActive { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
 /* Sub-nav lateral de pestañas (Task 6, R2a): una pestaña = su contenido a la
-   derecha. Reemplaza los antiguos grupos top-tab. */
+   derecha. Reemplaza los antiguos grupos top-tab. Re-skin Stitch (Task 7):
+   se ve como una card propia, con ítems de icono dorado y el activo
+   resaltado en dorado/beige con un filete a la izquierda. */
 .layout { display: flex; gap: 1.5rem; align-items: flex-start; }
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  width: 220px;
+  width: 240px;
   flex-shrink: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: var(--radius-card);
-  padding: 0.65rem;
+  box-shadow: var(--shadow-card);
+  padding: 0.75rem;
 }
 .navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
   text-align: left;
   background: transparent;
   border: none;
+  border-left: 3px solid transparent;
   border-radius: var(--radius-input);
-  padding: 0.6rem 0.75rem;
-  font-size: 0.82rem;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--ink-muted);
   cursor: pointer;
   transition: all 0.12s;
 }
-.navItem:hover { color: var(--text); background: var(--bg-hover); }
-.navItemActive { background: var(--accent-dim); color: var(--accent); }
+.navItem:hover { color: var(--ink); background: var(--hover-input); }
+.navItemActive {
+  background: var(--brand-bg);
+  border-left-color: var(--brand);
+  color: var(--brand-hover);
+  font-weight: 700;
+}
+.navIcon { display: inline-flex; flex-shrink: 0; }
+.navIcon svg { width: 18px; height: 18px; }
+
 .content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
 
-.form { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 1.5rem; }
+/* Card blanca redondeada genérica: envuelve el contenido de las pestañas que
+   viven en su propio componente (CAIs, Métodos de pago, POS, Cotizaciones)
+   para que luzcan igual que la card de Empresa/Tienda. */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.5rem;
+}
+
+.form { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; }
+
+/* Encabezado de card con icono dorado + título (Empresa/Facturador y
+   Tienda, cuyo markup vive completo en este componente). */
+.cardHeader { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; }
+.cardHeader svg { width: 20px; height: 20px; }
+.cardTitle { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+.cardDivider { height: 1px; background: var(--line); margin: 0 -1.5rem 1.25rem; }
+
 .section { display: flex; flex-direction: column; gap: 1rem; }
 .formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 .formLabel { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
@@ -51,7 +115,36 @@
 .formError { font-size: 0.8rem; color: var(--danger); margin-top: 0.5rem; }
 .helpText { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
 
+/* Upload de logo circular (Stitch): ImageUpload es compartido con Banners
+   (previews rectangulares 16:7) y no se toca — esta clase envuelve la
+   instancia usada aquí y fuerza el círculo por estructura (selectores por
+   etiqueta, no por clase, así que no depende de los nombres hasheados del
+   CSS module de ImageUpload). */
+.logoCircle { display: flex; flex-direction: column; gap: 0.5rem; }
+.logoCircle > div > div {
+  width: 88px;
+  height: 88px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+.logoCircle > div > div img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.logoCircle > div > label {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  padding: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.65rem;
+  line-height: 1.2;
+}
+
 @media (max-width: 720px) {
   .layout { flex-direction: column; }
   .sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
+  .navItem { flex-shrink: 0; }
+  .topbar { flex-direction: column; align-items: stretch; }
+  .btnPrimary { justify-content: center; }
 }

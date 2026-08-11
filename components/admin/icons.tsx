@@ -74,6 +74,17 @@ export const IconReportes = ({ className }: IconProps) =>
 export const IconVentas = ({ className }: IconProps) =>
   base(<><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01M18 12h.01" /></>, className)
 
+// Re-skin Stitch de Configuración (R2a Task 7): iconos para el sub-nav y las
+// cards de la pantalla de Configuración (empresa, métodos de pago, tienda).
+export const IconEmpresa = ({ className }: IconProps) =>
+  base(<><path d="M3 9l1-5h16l1 5" /><path d="M4 9v11h16V9" /><path d="M9 20v-6h6v6" /></>, className)
+
+export const IconMetodosPago = ({ className }: IconProps) =>
+  base(<><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></>, className)
+
+export const IconTienda = ({ className }: IconProps) =>
+  base(<><path d="M6 8h12l-1 12H7z" /><path d="M9 8V6a3 3 0 016 0v2" /></>, className)
+
 export const ICONOS = {
   inicio: IconInicio,
   productos: IconProductos,

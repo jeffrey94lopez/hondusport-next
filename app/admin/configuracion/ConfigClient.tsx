@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react'
 import ImageUpload from '@/components/admin/ImageUpload'
 import Toggle from '@/components/admin/Toggle'
+import { IconCotizaciones, IconDocumentos, IconEmpresa, IconMetodosPago, IconPos, IconTienda } from '@/components/admin/icons'
 import { validarRtn } from '@/lib/pos/fiscal'
 import type { CaiAutorizacion, Caja, ConfigMap, CotizacionEtapa, MetodoPago, Vendedor } from '@/types'
 import { saveConfig } from './actions'
@@ -10,6 +11,18 @@ import EtapasSection from './EtapasSection'
 import MetodosPagoSection from './MetodosPagoSection'
 import PosSection from './PosSection'
 import styles from './config.module.css'
+
+// Icono del botón "Guardar cambios" (Stitch): disco de guardado, trazo
+// "feather" consistente con components/admin/icons.tsx.
+function IconGuardar({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+      <path d="M17 21v-8H7v8" />
+      <path d="M7 3v5h8" />
+    </svg>
+  )
+}
 
 interface Props {
   config: ConfigMap
@@ -25,12 +38,12 @@ interface Props {
 // R2a Task 6. La pestaña `empresa` fusiona Empresa+Facturador en una sola
 // card sin datos duplicados (usa las claves canónicas de lib/empresa/perfil).
 const PESTANAS = [
-  { id: 'empresa', label: 'Empresa / Facturador' },
-  { id: 'cais', label: 'CAIs' },
-  { id: 'metodos', label: 'Métodos de pago' },
-  { id: 'pos', label: 'POS' },
-  { id: 'cotizaciones', label: 'Cotizaciones / Etapas' },
-  { id: 'tienda', label: 'Tienda' },
+  { id: 'empresa', label: 'Empresa / Facturador', icon: IconEmpresa },
+  { id: 'cais', label: 'CAIs', icon: IconDocumentos },
+  { id: 'metodos', label: 'Métodos de pago', icon: IconMetodosPago },
+  { id: 'pos', label: 'POS', icon: IconPos },
+  { id: 'cotizaciones', label: 'Cotizaciones / Etapas', icon: IconCotizaciones },
+  { id: 'tienda', label: 'Tienda', icon: IconTienda },
 ] as const
 
 type PestanaId = typeof PESTANAS[number]['id']
@@ -94,48 +107,65 @@ export default function ConfigClient({ config: initial, cais, cajas, vendedores,
   return (
     <div className={styles.page}>
       <div className={styles.topbar}>
-        <h1 className={styles.title}>Configuración</h1>
+        <div className={styles.headerText}>
+          <h1 className={styles.title}>Configuración</h1>
+          <p className={styles.subtitle}>Administra los ajustes generales, de facturación y del sistema.</p>
+        </div>
         <button
           form="config-form"
           type="submit"
           className={`${styles.btnPrimary} ${saved ? styles.saved : ''}`}
           disabled={isPending}
         >
-          {saved ? '✓ Guardado' : isPending ? 'Guardando…' : 'Guardar cambios'}
+          <IconGuardar className={styles.btnIcon} />
+          {saved ? 'Guardado' : isPending ? 'Guardando…' : 'Guardar cambios'}
         </button>
       </div>
 
       <div className={styles.layout}>
         <nav className={styles.sidebar}>
-          {PESTANAS.map(p => (
-            <button
-              key={p.id}
-              type="button"
-              className={`${styles.navItem} ${pestana === p.id ? styles.navItemActive : ''}`}
-              onClick={() => setPestana(p.id)}
-            >
-              {p.label}
-            </button>
-          ))}
+          {PESTANAS.map(p => {
+            const Icono = p.icon
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={`${styles.navItem} ${pestana === p.id ? styles.navItemActive : ''}`}
+                onClick={() => setPestana(p.id)}
+              >
+                <span className={styles.navIcon}><Icono className="iconoMerlin" /></span>
+                {p.label}
+              </button>
+            )
+          })}
         </nav>
 
         <div className={styles.content}>
           <form id="config-form" onSubmit={handleSave} className={styles.form} hidden={pestana !== 'empresa' && pestana !== 'tienda'}>
             {pestana === 'empresa' && (
               <div className={styles.section}>
+                <div className={styles.cardHeader}>
+                  <IconEmpresa className="iconoMerlin" />
+                  <h2 className={styles.cardTitle}>Detalles de la Empresa</h2>
+                </div>
+                <div className={styles.cardDivider} />
                 <div className={styles.formRow}>
-                  <ImageUpload
-                    bucket="banners"
-                    value={cfg.logo_url ?? ''}
-                    onChange={url => setCfg(c => ({ ...c, logo_url: url }))}
-                    label="Logo (documentos)"
-                  />
-                  <ImageUpload
-                    bucket="banners"
-                    value={cfg.empresa_icono_url ?? ''}
-                    onChange={url => setCfg(c => ({ ...c, empresa_icono_url: url }))}
-                    label="Ícono"
-                  />
+                  <div className={styles.logoCircle}>
+                    <ImageUpload
+                      bucket="banners"
+                      value={cfg.logo_url ?? ''}
+                      onChange={url => setCfg(c => ({ ...c, logo_url: url }))}
+                      label="Logo (documentos)"
+                    />
+                  </div>
+                  <div className={styles.logoCircle}>
+                    <ImageUpload
+                      bucket="banners"
+                      value={cfg.empresa_icono_url ?? ''}
+                      onChange={url => setCfg(c => ({ ...c, empresa_icono_url: url }))}
+                      label="Ícono"
+                    />
+                  </div>
                 </div>
                 <label className={styles.formLabel}>
                   Nombre comercial
@@ -231,6 +261,11 @@ export default function ConfigClient({ config: initial, cais, cajas, vendedores,
 
             {pestana === 'tienda' && (
               <>
+                <div className={styles.cardHeader}>
+                  <IconTienda className="iconoMerlin" />
+                  <h2 className={styles.cardTitle}>Ajustes de la Tienda</h2>
+                </div>
+                <div className={styles.cardDivider} />
                 <div className={styles.tabs}>
                   {SECTIONS.map(s => (
                     <button
@@ -358,20 +393,34 @@ export default function ConfigClient({ config: initial, cais, cajas, vendedores,
             {error && <p className={styles.formError}>{error}</p>}
           </form>
 
-          {pestana === 'cais' && <CaisSection cais={cais} />}
-          {pestana === 'metodos' && <MetodosPagoSection metodos={metodos} />}
-          {pestana === 'pos' && (
-            <PosSection
-              cajas={cajas}
-              vendedores={vendedores}
-              limiteConsumidorFinal={initial.pos_limite_consumidor_final ?? '10000'}
-              documentoModal={initial.pos_documento_modal ?? 'true'}
-              bloquearLimite={initial.cxc_bloquear_limite ?? 'false'}
-              conteoCiego={initial.inventario_conteo_ciego ?? 'true'}
-              devolucionesSinEfectivo={initial.devoluciones_sin_efectivo ?? 'false'}
-            />
+          {pestana === 'cais' && (
+            <div className={styles.card}>
+              <CaisSection cais={cais} />
+            </div>
           )}
-          {pestana === 'cotizaciones' && <EtapasSection etapas={etapas} />}
+          {pestana === 'metodos' && (
+            <div className={styles.card}>
+              <MetodosPagoSection metodos={metodos} />
+            </div>
+          )}
+          {pestana === 'pos' && (
+            <div className={styles.card}>
+              <PosSection
+                cajas={cajas}
+                vendedores={vendedores}
+                limiteConsumidorFinal={initial.pos_limite_consumidor_final ?? '10000'}
+                documentoModal={initial.pos_documento_modal ?? 'true'}
+                bloquearLimite={initial.cxc_bloquear_limite ?? 'false'}
+                conteoCiego={initial.inventario_conteo_ciego ?? 'true'}
+                devolucionesSinEfectivo={initial.devoluciones_sin_efectivo ?? 'false'}
+              />
+            </div>
+          )}
+          {pestana === 'cotizaciones' && (
+            <div className={styles.card}>
+              <EtapasSection etapas={etapas} />
+            </div>
+          )}
         </div>
       </div>
     </div>

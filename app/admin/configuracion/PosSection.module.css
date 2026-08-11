@@ -1,4 +1,7 @@
-.wrap { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 2rem; }
+/* Re-skin Stitch (R2a Task 7): esta pestaña ahora vive sola dentro de su
+   propia card blanca (ver ConfigClient.tsx); el margen superior que tenía
+   cuando colgaba debajo de un tab-bar ya no aplica. */
+.wrap { display: flex; flex-direction: column; gap: 2rem; }
 
 .block { display: flex; flex-direction: column; }
 
@@ -11,7 +14,8 @@
   flex-wrap: wrap;
 }
 
-.title { font-size: 1rem; font-weight: 800; color: var(--text); }
+.title { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 800; color: var(--text); }
+.title svg { width: 18px; height: 18px; }
 .subtitle { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.1rem; }
 
 .limiteRow { display: flex; gap: 0.6rem; align-items: center; max-width: 320px; }
