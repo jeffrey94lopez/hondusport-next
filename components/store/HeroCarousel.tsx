@@ -9,6 +9,26 @@ interface HeroCarouselProps {
   banners: Banner[]
 }
 
+// Acento dorado sobre la última palabra del título (patrón del diseño Stitch:
+// "Desata tu Potencial" -> "Potencial" en dorado). Puramente cosmético — no es
+// una regla de negocio, por eso vive junto al componente y no en lib/store/.
+function renderTituloConAcento(titulo: string | null) {
+  if (!titulo) return null
+  const partes = titulo.trim().split(/\s+/)
+  const ultima = partes.pop()
+  const resto = partes.join(' ')
+  return (
+    <>
+      {resto ? `${resto} ` : ''}
+      <span className={styles.accent}>{ultima}</span>
+    </>
+  )
+}
+
+function scrollToCatalogo() {
+  document.querySelector('main')?.scrollIntoView({ behavior: 'smooth' })
+}
+
 export default function HeroCarousel({ banners }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0)
 
@@ -31,17 +51,22 @@ export default function HeroCarousel({ banners }: HeroCarouselProps) {
           style={
             banner.imagen
               ? {
-                  backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${banner.imagen}')`,
+                  backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.2) 70%, rgba(0,0,0,0) 100%), url('${banner.imagen}')`,
                 }
               : undefined
           }
         >
           <div className={styles.slideContent}>
-            <h1>{banner.titulo}</h1>
-            <p>{banner.subtitulo}</p>
-            <a href={banner.btn_link} className={styles.heroBtn}>
-              {banner.btn_texto}
-            </a>
+            <h1>{renderTituloConAcento(banner.titulo)}</h1>
+            {banner.subtitulo && <p>{banner.subtitulo}</p>}
+            <div className={styles.ctaRow}>
+              <a href={banner.btn_link} className={styles.heroBtn}>
+                {banner.btn_texto}
+              </a>
+              <button type="button" className={styles.heroBtnSecondary} onClick={scrollToCatalogo}>
+                Ver catálogo
+              </button>
+            </div>
           </div>
         </div>
       ))}
