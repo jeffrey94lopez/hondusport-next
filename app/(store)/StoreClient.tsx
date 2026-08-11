@@ -17,11 +17,11 @@ import { useCart } from '@/lib/store/cart-context'
 import { filterProductos } from '@/lib/store/filters'
 import { getTallas } from '@/lib/store/getTallas'
 import { useStoreFilters } from '@/lib/store/useStoreFilters'
+import { isConfigActivo, resolveFreeShippingThreshold } from '@/lib/store/freeShipping'
 import styles from './page.module.css'
 import type { StoreProducto, Categoria, Banner, ConfigMap, Envio, Cupon } from '@/types/store'
 
 const DEFAULT_MAX_PRICE = 5000
-const DEFAULT_FREE_SHIPPING_THRESHOLD = 999
 const SIN_PERSONALIZACION = 'Sin personalización'
 const TALLA_UNICA = 'Única'
 
@@ -32,11 +32,6 @@ interface StoreClientProps {
   envios: Envio[]
   cupones: Cupon[]
   config: ConfigMap
-}
-
-function isConfigActivo(value: string | undefined, defaultValue: boolean): boolean {
-  if (value === undefined) return defaultValue
-  return value.toUpperCase() !== 'FALSE'
 }
 
 export default function StoreClient({ productos, categorias, banners, envios, cupones, config }: StoreClientProps) {
@@ -93,8 +88,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
   }
 
   const freeShippingActivo = isConfigActivo(config.free_shipping_activo, true)
-  const parsedThreshold = Number(config.free_shipping_minimo)
-  const freeShippingThreshold = config.free_shipping_minimo && Number.isFinite(parsedThreshold) ? parsedThreshold : DEFAULT_FREE_SHIPPING_THRESHOLD
+  const freeShippingThreshold = resolveFreeShippingThreshold(config.free_shipping_minimo)
   const cuponesPopupActivo = isConfigActivo(config.cupones_popup_activo, true)
 
   return (

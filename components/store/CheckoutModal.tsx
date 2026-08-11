@@ -5,12 +5,12 @@ import { formatPrice } from '@/lib/store/format'
 import { useCart } from '@/lib/store/cart-context'
 import { calculateOrderTotals, getOrderText } from '@/lib/store/orderTotals'
 import { pasosActivos, type Paso } from '@/lib/store/checkout-pasos'
+import { DEFAULT_FREE_SHIPPING_THRESHOLD } from '@/lib/store/freeShipping'
 import { crearPedido } from '@/app/(store)/checkout/actions'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Envio, Cupon } from '@/types'
 
 const DELIVERY_KEY = 'hs_checkout_delivery'
-const DEFAULT_FREE_SHIPPING_THRESHOLD = 999
 
 interface DeliveryInfo {
   name: string

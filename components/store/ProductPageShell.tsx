@@ -7,8 +7,7 @@ import WishlistDrawer from './WishlistDrawer'
 import CheckoutModal from './CheckoutModal'
 import MegaSearch from './MegaSearch'
 import type { StoreProducto, Categoria, ConfigMap, Envio, Cupon } from '@/types/store'
-
-const DEFAULT_FREE_SHIPPING_THRESHOLD = 999
+import { isConfigActivo, resolveFreeShippingThreshold } from '@/lib/store/freeShipping'
 
 interface ProductPageShellProps {
   logoUrl?: string
@@ -19,11 +18,6 @@ interface ProductPageShellProps {
   cupones: Cupon[]
   config: ConfigMap
   children: React.ReactNode
-}
-
-function isConfigActivo(value: string | undefined, defaultValue: boolean): boolean {
-  if (value === undefined) return defaultValue
-  return value.toUpperCase() !== 'FALSE'
 }
 
 export default function ProductPageShell({
@@ -51,9 +45,7 @@ export default function ProductPageShell({
   }
 
   const freeShippingActivo = isConfigActivo(config.free_shipping_activo, true)
-  const parsedThreshold = Number(config.free_shipping_minimo)
-  const freeShippingThreshold =
-    config.free_shipping_minimo && Number.isFinite(parsedThreshold) ? parsedThreshold : DEFAULT_FREE_SHIPPING_THRESHOLD
+  const freeShippingThreshold = resolveFreeShippingThreshold(config.free_shipping_minimo)
 
   return (
     <>

@@ -9,7 +9,7 @@ import SizeGuideModal from './SizeGuideModal'
 import ProductCard from './ProductCard'
 import { formatPrice } from '@/lib/store/format'
 import { getTallas } from '@/lib/store/getTallas'
-import { getReviews } from '@/lib/store/reviews'
+import { DEFAULT_FREE_SHIPPING_THRESHOLD } from '@/lib/store/freeShipping'
 import { addRecentView } from '@/lib/store/recentViews'
 import { useCart } from '@/lib/store/cart-context'
 import { useWishlist } from '@/lib/store/wishlist-context'
@@ -18,7 +18,6 @@ import type { StoreProducto, Categoria } from '@/types/store'
 const RECENT_VIEWS_KEY = 'hs_recent_views'
 const ZOOM_SCALE = 2
 const RELATED_SCROLL_AMOUNT = 300
-const DEFAULT_FREE_SHIPPING_THRESHOLD = 999
 const SIN_PERSONALIZACION = 'Sin personalización'
 const TALLA_UNICA = 'Única'
 
@@ -65,8 +64,6 @@ export default function ProductDetail({
   const { addToCart } = useCart()
   const { has: isWishlisted, toggle: toggleWishlist } = useWishlist()
   const tallas = getTallas(producto, tallaFiltros)
-  const reviews = getReviews(producto.rating)
-  const ratingValue = producto.rating || 5
   const showOriginalPrice = producto.precioOriginal != null && producto.precioOriginal > producto.precio
   const eyebrow = producto.subcat ?? producto.cat
 
@@ -225,11 +222,6 @@ export default function ProductDetail({
           {eyebrow && <p className={styles.eyebrow}>{eyebrow}</p>}
           <h1 className={styles.title}>{producto.nombre}</h1>
 
-          <div className={styles.ratingRow}>
-            <span className={styles.starsFilled}>{'★'.repeat(ratingValue)}</span>
-            <span className={styles.starsEmpty}>{'☆'.repeat(5 - ratingValue)}</span>
-          </div>
-
           <p className={styles.price}>
             {showOriginalPrice && (
               <span className={styles.originalPrice}>{formatPrice(producto.precioOriginal as number)}</span>
@@ -372,16 +364,6 @@ export default function ProductDetail({
             </button>
           </div>
         </div>
-      </div>
-
-      <div className={styles.reviewsSection}>
-        <h4>RESEÑAS DE CLIENTES ({reviews.length})</h4>
-        {reviews.map(review => (
-          <div key={review.author} className={styles.review}>
-            <span className={styles.reviewStars}>{'★'.repeat(ratingValue)}</span> <strong>{review.author}</strong>
-            <p>&quot;{review.text}&quot;</p>
-          </div>
-        ))}
       </div>
 
       {relacionados.length > 0 && (

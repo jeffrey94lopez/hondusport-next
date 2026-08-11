@@ -2,6 +2,7 @@
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase-server'
 import { calculateOrderTotals, cartItemsToPedidoItems, resolveTrustedCustom } from '@/lib/store/orderTotals'
+import { isConfigActivo, resolveFreeShippingThreshold } from '@/lib/store/freeShipping'
 import { toConfigMap } from '@/lib/store/adapters'
 import { validarCompra, precioEfectivo, traducirErrorPedido } from '@/lib/store/variantes'
 import type { EnvioPricing } from '@/lib/store/orderTotals'
@@ -141,8 +142,8 @@ export async function crearPedido(payload: CrearPedidoInput): Promise<CrearPedid
 
   const { data: configRows } = await supabase.from('configuracion').select('key, value')
   const configMap = toConfigMap(configRows ?? [])
-  const freeShippingActivo = configMap.free_shipping_activo !== 'false'
-  const freeShippingThreshold = Number(configMap.free_shipping_minimo ?? '999')
+  const freeShippingActivo = isConfigActivo(configMap.free_shipping_activo, true)
+  const freeShippingThreshold = resolveFreeShippingThreshold(configMap.free_shipping_minimo)
 
   const totals = calculateOrderTotals({
     cart: trustedCart,

@@ -147,27 +147,25 @@
   color: var(--primary);
 }
 
-.badge {
+.badge,
+.badgeGold {
   position: absolute;
   top: -5px;
   right: -10px;
-  background: var(--error-strong);
-  color: white;
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 50%;
 }
 
+.badge {
+  background: var(--error-strong);
+  color: white;
+}
+
 .badgeGold {
-  position: absolute;
-  top: -5px;
-  right: -10px;
   background: var(--primary);
   color: var(--ink);
-  font-size: 10px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 50%;
 }
 
 .hamburger {

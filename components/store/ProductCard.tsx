@@ -69,7 +69,6 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
   const showStockWarning = !agotado && stock != null && stock > 0 && stock <= STOCK_LIMITE
   const imagen = producto.imagenes[0] ?? ''
   const categoria = producto.subcat ?? producto.cat
-  const ratingValue = producto.rating || 5
   const tag = getTag(producto, agotado, discountPercent)
 
   return (
@@ -104,10 +103,6 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
 
       <div className={styles.info}>
         <div onClick={() => onOpen?.(producto.slug)} style={{ cursor: 'pointer' }}>
-          <div className={styles.stars}>
-            <span className={styles.starsFilled}>{'★'.repeat(ratingValue)}</span>
-            <span className={styles.starsEmpty}>{'☆'.repeat(5 - ratingValue)}</span>
-          </div>
           <h3>{producto.nombre}</h3>
           {categoria && <p className={styles.category}>{categoria}</p>}
         </div>
@@ -123,7 +118,7 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
             onClick={() => onQuickAdd?.(producto.id)}
             aria-label="Agregar al carrito"
           >
-            <i className="fa-solid fa-plus" />
+            <i className="fa-solid fa-cart-shopping" />
           </button>
         </div>
         {showStockWarning && <span className={styles.stockWarning}>ÚLTIMAS {stock} UNIDADES</span>}

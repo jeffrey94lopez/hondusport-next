@@ -5,11 +5,11 @@ import styles from './CartDrawer.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { useCart } from '@/lib/store/cart-context'
 import { getShippingProgress } from '@/lib/store/cart'
+import { DEFAULT_FREE_SHIPPING_THRESHOLD } from '@/lib/store/freeShipping'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
 import type { Cupon } from '@/types'
 
 const FREE_SHIPPING_TOAST_MS = 2500
-const DEFAULT_FREE_SHIPPING_THRESHOLD = 999
 const DEFAULT_FREE_SHIPPING_MSG = '✨ ¡TIENES ENVÍO GRATIS!'
 
 interface CartDrawerProps {
@@ -64,7 +64,7 @@ export default function CartDrawer({
       setCouponCode('')
       setCouponError('')
     } else {
-      setCouponError('CUPÓN INVÁLIDO')
+      setCouponError('Cupón inválido')
     }
   }
 
@@ -181,7 +181,7 @@ export default function CartDrawer({
                   Aplicar
                 </button>
               </div>
-              {couponError && <p className={styles.couponError}>Cupón inválido</p>}
+              {couponError && <p className={styles.couponError}>{couponError}</p>}
             </div>
           )}
         </div>

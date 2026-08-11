@@ -152,20 +152,6 @@
   margin-bottom: 12px;
 }
 
-.ratingRow {
-  font-size: 1.1rem;
-  letter-spacing: 2px;
-  margin-bottom: 1.25rem;
-}
-
-.starsFilled {
-  color: var(--warning-star);
-}
-
-.starsEmpty {
-  color: var(--ink-disabled);
-}
-
 .price {
   display: flex;
   align-items: baseline;
@@ -474,38 +460,6 @@
   gap: 6px;
   padding: 10px 0;
   transition: var(--transition);
-}
-
-/* Reseñas (pre-existente: reseñas fijas de ejemplo por umbral de rating, no
-   un conteo real por producto; ver lib/store/reviews.ts) */
-
-.reviewsSection {
-  border-top: 1px solid var(--border);
-  padding-top: 2rem;
-}
-
-.reviewsSection h4 {
-  font: var(--text-subtitle);
-  margin-bottom: 1.25rem;
-}
-
-.review {
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
-  padding: 12px 14px;
-  background: var(--hover-input);
-  border-radius: var(--radius-card);
-}
-
-.review p {
-  margin: 6px 0 0 0;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.reviewStars {
-  color: var(--warning-star);
-  letter-spacing: 1px;
 }
 
 /* Productos relacionados */
