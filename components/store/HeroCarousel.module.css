@@ -63,7 +63,7 @@
   padding: 14px 32px;
   background: var(--brand);
   border: 2px solid var(--brand);
-  color: #1e1e1e;
+  color: var(--ink);
   text-decoration: none;
   font-weight: 700;
   font-size: 0.95rem;

@@ -1,4 +1,10 @@
 .bar {
+  /* La seccion "Explorar por categoria" (cards) cubre la navegacion por
+     categoria en todos los viewports, y ActiveFilterChips muestra el filtro
+     activo + "Limpiar todo". El filtro por subcategoria sigue disponible via
+     FilterSidebar (boton de filtros en movil). Este bar queda oculto para
+     evitar doble navegacion (ver R1). */
+  display: none;
   background: var(--bg);
   padding: 1rem 5%;
   position: sticky;
@@ -6,7 +12,6 @@
   z-index: 999;
   overflow-x: auto;
   white-space: nowrap;
-  display: flex;
   justify-content: center;
 }
 
@@ -92,12 +97,6 @@
   border-bottom: 2px solid var(--text);
   color: var(--text);
   box-shadow: none;
-}
-
-@media (min-width: 769px) {
-  .bar {
-    display: none;
-  }
 }
 
 @media (max-width: 768px) {
