@@ -119,7 +119,14 @@
    (previews rectangulares 16:7) y no se toca — esta clase envuelve la
    instancia usada aquí y fuerza el círculo por estructura (selectores por
    etiqueta, no por clase, así que no depende de los nombres hasheados del
-   CSS module de ImageUpload). */
+   CSS module de ImageUpload).
+   Ojo: dentro de ImageUpload, el <div> hijo directo del wrap SOLO existe
+   cuando ya hay imagen cargada (es la preview de la foto); el <label>
+   "Cambiar imagen"/"+ Subir imagen" es un hermano aparte y NO debe
+   heredar el círculo — si se targetea por estructura (div > label) también
+   captura ese label y lo aplasta en un círculo de 88px. Por eso el círculo
+   se limita a `div > div` (la preview) y el label se deja con su estilo
+   propio de ImageUpload.module.css (enlace/botón normal). */
 .logoCircle { display: flex; flex-direction: column; gap: 0.5rem; }
 .logoCircle > div > div {
   width: 88px;
@@ -128,18 +135,6 @@
   border-radius: 50%;
 }
 .logoCircle > div > div img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-.logoCircle > div > label {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  padding: 0.4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 0.65rem;
-  line-height: 1.2;
-}
 
 @media (max-width: 720px) {
   .layout { flex-direction: column; }

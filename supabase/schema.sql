@@ -328,7 +328,7 @@ create table if not exists configuracion (
 
 -- Insertar claves iniciales de config
 insert into configuracion (key, value) values
-  ('site_name', 'Hondusport'),
+  ('empresa_nombre_comercial', 'Hondusport'),
   ('site_url', 'https://hondusport.com'),
   ('logo_url', ''),
   ('eslogan', 'Elite Performance'),
