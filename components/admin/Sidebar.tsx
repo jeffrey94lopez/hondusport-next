@@ -213,6 +213,12 @@ export default function Sidebar({ pendingOrders, userName }: Props) {
                 return (
                   <div
                     className={`${styles.groupItems} ${grupoColapsado ? styles.groupItemsCollapsed : ''}`}
+                    // Grupo plegado: los <Link> siguen en el DOM (ocultos con
+                    // max-height/opacity) pero no deben ser alcanzables con Tab
+                    // ni visibles para lectores de pantalla. `inert` los saca
+                    // del orden de tabulación y del árbol de accesibilidad de
+                    // un solo golpe (soportado en React 19 / Next 16).
+                    inert={grupoColapsado}
                   >
                     {items}
                   </div>
