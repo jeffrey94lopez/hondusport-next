@@ -82,6 +82,14 @@
   padding: 0 0.2rem;
   line-height: 1;
   flex-shrink: 0; /* nunca se colapsa a 0: debe seguir clickeable en .collapsed */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  /* En .collapsed queda como único hijo del header (logo y brandBlock se
+     ocultan): sin min-width/min-height un área de clic nula fue la causa de
+     que "no re-expandiera" — el botón visualmente estaba pero no era clickeable. */
 }
 .collapseBtn:hover { color: var(--text); }
 
@@ -96,13 +104,50 @@
 }
 
 .groupLabel {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  width: 100%;
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--text-dim);
   letter-spacing: 1px;
   padding: 0.5rem 0.85rem 0.25rem;
   white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.12s;
+}
+
+.groupLabel:hover { color: var(--text-muted); }
+
+.groupChevron {
+  font-size: 0.65rem;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+  color: var(--text-dim);
+}
+
+.groupLabel:hover .groupChevron { color: var(--text-muted); }
+
+/* max-height con margen holgado sobre el grupo más largo (INGRESOS, 6 items
+   ≈ 200px), en vez del truco de grid-template-rows 1fr↔0fr: la transición de
+   "fr" resultó poco confiable al agregarse la clase después del montaje en
+   las pruebas — max-height es la técnica más estándar y portable para animar
+   alto sin medir contenido en JS. */
+.groupItems {
+  max-height: 260px;
+  overflow: hidden;
+  transition: max-height 0.18s ease, opacity 0.15s ease;
+  opacity: 1;
+}
+
+.groupItemsCollapsed {
+  max-height: 0;
+  opacity: 0;
 }
 
 .item {

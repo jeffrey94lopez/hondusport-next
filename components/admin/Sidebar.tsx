@@ -1,10 +1,13 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { signOut } from '@/app/admin/actions'
 import { ICONOS, type IconoKey } from './icons'
 import styles from './Sidebar.module.css'
+
+const COLAPSADO_KEY = 'hs_admin_sidebar_colapsado'
+const GRUPOS_KEY = 'hs_admin_nav_groups'
 
 const INICIO = { href: '/admin', icon: 'inicio' as IconoKey, label: 'Inicio' }
 
@@ -72,6 +75,40 @@ function getIniciales(nombre: string): string {
 export default function Sidebar({ pendingOrders, userName }: Props) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const [gruposColapsados, setGruposColapsados] = useState<Record<string, boolean>>({})
+
+  // Guard de montaje (mismo patrón que CartProvider/WishlistProvider): el SSR
+  // siempre pinta el estado por defecto (expandido, sin grupos plegados); si el
+  // initializer leyera localStorage, el primer render del cliente divergiría del
+  // HTML del servidor y React reportaría un hydration mismatch. El estado
+  // persistido se aplica recién después de montar.
+  const [montado, setMontado] = useState(false)
+
+  useEffect(() => {
+    // Carga diferida a propósito: leer localStorage en el initializer
+    // reintroduce el hydration mismatch (ver comentario del guard).
+    /* eslint-disable react-hooks/set-state-in-effect */
+    try {
+      const colapsadoGuardado = localStorage.getItem(COLAPSADO_KEY)
+      if (colapsadoGuardado !== null) setCollapsed(colapsadoGuardado === 'true')
+      const gruposGuardados = localStorage.getItem(GRUPOS_KEY)
+      if (gruposGuardados) setGruposColapsados(JSON.parse(gruposGuardados) as Record<string, boolean>)
+    } catch {
+      // localStorage inaccesible (modo privado, cuota, etc.): se sigue con los valores por defecto.
+    }
+    setMontado(true)
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [])
+
+  useEffect(() => {
+    if (!montado) return
+    localStorage.setItem(COLAPSADO_KEY, String(collapsed))
+  }, [montado, collapsed])
+
+  useEffect(() => {
+    if (!montado) return
+    localStorage.setItem(GRUPOS_KEY, JSON.stringify(gruposColapsados))
+  }, [montado, gruposColapsados])
 
   // "Documentos" (/admin/pos/documentos) anida bajo "POS" (/admin/pos): con un
   // simple prefix-match ambos quedarían activos a la vez. Se elige el href más
@@ -121,33 +158,70 @@ export default function Sidebar({ pendingOrders, userName }: Props) {
           {!collapsed && <span className={styles.itemLabel}>{INICIO.label}</span>}
         </Link>
 
-        {NAV_GROUPS.map(group => (
-          <div key={group.label} className={styles.group}>
-            {!collapsed && <span className={styles.groupLabel}>{group.label}</span>}
-            {group.items.map(item => {
-              const Icono = ICONOS[item.icon]
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`${styles.item} ${isActive(item.href) ? styles.active : ''}`}
-                  title={collapsed ? item.label : undefined}
+        {NAV_GROUPS.map(group => {
+          // El grupo que contiene la ruta activa siempre se muestra expandido
+          // (para no esconder dónde está el usuario), sin importar si lo plegó
+          // antes. Fuera de ese caso, se respeta el valor persistido y, si no
+          // hay ninguno guardado, el grupo arranca expandido.
+          const grupoTieneActivo = group.items.some(item => isActive(item.href))
+          const grupoColapsado = grupoTieneActivo ? false : (gruposColapsados[group.label] ?? false)
+
+          const alternarGrupo = () => {
+            setGruposColapsados(prev => ({ ...prev, [group.label]: !grupoColapsado }))
+          }
+
+          return (
+            <div key={group.label} className={styles.group}>
+              {!collapsed && (
+                <button
+                  type="button"
+                  className={styles.groupLabel}
+                  onClick={alternarGrupo}
+                  aria-expanded={!grupoColapsado}
                 >
-                  <span className={styles.icon}><Icono className="iconoMerlin" /></span>
-                  {!collapsed && (
-                    <span className={styles.itemLabel}>
-                      {item.label}
-                      {'badge' in item && item.badge && pendingOrders > 0 && (
-                        <span className={styles.badge}>{pendingOrders}</span>
+                  <span>{group.label}</span>
+                  <span className={styles.groupChevron} aria-hidden="true">
+                    {grupoColapsado ? '▸' : '▾'}
+                  </span>
+                </button>
+              )}
+              {(() => {
+                const items = group.items.map(item => {
+                  const Icono = ICONOS[item.icon]
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`${styles.item} ${isActive(item.href) ? styles.active : ''}`}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <span className={styles.icon}><Icono className="iconoMerlin" /></span>
+                      {!collapsed && (
+                        <span className={styles.itemLabel}>
+                          {item.label}
+                          {'badge' in item && item.badge && pendingOrders > 0 && (
+                            <span className={styles.badge}>{pendingOrders}</span>
+                          )}
+                        </span>
                       )}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
-            <div className={styles.divider} />
-          </div>
-        ))}
+                    </Link>
+                  )
+                })
+                // En colapso total (solo-iconos) el acordeón no aplica: siempre se ven
+                // todos los iconos, sin el wrapper de transición del acordeón.
+                if (collapsed) return items
+                return (
+                  <div
+                    className={`${styles.groupItems} ${grupoColapsado ? styles.groupItemsCollapsed : ''}`}
+                  >
+                    {items}
+                  </div>
+                )
+              })()}
+              <div className={styles.divider} />
+            </div>
+          )
+        })}
       </nav>
 
       <div className={styles.bottom}>
