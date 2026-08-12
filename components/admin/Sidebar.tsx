@@ -57,9 +57,19 @@ const NAV_GROUPS = [
 
 interface Props {
   pendingOrders: number
+  userName: string
 }
 
-export default function Sidebar({ pendingOrders }: Props) {
+// Iniciales para el avatar placeholder del footer de usuario (p. ej. "Ana Gómez" → "AG",
+// "admin@hondusport.com" → "A"). Presentación pura, sin reglas de negocio: no va en lib/store.
+function getIniciales(nombre: string): string {
+  const partes = nombre.trim().split(/\s+/).filter(Boolean)
+  if (partes.length === 0) return '?'
+  if (partes.length === 1) return partes[0].slice(0, 1).toUpperCase()
+  return (partes[0].slice(0, 1) + partes[partes.length - 1].slice(0, 1)).toUpperCase()
+}
+
+export default function Sidebar({ pendingOrders, userName }: Props) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
 
@@ -86,7 +96,12 @@ export default function Sidebar({ pendingOrders }: Props) {
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
       <div className={styles.header}>
         <div className={styles.logo}>HS</div>
-        {!collapsed && <span className={styles.brand}>Hondusport</span>}
+        {!collapsed && (
+          <div className={styles.brandBlock}>
+            <span className={styles.brand}>Hondusport Admin</span>
+            <span className={styles.brandSub}>Panel de Control</span>
+          </div>
+        )}
         <button
           className={styles.collapseBtn}
           onClick={() => setCollapsed(c => !c)}
@@ -154,6 +169,11 @@ export default function Sidebar({ pendingOrders }: Props) {
             {!collapsed && <span className={styles.itemLabel}>Salir</span>}
           </button>
         </form>
+      </div>
+
+      <div className={styles.userFooter}>
+        <span className={styles.avatar}>{getIniciales(userName)}</span>
+        {!collapsed && <span className={styles.userName}>{userName}</span>}
       </div>
     </aside>
   )

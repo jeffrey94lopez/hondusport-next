@@ -19,9 +19,13 @@ export default async function AdminLayout({
     .select('*', { count: 'exact', head: true })
     .eq('estado', 'recibido')
 
+  const { data: { user } } = await supabase.auth.getUser()
+  const userName =
+    (user?.user_metadata?.nombre as string | undefined) ?? user?.email ?? 'Admin'
+
   return (
     <div className={styles.shell}>
-      <Sidebar pendingOrders={count ?? 0} />
+      <Sidebar pendingOrders={count ?? 0} userName={userName} />
       <div className={styles.content}>{children}</div>
     </div>
   )
