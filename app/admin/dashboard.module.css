@@ -1,72 +1,160 @@
-.page { padding: 1.5rem; }
-.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
-.title { font-size: 1.25rem; font-weight: 800; }
+.page { padding: 1.75rem clamp(1.25rem, 3vw, 2.5rem); background: var(--bg); }
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+/* Nota: no se usa `font: var(--text-title)` — esa y las demás variables
+   --text-* de merlin.css quedan inválidas en toda la app porque referencian
+   var(--font-poppins), que next/font solo define en <body> y no en <html>
+   (donde vive el :root de merlin.css); una custom property que referencia un
+   var() no resuelto en el elemento donde se declara queda "guaranteed-invalid"
+   y se hereda así. Bug preexistente, fuera de alcance de esta tarea (tocaría
+   app/layout.tsx, compartido con la tienda) — reportado por separado. Valores
+   explícitos aquí replican el diseño pretendido de --text-title. */
+.title { font-family: var(--font-poppins), sans-serif; font-size: 1.75rem; line-height: 2rem; font-weight: 700; color: var(--text); }
 .date { font-size: 0.8rem; color: var(--text-muted); text-transform: capitalize; }
 
-.section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.25rem; }
-.sectionTitle { font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; }
+.section { background: var(--bg-card); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; }
+.sectionTitle { font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; color: var(--text); }
 
 .pedidosList { display: flex; flex-direction: column; gap: 0; }
 
 .pedidoRow {
   display: grid;
-  grid-template-columns: 130px 1fr auto 92px 48px;
+  grid-template-columns: 80px 100px 1fr 108px 96px;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.65rem 0;
+  padding: 0.85rem 0.5rem;
   border-bottom: 1px solid var(--border);
-  font-size: 0.855rem;
+  font-size: 0.85rem;
+  border-radius: var(--radius-input);
+  transition: background 0.15s ease;
 }
+.pedidoRow:hover { background: var(--bg-hover); }
 .pedidoRow:last-child { border-bottom: none; }
 
-.pedidoNum { font-weight: 800; color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pedidoCliente { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pedidoTotal { font-weight: 700; white-space: nowrap; text-align: right; }
-.pedidoEstado { font-size: 0.78rem; font-weight: 600; text-transform: capitalize; text-align: right; }
-.pedidoFecha { font-size: 0.75rem; color: var(--text-muted); text-align: right; }
+/* Orden visual (Fecha / Cliente / Tipo / Total, con el número de documento
+   como columna angosta al inicio) vía `order`, sin tocar el DOM de page.tsx. */
+.pedidoNum { order: 1; font-weight: 700; color: var(--text-muted); font-size: 0.72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pedidoFecha { order: 2; font-size: 0.82rem; color: var(--text-muted); text-align: left; white-space: nowrap; }
+.pedidoCliente { order: 3; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pedidoEstado {
+  order: 4;
+  justify-self: start;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: var(--bg-hover);
+  color: var(--text);
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-tag);
+  white-space: nowrap;
+  text-align: center;
+}
+.pedidoTotal { order: 5; font-weight: 700; color: var(--text); white-space: nowrap; text-align: right; }
 
 .empty { padding: 1.5rem 0; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
 
-/* P6: filtro de fechas */
-.filtro { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-.presets { display: flex; gap: 0.35rem; flex-wrap: wrap; }
-.presetBtn {
-  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted);
-  border-radius: var(--radius-input); padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+/* "Últimos documentos": card a lo ancho completo (sin el cap angosto previo). */
+.ultimos { width: 100%; }
+
+/* R3: filtro de fechas — pill segmentado (look Stitch) */
+.filtro { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; }
+.presets {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-tag);
+  box-shadow: var(--shadow-card);
+  padding: 4px;
 }
-.presetOn { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.presetBtn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-tag);
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.presetBtn:hover { background: var(--bg-hover); }
+.presetOn, .presetOn:hover { background: var(--cta); color: #ffffff; }
 .rangoLibre { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
-.rangoLibre input { border: 1px solid var(--border); border-radius: var(--radius-input); padding: 0.25rem 0.5rem; }
-.filtroEtiqueta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-left: auto; }
+.rangoLibre input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 0.3rem 0.55rem;
+  background: var(--bg-card);
+  color: var(--text);
+}
+.filtroEtiqueta { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
 
-/* P6: grid de gráficos */
-.graficosGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
-.graficoCard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.25rem; }
+/* R3: grid de gráficos */
+.graficosGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin: 0 0 1.75rem; }
+.graficoCard { background: var(--bg-card); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; }
 
-/* P6.1: cards de segmento */
+/* R3: cards de segmento KPI (look Stitch: blancas, redondeadas, con sombra) */
 .segmentos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
 }
 .segmento {
   background: var(--bg-card);
-  border: 1px solid var(--border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
-  padding: 1rem 1.1rem;
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease;
 }
-.segmentoHead {
-  font-size: 0.8rem; font-weight: 700; color: var(--text);
-  margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;
-}
-.segmentoIcon { font-size: 1.15rem; display: inline-flex; align-items: center; }
-.segmentoMetricas { display: flex; gap: 0.9rem; flex-wrap: wrap; }
-.segMetrica { flex: 1 1 auto; min-width: 72px; }
-.segValor { font-size: 1.1rem; font-weight: 800; color: var(--accent); white-space: nowrap; }
-.segLabel { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; margin-top: 0.15rem; }
-.segAlerta .segValor { color: var(--warning); }
+.segmento:hover { box-shadow: var(--shadow-raised); }
 
-/* P6.1: "Últimos documentos" — card angosta (columnas fijas ya en .pedidoRow arriba) */
-.ultimos { max-width: 600px; }
+.segmentoHead {
+  font-size: 0.9rem; font-weight: 700; color: var(--text-muted);
+  margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.55rem;
+}
+.segmentoIcon { font-size: 1.2rem; display: inline-flex; align-items: center; }
+
+.segmentoMetricas { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; }
+.segMetrica { flex: 0 1 auto; min-width: 72px; }
+.segMetrica:first-child {
+  flex: 1 0 100%;
+  padding-bottom: 0.9rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.segMetrica:first-child .segValor { font-size: 1.55rem; font-weight: 800; }
+.segMetrica:not(:first-child) .segValor { font-size: 0.88rem; font-weight: 700; }
+
+.segValor { color: var(--text); white-space: nowrap; }
+.segLabel { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-top: 0.2rem; }
+
+.segAlerta .segValor { color: var(--danger); }
+.segBien .segValor { color: var(--success); }
+
+/* R3: card "Ítems" — banners (stock bajo / ítems nuevos) en vez del patrón
+   número grande + fila de sub-métricas de las otras cards. */
+.segmentoItems .segmentoMetricas { flex-direction: column; gap: 0.6rem; flex-wrap: nowrap; }
+.segmentoItems .segMetrica {
+  flex: 1 0 100%;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  margin: 0;
+  border-radius: var(--radius-input);
+  background: var(--bg-hover);
+}
+.segmentoItems .segMetrica:first-child { border-bottom: none; padding-bottom: 0.65rem; margin-bottom: 0; }
+.segmentoItems .segValor { font-size: 1rem; font-weight: 800; }
+.segmentoItems .segLabel { font-size: 0.82rem; font-weight: 600; margin-top: 0; }
+.segmentoItems .segAlerta { background: var(--error-bg); }
