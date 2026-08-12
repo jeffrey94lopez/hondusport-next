@@ -24,6 +24,7 @@ import CobroModal from './components/CobroModal'
 import CierreModal from './components/CierreModal'
 import HistorialModal from './components/HistorialModal'
 import DocumentoModal from './components/DocumentoModal'
+import { IconConfig, IconSalir } from '@/components/admin/icons'
 import type {
   Caja,
   SesionCaja,
@@ -1072,9 +1073,13 @@ export default function PosClient({
           (pos.module.css), que ya se neutraliza en print. */}
       <div className={`${styles.ventaRoot} ${styles.ventaWrap}`}>
       <header className={styles.header}>
-        <Link href="/admin" className={styles.headerBack}>← Admin</Link>
-        <span className={styles.headerCaja}>{caja.nombre}</span>
-        <span className={styles.headerSesion}>Sesión abierta desde {abiertaDesde}</span>
+        <span className={styles.headerBrand}>Hondusport POS</span>
+
+        <div className={styles.headerCajaInfo}>
+          <span className={styles.headerCaja}>{caja.nombre}</span>
+          <span className={styles.headerSesion}>Sesión abierta desde {abiertaDesde}</span>
+        </div>
+
         <div className={styles.headerActions}>
           <button type="button" className={`btnMerlinTertiary ${styles.btnGhost}`} onClick={() => setHistorialAbierto(true)}>
             Sesiones
@@ -1082,6 +1087,13 @@ export default function PosClient({
           <button type="button" className={`btnMerlinTertiary ${styles.btnGhost}`} onClick={() => setCierreAbierto(true)}>
             Cerrar caja
           </button>
+          <Link href="/admin/configuracion" className={styles.headerIconBtn} title="Configuración" aria-label="Configuración">
+            <IconConfig className="iconoMerlin" />
+          </Link>
+          <Link href="/admin" className={styles.headerExit} title="Salir del POS">
+            <IconSalir className="iconoMerlin" />
+            Salir
+          </Link>
         </div>
       </header>
 

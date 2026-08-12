@@ -75,25 +75,85 @@
 }
 .headerBack:hover { color: var(--accent); }
 
+/* R4 Task 1: marca del mostrador, siempre a la izquierda de la barra
+   superior — mismo tono/negrita que el `.brand` del Sidebar (R3), pero un
+   punto más grande porque aquí es el único elemento de marca en pantalla
+   (el Sidebar del admin queda oculto bajo el overlay del POS). */
+.headerBrand {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* Caja + sesión activa: agrupados en su propia columna flexible entre la
+   marca (izquierda) y las acciones (derecha) — antes `.headerSesion` sola
+   cargaba el flex:1 para empujar las acciones; ahora lo hace el contenedor. */
+.headerCajaInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
 .headerCaja {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 800;
   color: var(--text);
   white-space: nowrap;
 }
 
 .headerSesion {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
-  flex: 1;
-  min-width: 0;
+  white-space: nowrap;
 }
 
 .headerActions {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
 }
+
+/* R4 Task 1: botón circular de solo-ícono (engranaje → Configuración) en la
+   barra superior — mismo tratamiento visual que los íconos del Sidebar
+   (`.iconoMerlin`, dorado sin fondo propio), con un fondo neutro sutil para
+   que se lea como control clickeable dentro de la barra blanca. */
+.headerIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-hover);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+.headerIconBtn:hover { background: var(--border); }
+
+/* R4 Task 1: control de "salir del POS" reubicado a la derecha de la barra
+   superior (antes era el enlace "← Admin" a la izquierda) — misma acción
+   (`href="/admin"`), solo cambia posición/apariencia. */
+.headerExit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-btn);
+  background: var(--bg-hover);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+.headerExit:hover { background: var(--border); }
 
 /* Task 12: color/radio/tipografía vienen de btnMerlinTertiary; solo se
    conserva el tamaño compacto que necesita el header. */
@@ -243,14 +303,18 @@
 .caiBannerWarn { background: var(--warning-bg); color: var(--warning-deep); }
 .caiBannerError { background: var(--error-bg); color: var(--error-deep); }
 
-/* Área de venta: layout de dos columnas.
+/* Área de venta: layout de dos columnas (look Stitch, R4 Task 1).
+   El fondo gris de página (--bg) queda visible en el `gap`/`padding`; cada
+   columna es su propia card blanca redondeada con sombra (ver .catalogoCol/
+   .carritoCol) en vez del divisor de 1px que había antes.
    flex: 1 hace que ocupe el espacio restante tras header + banners.
    min-height: 0 es crítico en flex para que hijos con min-height: 0 scrolleen. */
 .ventaGrid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(340px, 420px);
-  gap: 1px;
-  background: var(--border);
+  gap: 1rem;
+  background: var(--bg);
+  padding: 1rem;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -262,13 +326,18 @@
 
 /* Columna izquierda: pestañas de ventas (fijas arriba) + catálogo (scroll).
    Mismo patrón que .ventaRoot (header auto + contenido flex:1): la barra de
-   pestañas nunca scrollea con los productos. */
+   pestañas nunca scrollea con los productos. Card blanca redondeada con
+   sombra (R4 Task 1) — el fondo gris de `.catalogo` (adentro) sigue
+   diferenciando la zona de scroll de productos de la barra de pestañas,
+   ambas quedan recortadas al radio de esta card por el overflow:hidden. */
 .catalogoCol {
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 /* Columna izquierda: catálogo. flex:1 para llenar lo que deja la barra de
@@ -393,13 +462,25 @@
 .prodPrecio { font-size: 0.82rem; font-weight: 800; color: var(--accent); }
 .prodStock { font-size: 0.7rem; color: var(--text-muted); }
 
-/* Columna derecha: carrito */
+/* Columna derecha: carrito. Card blanca redondeada con sombra (R4 Task 1),
+   misma familia visual que .catalogoCol — ya vivía en `--bg-card` (blanco),
+   solo se agrega el radio/sombra para que ambas columnas floten sobre el
+   fondo gris de página en vez de tocarse por un borde de 1px. Sin
+   `overflow: hidden` a propósito (a diferencia de .catalogoCol): esta
+   columna es la única con contenido que se sale de su caja a propósito
+   (`.clienteDropdown` es `position: absolute` y puede exceder el alto de la
+   columna) — recortarlo aquí lo dejaría inutilizable en viewports bajos. El
+   `background: var(--bg-card)` idéntico entre esta card y `.pieCarrito`
+   (que sí toca los bordes por su margen negativo) evita que la ausencia de
+   recorte se note en las esquinas inferiores. */
 .carritoCol {
   background: var(--bg-card);
   padding: 1rem;
   display: grid;
   grid-template-rows: auto 1fr auto;
   min-height: 0;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 .lineasScroll {
