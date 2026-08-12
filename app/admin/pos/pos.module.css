@@ -565,7 +565,11 @@
    `grid-template-areas` con la descripción en su PROPIA fila a ancho
    completo — nunca compite por espacio con los controles numéricos — y
    cantidad/subtotal/acciones bajan a una segunda fila. El nombre completo
-   se conserva legible con un clamp de 2 líneas + ellipsis. */
+   se conserva legible con un clamp de 2 líneas + ellipsis.
+   NOTA: esta clase (`.lineaRow`/`.lineaDesc`) también la usa DevolucionModal
+   (fila "Producto/Devolvible/Cantidad/Acredita") — R4 Task 4 NO la toca para
+   no arrastrar cambios a esa pantalla (fuera de alcance); el carrito usa las
+   clases nuevas `.carritoLineaRow`/`.carritoLineaDesc` de más abajo. */
 .lineaRow {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -580,6 +584,35 @@
 }
 
 .lineaDesc { grid-area: desc; display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+
+/* R4 Task 4 (look Stitch): fila del carrito en una sola línea — thumbnail +
+   descripción + stepper + total + acciones — a diferencia de `.lineaRow`
+   (arriba, compartida con DevolucionModal), que sigue en dos filas. Columna
+   de imagen a ancho fijo para que la descripción nunca compita por espacio
+   con ella; el resto se reparte en columnas `auto` como antes. */
+.carritoLineaRow {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.8rem;
+}
+
+.carritoLineaImgWrap {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-input);
+  overflow: hidden;
+  background: var(--bg-hover);
+  flex-shrink: 0;
+}
+.carritoLineaImg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.carritoLineaImgPlaceholder { width: 100%; height: 100%; background: var(--bg-hover); }
+
+.carritoLineaDesc { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+
 .lineaNombre {
   color: var(--text);
   font-weight: 600;
@@ -593,20 +626,43 @@
 .lineaDescuentoTag { color: var(--danger); font-size: 0.7rem; font-weight: 700; }
 
 .lineaQty {
-  grid-area: qty;
   display: flex;
   align-items: center;
   gap: 0.3rem;
 }
+
+/* R4 Task 4 (look Stitch): agrupa los botones −/+ y el input de cantidad en
+   una sola pastilla con borde (mockup: "− 1 +" dentro de un contenedor
+   redondeado), en vez de 3 controles sueltos. Se compone sobre
+   btnMerlinIcon/btnMerlinIconSm (que conservan su lógica/props intactos en
+   el JSX): el override local solo les quita el borde/fondo propios para que
+   se vean integrados dentro de la pastilla — mismo patrón de override local
+   que `.catChipsRow :global(.btnMerlinChip)` en CatalogoPanel. */
+.qtyStepper {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-tag);
+  padding: 0.15rem;
+  background: var(--bg-card);
+}
+.qtyStepper :global(.btnMerlinIcon) {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+}
+.qtyStepper :global(.btnMerlinIcon):hover:not(:disabled) { background: var(--bg-hover); }
+
 .qtyInput {
-  width: 44px;
+  width: 34px;
   text-align: center;
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-input);
-  padding: 0.3rem;
-  background: var(--bg-input);
+  border: none;
+  background: transparent;
   color: var(--text);
-  font-size: 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
   -moz-appearance: textfield;
 }
 .qtyInput::-webkit-outer-spin-button,
@@ -616,17 +672,14 @@
 }
 
 .lineaSubtotal {
-  grid-area: subtotal;
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--text);
   white-space: nowrap;
   text-align: right;
-  padding-right: 0.5rem;
 }
 
 .lineaAcciones {
-  grid-area: acciones;
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -727,22 +780,85 @@
   margin: 0 -1rem -1rem -1rem;
 }
 
-.descuentoGlobalRow {
+/* R4 Task 4 (look Stitch): fila superior del pie — label "Aplicar descuento
+   global" (ícono + texto dorado) a la izquierda, selector de Vendedor
+   compacto a la derecha (mockup: "Vendedor: [Caja 01]"). */
+.pieTopRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.descuentoGlobalLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.vendedorInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.vendedorInlineLabel {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Contenedor de los chips de descuento global (R2b, sin cambios en su
+   lógica/marcado) + el input manual — ver CarritoPanel.tsx. Pasa de fila
+   única (label + chips + input apretados) a columna, para que los chips
+   puedan envolver en varias líneas sin comprimir el input. */
+.descuentoGlobalRow {
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   font-size: 0.8rem;
   color: var(--text-muted);
 }
 .descuentoGlobalRow input {
   width: 100px;
+  align-self: flex-end;
   border: 1px solid var(--border-input);
   border-radius: var(--radius-input);
   padding: 0.3rem 0.5rem;
   background: var(--bg-input);
   color: var(--text);
   text-align: right;
+}
+
+/* Totales del carrito (look Stitch: sin caja gris, filas planas separadas
+   por un divisor antes del Total). Clases propias — NO se reusa
+   `.totalesPanel`/`.totalesRow`/`.totalesRowTotal` (de abajo), que también
+   pinta CierreModal/CobroModal y queda fuera de alcance de esta tarea. */
+.carritoTotales {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-light);
+}
+.carritoTotalRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.carritoTotalRowTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text);
+  padding-top: 0.35rem;
+  margin-top: 0.15rem;
+  border-top: 1px solid var(--border-light);
 }
 
 .totalesPanel {
@@ -778,19 +894,54 @@
 }
 
 /* Cliente en la fila superior del carrito (grid row "auto"): se separa de la
-   lista de líneas con un borde inferior, como hacían las pestañas cuando
-   ocupaban este lugar. */
+   lista de líneas con un espacio, la card de cliente (abajo) ya aporta su
+   propio borde/contorno. */
 .clienteBlockTop {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
   padding-bottom: 0.75rem;
   margin-bottom: 0.25rem;
   border-bottom: 1px solid var(--border);
 }
 
-.clienteBlockHeader {
+/* Card "CLIENTE / CONSUMIDOR FINAL" (look Stitch): ícono + etiqueta pequeña
+   + valor grande + chevron, en vez del combo suelto de antes. El combo de
+   búsqueda (`.clienteCombo`, más abajo) sigue viviendo dentro sin cambiar su
+   lógica de foco/typeahead. */
+.clienteCard {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 0.55rem 0.85rem;
+  background: var(--bg-card);
+}
+.clienteCardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.clienteCardBody { flex: 1; min-width: 0; }
+.clienteCardTopRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+.clienteCardLabel {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
 }
 
 .btnNuevoCliente {
@@ -804,17 +955,36 @@
 }
 .btnNuevoCliente:hover { text-decoration: underline; }
 
-.clienteCombo { position: relative; }
-.clienteInput, .vendedorSelect {
-  width: 100%;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-input);
-  background: var(--bg-input);
+.clienteCombo { position: relative; display: flex; align-items: center; }
+.clienteInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 800;
 }
-.clienteInput:focus, .vendedorSelect:focus { outline: none; border-color: var(--accent); }
+.clienteInput:focus { outline: none; }
+.clienteInput::placeholder { font-weight: 600; color: var(--text-muted); }
+.clienteChevron { color: var(--text-muted); flex-shrink: 0; }
+
+/* Vendedor: select compacto en la fila superior del pie (mockup:
+   "Vendedor: [Caja 01]"), no la card ancha que tenía antes (`.vendedorBlock`,
+   arriba — ya sin uso en este panel, se conserva por si otra pantalla la
+   necesita). */
+.vendedorSelect {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-tag);
+  background: var(--bg-hover);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  max-width: 140px;
+}
+.vendedorSelect:focus { outline: none; border-color: var(--accent); }
 
 .clienteDropdown {
   position: absolute;

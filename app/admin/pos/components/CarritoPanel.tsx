@@ -57,6 +57,34 @@ function partesDescripcion(l: LineaVenta): { nombre: string; variante: string | 
   return m ? { nombre: m[1], variante: m[2] } : { nombre: l.descripcion, variante: null }
 }
 
+// Iconos inline (look Stitch): mismo patrón que el ícono de búsqueda de
+// CatalogoPanel — SVG con stroke=currentColor, sin depender de una librería.
+function IconoPersona() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.5-6 8-6s8 2 8 6" />
+    </svg>
+  )
+}
+
+function IconoChevron() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  )
+}
+
+function IconoEtiqueta() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+      <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export default function CarritoPanel({
   lineas,
   descuentoGlobal,
@@ -120,6 +148,13 @@ export default function CarritoPanel({
   const ningunoActivo = descuentoGlobal === 0
   const otroActivo = !ningunoActivo && !descuentos.some(presetActivo)
 
+  // Subtotal (pre-ISV, neto de descuentos): derivado por aritmética simple de
+  // los campos ya calculados en `totales` (total = suma de bases + ISV, ver
+  // lib/pos/desglose.ts) — no es una regla de negocio nueva, solo una lectura
+  // distinta de datos que el panel ya recibe, para mostrar la fila "Subtotal"
+  // del look Stitch.
+  const subtotalMostrado = round2(totales.total - totales.isv15 - totales.isv18)
+
   const clientesFiltrados =
     clienteQuery.trim() === ''
       ? clientes
@@ -148,6 +183,7 @@ export default function CarritoPanel({
         onBlur={() => setTimeout(() => setClienteOpen(false), 120)}
         placeholder="Buscar por nombre o RTN…"
       />
+      <span className={styles.clienteChevron} aria-hidden="true"><IconoChevron /></span>
       {clienteOpen && (
         <div className={styles.clienteDropdown} onMouseDown={e => e.preventDefault()}>
           <button type="button" className={styles.clienteOption} onClick={() => seleccionarCliente(null)}>
@@ -168,14 +204,19 @@ export default function CarritoPanel({
       {/* Cliente arriba de todo (donde antes estaban las pestañas de ventas):
           se elige a quién se le vende antes de armar el carrito. El resto del
           "quién/cuánto" (vendedor, descuento, totales, cobrar) queda en el pie. */}
-      <div className={`${styles.clienteBlock} ${styles.clienteBlockTop}`}>
-        <div className={styles.clienteBlockHeader}>
-          <label className={styles.formLabel}>Cliente</label>
-          <button type="button" className={styles.btnNuevoCliente} onClick={onNuevoCliente}>
-            + Nuevo
-          </button>
+      <div className={styles.clienteBlockTop}>
+        <div className={styles.clienteCard}>
+          <span className={styles.clienteCardIcon} aria-hidden="true"><IconoPersona /></span>
+          <div className={styles.clienteCardBody}>
+            <div className={styles.clienteCardTopRow}>
+              <span className={styles.clienteCardLabel}>Cliente</span>
+              <button type="button" className={styles.btnNuevoCliente} onClick={onNuevoCliente}>
+                + Nuevo
+              </button>
+            </div>
+            {clienteSelector}
+          </div>
         </div>
-        {clienteSelector}
         {exonerado && <span className={styles.badgeExonerado}>Exonerado</span>}
       </div>
 
@@ -188,9 +229,19 @@ export default function CarritoPanel({
               const tope = topeStock(l, productosPorId)
               const subtotal = brutoLinea(l) - l.descuento
               const { nombre, variante } = partesDescripcion(l)
+              const producto = l.producto_id ? productosPorId.get(l.producto_id) : undefined
+              const imagen = producto?.imagenes?.[0] ?? null
               return (
-                <div key={l.key} className={styles.lineaRow}>
-                  <div className={styles.lineaDesc}>
+                <div key={l.key} className={styles.carritoLineaRow}>
+                  <div className={styles.carritoLineaImgWrap}>
+                    {imagen ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={imagen} alt="" className={styles.carritoLineaImg} />
+                    ) : (
+                      <div className={styles.carritoLineaImgPlaceholder} />
+                    )}
+                  </div>
+                  <div className={styles.carritoLineaDesc}>
                     <div className={styles.lineaNombre}>{nombre}</div>
                     {variante && <div className={styles.lineaVariante}>{variante}</div>}
                     {l.descuento > 0 && (
@@ -198,20 +249,22 @@ export default function CarritoPanel({
                     )}
                   </div>
                   <div className={styles.lineaQty}>
-                    <button type="button" className="btnMerlinIcon btnMerlinIconSm" onClick={() => onCantidad(l.key, -1)} aria-label="Restar cantidad">
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      className={styles.qtyInput}
-                      value={l.cantidad}
-                      min={1}
-                      max={tope ?? undefined}
-                      onChange={e => onCantidadInput(l.key, e.target.value)}
-                    />
-                    <button type="button" className="btnMerlinIcon btnMerlinIconSm" onClick={() => onCantidad(l.key, 1)} aria-label="Sumar cantidad">
-                      +
-                    </button>
+                    <div className={styles.qtyStepper}>
+                      <button type="button" className="btnMerlinIcon btnMerlinIconSm" onClick={() => onCantidad(l.key, -1)} aria-label="Restar cantidad">
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        className={styles.qtyInput}
+                        value={l.cantidad}
+                        min={1}
+                        max={tope ?? undefined}
+                        onChange={e => onCantidadInput(l.key, e.target.value)}
+                      />
+                      <button type="button" className="btnMerlinIcon btnMerlinIconSm" onClick={() => onCantidad(l.key, 1)} aria-label="Sumar cantidad">
+                        +
+                      </button>
+                    </div>
                   </div>
                   <div className={styles.lineaSubtotal}>{formatPrice(subtotal)}</div>
                   <div className={styles.lineaAcciones}>
@@ -230,8 +283,31 @@ export default function CarritoPanel({
       </div>
 
       <div className={styles.pieCarrito}>
+        <div className={styles.pieTopRow}>
+          <span className={styles.descuentoGlobalLabel}>
+            <IconoEtiqueta />
+            Aplicar descuento global
+          </span>
+          <div className={styles.vendedorInline}>
+            <label className={styles.vendedorInlineLabel} htmlFor="pos-carrito-vendedor">Vendedor</label>
+            <select
+              id="pos-carrito-vendedor"
+              className={styles.vendedorSelect}
+              value={vendedorId ?? ''}
+              onChange={e => onVendedor(e.target.value || null)}
+            >
+              <option value="">Sin vendedor</option>
+              {vendedores.map(v => (
+                <option key={v.id} value={v.id}>{v.nombre}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* R2b: chips de descuento global — se conservan tal cual (misma
+            lógica, mismo marcado de los botones .chip/.chipActivo y del
+            input manual), solo cambia el contenedor que los envuelve. */}
         <div className={styles.descuentoGlobalRow}>
-          <label>Descuento global (L.)</label>
           <div className={styles.chipsRow}>
             <button
               type="button"
@@ -273,43 +349,24 @@ export default function CarritoPanel({
           />
         </div>
 
-        <div className={styles.totalesPanel}>
+        <div className={styles.carritoTotales}>
+          <div className={styles.carritoTotalRow}><span>Subtotal</span><span>{formatPrice(subtotalMostrado)}</span></div>
           {totales.total_exento > 0 && (
-            <div className={styles.totalesRow}><span>Exento</span><span>{formatPrice(totales.total_exento)}</span></div>
+            <div className={styles.carritoTotalRow}><span>Exento</span><span>{formatPrice(totales.total_exento)}</span></div>
           )}
           {totales.total_exonerado > 0 && (
-            <div className={styles.totalesRow}><span>Exonerado</span><span>{formatPrice(totales.total_exonerado)}</span></div>
-          )}
-          {totales.total_gravado15 > 0 && (
-            <div className={styles.totalesRow}><span>Gravado 15%</span><span>{formatPrice(totales.total_gravado15)}</span></div>
-          )}
-          {totales.total_gravado18 > 0 && (
-            <div className={styles.totalesRow}><span>Gravado 18%</span><span>{formatPrice(totales.total_gravado18)}</span></div>
+            <div className={styles.carritoTotalRow}><span>Exonerado</span><span>{formatPrice(totales.total_exonerado)}</span></div>
           )}
           {totales.isv15 > 0 && (
-            <div className={styles.totalesRow}><span>ISV 15%</span><span>{formatPrice(totales.isv15)}</span></div>
+            <div className={styles.carritoTotalRow}><span>ISV (15%)</span><span>{formatPrice(totales.isv15)}</span></div>
           )}
           {totales.isv18 > 0 && (
-            <div className={styles.totalesRow}><span>ISV 18%</span><span>{formatPrice(totales.isv18)}</span></div>
+            <div className={styles.carritoTotalRow}><span>ISV (18%)</span><span>{formatPrice(totales.isv18)}</span></div>
           )}
           {totales.descuento_total > 0 && (
-            <div className={styles.totalesRow}><span>Descuento</span><span>-{formatPrice(totales.descuento_total)}</span></div>
+            <div className={styles.carritoTotalRow}><span>Descuento</span><span>-{formatPrice(totales.descuento_total)}</span></div>
           )}
-          <div className={styles.totalesRowTotal}><span>Total</span><span>{formatPrice(totales.total)}</span></div>
-        </div>
-
-        <div className={styles.vendedorBlock}>
-          <label className={styles.formLabel}>Vendedor</label>
-          <select
-            className={styles.vendedorSelect}
-            value={vendedorId ?? ''}
-            onChange={e => onVendedor(e.target.value || null)}
-          >
-            <option value="">Sin vendedor</option>
-            {vendedores.map(v => (
-              <option key={v.id} value={v.id}>{v.nombre}</option>
-            ))}
-          </select>
+          <div className={styles.carritoTotalRowTotal}><span>Total</span><span>{formatPrice(totales.total)}</span></div>
         </div>
 
         <button
@@ -318,7 +375,7 @@ export default function CarritoPanel({
           disabled={lineas.length === 0}
           onClick={onCobrar}
         >
-          Cobrar {formatPrice(totales.total)}
+          Cobrar <span aria-hidden="true">→</span>
         </button>
       </div>
     </section>
