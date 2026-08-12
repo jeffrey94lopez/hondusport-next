@@ -351,7 +351,8 @@
 }
 
 /* Barra de búsqueda + botón de ítem libre a su derecha. align-items:stretch
-   hace que el botón iguale el alto del input sin fijarlo a mano. */
+   hace que el botón iguale el alto del input sin fijarlo a mano. Look Stitch
+   (R4 Task 3): barra completamente redondeada (pill) con lupa a la izquierda. */
 .searchRow {
   display: flex;
   align-items: stretch;
@@ -359,12 +360,28 @@
   margin-bottom: 1rem;
 }
 
+.searchInputWrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.9rem;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 .searchInput {
   flex: 1;
   min-width: 0;
-  padding: 0.65rem 0.9rem;
+  padding: 0.65rem 0.9rem 0.65rem 2.5rem;
   border: 1px solid var(--border-input);
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-btn);
   background: var(--bg-card);
   color: var(--text);
   font-size: 0.9rem;
@@ -376,6 +393,20 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
+}
+
+/* Chips de categoría/subcategoría del catálogo (look Stitch): el chip activo
+   se resalta en dorado en vez del negro que usa `btnMerlinChip` por defecto
+   (ver app/merlin.css) — mismo patrón de override local que .monedaBtn en
+   compras.module.css, pero aquí se compone sobre el ícono global vía
+   :global() porque el botón ya usa la clase compartida `btnMerlinChip`. */
+.catChipsRow :global(.btnMerlinChip)[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.catChipsRow :global(.btnMerlinChip)[aria-pressed="true"]:hover {
+  background: var(--accent);
 }
 
 .anclados {
@@ -406,25 +437,46 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
-  padding: 0.6rem;
+  padding: 0.75rem;
   cursor: pointer;
   box-shadow: var(--shadow-card);
+  transition: border-color 0.12s;
 }
 .prodCard:hover:not([aria-disabled="true"]) { border-color: var(--accent); }
 .prodCard[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
 
-/* Color/radio/tamaño de ícono vienen de btnMerlinIcon; solo se conserva la
-   posición sobre la esquina de la tarjeta. */
+/* Estrella de anclar (look Stitch): círculo blanco flotando sobre la esquina
+   de la imagen, sin borde propio — mismo patrón que `.wishlistBtn` de
+   ProductCard.module.css (tienda). No compone con `btnMerlinIcon` (40px,
+   con borde) porque ese tamaño/tratamiento no cabe sobre una imagen de
+   card tan chica; se define standalone para no depender del orden de carga
+   entre este módulo y app/merlin.css. */
 .estrella {
   position: absolute;
-  top: 0.35rem;
-  right: 0.35rem;
+  top: 0.4rem;
+  right: 0.4rem;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.12s;
 }
+.estrella[aria-pressed="true"] { color: var(--accent); }
 
 .prodImgWrap {
   position: relative;
@@ -437,20 +489,28 @@
 .prodImg { width: 100%; height: 100%; object-fit: cover; display: block; }
 .prodImgPlaceholder { width: 100%; height: 100%; background: var(--bg-hover); }
 
+/* AGOTADO (look Stitch): pastilla gris centrada sobre la imagen (no una
+   esquina en rojo) — la tarjeta ya se atenúa entera vía `opacity: 0.55` en
+   `.prodCard[aria-disabled="true"]`, así que el badge solo necesita leerse
+   como gris neutro, no como alerta. */
 .prodBadgeAgotado {
   position: absolute;
-  top: 0.35rem;
-  left: 0.35rem;
-  font-size: 0.62rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.68rem;
   font-weight: 800;
-  color: #fff;
-  background: var(--danger);
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-tag);
-  padding: 0.15rem 0.5rem;
+  padding: 0.2rem 0.65rem;
+  white-space: nowrap;
 }
 
 .prodNombre {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text);
   line-height: 1.25;
@@ -459,7 +519,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.prodPrecio { font-size: 0.82rem; font-weight: 800; color: var(--accent); }
+.prodPrecio { font-size: 0.85rem; font-weight: 800; color: var(--text); }
 .prodStock { font-size: 0.7rem; color: var(--text-muted); }
 
 /* Columna derecha: carrito. Card blanca redondeada con sombra (R4 Task 1),
@@ -631,20 +691,29 @@
   color: var(--text);
 }
 
-/* Color/radio/tipografía vienen de btnMerlinSecondary, que NO trae caja
-   propia (ver app/merlin.css): esta clase aporta padding + inline-flex para
-   que se vea como botón al lado del buscador (antes iba solo, sin padding, y
-   quedaba como texto). white-space:nowrap evita que "Ítem libre" se parta. */
+/* Look Stitch (R4 Task 3): botón dorado outline, no el relleno claro de
+   `btnMerlinSecondary` (ver app/merlin.css) — se define standalone en vez de
+   componer con esa clase global para no depender del orden de carga entre
+   este módulo y merlin.css. white-space:nowrap evita que "Ítem libre" se
+   parta. */
 .btnItemLibre {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 0.9rem;
+  gap: 0.35rem;
+  padding: 0 1.1rem;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: background 0.12s;
 }
+.btnItemLibre:hover { background: var(--accent-dim); }
 
 .pieCarrito {
   display: flex;

@@ -203,7 +203,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
       >
         <button
           type="button"
-          className={`btnMerlinIcon ${styles.estrella}`}
+          className={styles.estrella}
           aria-pressed={favorito}
           aria-label={favorito ? 'Quitar de anclados' : 'Anclar al POS'}
           onClick={e => alternarFavorito(p, e)}
@@ -231,17 +231,32 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
   return (
     <section className={styles.catalogo}>
       <div className={styles.searchRow}>
-        <input
-          ref={searchRef}
-          type="text"
-          className={styles.searchInput}
-          placeholder="Buscar por nombre o escanear SKU…"
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-          onKeyDown={handleSearchKeyDown}
-          autoFocus
-        />
-        <button type="button" className={`btnMerlinSecondary ${styles.btnItemLibre}`} onClick={onItemLibre}>
+        <div className={styles.searchInputWrap}>
+          <svg
+            className={styles.searchIcon}
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            ref={searchRef}
+            type="text"
+            className={styles.searchInput}
+            placeholder="Buscar por nombre, SKU o código de barras…"
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            autoFocus
+          />
+        </div>
+        <button type="button" className={styles.btnItemLibre} onClick={onItemLibre}>
           + Ítem libre
         </button>
       </div>
@@ -254,7 +269,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
       )}
 
       {cats.length > 0 && (
-        <div className={styles.chipsRow}>
+        <div className={`${styles.chipsRow} ${styles.catChipsRow}`}>
           <button
             type="button"
             className="btnMerlinChip"
@@ -278,7 +293,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
       )}
 
       {catId !== null && subcats.length > 0 && (
-        <div className={styles.chipsRow}>
+        <div className={`${styles.chipsRow} ${styles.catChipsRow}`}>
           {subcats.map(sc => (
             <button
               key={sc.id}
