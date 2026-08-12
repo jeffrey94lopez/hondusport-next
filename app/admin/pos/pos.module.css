@@ -976,11 +976,11 @@
 .pestanasBar {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.25rem;
   flex-wrap: nowrap;
   overflow-x: auto;
   flex-shrink: 0;
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.75rem;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
 }
@@ -992,10 +992,29 @@
   flex-shrink: 0;
 }
 
+/* Look Stitch de pestaña de navegador: inactiva es solo texto (sin caja);
+   la activa se resalta con fondo blanco + borde redondeado, no con el
+   relleno negro de .btnMerlinChip (por eso no se compone con esa clase
+   global aquí — el resto de estados/tokens vienen de Merlin igual). */
 .pestanaTab {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.pestanaTab:hover:not([aria-current="true"]) { background: var(--bg-hover); }
+.pestanaTab[aria-current="true"] {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text);
 }
 
 .pestanaNombre {
@@ -1008,12 +1027,37 @@
 .pestanaContador {
   font-size: 0.7rem;
   font-weight: 700;
+  color: var(--text-muted);
   background: var(--bg-hover);
   border-radius: var(--radius-tag);
   padding: 0.05rem 0.45rem;
   min-width: 1.1rem;
   text-align: center;
 }
+
+/* Botones de renombrar/cerrar por pestaña y el "+" de nueva venta: íconos
+   discretos sin caja por defecto (solo fondo al hover), para que el único
+   elemento con borde visible en la barra sea el tab activo. */
+.pestanaAccion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  flex-shrink: 0;
+}
+.pestanaAccion:hover { background: var(--bg-hover); color: var(--text); }
+.pestanaAccionDanger:hover { background: var(--error-bg); color: var(--danger); }
 
 .pestanaNombreInput {
   font-size: 0.82rem;

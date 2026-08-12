@@ -70,7 +70,7 @@ export default function PestanasBar({ pestanas, activaId, conteoActiva, onSelecc
             ) : (
               <button
                 type="button"
-                className={`btnMerlinChip ${styles.pestanaTab}`}
+                className={styles.pestanaTab}
                 aria-pressed={activa}
                 aria-current={activa ? 'true' : undefined}
                 // Nombre accesible explícito: sin esto, el lector de pantalla
@@ -87,7 +87,7 @@ export default function PestanasBar({ pestanas, activaId, conteoActiva, onSelecc
             )}
             <button
               type="button"
-              className="btnMerlinIcon"
+              className={styles.pestanaAccion}
               onClick={() => iniciarRenombrar(p)}
               aria-label={`Renombrar ${p.nombre}`}
               title="Renombrar"
@@ -96,7 +96,7 @@ export default function PestanasBar({ pestanas, activaId, conteoActiva, onSelecc
             </button>
             <button
               type="button"
-              className="btnMerlinIcon btnMerlinIconDanger"
+              className={`${styles.pestanaAccion} ${styles.pestanaAccionDanger}`}
               onClick={() => onCerrar(p.id)}
               aria-label={`Cerrar ${p.nombre}`}
               title="Cerrar"
@@ -106,7 +106,7 @@ export default function PestanasBar({ pestanas, activaId, conteoActiva, onSelecc
           </div>
         )
       })}
-      <button type="button" className="btnMerlinIcon" onClick={onNueva} aria-label="Nueva venta" title="Nueva venta">
+      <button type="button" className={styles.pestanaAccion} onClick={onNueva} aria-label="Nueva venta" title="Nueva venta">
         +
       </button>
     </div>
