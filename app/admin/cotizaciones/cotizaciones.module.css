@@ -10,11 +10,21 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
 
-.title { font-size: 1.25rem; font-weight: 800; color: var(--text); }
+/* Sin `font: var(--text-title)`: --font-poppins solo está definido en <body>
+   (next/font), no en :root donde vive --text-title en merlin.css, así que el
+   shorthand queda guaranteed-invalid y se hereda "" a toda la app (mismo bug
+   documentado en productos.module.css/dashboard.module.css). Valores
+   explícitos, alineados al resto de listas re-skinned de R5a. */
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
 .subtitle { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem; }
 
 .topbarActions {
@@ -24,7 +34,48 @@
   flex-wrap: wrap;
 }
 
-.filtroVendedor { width: 200px; }
+/* Buscador redondeado (look Stitch): mismo patrón que .searchWrap de
+   productos.module.css — lupa absoluta + selector compuesto para ganarle en
+   especificidad (0,2,0) a la regla global `input[type="text"]` (0,1,1) de
+   app/globals.css, que si no pisa el padding-left del ícono. */
+.searchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 220px;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.85rem;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.searchWrap .searchInput {
+  width: 100%;
+  min-width: 220px;
+  padding: 0.55rem 0.9rem 0.55rem 2.35rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-btn);
+  background: var(--bg-hover);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.searchWrap .searchInput:focus { outline: none; border-color: var(--accent); background: var(--bg-card); }
+
+.filtroVendedor {
+  width: 190px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-btn);
+  background: var(--bg-hover);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.filtroVendedor:focus { outline: none; border-color: var(--accent); background: var(--bg-card); }
 
 .btnNueva { padding: 0.55rem 1.1rem; white-space: nowrap; }
 
@@ -43,22 +94,52 @@
   max-width: 300px;
   flex-shrink: 0;
   background: var(--bg-hover);
+  border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  border-top: 4px solid var(--border);
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 11rem);
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+/* Feedback visual de drag-over (look Stitch: columna resaltada mientras se
+   arrastra una tarjeta encima). Puramente presentacional — el drop en sí lo
+   sigue resolviendo onDrop/mover() sin cambios. */
+.columnDragOver {
+  background: var(--bg-card);
+  border-color: var(--accent);
 }
 
 .columnHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.7rem 0.85rem;
+  padding: 0.85rem 0.85rem 0.7rem;
   flex-shrink: 0;
 }
 
-.columnNombre { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+.columnHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.columnDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.columnNombre {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .columnCount {
   background: var(--bg-card);
@@ -68,6 +149,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .columnBody {
@@ -89,16 +171,20 @@
 /* Tarjetas */
 .card {
   background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
-  padding: 0.7rem 0.8rem;
+  padding: 0.75rem 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.5rem;
   cursor: grab;
   position: relative;
 }
 .card:active { cursor: grabbing; }
+.card:hover { box-shadow: var(--shadow-pop); }
+
+.cardVencida { border-color: var(--error); }
 
 .cardHeader {
   display: flex;
@@ -107,7 +193,19 @@
   gap: 0.4rem;
 }
 
-.cardNumero { font-size: 0.78rem; font-weight: 700; color: var(--accent); }
+.cardNumero {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-muted);
+}
+
+.cardHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
 
 .cardMenuWrap { position: relative; }
 
@@ -160,44 +258,86 @@
 }
 
 .cardCliente {
-  font-size: 0.83rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.cardTotal { font-size: 0.95rem; font-weight: 800; color: var(--text); }
-
 .cardFooter {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 0.4rem;
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  gap: 0.5rem;
+}
+
+.cardVendedorBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.cardLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .cardVendedor {
+  font-size: 0.78rem;
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cardFecha { flex-shrink: 0; }
+
+.cardTotal {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cardVence {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--border);
+}
+
+.cardVenceFecha { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+.cardVenceFechaVencida { color: var(--error-deep); }
 
 .badgeVencida {
-  align-self: flex-start;
   background: var(--error-bg);
   color: var(--error-deep);
   border-radius: var(--radius-tag);
   padding: 0.15rem 0.55rem;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.badgeFacturada {
+  background: var(--success-bg);
+  color: var(--success);
+  border-radius: var(--radius-tag);
+  padding: 0.15rem 0.55rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 @media (max-width: 640px) {
   .page { padding: 1rem; }
   .column { min-width: 260px; max-width: 260px; }
-  .filtroVendedor { width: 150px; }
+  .searchWrap, .searchWrap .searchInput { min-width: 160px; }
+  .filtroVendedor { width: 140px; }
 }

@@ -35,7 +35,9 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
   }
 
   const [filtroVendedor, setFiltroVendedor] = useState('todos')
+  const [busqueda, setBusqueda] = useState('')
   const [menuAbierto, setMenuAbierto] = useState<string | null>(null)
+  const [dragOverEtapaId, setDragOverEtapaId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!menuAbierto) return
@@ -44,10 +46,18 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
     return () => window.removeEventListener('click', cerrar)
   }, [menuAbierto])
 
-  const filtradas = useMemo(
-    () => (filtroVendedor === 'todos' ? cotizacionesLocal : cotizacionesLocal.filter(c => c.vendedor_id === filtroVendedor)),
-    [cotizacionesLocal, filtroVendedor],
-  )
+  const filtradas = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    return cotizacionesLocal.filter(c => {
+      if (filtroVendedor !== 'todos' && c.vendedor_id !== filtroVendedor) return false
+      if (!q) return true
+      return (
+        c.numero.toLowerCase().includes(q) ||
+        c.cliente_display.toLowerCase().includes(q) ||
+        (c.vendedor_nombre ?? '').toLowerCase().includes(q)
+      )
+    })
+  }, [cotizacionesLocal, filtroVendedor, busqueda])
 
   const columnas = useMemo(() => agruparPorEtapa(filtradas, etapas), [filtradas, etapas])
 
@@ -95,8 +105,13 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
     e.dataTransfer.effectAllowed = 'move'
   }
 
+  function onDragEnd() {
+    setDragOverEtapaId(null)
+  }
+
   function onDrop(e: React.DragEvent, etapaId: string) {
     e.preventDefault()
+    setDragOverEtapaId(null)
     const id = e.dataTransfer.getData('text/plain')
     if (id) mover(id, etapaId)
   }
@@ -109,6 +124,28 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
           <p className={styles.subtitle}>{filtradas.length} de {cotizacionesLocal.length} cotizaciones</p>
         </div>
         <div className={styles.topbarActions}>
+          <div className={styles.searchWrap}>
+            <svg
+              className={styles.searchIcon}
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar cotización, cliente o vendedor…"
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              className={styles.searchInput}
+            />
+          </div>
           <select
             className={styles.filtroVendedor}
             value={filtroVendedor}
@@ -132,13 +169,19 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
         {columnas.map(({ etapa, items }) => (
           <div
             key={etapa.id}
-            className={styles.column}
-            style={{ borderTopColor: etapa.color }}
-            onDragOver={e => e.preventDefault()}
+            className={`${styles.column} ${dragOverEtapaId === etapa.id ? styles.columnDragOver : ''}`}
+            onDragOver={e => {
+              e.preventDefault()
+              if (dragOverEtapaId !== etapa.id) setDragOverEtapaId(etapa.id)
+            }}
+            onDragLeave={() => setDragOverEtapaId(prev => (prev === etapa.id ? null : prev))}
             onDrop={e => onDrop(e, etapa.id)}
           >
             <div className={styles.columnHeader}>
-              <span className={styles.columnNombre}>{etapa.nombre}</span>
+              <div className={styles.columnHeaderLeft}>
+                <span className={styles.columnDot} style={{ background: etapa.color }} />
+                <span className={styles.columnNombre}>{etapa.nombre}</span>
+              </div>
               <span className={styles.columnCount}>{items.length}</span>
             </div>
 
@@ -146,64 +189,77 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
               {items.length === 0 && <p className={styles.columnEmpty}>Sin cotizaciones</p>}
               {items.map(c => {
                 const vencida = estaVencida(new Date(c.valido_hasta), hoy)
+                const facturada = c.documento_id !== null
                 return (
                   <div
                     key={c.id}
-                    className={styles.card}
+                    className={`${styles.card} ${vencida ? styles.cardVencida : ''}`}
                     draggable
                     onDragStart={e => onDragStart(e, c.id)}
+                    onDragEnd={onDragEnd}
                     onClick={() => router.push(`/admin/cotizaciones/${c.id}`)}
                   >
                     <div className={styles.cardHeader}>
                       <span className={styles.cardNumero}>{c.numero}</span>
-                      <div className={styles.cardMenuWrap} onClick={e => e.stopPropagation()}>
-                        <button
-                          className={`${styles.menuBtn} btnMerlinIcon`}
-                          aria-label="Más acciones"
-                          onClick={() => setMenuAbierto(menuAbierto === c.id ? null : c.id)}
-                        >
-                          ⋮
-                        </button>
-                        {menuAbierto === c.id && (
-                          <div className={styles.menu}>
-                            <span className={styles.menuLabel}>Mover a…</span>
-                            {etapas.filter(e => e.activo).map(e => (
+                      <div className={styles.cardHeaderRight}>
+                        {facturada && <span className={styles.badgeFacturada}>Facturada</span>}
+                        {vencida && <span className={styles.badgeVencida}>Vencida</span>}
+                        <div className={styles.cardMenuWrap} onClick={e => e.stopPropagation()}>
+                          <button
+                            className={`${styles.menuBtn} btnMerlinIcon`}
+                            aria-label="Más acciones"
+                            onClick={() => setMenuAbierto(menuAbierto === c.id ? null : c.id)}
+                          >
+                            ⋮
+                          </button>
+                          {menuAbierto === c.id && (
+                            <div className={styles.menu}>
+                              <span className={styles.menuLabel}>Mover a…</span>
+                              {etapas.filter(e => e.activo).map(e => (
+                                <button
+                                  key={e.id}
+                                  className={styles.menuItem}
+                                  disabled={e.id === c.etapa_id}
+                                  onClick={() => mover(c.id, e.id)}
+                                >
+                                  {e.nombre}
+                                </button>
+                              ))}
+                              <div className={styles.menuDivider} />
                               <button
-                                key={e.id}
                                 className={styles.menuItem}
-                                disabled={e.id === c.etapa_id}
-                                onClick={() => mover(c.id, e.id)}
+                                onClick={() => duplicar(c.id)}
                               >
-                                {e.nombre}
+                                Duplicar
                               </button>
-                            ))}
-                            <div className={styles.menuDivider} />
-                            <button
-                              className={styles.menuItem}
-                              onClick={() => duplicar(c.id)}
-                            >
-                              Duplicar
-                            </button>
-                            <button
-                              className={`${styles.menuItem} ${styles.menuItemDanger}`}
-                              onClick={() => eliminar(c.id, c.numero)}
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        )}
+                              <button
+                                className={`${styles.menuItem} ${styles.menuItemDanger}`}
+                                onClick={() => eliminar(c.id, c.numero)}
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     <p className={styles.cardCliente}>{c.cliente_display}</p>
-                    <p className={styles.cardTotal}>{formatPrice(c.total)}</p>
 
                     <div className={styles.cardFooter}>
-                      <span className={styles.cardVendedor}>{c.vendedor_nombre ?? 'Sin vendedor'}</span>
-                      <span className={styles.cardFecha}>{fechaCorta(c.updated_at)}</span>
+                      <div className={styles.cardVendedorBlock}>
+                        <span className={styles.cardLabel}>Vendedor</span>
+                        <span className={styles.cardVendedor}>{c.vendedor_nombre ?? 'Sin vendedor'}</span>
+                      </div>
+                      <span className={styles.cardTotal}>{formatPrice(c.total)}</span>
                     </div>
 
-                    {vencida && <span className={styles.badgeVencida}>Vencida</span>}
+                    <div className={styles.cardVence}>
+                      <span className={styles.cardLabel}>Vence</span>
+                      <span className={`${styles.cardVenceFecha} ${vencida ? styles.cardVenceFechaVencida : ''}`}>
+                        {fechaCorta(c.valido_hasta)}
+                      </span>
+                    </div>
                   </div>
                 )
               })}
