@@ -175,7 +175,20 @@ export default function CuentasPorCobrarClient({ filas, clientes, sesiones, caja
             <div key={g.clienteId} className={styles.grupo}>
               <div
                 className={styles.grupoHeader}
+                role="button"
+                tabIndex={0}
+                aria-expanded={abierto}
                 onClick={() => toggleGrupo(g.clienteId)}
+                onKeyDown={e => {
+                  // Ignora el keydown si viene de un control hijo (p. ej. el
+                  // botón "Aplicar saldo a favor"): solo togglear cuando el
+                  // foco está en la propia cabecera.
+                  if (e.target !== e.currentTarget) return
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    toggleGrupo(g.clienteId)
+                  }
+                }}
               >
                 <div className={styles.grupoLeft}>
                   <span className={styles.avatar}>{inicialesCliente(g.clienteNombre)}</span>
@@ -185,7 +198,9 @@ export default function CuentasPorCobrarClient({ filas, clientes, sesiones, caja
                   <span className={styles.grupoCount}>
                     {g.filas.length} documento{g.filas.length === 1 ? '' : 's'}
                   </span>
-                  <span className={styles.grupoTotal}>{formatPrice(g.total)}</span>
+                  <span className={styles.grupoTotal} title="Saldo pendiente del cliente">
+                    <span className={styles.grupoTotalLabel}>Saldo</span> {formatPrice(g.total)}
+                  </span>
                   {(saldosFavor[g.clienteId] ?? 0) > 0 && (
                     <button
                       className={`${styles.btnAbonar} btnMerlinSecondary`}

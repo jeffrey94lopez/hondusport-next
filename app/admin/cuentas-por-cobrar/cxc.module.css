@@ -166,6 +166,14 @@
   white-space: nowrap;
 }
 
+.grupoTotalLabel {
+  font-weight: 500;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
 .chevron {
   font-size: 0.7rem;
   color: var(--text-muted);

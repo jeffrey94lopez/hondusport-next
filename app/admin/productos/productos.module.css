@@ -194,7 +194,7 @@
   font-size: 0.82rem;
   color: var(--text);
 }
-.stockBadgeAlert { background: var(--error-bg); color: var(--danger); }
+.stockBadgeAlert { background: var(--danger); color: #fff; }
 .stockLow { color: var(--danger); }
 
 .rowActions {

@@ -6,7 +6,7 @@ const round2 = (n: number) => Math.round(n * 100) / 100
 // es la suma de `saldo` de los documentos del cliente — la única aritmética
 // de dinero que hace esta función; todo lo demás (saldo/estado/bucket/
 // dias_vencido por documento) ya viene calculado por la vista `CxcFila`.
-export interface GrupoCxc {
+export interface GrupoCxcCliente {
   clienteId: string
   clienteNombre: string
   filas: CxcFila[]
@@ -18,9 +18,9 @@ export interface GrupoCxc {
 // Usado por la cascada de /admin/cuentas-por-cobrar (R5a): antes vivía inline
 // en el componente, sin test, pese a sumar dinero (`total`) — regla con peso
 // según convención del proyecto (CLAUDE.md).
-export function agruparPorCliente(filas: CxcFila[]): GrupoCxc[] {
+export function agruparPorCliente(filas: CxcFila[]): GrupoCxcCliente[] {
   const orden: string[] = []
-  const map = new Map<string, GrupoCxc>()
+  const map = new Map<string, GrupoCxcCliente>()
   for (const f of filas) {
     let g = map.get(f.cliente_id)
     if (!g) {

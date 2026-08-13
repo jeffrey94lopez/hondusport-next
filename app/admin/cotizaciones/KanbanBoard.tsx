@@ -174,7 +174,13 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
               e.preventDefault()
               if (dragOverEtapaId !== etapa.id) setDragOverEtapaId(etapa.id)
             }}
-            onDragLeave={() => setDragOverEtapaId(prev => (prev === etapa.id ? null : prev))}
+            onDragLeave={e => {
+              // Evita el titileo: onDragLeave se dispara también al entrar a
+              // una tarjeta hija dentro de la misma columna; solo limpiar si
+              // el puntero de verdad salió de la columna.
+              if (e.currentTarget.contains(e.relatedTarget as Node)) return
+              setDragOverEtapaId(prev => (prev === etapa.id ? null : prev))
+            }}
             onDrop={e => onDrop(e, etapa.id)}
           >
             <div className={styles.columnHeader}>
