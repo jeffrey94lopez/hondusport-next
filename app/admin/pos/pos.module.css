@@ -1125,8 +1125,8 @@
   border: none;
   background: transparent;
   color: var(--text);
-  font-size: 0.92rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 .clienteInput:focus { outline: none; }
 .clienteInput::placeholder { font-weight: 600; color: var(--text-muted); }

@@ -152,6 +152,16 @@ export default function CarritoPanel({
   const ningunoActivo = descuentoGlobal === 0
   const otroActivo = !ningunoActivo && !descuentos.some(presetActivo)
 
+  // Etiqueta del botón del pie: si el descuento vino de un preset de
+  // porcentaje se muestra el % (pedido del usuario); si vino de un preset de
+  // monto o del input manual, el monto en L.
+  const presetAplicado = ningunoActivo ? undefined : descuentos.find(presetActivo)
+  const etiquetaDescuento = ningunoActivo
+    ? 'Descuento'
+    : presetAplicado?.tipo === 'porcentaje'
+      ? `Descuento −${presetAplicado.valor}%`
+      : `Descuento −${formatPrice(descuentoGlobal)}`
+
   // Subtotal (pre-ISV, neto de descuentos): derivado por aritmética simple de
   // los campos ya calculados en `totales` (total = suma de bases + ISV, ver
   // lib/pos/desglose.ts) — no es una regla de negocio nueva, solo una lectura
@@ -301,7 +311,7 @@ export default function CarritoPanel({
             onClick={() => setDescuentoModalAbierto(true)}
           >
             <IconoEtiqueta />
-            {descuentoGlobal > 0 ? `Descuento −${formatPrice(descuentoGlobal)}` : 'Descuento'}
+            {etiquetaDescuento}
           </button>
           <div className={styles.vendedorInline}>
             <label className={styles.vendedorInlineLabel} htmlFor="pos-carrito-vendedor">Vendedor</label>
