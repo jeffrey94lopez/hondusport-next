@@ -3,9 +3,10 @@ import * as XLSX from 'xlsx'
 import { createClient } from '@/lib/supabase-server'
 import { obtenerContactos } from '@/app/admin/reportes/contactos/data'
 import { contactosAoA } from '@/lib/reportes/contactos'
-import type { RolContacto } from '@/types'
+import type { EstadoContacto, RolContacto } from '@/types'
 
 const ROLES: RolContacto[] = ['cliente', 'proveedor', 'ambos']
+const ESTADOS: EstadoContacto[] = ['todos', 'activos', 'inactivos']
 
 export async function GET(req: Request) {
   const supabase = await createClient()
@@ -15,8 +16,10 @@ export async function GET(req: Request) {
   const url = new URL(req.url)
   const rolRaw = url.searchParams.get('rol')
   const rol: RolContacto = ROLES.includes(rolRaw as RolContacto) ? (rolRaw as RolContacto) : 'cliente'
+  const estadoRaw = url.searchParams.get('estado')
+  const estado: EstadoContacto = ESTADOS.includes(estadoRaw as EstadoContacto) ? (estadoRaw as EstadoContacto) : 'todos'
 
-  const filas = await obtenerContactos(rol)
+  const filas = await obtenerContactos(rol, estado)
   const aoa = contactosAoA(filas)
 
   const wb = XLSX.utils.book_new()

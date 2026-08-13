@@ -928,6 +928,9 @@ export interface TotalesGanancias {
   ventas: number; costo: number; ganancia: number; margen: number
 }
 export type RolContacto = 'cliente' | 'proveedor' | 'ambos'
+// R5a fixC: filtro de estado del directorio — 'todos' es el default (comportamiento
+// previo, sin filtrar); 'activos'/'inactivos' filtran por la columna `activo`.
+export type EstadoContacto = 'todos' | 'activos' | 'inactivos'
 // R5a fixB: reenfocado a directorio (datos de contacto del formulario de
 // clientes/proveedores) — ya NO trae montos de ventas/compras/saldos, ver
 // app/admin/clientes/ClientesClient.tsx para el formulario real.

@@ -1,25 +1,29 @@
-import type { RolContacto } from '@/types'
+import type { EstadoContacto, RolContacto } from '@/types'
 import { obtenerContactos } from './data'
 import { rolLabel, tipoClienteLabel } from '@/lib/reportes/contactos'
 import ContactosControls from './ContactosControls'
 import styles from './contactos.module.css'
 
 const ROLES: RolContacto[] = ['cliente', 'proveedor', 'ambos']
+const ESTADOS: EstadoContacto[] = ['todos', 'activos', 'inactivos']
 
 // R5a fixB: reenfocado como directorio de clientes/proveedores — datos de
 // contacto del formulario real (nombre, RTN/identidad, teléfono, correo,
 // dirección, rol, exonerado…), no montos de ventas/compras/saldos (esos ya
 // están en los reportes de ventas/cxc/cxp). Por eso ya no filtra por fecha:
 // es la lista vigente en `clientes`, "a la fecha" — no por período.
-export default async function ContactosPage({ searchParams }: { searchParams: Promise<{ rol?: string }> }) {
+// R5a fixC: + filtro de estado (todos/activos/inactivos), default 'todos'
+// (comportamiento previo, sin filtrar).
+export default async function ContactosPage({ searchParams }: { searchParams: Promise<{ rol?: string; estado?: string }> }) {
   const sp = await searchParams
   const rol: RolContacto = ROLES.includes(sp.rol as RolContacto) ? (sp.rol as RolContacto) : 'cliente'
-  const filas = await obtenerContactos(rol)
-  const qs = new URLSearchParams({ rol }).toString()
+  const estado: EstadoContacto = ESTADOS.includes(sp.estado as EstadoContacto) ? (sp.estado as EstadoContacto) : 'todos'
+  const filas = await obtenerContactos(rol, estado)
+  const qs = new URLSearchParams({ rol, estado }).toString()
 
   return (
     <div className={styles.page}>
-      <ContactosControls rol={rol} exportHref={`/api/reportes/contactos/export?${qs}`} />
+      <ContactosControls rol={rol} estado={estado} exportHref={`/api/reportes/contactos/export?${qs}`} />
       <div className={styles.hoja}>
         <h1 className={styles.titulo}>Clientes y proveedores</h1>
         <p className={styles.periodo}>{filas.length} contacto(s)</p>

@@ -49,7 +49,7 @@
 .badgeActivo, .badgeInactivo {
   font-size: 0.72rem; font-weight: 700; border-radius: var(--radius-tag); padding: 0.15rem 0.6rem;
 }
-.badgeActivo { color: var(--success); background: var(--success-dim, var(--bg-hover)); }
+.badgeActivo { color: var(--success); background: var(--success-bg); }
 .badgeInactivo { color: var(--text-muted); background: var(--bg-hover); }
 .vacio { text-align: center; color: var(--text-muted); padding: 1.5rem; }
 @media print {
