@@ -1,24 +1,71 @@
+/* Re-skin R5a T8 (bandera): filtros pill (btnMerlinChip global para los
+   presets), rango libre y etiqueta como pastillas, cards de totales con
+   icono/acento (mirror Stitch "Ganancias por ítem") y tabla con encabezado
+   limpio + hover. Vista imprimible sin tocar (@media print). */
 .page { padding: 1.25rem; }
-.controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.presets { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-.presetBtn { border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); border-radius: var(--radius-input); padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-.presetOn { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
-.rangoLibre { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
-.rangoLibre input { border: 1px solid var(--border); border-radius: var(--radius-input); padding: 0.25rem 0.5rem; }
-.etiqueta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.presets { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.rangoLibre {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.8rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  padding: 0.3rem 0.9rem;
+}
+.rangoLibre input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.78rem;
+}
+.etiqueta {
+  font-size: 0.78rem; font-weight: 700; color: var(--text-muted);
+  background: var(--bg-hover); border-radius: var(--radius-btn);
+  padding: 0.35rem 0.85rem;
+}
 .acciones { display: flex; gap: 0.5rem; }
-.btnAccion { padding: 0.4rem 0.9rem; display: inline-flex; align-items: center; }
+.btnAccion { padding: 0.45rem 1rem; display: inline-flex; align-items: center; gap: 0.4rem; }
 .hoja { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; overflow-x: auto; }
-.titulo { font-size: 1.1rem; font-weight: 800; }
-.totales { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.totales > div { display: flex; flex-direction: column; }
-.totLabel { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
-.totVal { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
-.tabla { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-.tabla th, .tabla td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; text-align: left; white-space: nowrap; }
-.tabla th { background: var(--bg-hover); font-weight: 700; }
+.titulo { font-size: 1.15rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; }
+
+/* Cards de totales (Ventas / Costos / Ganancias, con margen % como acento
+   dentro de la card de ganancias — mismo dato de siempre, solo agrupado). */
+.totales { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+@media (max-width: 760px) { .totales { grid-template-columns: 1fr; } }
+.totalCard {
+  display: flex; flex-direction: column; gap: 0.65rem;
+  background: var(--bg-hover); border: 1px solid var(--border);
+  border-radius: var(--radius-card); padding: 1rem 1.15rem;
+}
+.totalHead { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.totLabel { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; }
+.totIcono {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem; border-radius: 50%;
+  background: var(--accent-dim); color: var(--accent); flex-shrink: 0;
+}
+.totIcono svg { width: 1rem; height: 1rem; }
+.totVal { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+.totGanancia { color: var(--accent); }
+.totMargen {
+  align-self: flex-start; font-size: 0.78rem; font-weight: 700; color: var(--accent);
+  background: var(--accent-dim); border-radius: var(--radius-tag); padding: 0.2rem 0.65rem;
+}
+
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.tabla th {
+  text-align: left; padding: 0.6rem 0.75rem; font-size: 0.72rem; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 0.4px; border-bottom: 1px solid var(--border);
+  background: var(--bg-hover); white-space: nowrap;
+}
+.tabla td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.tabla tbody tr:hover td { background: var(--bg-hover); }
+.tabla tbody tr:last-child td { border-bottom: none; }
 .num { text-align: right; }
-.vacio { text-align: center; color: var(--text-muted); padding: 1rem; }
+.vacio { text-align: center; color: var(--text-muted); padding: 1.5rem; }
 @media print {
   .noPrint { display: none; }
   .page { padding: 0; }

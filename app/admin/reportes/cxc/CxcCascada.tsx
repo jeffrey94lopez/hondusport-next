@@ -4,6 +4,22 @@ import { formatPrice } from '@/lib/store/format'
 import type { GrupoCxc } from '@/types'
 import styles from './cxc.module.css'
 
+function IconoBuscar() {
+  return (
+    <svg className={styles.searchIcon} viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  )
+}
+
+function IconoChevron() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="9 6 15 12 9 18" />
+    </svg>
+  )
+}
+
 export default function CxcCascada({ grupos, total, exportHref }: { grupos: GrupoCxc[]; total: number; exportHref: string }) {
   const [abiertos, setAbiertos] = useState<Set<string>>(new Set())
   const [filtro, setFiltro] = useState('')
@@ -14,21 +30,24 @@ export default function CxcCascada({ grupos, total, exportHref }: { grupos: Grup
   return (
     <>
       <div className={`${styles.controls} ${styles.noPrint}`}>
-        <input className={styles.filtro} placeholder="Filtrar cliente…" value={filtro} onChange={e => setFiltro(e.target.value)} />
+        <div className={styles.searchWrap}>
+          <IconoBuscar />
+          <input type="text" className={styles.filtro} placeholder="Filtrar cliente…" value={filtro} onChange={e => setFiltro(e.target.value)} />
+        </div>
         <span className={styles.etiqueta}>Total por cobrar: {formatPrice(total)}</span>
         <div className={styles.acciones}>
           <a href={exportHref} className={`btnMerlinSecondary ${styles.btnAccion}`}>Exportar Excel</a>
           <button type="button" className={`btnMerlinPrimary ${styles.btnAccion}`} onClick={() => window.print()}>Imprimir</button>
         </div>
       </div>
-      <div className={styles.hoja}>
-        <h1 className={styles.titulo}>Cuentas por cobrar</h1>
+      <h1 className={styles.titulo}>Cuentas por cobrar</h1>
+      <div className={styles.cascada}>
         {visibles.map(g => {
           const open = abiertos.has(g.clienteId)
           return (
             <div key={g.clienteId} className={styles.grupo}>
               <button type="button" className={styles.clienteRow} onClick={() => toggle(g.clienteId)} aria-expanded={open}>
-                <span className={styles.caret}>{open ? '▾' : '▸'}</span>
+                <span className={`${styles.caret} ${open ? styles.caretOpen : ''}`}><IconoChevron /></span>
                 <span className={styles.clienteNombre}>{g.cliente}</span>
                 <span className={styles.clienteMeta}>{g.docs.length} doc(s)</span>
                 <span className={styles.clienteTotal}>{formatPrice(g.total)}</span>

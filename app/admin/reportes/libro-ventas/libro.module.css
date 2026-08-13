@@ -1,23 +1,47 @@
+/* Re-skin R5a T8 (mismo patrón de ganancias): filtros pill (btnMerlinChip
+   para presets), rango libre/etiqueta como pastillas y tabla con encabezado
+   limpio + hover. Vista imprimible sin tocar (@media print). */
 .page { padding: 1.25rem; }
-.controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.presets { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-.presetBtn { border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); border-radius: var(--radius-input); padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-.presetOn { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
-.rangoLibre { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
-.rangoLibre input { border: 1px solid var(--border); border-radius: var(--radius-input); padding: 0.25rem 0.5rem; }
-.etiqueta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.presets { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.rangoLibre {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.8rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  padding: 0.3rem 0.9rem;
+}
+.rangoLibre input {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 0.78rem;
+}
+.etiqueta {
+  font-size: 0.78rem; font-weight: 700; color: var(--text-muted);
+  background: var(--bg-hover); border-radius: var(--radius-btn);
+  padding: 0.35rem 0.85rem;
+}
 .acciones { display: flex; gap: 0.5rem; }
-.btnAccion { padding: 0.4rem 0.9rem; display: inline-flex; align-items: center; }
+.btnAccion { padding: 0.45rem 1rem; display: inline-flex; align-items: center; gap: 0.4rem; }
 .hoja { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; overflow-x: auto; }
-.titulo { font-size: 1.1rem; font-weight: 800; }
+.titulo { font-size: 1.15rem; font-weight: 800; color: var(--text); }
 .periodo { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: capitalize; }
-.tabla { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-.tabla th, .tabla td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; text-align: left; white-space: nowrap; }
-.tabla th { background: var(--bg-hover); font-weight: 700; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.tabla th {
+  text-align: left; padding: 0.6rem 0.75rem; font-size: 0.72rem; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 0.4px; border-bottom: 1px solid var(--border);
+  background: var(--bg-hover); white-space: nowrap;
+}
+.tabla td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.tabla tbody tr:hover td { background: var(--bg-hover); }
 .num { text-align: right; }
 .filaNota { color: var(--error-strong); }
-.totales td { font-weight: 800; background: var(--bg-hover); }
-.vacio { text-align: center; color: var(--text-muted); padding: 1rem; }
+.totales td { font-weight: 800; background: var(--bg-hover); border-top: 2px solid var(--border); }
+.vacio { text-align: center; color: var(--text-muted); padding: 1.5rem; }
 @media print {
   .noPrint { display: none; }
   .page { padding: 0; }

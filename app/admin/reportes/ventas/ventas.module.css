@@ -1,22 +1,42 @@
+/* Re-skin R5a T8 (mismo patrón de ganancias): filtros pill (btnMerlinChip
+   para presets, selects/date redondeados) y tabla con encabezado limpio +
+   hover. Vista imprimible sin tocar (@media print). */
 .page { padding: 1.25rem; }
-.controls { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
-.fila { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-.controls select, .controls input[type="date"] { border: 1px solid var(--border); border-radius: var(--radius-input); padding: 0.3rem 0.5rem; font-size: 0.8rem; background: var(--bg-card); }
-.presetBtn { border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); border-radius: var(--radius-input); padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-.presetOn { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
-.etiqueta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
-.check { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; }
-.btnAccion { padding: 0.4rem 0.9rem; display: inline-flex; align-items: center; }
+.controls { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.25rem; }
+.fila { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.controls select,
+.controls input[type="date"] {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  background: var(--bg-card);
+  color: var(--text);
+  width: auto;
+}
+.etiqueta {
+  font-size: 0.78rem; font-weight: 700; color: var(--text-muted);
+  background: var(--bg-hover); border-radius: var(--radius-btn);
+  padding: 0.35rem 0.85rem;
+}
+.check { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--text-muted); }
+.btnAccion { padding: 0.45rem 1rem; display: inline-flex; align-items: center; gap: 0.4rem; }
 .hoja { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; overflow-x: auto; }
-.titulo { font-size: 1.1rem; font-weight: 800; }
+.titulo { font-size: 1.15rem; font-weight: 800; color: var(--text); }
 .periodo { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: capitalize; }
-.tabla { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-.tabla th, .tabla td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; text-align: left; white-space: nowrap; }
-.tabla th { background: var(--bg-hover); font-weight: 700; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.tabla th {
+  text-align: left; padding: 0.6rem 0.75rem; font-size: 0.72rem; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 0.4px; border-bottom: 1px solid var(--border);
+  background: var(--bg-hover); white-space: nowrap;
+}
+.tabla td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.tabla tbody tr:hover td { background: var(--bg-hover); }
+.tabla tbody tr:last-child td { border-bottom: none; }
 .num { text-align: right; }
 .filaItem { color: var(--text-muted); font-size: 0.76rem; }
 .filaItem td { background: var(--bg-hover); }
-.vacio { text-align: center; color: var(--text-muted); padding: 1rem; }
+.vacio { text-align: center; color: var(--text-muted); padding: 1.5rem; }
 @media print {
   .noPrint { display: none; }
   .page { padding: 0; }

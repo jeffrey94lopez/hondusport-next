@@ -22,7 +22,7 @@ export default function GananciasControls({ preset, desde, hasta, etiqueta, expo
     <div className={`${styles.controls} ${styles.noPrint}`}>
       <div className={styles.presets}>
         {PRESETS.map(pr => (
-          <button key={pr.v} type="button" className={`${styles.presetBtn} ${preset === pr.v ? styles.presetOn : ''}`}
+          <button key={pr.v} type="button" className="btnMerlinChip" aria-pressed={preset === pr.v}
             onClick={() => ir({ preset: pr.v })}>{pr.l}</button>
         ))}
         {preset === 'personalizado' && (

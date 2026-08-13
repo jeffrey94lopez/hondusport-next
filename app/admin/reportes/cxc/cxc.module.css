@@ -1,32 +1,86 @@
+/* Re-skin R5a T8: mismo patrón visual del módulo Cuentas por cobrar
+   (app/admin/cuentas-por-cobrar, ya re-skineado en R5a T6) — cascada de
+   cards por cliente con chevron, buscador con lupa (selector compuesto
+   `.searchWrap .filtro` para ganarle en especificidad (0,2,0) a la regla
+   global `input[type="text"]` (0,1,1) de app/globals.css) y tabla de
+   documentos con encabezado limpio + hover. Vista imprimible intacta: los
+   documentos siguen en el DOM siempre (oculto con CSS, no con render
+   condicional) para que @media print los muestre todos sin importar el
+   colapso en pantalla. */
 .page { padding: 1.25rem; }
+
 .controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.filtro { border: 1px solid var(--border); border-radius: var(--radius-input); padding: 0.3rem 0.6rem; font-size: 0.85rem; }
-.etiqueta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+
+.searchWrap { position: relative; display: flex; align-items: center; min-width: 220px; }
+.searchIcon { position: absolute; top: 50%; left: 0.85rem; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.searchWrap .filtro {
+  width: 100%;
+  min-width: 220px;
+  padding: 0.45rem 0.9rem 0.45rem 2.35rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-btn);
+  background: var(--bg-hover);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.searchWrap .filtro:focus { outline: none; border-color: var(--accent); background: var(--bg-card); }
+
+.etiqueta {
+  font-size: 0.78rem; font-weight: 700; color: var(--text-muted);
+  background: var(--bg-hover); border-radius: var(--radius-btn);
+  padding: 0.35rem 0.85rem;
+}
 .acciones { display: flex; gap: 0.5rem; }
-.btnAccion { padding: 0.4rem 0.9rem; display: inline-flex; align-items: center; }
-.hoja { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; overflow-x: auto; }
-.titulo { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.75rem; }
-.tabla { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-.tabla th, .tabla td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; text-align: left; white-space: nowrap; }
-.tabla th { background: var(--bg-hover); font-weight: 700; }
-.num { text-align: right; }
-.vacio { text-align: center; color: var(--text-muted); padding: 1rem; }
-.grupo { border-bottom: 1px solid var(--border); }
-.clienteRow { display: flex; align-items: center; gap: 0.75rem; width: 100%; background: none; border: none; cursor: pointer; padding: 0.6rem 0.4rem; text-align: left; font-size: 0.88rem; }
+.btnAccion { padding: 0.45rem 1rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+
+.titulo { font-size: 1.15rem; font-weight: 800; color: var(--text); margin-bottom: 1rem; }
+
+.cascada { display: flex; flex-direction: column; gap: 0.65rem; }
+
+.grupo {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.clienteRow {
+  display: flex; align-items: center; gap: 0.75rem; width: 100%;
+  background: none; border: none; cursor: pointer;
+  padding: 0.85rem 1.1rem; text-align: left; font-family: inherit;
+}
 .clienteRow:hover { background: var(--bg-hover); }
-.caret { width: 1rem; color: var(--text-muted); }
-.clienteNombre { font-weight: 700; flex: 1; }
-.clienteMeta { color: var(--text-muted); font-size: 0.78rem; }
-.clienteTotal { font-weight: 800; color: var(--accent); white-space: nowrap; }
-.docs { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin: 0 0 0.5rem 1.5rem; }
-.docs th, .docs td { border: 1px solid var(--border); padding: 0.3rem 0.5rem; text-align: left; white-space: nowrap; }
-.docs th { background: var(--bg-hover); }
-.vencido { color: var(--error-strong); }
+.caret { display: inline-flex; color: var(--text-muted); transition: transform 0.15s; flex-shrink: 0; }
+.caret svg { width: 0.85rem; height: 0.85rem; }
+.caretOpen { transform: rotate(90deg); }
+.clienteNombre { font-weight: 700; font-size: 0.92rem; flex: 1; color: var(--text); }
+.clienteMeta { color: var(--text-muted); font-size: 0.8rem; white-space: nowrap; }
+.clienteTotal { font-weight: 800; color: var(--text); white-space: nowrap; }
+
+.docs { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.docs th {
+  text-align: left; padding: 0.55rem 1.1rem; font-size: 0.72rem; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 0.4px;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  background: var(--bg-hover); white-space: nowrap;
+}
+.docs td { padding: 0.55rem 1.1rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.docs tbody tr:last-child td { border-bottom: none; }
+.docs tbody tr:hover td { background: var(--bg-hover); }
+.num { text-align: right; }
+.vencido { color: var(--error-strong); font-weight: 700; }
 .oculto { display: none; }
+
+.vacio {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card);
+  padding: 2.5rem; text-align: center; color: var(--text-muted); font-size: 0.88rem;
+}
+
 @media print {
   .noPrint { display: none; }
   .page { padding: 0; }
-  .hoja { border: none; box-shadow: none; padding: 0; }
+  .grupo { border: none; box-shadow: none; border-radius: 0; margin-bottom: 0.5rem; }
   .docs, .oculto { display: table !important; }
   .caret { display: none; }
 }
