@@ -242,7 +242,9 @@ export default function CarritoPanel({
                     )}
                   </div>
                   <div className={styles.carritoLineaDesc}>
-                    <div className={styles.lineaNombre}>{nombre}</div>
+                    {/* title: el nombre va en una sola línea con elipsis; el
+                        completo se lee al pasar el mouse (o en Editar línea) */}
+                    <div className={styles.lineaNombre} title={nombre}>{nombre}</div>
                     {variante && <div className={styles.lineaVariante}>{variante}</div>}
                     {l.descuento > 0 && (
                       <div className={styles.lineaDescuentoTag}>−{formatPrice(l.descuento)}</div>
