@@ -68,6 +68,7 @@
   font-weight: 800;
   color: var(--text);
 }
+.resumenVencido { color: var(--danger); }
 
 /* ---- Filtros ---- */
 .filtros {
@@ -88,13 +89,99 @@
 }
 .filtroSelect:focus { outline: none; border-color: var(--accent); }
 
-/* ---- Tabla ---- */
-.tableWrap {
+/* ---- Cascada (cliente → documentos) ---- */
+.cascada {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.grupo {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.grupoHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  cursor: pointer;
+  flex-wrap: wrap;
+}
+.grupoHeader:hover { background: var(--bg-hover); }
+
+.grupoLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.avatar {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.grupoNombre {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grupoRight {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-shrink: 0;
+}
+
+.grupoCount {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.grupoTotal {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.chevron {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.grupoBody {
+  border-top: 1px solid var(--border);
   overflow-x: auto;
 }
+
+@media (max-width: 640px) {
+  .grupoCount { display: none; }
+}
+
+/* ---- Tabla de documentos (dentro de cada grupo) ---- */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -102,17 +189,17 @@
 }
 .table th {
   text-align: left;
-  padding: 0.7rem 1rem;
+  padding: 0.6rem 1rem;
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-muted);
   letter-spacing: 0.5px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg-card);
+  background: var(--bg-hover);
   white-space: nowrap;
 }
 .table td {
-  padding: 0.75rem 1rem;
+  padding: 0.65rem 1rem;
   border-bottom: 1px solid var(--border);
   color: var(--text);
   vertical-align: middle;
@@ -124,8 +211,12 @@
 .saldoCol { font-weight: 700; }
 .fechaCol { white-space: nowrap; color: var(--text-muted); }
 .accionCol { text-align: right; white-space: nowrap; }
-.accionesFila { display: flex; gap: 0.4rem; justify-content: flex-end; }
 .btnAbonar { padding: 0.35rem 0.85rem; font-size: 0.78rem; white-space: nowrap; }
+
+/* Días vencido: rojo si venció, verde si sigue al día (mismo criterio de
+   color que las badges de estado). */
+.diasVencido { color: var(--danger); font-weight: 700; }
+.diasOk { color: var(--success); font-weight: 700; }
 
 /* Badge de estado (pendiente gris, parcial ámbar, vencida rojo, pagada verde) */
 .badge {
@@ -142,6 +233,9 @@
 .badgeRojo { background: var(--error-bg); color: var(--danger); }
 
 .empty {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
   padding: 3rem;
   text-align: center;
   color: var(--text-muted);
