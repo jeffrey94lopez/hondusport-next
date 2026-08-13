@@ -315,7 +315,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
         <Modal
           title={modal === 'edit' ? 'Editar producto' : 'Nuevo producto'}
           onClose={closeModal}
-          maxWidth="640px"
+          maxWidth="760px"
         >
           <form onSubmit={handleSubmit} className={styles.form}>
             <ProductoFields
@@ -327,6 +327,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
               producto={editing}
               historialCosto={historialCosto}
               historialCostoVariantes={historialCostoVariantes}
+              layout="modal"
             />
             {formError && <p className={styles.formError}>{formError}</p>}
             <div className={styles.formFooter}>

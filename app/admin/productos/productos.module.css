@@ -250,7 +250,58 @@
 .form {
   display: flex;
   flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Re-skin R5a Task 3 (editor de producto, look Stitch): el formulario del
+   modal se agrupa en cards por tema (datos generales, precios, imágenes,
+   variantes, tallas/categorías) — mismo patrón que .card/.cardHeader de
+   configuracion (config.module.css), pero con su propio nombre porque estos
+   viven dentro de un <form> y no de una pestaña. Solo se usa cuando
+   ProductoFields recibe layout="modal" (ProductosClient); CarruselClient no
+   pasa esa prop y sigue con el layout plano de siempre. */
+.formSection {
+  display: flex;
+  flex-direction: column;
   gap: 0.9rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.25rem 1.4rem;
+}
+
+.formSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.formSectionHeader svg { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
+
+.formSectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+/* Selector compuesto a propósito: los inputs dentro de .formSection heredan
+   el radio de la regla global `input[type=...]` de app/globals.css, pero un
+   estado :disabled (costo bloqueado por historial) necesita más
+   especificidad que esa regla (0,1,1) para pisar background/color — igual
+   lección que .searchInputWrap .searchInput / .form .formInput en otros
+   módulos del admin. Se limita a .formSection para no afectar inputs
+   deshabilitados de otras pantallas. */
+.formSection input:disabled,
+.formSection textarea:disabled,
+.formSection select:disabled {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  cursor: not-allowed;
 }
 
 .formRow {
@@ -386,13 +437,54 @@
   margin-top: 0.25rem;
 }
 
+/* Look Stitch: "Cancelar" es un pill outline (fondo transparente, solo
+   borde) frente al "Guardar"/"Crear" en negro (.btnMerlinPrimary, ya lo
+   era). */
 .btnCancel {
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-input);
-  padding: 0.55rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  padding: 0.55rem 1.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.btnCancel:hover { background: var(--bg-hover); border-color: var(--text-muted); }
+
+/* Botón "+ Agregar variante" (look Stitch: texto dorado tipo link, no pill
+   sólido) — clase propia para no acoplarse a .btnSecondary (usado en la
+   barra superior de la lista con otro significado). */
+.btnAgregarVariante {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0.2rem 0;
   font-size: 0.82rem;
-  color: var(--text-muted);
+  font-weight: 700;
+  color: var(--accent);
   cursor: pointer;
 }
-.btnCancel:hover { color: var(--text); }
+.btnAgregarVariante:hover { color: var(--text); text-decoration: underline; }
+
+/* Selector compuesto a propósito (misma razón que arriba): estos inputs no
+   tienen `type` explícito distinto de "text"/"number" así que la regla
+   global `input[type=...]` (0,1,1) ya los redondea, pero para el relleno
+   compacto propio de la tabla de variantes (look Stitch) hace falta más
+   especificidad que una clase sola (0,1,0) — `.varianteRow .varianteInput`
+   (0,2,0) gana sin depender del orden de las hojas de estilo. */
+.varianteRow .varianteInput {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+}
+.varianteRow .varianteInput:focus { border-color: var(--accent); background: var(--bg-card); }
+
+/* Celda de stock de variante: pill gris centrado, angosto (look Stitch). */
+.varianteRow .varianteStockInput {
+  width: 70px;
+  text-align: center;
+  background: var(--bg-hover);
+  border-color: transparent;
+}
+.varianteRow .varianteStockInput:focus { border-color: var(--accent); background: var(--bg-card); }
