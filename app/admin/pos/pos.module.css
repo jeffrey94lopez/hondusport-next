@@ -1117,20 +1117,39 @@
 }
 .btnNuevoCliente:hover { text-decoration: underline; }
 
-.clienteCombo { position: relative; display: flex; align-items: center; }
-.clienteInput {
+/* El pill gris vive en el CONTENEDOR (no en el input) para que el chevron
+   quede DENTRO del pill, pegado a la derecha (pedido del usuario). El
+   selector compuesto (0,2,0) gana a la regla global input[type="text"] de
+   app/globals.css (0,1,1), que pisaba font-size/padding/background. */
+.clienteCombo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-input);
+  border-radius: var(--radius-input);
+  padding: 0.4rem 0.7rem;
+}
+.clienteCombo .clienteInput {
   flex: 1;
   min-width: 0;
+  width: 100%;
   padding: 0;
   border: none;
+  border-radius: 0;
   background: transparent;
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
-.clienteInput:focus { outline: none; }
-.clienteInput::placeholder { font-weight: 600; color: var(--text-muted); }
-.clienteChevron { color: var(--text-muted); flex-shrink: 0; }
+.clienteCombo .clienteInput:focus { outline: none; border: none; }
+.clienteCombo .clienteInput::placeholder { font-weight: 600; color: var(--text-muted); }
+.clienteChevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
 
 /* Vendedor: select compacto en la fila superior del pie (mockup:
    "Vendedor: [Caja 01]"), no la card ancha que tenía antes (`.vendedorBlock`,
