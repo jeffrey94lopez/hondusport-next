@@ -37,36 +37,60 @@ export default function ItemLibreModal({ onClose, onSave }: ItemLibreModalProps)
     onSave(descripcion.trim(), cantidadNum, precioNum, isv)
   }
 
-  // Reutiliza las clases del formulario de apertura de sesión (pos.module.css)
-  // para evitar duplicar estilos casi idénticos.
+  // R4 Task 7 (look Stitch): namespace propio `.itemLibreForm`/`.itemLibreInput`
+  // (ver pos.module.css) en vez de las clases `.form`/`.formLabel` genéricas
+  // que antes compartía con la apertura de sesión — así el look nuevo (pill
+  // sin borde, fondo bg-hover) no se filtra a esa pantalla ni a
+  // DocumentosClient/LineaEditorModal, fuera de alcance de esta tarea.
   return (
     <Modal title="Ítem libre" onClose={onClose}>
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={styles.itemLibreForm} onSubmit={handleSubmit}>
         <label className={styles.formLabel}>
           Descripción
-          <input type="text" value={descripcion} onChange={e => setDescripcion(e.target.value)} autoFocus />
-        </label>
-        <label className={styles.formLabel}>
-          Cantidad
-          <input type="number" min="1" step="1" value={cantidad} onChange={e => setCantidad(e.target.value)} />
-        </label>
-        <label className={styles.formLabel}>
-          Precio (L.)
           <input
             type="text"
-            inputMode="decimal"
-            placeholder="0.00"
-            value={precio}
-            onChange={e => setPrecio(e.target.value)}
+            className={styles.itemLibreInput}
+            value={descripcion}
+            onChange={e => setDescripcion(e.target.value)}
+            autoFocus
           />
         </label>
+
+        <div className={styles.itemLibreRow}>
+          <label className={styles.formLabel}>
+            Cantidad
+            <input
+              type="number"
+              min="1"
+              step="1"
+              className={styles.itemLibreInput}
+              value={cantidad}
+              onChange={e => setCantidad(e.target.value)}
+            />
+          </label>
+          <label className={styles.formLabel}>
+            ISV
+            <select className={styles.itemLibreInput} value={isv} onChange={e => setIsv(e.target.value as IsvTipo)}>
+              <option value="15">15%</option>
+              <option value="18">18%</option>
+              <option value="exento">Exento</option>
+            </select>
+          </label>
+        </div>
+
         <label className={styles.formLabel}>
-          ISV
-          <select value={isv} onChange={e => setIsv(e.target.value as IsvTipo)}>
-            <option value="15">15%</option>
-            <option value="18">18%</option>
-            <option value="exento">Exento</option>
-          </select>
+          Precio (L.)
+          <div className={styles.pagoMontoWrap}>
+            <span className={styles.pagoMontoPrefix}>L.</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="0.00"
+              className={styles.pagoMontoInput}
+              value={precio}
+              onChange={e => setPrecio(e.target.value)}
+            />
+          </div>
         </label>
 
         {formError && <div className={styles.formError}>{formError}</div>}

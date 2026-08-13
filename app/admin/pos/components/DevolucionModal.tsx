@@ -395,7 +395,12 @@ export default function DevolucionModal({ documentoId, sesiones, cajas, onClose,
             {sesiones.length > 1 && (
               <label className={styles.formLabel}>
                 Caja
-                <select value={sesionId ?? ''} onChange={e => setSesionId(e.target.value || null)} disabled={isPending}>
+                <select
+                  className={styles.cajaSelect}
+                  value={sesionId ?? ''}
+                  onChange={e => setSesionId(e.target.value || null)}
+                  disabled={isPending}
+                >
                   <option value="">Selecciona una caja…</option>
                   {sesiones.map(s => (
                     <option key={s.id} value={s.id}>
@@ -438,15 +443,18 @@ export default function DevolucionModal({ documentoId, sesiones, cajas, onClose,
                       <span className={styles.reembolsoNombre}>{LABEL_REEMBOLSO[r.tipo]}</span>
                       <label className={styles.formLabel}>
                         Monto
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          placeholder="0.00"
-                          className={styles.montoInput}
-                          value={r.montoTexto}
-                          onChange={e => cambiarMontoReembolso(r.tipo, e.target.value)}
-                          disabled={isPending}
-                        />
+                        <div className={styles.montoInputWrap}>
+                          <span className={styles.montoInputPrefix}>L.</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            placeholder="0.00"
+                            className={styles.montoInput}
+                            value={r.montoTexto}
+                            onChange={e => cambiarMontoReembolso(r.tipo, e.target.value)}
+                            disabled={isPending}
+                          />
+                        </div>
                       </label>
                       <div className={styles.reembolsoChipsRow}>
                         <button
@@ -481,6 +489,7 @@ export default function DevolucionModal({ documentoId, sesiones, cajas, onClose,
             <label className={styles.formLabel}>
               Motivo *
               <textarea
+                className={styles.motivoInput}
                 value={motivo}
                 onChange={e => setMotivo(e.target.value)}
                 rows={3}

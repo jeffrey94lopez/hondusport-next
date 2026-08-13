@@ -56,10 +56,19 @@
 .lineaDevolvible { color: var(--text-muted); text-align: right; }
 .lineaImporte { color: var(--text); text-align: right; font-weight: 600; }
 
+/* R4 Task 7 (look Stitch): pill sin borde relleno con bg-hover — mismo
+   criterio que los inputs de ClienteNuevoModal/CobroModal, en vez del input
+   con borde de app/globals.css que usaba antes. */
 .cantidadInput {
   width: 100%;
   text-align: right;
+  font-weight: 700;
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  background: var(--bg-hover);
+  padding: 0.4rem 0.55rem;
 }
+.cantidadInput:focus { border-color: var(--accent); background: var(--bg-card); }
 .cantidadInput:disabled { opacity: 0.5; }
 
 .sinLineas {
@@ -86,16 +95,42 @@
   color: var(--text-muted);
 }
 
+/* R4 Task 7 (look Stitch): labels en negrita/color texto — mismo criterio
+   que `.clienteFormLabel` de ClienteNuevoModal. */
 .formLabel {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-weight: 700;
+  color: var(--text);
 }
 
 .formError { font-size: 0.8rem; color: var(--danger); }
+
+/* R4 Task 7 (look Stitch): "Caja" y "Motivo" — mismo pill sin borde/bg-hover
+   que el resto de inputs del modal (antes heredaban el input con borde de
+   app/globals.css). */
+.cajaSelect {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  background: var(--bg-hover);
+}
+.cajaSelect:focus { border-color: var(--accent); background: var(--bg-card); }
+
+.motivoInput {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  background: var(--bg-hover);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--text);
+  resize: vertical;
+}
+.motivoInput:focus { border-color: var(--accent); background: var(--bg-card); }
 
 .reembolsoSection {
   display: flex;
@@ -123,7 +158,31 @@
 
 .reembolsoNombre { font-size: 0.82rem; font-weight: 700; color: var(--text); }
 
-.montoInput { width: 100%; }
+/* R4 Task 7 (look Stitch): prefijo "L." + pill bg-hover, mismo patrón que
+   `.pagoMontoWrap`/`.pagoMontoPrefix`/`.pagoMontoInput` de CobroModal — no se
+   reutilizan esas clases directamente porque viven en pos.module.css (otro
+   módulo); este componente ya tiene su propio CSS module (ver comentario al
+   inicio del archivo). */
+.montoInputWrap { position: relative; display: flex; }
+.montoInputPrefix {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.montoInput {
+  width: 100%;
+  padding-left: 2.1rem;
+  text-align: right;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+  background: var(--bg-hover);
+}
 
 .reembolsoChipsRow { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 

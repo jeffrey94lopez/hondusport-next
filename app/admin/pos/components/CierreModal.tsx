@@ -151,18 +151,26 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
           </div>
         )}
 
-        <label className={styles.formLabel}>
-          Monto contado en efectivo (L.)
-          <input
-            type="text"
-            inputMode="decimal"
-            placeholder="0.00"
-            value={montoContado}
-            onChange={e => setMontoContado(e.target.value)}
-            autoFocus
-            disabled={isPending}
-          />
-        </label>
+        {/* R4 Task 7 (look Stitch): mismo tratamiento que los montos de pago de
+            CobroModal (.pagoCard/.pagoMontoWrap/.pagoMontoPrefix/.pagoMontoInput,
+            mismo módulo) — es el único monto que captura el cajero en este
+            modal, así que se destaca igual que "Monto recibido" en el cobro. */}
+        <div className={styles.pagoCard}>
+          <div className={styles.pagoCardNombre}>Monto contado en efectivo</div>
+          <div className={styles.pagoMontoWrap}>
+            <span className={styles.pagoMontoPrefix}>L.</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="0.00"
+              className={styles.pagoMontoInput}
+              value={montoContado}
+              onChange={e => setMontoContado(e.target.value)}
+              autoFocus
+              disabled={isPending}
+            />
+          </div>
+        </div>
 
         {diferencia !== null && (
           <div
