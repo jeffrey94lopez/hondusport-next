@@ -40,12 +40,19 @@ export default function HistorialModal({ sesiones, onClose }: HistorialModalProp
                   <span>Contado</span>
                   <span>{formatPrice(s.monto_contado ?? 0)}</span>
                 </div>
-                <div
-                  className={styles.historialCol}
-                  style={{ color: diferencia < 0 ? 'var(--danger)' : diferencia > 0 ? 'var(--success)' : undefined }}
-                >
+                <div className={styles.historialCol}>
                   <span>Diferencia</span>
-                  <span>{formatPrice(diferencia)}</span>
+                  <span
+                    className={`${styles.historialDiferencia} ${
+                      diferencia < 0
+                        ? styles.historialDiferenciaNegativa
+                        : diferencia > 0
+                          ? styles.historialDiferenciaPositiva
+                          : styles.historialDiferenciaNeutra
+                    }`}
+                  >
+                    {formatPrice(diferencia)}
+                  </span>
                 </div>
               </div>
             )

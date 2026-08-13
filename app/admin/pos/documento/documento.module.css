@@ -220,7 +220,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 1rem 1.25rem;
+  /* R4 Task 8 (look Stitch): mismo padding que .header de components/admin/
+     Modal.module.css (el modal genérico) — este modal no puede reusar ese
+     componente (ver comentario de .modalDocumentoOverlay sobre paginado en
+     impresión), pero su marco alinea con el mismo espaciado. */
+  padding: 1.1rem 1.4rem;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -235,7 +239,8 @@
 }
 .modalDocumentoToolbarTitulo {
   font-weight: 700;
-  font-size: 0.95rem;
+  /* R4 Task 8: 1rem, igual que .title del Modal genérico. */
+  font-size: 1rem;
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
