@@ -342,6 +342,7 @@ export default function CarritoPanel({
             type="text"
             inputMode="decimal"
             placeholder="0.00"
+            aria-label="Descuento global (L.)"
             value={descuentoMostrado}
             onFocus={handleDescuentoFocus}
             onChange={e => handleDescuentoChange(e.target.value)}
@@ -351,12 +352,6 @@ export default function CarritoPanel({
 
         <div className={styles.carritoTotales}>
           <div className={styles.carritoTotalRow}><span>Subtotal</span><span>{formatPrice(subtotalMostrado)}</span></div>
-          {totales.total_exento > 0 && (
-            <div className={styles.carritoTotalRow}><span>Exento</span><span>{formatPrice(totales.total_exento)}</span></div>
-          )}
-          {totales.total_exonerado > 0 && (
-            <div className={styles.carritoTotalRow}><span>Exonerado</span><span>{formatPrice(totales.total_exonerado)}</span></div>
-          )}
           {totales.isv15 > 0 && (
             <div className={styles.carritoTotalRow}><span>ISV (15%)</span><span>{formatPrice(totales.isv15)}</span></div>
           )}
