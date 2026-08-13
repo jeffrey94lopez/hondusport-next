@@ -12,9 +12,14 @@
   flex-wrap: wrap;
 }
 
+/* Sin `font: var(--text-title)`: --font-poppins solo está definido en <body>
+   (next/font), no en :root donde vive --text-title en merlin.css, así que el
+   shorthand queda guaranteed-invalid y se hereda "" a toda la app (mismo bug
+   documentado en dashboard.module.css). Valores explícitos, alineados al
+   tamaño de encabezado que ya usa el dashboard (R3). */
 .title {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--text);
 }
 
@@ -31,9 +36,37 @@
   flex-wrap: wrap;
 }
 
-.search {
-  width: 240px;
+/* Buscador redondeado (look Stitch): mismo patrón que .searchInputWrap de
+   pos.module.css (CatalogoPanel) — lupa absoluta + selector compuesto para
+   ganarle en especificidad (0,2,0) a la regla global `input[type="text"]`
+   (0,1,1) de app/globals.css, que si no pisa el padding-left del ícono. */
+.searchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 220px;
 }
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.85rem;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.searchWrap .searchInput {
+  width: 100%;
+  min-width: 220px;
+  padding: 0.55rem 0.9rem 0.55rem 2.35rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-btn);
+  background: var(--bg-hover);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.searchWrap .searchInput:focus { outline: none; border-color: var(--accent); background: var(--bg-card); }
 
 /* Colores/tipografía/radio del CTA los da la clase global .btnMerlinPrimary
    (compuesta en el JSX); aquí solo el layout propio del botón. */
@@ -64,6 +97,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
@@ -80,6 +114,7 @@
   font-weight: 700;
   color: var(--text-muted);
   letter-spacing: 0.5px;
+  text-transform: uppercase;
   border-bottom: 1px solid var(--border);
   background: var(--bg-card);
 }
@@ -94,6 +129,33 @@
 .table tr:last-child td { border-bottom: none; }
 .table tr:hover td { background: var(--bg-hover); }
 
+/* Fila con alerta de stock (stockBajo): tinte suave de fondo, incluso en
+   hover — selector compuesto (0,2,2 / 0,3,2) para ganarle a `.table td` y
+   `.table tr:hover td`. */
+.table tr.rowWarning td { background: var(--error-bg); }
+.table tr.rowWarning:hover td { background: var(--error-bg); }
+
+/* Columna de imagen: thumbnail cuadrado o placeholder cuando el producto no
+   tiene fotos cargadas. */
+.thumbCell { width: 56px; padding: 0.5rem 0.75rem; }
+.thumb {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-input);
+  object-fit: cover;
+  background: var(--bg-hover);
+}
+.thumbPlaceholder {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-input);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+}
+
+.skuCell { color: var(--text-muted); font-size: 0.8rem; white-space: nowrap; }
+
 .productName { font-weight: 600; }
 .productMeta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 
@@ -101,7 +163,7 @@
   display: inline-block;
   margin-left: 0.45rem;
   padding: 0.05rem 0.45rem;
-  border-radius: 999px;
+  border-radius: var(--radius-tag);
   font-size: 0.65rem;
   font-weight: 700;
   vertical-align: middle;
@@ -113,21 +175,27 @@
 .canalBadge[data-canal="mostrador"] { color: var(--warning); border-color: var(--warning); background: var(--warning-bg); }
 .canalBadge[data-canal="ambas"] { color: var(--success); border-color: var(--success); background: var(--success-bg); }
 
-/* Punto de alerta: stock efectivo <= stock_minimo configurado. */
-.stockDot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--danger);
-  margin-left: 0.4rem;
-  vertical-align: middle;
-}
-
-.precio { font-weight: 600; }
+.precio { font-weight: 700; color: var(--text); }
 .precioOriginal { font-size: 0.75rem; color: var(--text-muted); text-decoration: line-through; }
 
-.stockLow { color: var(--danger); font-weight: 600; }
+/* Badge de stock (look Stitch): pastilla neutra por defecto; se pone en
+   alerta (fondo+texto de peligro) cuando stockBajo (<= stock_minimo
+   configurado); .stockLow es el aviso más leve preexistente (< 5 unidades,
+   hardcoded, independiente de si hay stock_minimo configurado) y solo tiñe
+   el texto cuando no aplica ya el badge de alerta. */
+.stockBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-tag);
+  background: var(--bg-hover);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+.stockBadgeAlert { background: var(--error-bg); color: var(--danger); }
+.stockLow { color: var(--danger); }
 
 .rowActions {
   display: flex;
