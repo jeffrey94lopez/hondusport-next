@@ -249,7 +249,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
             ref={searchRef}
             type="text"
             className={styles.searchInput}
-            placeholder="Buscar por nombre, SKU o código de barras…"
+            placeholder="Buscar por nombre o SKU…"
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
             onKeyDown={handleSearchKeyDown}

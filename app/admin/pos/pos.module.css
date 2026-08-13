@@ -197,21 +197,38 @@
   gap: 0.6rem;
 }
 
+/* Look mostrador (R5a): card blanca (no gris) con sombra propia, igual que
+   `.prodCard`/`.historialRow` — el hover levanta la card (borde dorado +
+   sombra más marcada) en vez de solo teñir el fondo. El chevron (`::after`,
+   dos bordes rotados 45°) es la CTA "clara" que faltaba: sin él la card no
+   comunicaba que era clicable más allá del cursor. */
 .cajaCard {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  background: var(--bg-hover);
+  background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
-  padding: 0.85rem 1rem;
+  padding: 0.9rem 1.1rem;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
-  transition: border-color 0.12s, background 0.12s;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
-.cajaCard:hover { border-color: var(--accent); background: var(--accent-dim); }
+.cajaCard:hover { border-color: var(--accent); box-shadow: var(--shadow-pop); }
+.cajaCard::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-top: 2px solid var(--text-muted);
+  border-right: 2px solid var(--text-muted);
+  transform: rotate(45deg);
+  transition: border-color 0.12s;
+}
+.cajaCard:hover::after { border-color: var(--accent); }
 
 .cajaNombre { font-weight: 700; color: var(--text); font-size: 0.92rem; }
 .cajaMeta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
@@ -251,10 +268,27 @@
   color: var(--text-muted);
 }
 
-.formRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+/* Look mostrador (R5a): input pill sin borde, fondo `--bg-hover` — mismo
+   lenguaje que `.clienteFormLabel input`/`.itemLibreInput` en vez del input
+   con borde de `app/globals.css` que tenía este formulario. Selector
+   compuesto a propósito: la regla global `input[type="text"]` de
+   app/globals.css tiene especificidad (0,1,1) y pisaría una clase sola
+   (0,1,0) — `.form .formInput` (0,2,0) gana (misma lección que
+   `.searchInputWrap .searchInput`, más abajo). */
+.form .formInput {
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  background: var(--bg-hover);
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  width: 100%;
+}
+.form .formInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg-card);
 }
 
 /* R4 Task 6 (look Stitch): ClienteNuevoModal usa su PROPIO set de clases
@@ -526,7 +560,7 @@
 .catChipsRow :global(.btnMerlinChip)[aria-pressed="true"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--ink);
 }
 .catChipsRow :global(.btnMerlinChip)[aria-pressed="true"]:hover {
   background: var(--accent);
@@ -680,39 +714,12 @@
   gap: 0.5rem;
 }
 
-/* Task 7 (revisión POS defecto 1): la columna de la carta era 1fr auto auto
-   auto — con nombres largos, el 1fr se comprimía casi a 0 (los 3 `auto`
-   suman ~330px: botones de cantidad btnMerlinIcon de 40px + input 48px,
-   subtotal y 2 botones de acción) y `word-break: break-word` envolvía
-   letra por letra, disparando la altura de la fila. Se pasa a
-   `grid-template-areas` con la descripción en su PROPIA fila a ancho
-   completo — nunca compite por espacio con los controles numéricos — y
-   cantidad/subtotal/acciones bajan a una segunda fila. El nombre completo
-   se conserva legible con un clamp de 2 líneas + ellipsis.
-   NOTA: esta clase (`.lineaRow`/`.lineaDesc`) también la usa DevolucionModal
-   (fila "Producto/Devolvible/Cantidad/Acredita") — R4 Task 4 NO la toca para
-   no arrastrar cambios a esa pantalla (fuera de alcance); el carrito usa las
-   clases nuevas `.carritoLineaRow`/`.carritoLineaDesc` de más abajo. */
-.lineaRow {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas:
-    "desc desc desc"
-    "qty subtotal acciones";
-  align-items: center;
-  gap: 0.4rem 0.6rem;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--border-light);
-  font-size: 0.8rem;
-}
-
-.lineaDesc { grid-area: desc; display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
-
 /* R4 Task 4 (look Stitch): fila del carrito en una sola línea — thumbnail +
-   descripción + stepper + total + acciones — a diferencia de `.lineaRow`
-   (arriba, compartida con DevolucionModal), que sigue en dos filas. Columna
-   de imagen a ancho fijo para que la descripción nunca compita por espacio
-   con ella; el resto se reparte en columnas `auto` como antes. */
+   descripción + stepper + total + acciones. Columna de imagen a ancho fijo
+   para que la descripción nunca compita por espacio con ella; el resto se
+   reparte en columnas `auto`. (DevolucionModal tiene su fila de línea
+   propia, `.lineaRow`/`.lineaDesc` en su propio módulo CSS — sin relación
+   con esta clase.) */
 /* Pase visual R4: dos filas — nombre completo arriba, controles abajo. */
 .carritoLineaRow {
   display: flex;
@@ -857,12 +864,8 @@
 
 /* R2b Task 5: chips de descuento (look Stitch, pill dorada) — "Ninguno",
    un chip por preset activo y "Otro". Reusados por Task 6 para los chips del
-   descuento global en el pie del carrito. */
-.chipsRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
+   descuento global en el pie del carrito. Contenedor: `.chipsRow`, ya
+   definido arriba (junto a los chips de categoría del catálogo). */
 .chip {
   padding: 0.45rem 0.95rem;
   border-radius: var(--radius-tag);
@@ -1048,13 +1051,6 @@
   border-top: 1px solid var(--border-light);
 }
 
-.clienteBlock, .vendedorBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  position: relative;
-}
-
 /* Cliente en la fila superior del carrito (grid row "auto"): se separa de la
    lista de líneas con un espacio, la card de cliente (abajo) ya aporta su
    propio borde/contorno. */
@@ -1152,9 +1148,7 @@
 }
 
 /* Vendedor: select compacto en la fila superior del pie (mockup:
-   "Vendedor: [Caja 01]"), no la card ancha que tenía antes (`.vendedorBlock`,
-   arriba — ya sin uso en este panel, se conserva por si otra pantalla la
-   necesita). */
+   "Vendedor: [Caja 01]"), no la card ancha que tenía antes. */
 /* Mismo lenguaje que la card del cliente (.clienteCard): borde suave, fondo
    blanco y esquinas redondeadas con --radius-card, pedido del usuario en el
    pase visual de R4. */

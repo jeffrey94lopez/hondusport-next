@@ -1004,6 +1004,7 @@ export default function PosClient({
               Monto inicial (L.)
               <input
                 type="text"
+                className={styles.formInput}
                 inputMode="decimal"
                 placeholder="0.00"
                 value={montoInicial}
