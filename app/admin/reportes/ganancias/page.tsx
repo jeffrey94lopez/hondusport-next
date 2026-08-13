@@ -66,7 +66,11 @@ export default async function GananciasPage({ searchParams }: { searchParams: Pr
               <span className={styles.totLabel}>Total ganancias</span>
               <span className={styles.totIcono}><IconoGanancia /></span>
             </div>
-            <span className={`${styles.totVal} ${styles.totGanancia}`}>{formatPrice(t.ganancia)}</span>
+            <span
+              className={`${styles.totVal} ${styles.totGanancia} ${t.ganancia > 0 ? styles.positivo : t.ganancia < 0 ? styles.negativo : ''}`}
+            >
+              {formatPrice(t.ganancia)}
+            </span>
             <span className={styles.totMargen}>Margen {t.margen}%</span>
           </div>
         </div>
@@ -79,8 +83,12 @@ export default async function GananciasPage({ searchParams }: { searchParams: Pr
                 <td className={styles.num}>{f.cantidad}</td>
                 <td className={styles.num}>{formatPrice(f.ventas)}</td>
                 <td className={styles.num}>{formatPrice(f.costo)}</td>
-                <td className={styles.num}>{formatPrice(f.ganancia)}</td>
-                <td className={styles.num}>{f.margen}%</td>
+                <td className={`${styles.num} ${f.ganancia > 0 ? styles.positivo : f.ganancia < 0 ? styles.negativo : ''}`}>
+                  {formatPrice(f.ganancia)}
+                </td>
+                <td className={`${styles.num} ${f.margen > 0 ? styles.positivo : f.margen < 0 ? styles.negativo : ''}`}>
+                  {f.margen}%
+                </td>
               </tr>
             ))}
             {filas.length === 0 && <tr><td colSpan={9} className={styles.vacio}>Sin ventas en el período.</td></tr>}

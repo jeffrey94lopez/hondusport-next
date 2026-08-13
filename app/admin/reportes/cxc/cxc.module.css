@@ -72,6 +72,11 @@
 .vencido { color: var(--error-strong); font-weight: 700; }
 .oculto { display: none; }
 
+/* Feedback pase visual (R5a fixA): link discreto al documento — mismo
+   patrón que .referenciaLink de movimientos.module.css. */
+.verDoc { color: var(--accent); text-decoration: none; font-weight: 600; }
+.verDoc:hover { text-decoration: underline; }
+
 .vacio {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card);
   padding: 2.5rem; text-align: center; color: var(--text-muted); font-size: 0.88rem;

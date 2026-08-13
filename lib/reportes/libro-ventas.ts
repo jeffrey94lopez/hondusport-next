@@ -36,12 +36,19 @@ export function totalesLibro(filas: FilaLibroVentas[]): TotalesLibroVentas {
   }), { exento: 0, exonerado: 0, gravado15: 0, isv15: 0, gravado18: 0, isv18: 0, total: 0 })
 }
 
+// Etiqueta de tipo de documento para la columna "Tipo" (feedback pase visual
+// R5a fixA) — misma distinción que ya usa `esNota` para el color de fila,
+// solo en texto plano (presentación, no toca los signos/sumas).
+export function tipoLibroLabel(esNota: boolean): string {
+  return esNota ? 'Nota de crédito' : 'Factura'
+}
+
 export function libroAoA(filas: FilaLibroVentas[], totales: TotalesLibroVentas): (string | number)[][] {
-  const head = ['Fecha', 'Correlativo', 'CAI', 'Cliente', 'RTN', 'Exento', 'Exonerado', 'Gravado 15%', 'ISV 15%', 'Gravado 18%', 'ISV 18%', 'Total']
+  const head = ['Fecha', 'Correlativo', 'Tipo', 'CAI', 'Cliente', 'RTN', 'Exento', 'Exonerado', 'Gravado 15%', 'ISV 15%', 'Gravado 18%', 'ISV 18%', 'Total']
   const body = filas.map(f => [
-    fechaHN(f.fecha), f.correlativo, f.cai, f.cliente, f.rtn,
+    fechaHN(f.fecha), f.correlativo, tipoLibroLabel(f.esNota), f.cai, f.cliente, f.rtn,
     f.exento, f.exonerado, f.gravado15, f.isv15, f.gravado18, f.isv18, f.total,
   ])
-  const foot = ['TOTALES', '', '', '', '', totales.exento, totales.exonerado, totales.gravado15, totales.isv15, totales.gravado18, totales.isv18, totales.total]
+  const foot = ['TOTALES', '', '', '', '', '', totales.exento, totales.exonerado, totales.gravado15, totales.isv15, totales.gravado18, totales.isv18, totales.total]
   return [head, ...body, foot]
 }

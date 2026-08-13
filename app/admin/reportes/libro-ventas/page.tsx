@@ -2,7 +2,7 @@ import { rangoDesdePreset, etiquetaRango } from '@/lib/dashboard/rango'
 import { formatPrice } from '@/lib/store/format'
 import type { PresetRango } from '@/types'
 import { obtenerLibroVentas } from './data'
-import { filaLibro, totalesLibro } from '@/lib/reportes/libro-ventas'
+import { filaLibro, totalesLibro, tipoLibroLabel } from '@/lib/reportes/libro-ventas'
 import { fechaHN } from '@/lib/reportes/fecha'
 import LibroVentasControls from './LibroVentasControls'
 import styles from './libro.module.css'
@@ -30,7 +30,7 @@ export default async function LibroVentasPage({
         <table className={styles.tabla}>
           <thead>
             <tr>
-              <th>Fecha</th><th>Correlativo</th><th>CAI</th><th>Cliente</th><th>RTN</th>
+              <th>Fecha</th><th>Correlativo</th><th>Tipo</th><th>CAI</th><th>Cliente</th><th>RTN</th>
               <th>Exento</th><th>Exonerado</th><th>Gravado 15%</th><th>ISV 15%</th>
               <th>Gravado 18%</th><th>ISV 18%</th><th>Total</th>
             </tr>
@@ -38,7 +38,13 @@ export default async function LibroVentasPage({
           <tbody>
             {filas.map((f, i) => (
               <tr key={i} className={f.esNota ? styles.filaNota : ''}>
-                <td>{fechaHN(f.fecha)}</td><td>{f.correlativo}</td><td>{f.cai}</td>
+                <td>{fechaHN(f.fecha)}</td><td>{f.correlativo}</td>
+                <td>
+                  <span className={`${styles.badge} ${f.esNota ? styles.badgeNota : styles.badgeFactura}`}>
+                    {tipoLibroLabel(f.esNota)}
+                  </span>
+                </td>
+                <td>{f.cai}</td>
                 <td>{f.cliente}</td><td>{f.rtn}</td>
                 <td className={styles.num}>{formatPrice(f.exento)}</td>
                 <td className={styles.num}>{formatPrice(f.exonerado)}</td>
@@ -49,11 +55,11 @@ export default async function LibroVentasPage({
                 <td className={styles.num}>{formatPrice(f.total)}</td>
               </tr>
             ))}
-            {filas.length === 0 && <tr><td colSpan={12} className={styles.vacio}>Sin documentos fiscales en el período.</td></tr>}
+            {filas.length === 0 && <tr><td colSpan={13} className={styles.vacio}>Sin documentos fiscales en el período.</td></tr>}
           </tbody>
           <tfoot>
             <tr className={styles.totales}>
-              <td colSpan={5}>TOTALES</td>
+              <td colSpan={6}>TOTALES</td>
               <td className={styles.num}>{formatPrice(totales.exento)}</td>
               <td className={styles.num}>{formatPrice(totales.exonerado)}</td>
               <td className={styles.num}>{formatPrice(totales.gravado15)}</td>

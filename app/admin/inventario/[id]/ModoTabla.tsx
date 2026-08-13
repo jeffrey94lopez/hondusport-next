@@ -138,6 +138,7 @@ function FilaConteo({ linea, ciego, editable, registrarRef, onGuardar, onQuitar 
           type="text"
           inputMode="decimal"
           className={styles.inputContado}
+          placeholder="0"
           value={valor}
           onChange={e => setValor(e.target.value)}
           onBlur={handleBlur}

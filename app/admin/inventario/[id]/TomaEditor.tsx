@@ -184,6 +184,14 @@ export default function TomaEditor({ toma, lineasIniciales, ciego }: Props) {
         </div>
       </div>
 
+      {/* Descripción del flujo (feedback R5a): una sola vez acá porque queda
+          visible en ambos modos (Tabla/Carrusel comparten este layout). */}
+      <p className={styles.helpText}>
+        Contá físicamente cada producto y anotá la cantidad encontrada en el campo Contado
+        {ciego ? ' (a ciegas: no se muestra el stock del sistema hasta revisar)' : ''}. Al aplicar la toma, el
+        sistema ajustará el stock según la diferencia y la registrará en el kardex — la acción es irreversible.
+      </p>
+
       {/* Progreso visible del conteo completo (Task 4, look Stitch): mismo
           resumen que .avance de arriba, pero como barra — útil en modo
           Tabla, que no tiene la barra propia del carrusel. */}

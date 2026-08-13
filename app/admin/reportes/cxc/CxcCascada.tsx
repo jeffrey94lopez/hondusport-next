@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { formatPrice } from '@/lib/store/format'
 import type { GrupoCxc } from '@/types'
 import styles from './cxc.module.css'
@@ -36,6 +37,9 @@ export default function CxcCascada({ grupos, total, exportHref }: { grupos: Grup
         </div>
         <span className={styles.etiqueta}>Total por cobrar: {formatPrice(total)}</span>
         <div className={styles.acciones}>
+          <Link href="/admin/cuentas-por-cobrar" className={`btnMerlinSecondary ${styles.btnAccion}`}>
+            Aplicar pagos
+          </Link>
           <a href={exportHref} className={`btnMerlinSecondary ${styles.btnAccion}`}>Exportar Excel</a>
           <button type="button" className={`btnMerlinPrimary ${styles.btnAccion}`} onClick={() => window.print()}>Imprimir</button>
         </div>
@@ -57,7 +61,16 @@ export default function CxcCascada({ grupos, total, exportHref }: { grupos: Grup
                 <tbody>
                   {g.docs.map(d => (
                     <tr key={d.documento_id} className={d.diasVencido > 0 ? styles.vencido : ''}>
-                      <td>{d.numero}</td><td>{fmt(d.fecha)}</td><td>{fmt(d.vencimiento)}</td>
+                      <td>
+                        <Link
+                          href={`/admin/pos/documento/${d.documento_id}`}
+                          className={styles.verDoc}
+                          title="Ver documento"
+                        >
+                          {d.numero}
+                        </Link>
+                      </td>
+                      <td>{fmt(d.fecha)}</td><td>{fmt(d.vencimiento)}</td>
                       <td className={styles.num}>{d.diasVencido > 0 ? d.diasVencido : 0}</td>
                       <td className={styles.num}>{formatPrice(d.saldo)}</td>
                     </tr>

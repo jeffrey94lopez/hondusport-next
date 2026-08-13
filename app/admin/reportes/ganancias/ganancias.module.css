@@ -50,6 +50,10 @@
 .totIcono svg { width: 1rem; height: 1rem; }
 .totVal { font-size: 1.5rem; font-weight: 800; color: var(--text); }
 .totGanancia { color: var(--accent); }
+/* Feedback pase visual (R5a fixA): positivo/negativo en indicadores de
+   dinero — mismo criterio en toda la tabla y en la card de totales. */
+.positivo { color: var(--success); }
+.negativo { color: var(--danger); }
 .totMargen {
   align-self: flex-start; font-size: 0.78rem; font-weight: 700; color: var(--accent);
   background: var(--accent-dim); border-radius: var(--radius-tag); padding: 0.2rem 0.65rem;

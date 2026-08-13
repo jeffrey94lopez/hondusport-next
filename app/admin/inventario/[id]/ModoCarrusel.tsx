@@ -141,6 +141,7 @@ const ModoCarrusel = forwardRef<ModoCarruselHandle, Props>(function ModoCarrusel
             type="text"
             inputMode="decimal"
             className={styles.carruselInput}
+            placeholder="0"
             value={valor}
             onChange={e => {
               setValor(e.target.value)

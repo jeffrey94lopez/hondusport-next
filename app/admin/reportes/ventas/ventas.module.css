@@ -36,6 +36,9 @@
 .num { text-align: right; }
 .filaItem { color: var(--text-muted); font-size: 0.76rem; }
 .filaItem td { background: var(--bg-hover); }
+/* Feedback pase visual (R5a fixA): nota de crédito/devolución restan a las
+   ventas — el total de esas filas se pinta en rojo (sin tocar el cálculo). */
+.negativo { color: var(--danger); font-weight: 700; }
 .vacio { text-align: center; color: var(--text-muted); padding: 1.5rem; }
 @media print {
   .noPrint { display: none; }

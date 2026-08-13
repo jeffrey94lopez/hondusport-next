@@ -35,12 +35,14 @@ export default async function VentasReportePage({
             <tr><th>Número</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th><th>Caja</th><th>Tipo</th><th className={styles.num}>Total</th></tr>
           </thead>
           <tbody>
-            {filas.map(f => (
+            {filas.map(f => {
+              const esNota = f.tipo === 'nota_credito' || f.tipo === 'devolucion'
+              return (
               <Fragment key={f.id}>
                 <tr>
                   <td>{f.numero}</td><td>{fechaHN(f.fecha)}</td><td>{f.cliente}</td>
                   <td>{f.vendedor}</td><td>{f.caja}</td><td>{tipoDocLabel(f.tipo)}</td>
-                  <td className={styles.num}>{formatPrice(f.total)}</td>
+                  <td className={`${styles.num} ${esNota ? styles.negativo : ''}`}>{formatPrice(f.total)}</td>
                 </tr>
                 {detallado && f.items.map((it, j) => (
                   <tr key={`${f.id}-${j}`} className={styles.filaItem}>
@@ -50,7 +52,8 @@ export default async function VentasReportePage({
                   </tr>
                 ))}
               </Fragment>
-            ))}
+              )
+            })}
             {filas.length === 0 && <tr><td colSpan={7} className={styles.vacio}>Sin documentos para los filtros.</td></tr>}
           </tbody>
         </table>

@@ -39,13 +39,21 @@ describe('totalesLibro', () => {
 })
 
 describe('libroAoA', () => {
-  it('encabezado + filas + fila de totales', () => {
+  it('encabezado + filas + fila de totales (con columna Tipo)', () => {
     const filas = [filaLibro(doc({}))]
     const aoa = libroAoA(filas, totalesLibro(filas))
     expect(aoa[0][0]).toBe('Fecha')
+    expect(aoa[0][2]).toBe('Tipo')
     expect(aoa[1][1]).toBe('000-001-01-00000001')
+    expect(aoa[1][2]).toBe('Factura')
     expect(aoa[aoa.length - 1][0]).toBe('TOTALES')
-    expect(aoa[aoa.length - 1][11]).toBe(230)
+    expect(aoa[aoa.length - 1][12]).toBe(230)
+  })
+
+  it('tipoLibroLabel: nota de crédito', () => {
+    const filas = [filaLibro(doc({ tipo: 'nota_credito' }))]
+    const aoa = libroAoA(filas, totalesLibro(filas))
+    expect(aoa[1][2]).toBe('Nota de crédito')
   })
 })
 

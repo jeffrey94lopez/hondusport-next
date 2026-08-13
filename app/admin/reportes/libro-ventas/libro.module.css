@@ -40,6 +40,14 @@
 .tabla tbody tr:hover td { background: var(--bg-hover); }
 .num { text-align: right; }
 .filaNota { color: var(--error-strong); }
+/* Columna Tipo (feedback pase visual R5a fixA): badge neutro para factura,
+   rojo suave para nota de crédito — mismo patrón .badge de otros módulos. */
+.badge {
+  display: inline-block; font-size: 0.72rem; font-weight: 700;
+  border-radius: var(--radius-tag); padding: 0.2rem 0.6rem; white-space: nowrap;
+}
+.badgeFactura { background: var(--bg-hover); color: var(--text-muted); }
+.badgeNota { background: var(--error-bg); color: var(--danger); }
 .totales td { font-weight: 800; background: var(--bg-hover); border-top: 2px solid var(--border); }
 .vacio { text-align: center; color: var(--text-muted); padding: 1.5rem; }
 @media print {
