@@ -495,9 +495,13 @@
   pointer-events: none;
 }
 
-.searchInput {
+/* Selector compuesto a propósito: la regla global `input[type="text"]` de
+   app/globals.css tiene especificidad (0,1,1) y pisaba el padding-left de la
+   clase sola (la lupa quedaba encima del placeholder). (0,2,0) gana. */
+.searchInputWrap .searchInput {
   flex: 1;
   min-width: 0;
+  width: 100%;
   padding: 0.65rem 0.9rem 0.65rem 2.5rem;
   border: 1px solid var(--border-input);
   border-radius: var(--radius-btn);
@@ -505,7 +509,7 @@
   color: var(--text);
   font-size: 0.9rem;
 }
-.searchInput:focus { outline: none; border-color: var(--accent); }
+.searchInputWrap .searchInput:focus { outline: none; border-color: var(--accent); }
 
 .chipsRow {
   display: flex;
@@ -774,10 +778,16 @@
 }
 .qtyStepper :global(.btnMerlinIcon):hover:not(:disabled) { background: var(--bg-hover); }
 
-.qtyInput {
+/* Selector compuesto a propósito: la regla global `input[type="number"]` de
+   app/globals.css (0,1,1) pisaba width/padding/border de la clase sola — el
+   campo se inflaba a 100% con padding grueso y, dentro del grid de la línea,
+   su columna `auto` aplastaba la del nombre del producto a 0. (0,2,0) gana. */
+.qtyStepper .qtyInput {
   width: 34px;
+  padding: 0.15rem 0;
   text-align: center;
   border: none;
+  border-radius: 0;
   background: transparent;
   color: var(--text);
   font-size: 0.9rem;
@@ -1093,11 +1103,14 @@
    "Vendedor: [Caja 01]"), no la card ancha que tenía antes (`.vendedorBlock`,
    arriba — ya sin uso en este panel, se conserva por si otra pantalla la
    necesita). */
+/* Mismo lenguaje que la card del cliente (.clienteCard): borde suave, fondo
+   blanco y esquinas redondeadas con --radius-card, pedido del usuario en el
+   pase visual de R4. */
 .vendedorSelect {
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-tag);
-  background: var(--bg-hover);
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--bg-card);
   color: var(--text);
   font-size: 0.8rem;
   font-weight: 600;
