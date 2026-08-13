@@ -891,6 +891,27 @@ export interface FiltrosReporteVentas {
   clienteId?: string; vendedorId?: string; cajaId?: string; metodoId?: string
 }
 
+// ── R5a fixB: cards de resumen del reporte de ventas ───────────────
+export interface PagoDocumentoVenta {
+  documentoId: string
+  metodo: string
+  monto: number
+  tipoDocumento: FilaReporteVenta['tipo']
+}
+export interface ResumenMetodoPago {
+  metodo: string
+  monto: number
+  documentos: number
+}
+export interface ConteoTipoDoc {
+  tipo: FilaReporteVenta['tipo']
+  cantidad: number
+}
+export interface ResumenNotasCredito {
+  cantidad: number
+  monto: number
+}
+
 // ── POS P7b: Reportes Ola 2 ─────────────────────────────────────────
 export interface FilaGananciaItem {
   codigo: string
@@ -907,17 +928,23 @@ export interface TotalesGanancias {
   ventas: number; costo: number; ganancia: number; margen: number
 }
 export type RolContacto = 'cliente' | 'proveedor' | 'ambos'
+// R5a fixB: reenfocado a directorio (datos de contacto del formulario de
+// clientes/proveedores) — ya NO trae montos de ventas/compras/saldos, ver
+// app/admin/clientes/ClientesClient.tsx para el formulario real.
 export interface FilaContacto {
   id: string
   nombre: string
   rtn: string
   identidad: string
+  tipoCliente: 'final' | 'revendedor'
+  exonerado: boolean
+  telefono: string
+  correo: string
+  direccion: string
+  contacto: string
   es_cliente: boolean
   es_proveedor: boolean
-  total_ventas: number
-  total_compras: number
-  saldo_cxc: number
-  saldo_cxp: number
+  activo: boolean
 }
 export interface DocCxc {
   documento_id: string

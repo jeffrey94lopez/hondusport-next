@@ -1,50 +1,54 @@
-import { rangoDesdePreset, etiquetaRango } from '@/lib/dashboard/rango'
-import { formatPrice } from '@/lib/store/format'
-import type { PresetRango, RolContacto } from '@/types'
+import type { RolContacto } from '@/types'
 import { obtenerContactos } from './data'
+import { rolLabel, tipoClienteLabel } from '@/lib/reportes/contactos'
 import ContactosControls from './ContactosControls'
 import styles from './contactos.module.css'
 
-const PRESETS: PresetRango[] = ['hoy', 'semana', 'mes', 'anio', 'personalizado']
 const ROLES: RolContacto[] = ['cliente', 'proveedor', 'ambos']
 
-export default async function ContactosPage({ searchParams }: { searchParams: Promise<{ preset?: string; desde?: string; hasta?: string; rol?: string }> }) {
+// R5a fixB: reenfocado como directorio de clientes/proveedores — datos de
+// contacto del formulario real (nombre, RTN/identidad, teléfono, correo,
+// dirección, rol, exonerado…), no montos de ventas/compras/saldos (esos ya
+// están en los reportes de ventas/cxc/cxp). Por eso ya no filtra por fecha:
+// es la lista vigente en `clientes`, "a la fecha" — no por período.
+export default async function ContactosPage({ searchParams }: { searchParams: Promise<{ rol?: string }> }) {
   const sp = await searchParams
-  const preset: PresetRango = PRESETS.includes(sp.preset as PresetRango) ? (sp.preset as PresetRango) : 'mes'
   const rol: RolContacto = ROLES.includes(sp.rol as RolContacto) ? (sp.rol as RolContacto) : 'cliente'
-  const rango = rangoDesdePreset(preset, new Date(), sp.desde, sp.hasta)
-  const filas = await obtenerContactos(rango.desde, rango.hasta, rol)
-  const qs = new URLSearchParams({ preset, rol, ...(sp.desde ? { desde: sp.desde } : {}), ...(sp.hasta ? { hasta: sp.hasta } : {}) }).toString()
-  const esAmbos = rol === 'ambos', esProv = rol === 'proveedor'
+  const filas = await obtenerContactos(rol)
+  const qs = new URLSearchParams({ rol }).toString()
 
   return (
     <div className={styles.page}>
-      <ContactosControls preset={preset} desde={sp.desde} hasta={sp.hasta} rol={rol} etiqueta={etiquetaRango(preset, rango)} exportHref={`/api/reportes/contactos/export?${qs}`} />
+      <ContactosControls rol={rol} exportHref={`/api/reportes/contactos/export?${qs}`} />
       <div className={styles.hoja}>
         <h1 className={styles.titulo}>Clientes y proveedores</h1>
+        <p className={styles.periodo}>{filas.length} contacto(s)</p>
         <table className={styles.tabla}>
           <thead>
             <tr>
-              <th>Nombre</th><th>RTN/Identidad</th>
-              {esAmbos && <th>Rol</th>}
-              {!esProv && <th className={styles.num}>Total ventas</th>}
-              {(esProv || esAmbos) && <th className={styles.num}>Total compras</th>}
-              {!esProv && <th className={styles.num}>Saldo CxC</th>}
-              {(esProv || esAmbos) && <th className={styles.num}>Saldo CxP</th>}
+              <th>Nombre</th><th>Rol</th><th>RTN/Identidad</th><th>Tipo</th>
+              <th>Teléfono</th><th>Correo</th><th>Dirección</th>
+              <th>Persona de contacto</th><th>Exonerado</th><th>Activo</th>
             </tr>
           </thead>
           <tbody>
             {filas.map(f => (
               <tr key={f.id}>
-                <td>{f.nombre}</td><td>{f.rtn || f.identidad}</td>
-                {esAmbos && <td>{f.es_cliente && f.es_proveedor ? 'Cliente y proveedor' : f.es_proveedor ? 'Proveedor' : 'Cliente'}</td>}
-                {!esProv && <td className={styles.num}>{formatPrice(f.total_ventas)}</td>}
-                {(esProv || esAmbos) && <td className={styles.num}>{formatPrice(f.total_compras)}</td>}
-                {!esProv && <td className={styles.num}>{formatPrice(f.saldo_cxc)}</td>}
-                {(esProv || esAmbos) && <td className={styles.num}>{formatPrice(f.saldo_cxp)}</td>}
+                <td>{f.nombre}</td>
+                <td>{rolLabel(f)}</td>
+                <td>{f.rtn || f.identidad || '—'}</td>
+                <td>{f.es_cliente ? tipoClienteLabel(f.tipoCliente) : '—'}</td>
+                <td>{f.telefono || '—'}</td>
+                <td>{f.correo || '—'}</td>
+                <td>{f.direccion || '—'}</td>
+                <td>{f.es_proveedor ? (f.contacto || '—') : '—'}</td>
+                <td>{f.es_cliente ? (f.exonerado ? 'Sí' : 'No') : '—'}</td>
+                <td>
+                  <span className={f.activo ? styles.badgeActivo : styles.badgeInactivo}>{f.activo ? 'Sí' : 'No'}</span>
+                </td>
               </tr>
             ))}
-            {filas.length === 0 && <tr><td colSpan={7} className={styles.vacio}>Sin contactos para el filtro.</td></tr>}
+            {filas.length === 0 && <tr><td colSpan={10} className={styles.vacio}>Sin contactos para el filtro.</td></tr>}
           </tbody>
         </table>
       </div>

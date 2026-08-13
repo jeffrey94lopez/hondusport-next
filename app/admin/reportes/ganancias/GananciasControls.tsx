@@ -3,6 +3,12 @@ import { useRouter } from 'next/navigation'
 import type { PresetRango } from '@/types'
 import styles from './ganancias.module.css'
 
+// R5a fixB (homogeneización de filtros, punto 2): presets de fecha ya
+// iguales a ventas (hoy/semana/mes/año/personalizado) — nada que ajustar
+// acá. NO se agregó filtro de cliente/vendedor/caja/método (como en ventas):
+// `reporte_ganancias_items` agrega por producto/variante en todo el rango,
+// no por documento, así que esos filtros no existen en los datos que ya
+// trae sin agregar una RPC/query nueva (fuera de alcance de este fix).
 const PRESETS: { v: PresetRango; l: string }[] = [
   { v: 'hoy', l: 'Hoy' }, { v: 'semana', l: 'Semana' }, { v: 'mes', l: 'Mes' }, { v: 'anio', l: 'Año' }, { v: 'personalizado', l: 'Personalizado' },
 ]

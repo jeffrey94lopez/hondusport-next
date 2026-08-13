@@ -40,8 +40,30 @@
    ventas — el total de esas filas se pinta en rojo (sin tocar el cálculo). */
 .negativo { color: var(--danger); font-weight: 700; }
 .vacio { text-align: center; color: var(--text-muted); padding: 1.5rem; }
+
+/* Cards de resumen al pie (R5a fixB): método de pago / tipo de documento /
+   devoluciones-NC, mismo lenguaje visual que las cards de ganancias. */
+.resumen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1.25rem; }
+@media (max-width: 900px) { .resumen { grid-template-columns: 1fr; } }
+.resumenCard {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+  padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: 0.65rem;
+}
+.resumenCardAlerta { border-color: var(--danger); }
+.resumenTitulo { font-size: 0.85rem; font-weight: 800; color: var(--text); }
+.resumenVacio { font-size: 0.8rem; color: var(--text-muted); }
+.resumenTabla { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.resumenTabla th {
+  text-align: left; padding: 0.4rem 0.5rem; font-size: 0.68rem; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 0.3px; border-bottom: 1px solid var(--border);
+}
+.resumenTabla td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); }
+.resumenTabla tbody tr:last-child td { border-bottom: none; }
+.resumenDestacado { font-size: 0.95rem; font-weight: 700; color: var(--text); }
 @media print {
   .noPrint { display: none; }
   .page { padding: 0; }
   .hoja { border: none; box-shadow: none; padding: 0; }
+  .resumen { break-inside: avoid; }
 }

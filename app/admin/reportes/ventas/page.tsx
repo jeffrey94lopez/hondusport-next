@@ -1,9 +1,9 @@
 import { rangoDesdePreset, etiquetaRango } from '@/lib/dashboard/rango'
 import { formatPrice } from '@/lib/store/format'
-import type { PresetRango } from '@/types'
+import type { PresetRango, PagoDocumentoVenta } from '@/types'
 import { Fragment } from 'react'
-import { obtenerReporteVentas, obtenerOpcionesFiltro, parseFiltros } from './data'
-import { tipoDocLabel } from '@/lib/reportes/ventas'
+import { obtenerReporteVentas, obtenerOpcionesFiltro, obtenerPagosDocumentos, parseFiltros } from './data'
+import { tipoDocLabel, resumenPorMetodo, conteoPorTipo, resumenNotasCredito } from '@/lib/reportes/ventas'
 import { fechaHN } from '@/lib/reportes/fecha'
 import VentasControls from './VentasControls'
 import styles from './ventas.module.css'
@@ -22,6 +22,18 @@ export default async function VentasReportePage({
 
   const [filas, opciones] = await Promise.all([obtenerReporteVentas(filtros), obtenerOpcionesFiltro()])
   const qs = usp.toString()
+
+  // Cards de resumen al pie (R5a fixB): mismo conjunto de documentos ya
+  // filtrado por la tabla — se traen los pagos de esos documentos y se
+  // agrega con las funciones puras de lib/reportes/ventas.ts.
+  const tipoPorId = new Map(filas.map(f => [f.id, f.tipo]))
+  const pagosRaw = await obtenerPagosDocumentos(filas.map(f => f.id))
+  const pagos: PagoDocumentoVenta[] = pagosRaw.map(p => ({
+    ...p, tipoDocumento: tipoPorId.get(p.documentoId) ?? 'comprobante',
+  }))
+  const porMetodo = resumenPorMetodo(pagos)
+  const porTipo = conteoPorTipo(filas)
+  const notas = resumenNotasCredito(filas)
 
   return (
     <div className={styles.page}>
@@ -57,6 +69,57 @@ export default async function VentasReportePage({
             {filas.length === 0 && <tr><td colSpan={7} className={styles.vacio}>Sin documentos para los filtros.</td></tr>}
           </tbody>
         </table>
+      </div>
+
+      <div className={styles.resumen}>
+        <div className={styles.resumenCard}>
+          <h2 className={styles.resumenTitulo}>Resumen por método de pago</h2>
+          {porMetodo.length === 0 ? (
+            <p className={styles.resumenVacio}>Sin pagos registrados en el período.</p>
+          ) : (
+            <table className={styles.resumenTabla}>
+              <thead><tr><th>Método</th><th className={styles.num}>Documentos</th><th className={styles.num}>Monto</th></tr></thead>
+              <tbody>
+                {porMetodo.map(m => (
+                  <tr key={m.metodo}>
+                    <td>{m.metodo}</td>
+                    <td className={styles.num}>{m.documentos}</td>
+                    <td className={styles.num}>{formatPrice(m.monto)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className={styles.resumenCard}>
+          <h2 className={styles.resumenTitulo}>Documentos por tipo</h2>
+          {porTipo.length === 0 ? (
+            <p className={styles.resumenVacio}>Sin documentos en el período.</p>
+          ) : (
+            <table className={styles.resumenTabla}>
+              <thead><tr><th>Tipo</th><th className={styles.num}>Cantidad</th></tr></thead>
+              <tbody>
+                {porTipo.map(t => (
+                  <tr key={t.tipo}>
+                    <td>{tipoDocLabel(t.tipo)}</td>
+                    <td className={styles.num}>{t.cantidad}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {notas.cantidad > 0 && (
+          <div className={`${styles.resumenCard} ${styles.resumenCardAlerta}`}>
+            <h2 className={styles.resumenTitulo}>Devoluciones y notas de crédito</h2>
+            <p className={styles.resumenDestacado}>
+              <span className={styles.negativo}>{notas.cantidad}</span> documento(s) ·{' '}
+              <span className={styles.negativo}>{formatPrice(notas.monto)}</span>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

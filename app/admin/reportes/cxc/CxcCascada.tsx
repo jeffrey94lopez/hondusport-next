@@ -21,6 +21,11 @@ function IconoChevron() {
   )
 }
 
+// R5a fixB (homogeneización de filtros, punto 2): CxC es "a la fecha"
+// (saldo pendiente ahora, no por período) — correcto no forzar filtro de
+// fechas aquí. Ya tiene filtro de cliente (búsqueda `filtro` abajo, sobre
+// los grupos ya traídos); no se agregó vendedor/caja/método porque
+// `documento_saldos` no trae esas columnas sin una query nueva.
 export default function CxcCascada({ grupos, total, exportHref }: { grupos: GrupoCxc[]; total: number; exportHref: string }) {
   const [abiertos, setAbiertos] = useState<Set<string>>(new Set())
   const [filtro, setFiltro] = useState('')

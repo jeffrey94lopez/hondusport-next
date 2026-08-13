@@ -1,16 +1,19 @@
 import { createClient } from '@/lib/supabase-server'
-import { filaContacto } from '@/lib/reportes/contactos'
+import { filaContacto, filtrarPorRol } from '@/lib/reportes/contactos'
 import type { FilaContacto, RolContacto } from '@/types'
 
-export async function obtenerContactos(desde: string, hasta: string, rol: RolContacto): Promise<FilaContacto[]> {
+// R5a fixB: directorio de clientes/proveedores — datos de contacto del
+// formulario real (app/admin/clientes/ClientesClient.tsx), sin montos de
+// ventas/compras/saldos (eso vive en los reportes de ventas/cxc/cxp). Ya no
+// es "a un rango de fechas": es la lista vigente en `clientes`.
+export async function obtenerContactos(rol: RolContacto): Promise<FilaContacto[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('reporte_contactos', { p_desde: desde, p_hasta: hasta }).limit(5000)
+  const { data, error } = await supabase
+    .from('clientes')
+    .select('id, nombre, rtn, identidad, tipo_cliente, exonerado, telefono, correo, direccion, contacto, es_cliente, es_proveedor, activo')
+    .order('nombre')
+    .limit(5000)
   if (error) console.error('[contactos] error:', error.message)
-  let filas: FilaContacto[] = (data ?? []).map(filaContacto)
-  // Solo contactos con actividad o saldo (no listar inertes).
-  filas = filas.filter(f => f.total_ventas !== 0 || f.total_compras !== 0 || f.saldo_cxc !== 0 || f.saldo_cxp !== 0)
-  if (rol === 'cliente') filas = filas.filter(f => f.es_cliente)
-  else if (rol === 'proveedor') filas = filas.filter(f => f.es_proveedor)
-  filas.sort((a, b) => (rol === 'proveedor' ? b.total_compras - a.total_compras : b.total_ventas - a.total_ventas))
-  return filas
+  const filas = (data ?? []).map(filaContacto)
+  return filtrarPorRol(filas, rol)
 }

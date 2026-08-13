@@ -3,8 +3,19 @@ import { useRouter } from 'next/navigation'
 import type { PresetRango } from '@/types'
 import styles from './libro.module.css'
 
+// R5a fixB (homogeneización de filtros, punto 2): la página ya soporta
+// 'hoy'/'semana' (mismo PRESETS que ventas/ganancias en page.tsx) pero acá
+// faltaban los botones — se agregan para que los 3 reportes por período
+// (ventas, libro, ganancias) tengan los mismos presets de fecha. NO se
+// agregó vendedor/caja/método: `obtenerLibroVentas` no trae esas columnas
+// (solo lo fiscal — CAI, RTN, desglose por tasa) y añadirlas requeriría
+// embeds/queries nuevas, fuera de alcance de este fix. El nombre del
+// cliente sí está disponible en cada fila, pero un filtro de cliente
+// consistente con ventas necesitaría convertir la tabla a un componente
+// cliente con estado (como hace CxcCascada) — se deja para un fix
+// dedicado en vez de mezclarlo con este pase.
 const PRESETS: { v: PresetRango; l: string }[] = [
-  { v: 'mes', l: 'Mes' }, { v: 'anio', l: 'Año' }, { v: 'personalizado', l: 'Personalizado' },
+  { v: 'hoy', l: 'Hoy' }, { v: 'semana', l: 'Semana' }, { v: 'mes', l: 'Mes' }, { v: 'anio', l: 'Año' }, { v: 'personalizado', l: 'Personalizado' },
 ]
 
 export default function LibroVentasControls({ preset, desde, hasta, etiqueta, exportHref }: {

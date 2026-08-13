@@ -45,6 +45,12 @@
 .tabla tbody tr:hover td { background: var(--bg-hover); }
 .tabla tbody tr:last-child td { border-bottom: none; }
 .num { text-align: right; }
+.periodo { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+.badgeActivo, .badgeInactivo {
+  font-size: 0.72rem; font-weight: 700; border-radius: var(--radius-tag); padding: 0.15rem 0.6rem;
+}
+.badgeActivo { color: var(--success); background: var(--success-dim, var(--bg-hover)); }
+.badgeInactivo { color: var(--text-muted); background: var(--bg-hover); }
 .vacio { text-align: center; color: var(--text-muted); padding: 1.5rem; }
 @media print {
   .noPrint { display: none; }

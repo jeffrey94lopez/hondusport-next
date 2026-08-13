@@ -62,6 +62,29 @@ export async function obtenerReporteVentas(f: FiltrosReporteVentas): Promise<Fil
   }))
 }
 
+// Embed real de documento_pagos → metodos_pago: FK simple (to-one), así que
+// PostgREST devuelve un OBJETO por fila (mismo gotcha ya documentado en
+// app/admin/pos/page.tsx). Se acota a los documentos ya traídos por
+// obtenerReporteVentas (mismo rango/filtros que la tabla) — sin traer el
+// histórico completo de pagos.
+interface PagoRow { documento_id: string; monto: number; metodos_pago: { nombre: string } | null }
+
+export async function obtenerPagosDocumentos(documentoIds: string[]): Promise<{ documentoId: string; metodo: string; monto: number }[]> {
+  if (!documentoIds.length) return []
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('documento_pagos')
+    .select('documento_id, monto, metodos_pago(nombre)')
+    .in('documento_id', documentoIds)
+    .limit(10000)
+  if (error) console.error('[reporte-ventas] error pagos:', error.message)
+  return ((data ?? []) as unknown as PagoRow[]).map(p => ({
+    documentoId: p.documento_id,
+    metodo: p.metodos_pago?.nombre ?? '—',
+    monto: Number(p.monto),
+  }))
+}
+
 export async function obtenerOpcionesFiltro() {
   const supabase = await createClient()
   const [{ data: clientes }, { data: vendedores }, { data: cajas }, { data: metodos }] = await Promise.all([

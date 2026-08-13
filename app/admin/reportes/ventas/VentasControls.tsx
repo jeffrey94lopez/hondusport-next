@@ -13,6 +13,11 @@ interface Props {
   exportHref: string
 }
 
+// R5a fixB (homogeneización de filtros, punto 2): este reporte ya tiene el
+// set completo (presets + rango personalizado + tipo/cliente/vendedor/caja/
+// método) — es la referencia que se propagó a libro-ventas (presets) y se
+// evaluó para ganancias/cxc/contactos (documentado en cada uno por qué se
+// omitió lo que no aplicaba sin inventar queries nuevas).
 const PRESETS: { v: PresetRango; l: string }[] = [
   { v: 'hoy', l: 'Hoy' }, { v: 'semana', l: 'Semana' }, { v: 'mes', l: 'Mes' }, { v: 'anio', l: 'Año' }, { v: 'personalizado', l: 'Personalizado' },
 ]
