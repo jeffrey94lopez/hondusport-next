@@ -1048,6 +1048,32 @@
    cada botón llene su celda del grid de 2 columnas, con el texto centrado. */
 .tipoDocBtn { width: 100%; justify-content: center; }
 
+/* R4 Task 5 (look Stitch): "MONTO A PAGAR" destacado justo bajo el tipo de
+   documento — caption uppercase muted + valor grande en dorado, mismo
+   lenguaje visual que el resto del rediseño (ver .montoPagarValue vs
+   --accent = dorado de marca). Puramente informativo: repite `total`, que
+   sigue siendo la única fuente de verdad usada por los cálculos de abajo. */
+.montoPagarBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0 0.5rem;
+}
+.montoPagarLabel {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.montoPagarValue {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1.15;
+}
+
 .identBlock {
   display: flex;
   flex-direction: column;
@@ -1067,36 +1093,64 @@
   flex-direction: column;
   gap: 0.5rem;
 }
+/* R4 Task 5 (look Stitch): caption uppercase muted, mismo tratamiento que
+   .montoPagarLabel/.clienteCardLabel en vez del texto "normal" que tenía. */
 .pagosHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
 }
 .pagosList {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
+/* R4 Task 5 (look Stitch): card "Monto recibido" — fondo blanco con borde
+   nítido (antes gris `--bg-hover`) y más aire, para que se lea como la card
+   destacada del mockup en vez de un bloque agrupador cualquiera. */
 .pagoCard {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
+  gap: 0.6rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 0.75rem 0.9rem;
+  padding: 1rem 1.1rem;
 }
 .pagoCardNombre {
-  font-size: 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+/* Envoltorio del input de monto: agrega el prefijo de moneda (L./$) como
+   texto decorativo superpuesto — el valor real sigue viviendo solo en el
+   <input> (montoTexto/montoUsdTexto), esto es puramente visual. */
+.pagoMontoWrap { position: relative; display: flex; }
+.pagoMontoPrefix {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--text-muted);
+  pointer-events: none;
 }
 .pagoMontoInput {
-  font-size: 1.15rem;
-  font-weight: 700;
+  padding-left: 2.1rem;
+  text-align: right;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text);
+  background: var(--bg-hover);
 }
 .pagoTasaLinea {
   font-size: 0.8rem;
@@ -1131,10 +1185,10 @@
 .cobroResumen {
   background: var(--bg-hover);
   border-radius: var(--radius-card);
-  padding: 0.75rem 1rem;
+  padding: 0.9rem 1.1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.4rem;
 }
 .resumenDestacado {
   display: flex;
@@ -1145,6 +1199,63 @@
 }
 .resumenRestante { color: var(--danger); }
 .resumenCambio { color: var(--success); }
+
+/* R4 Task 5 (look Stitch): separador entre Subtotal/ISV (desglose fiscal,
+   informativo) y el bloque Total/Pagado/Restante/Cambio (montos que sí
+   maneja la lógica de pagos). */
+.resumenDivider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 0.15rem 0;
+}
+
+/* Pie del modal de cobro (look Stitch): Cancelar en outline dorado a 1/3 del
+   ancho, Emitir en negro relleno a 2/3 — distinto del `.formFooter` genérico
+   (compartido con otros modales del POS, justify-content:flex-end) porque
+   aquí las acciones ocupan todo el ancho del modal. */
+.cobroFooter {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+.btnCobroCancelar {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.25rem;
+  font: var(--text-subtitle);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background .15s;
+}
+.btnCobroCancelar:hover:not(:disabled) { background: var(--accent-dim); }
+.btnCobroCancelar:disabled { opacity: .5; cursor: not-allowed; }
+
+.btnCobroEmitir {
+  flex: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  font: var(--text-subtitle);
+  border: none;
+  border-radius: var(--radius-btn);
+  background: var(--cta);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background .15s;
+}
+.btnCobroEmitir:hover:not(:disabled) { background: var(--cta-hover); }
+.btnCobroEmitir:disabled {
+  background: var(--cta-disabled-bg);
+  color: var(--cta-disabled-text);
+  cursor: not-allowed;
+}
 
 /* Venta al crédito: botón "Dejar el restante a crédito" — los btnMerlin* no
    traen caja propia, así que la clase de módulo aporta display/padding/ancho. */

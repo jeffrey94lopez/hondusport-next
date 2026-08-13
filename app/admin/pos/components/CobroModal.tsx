@@ -5,6 +5,7 @@ import { emitirVenta } from '../actions'
 import { validarPagos, cambioPago, validarEmision, montosPagoAlAgregar } from '@/lib/pos/emision'
 import { sugerenciasEfectivo } from '@/lib/pos/carrito'
 import { saldoAplicable, validarGastoSaldo } from '@/lib/pos/saldo-favor'
+import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { obtenerSaldoFavorCliente } from '@/app/admin/cuentas-por-cobrar/saldo-favor-actions'
 import { formatPrice } from '@/lib/store/format'
 import { round2, parseMoneyInput, valorMostrado } from '../pos-helpers'
@@ -27,6 +28,17 @@ interface PagoUi extends PagoPos {
 interface ChipSugerencia {
   label: string
   onClick: () => void
+}
+
+// Ícono decorativo del botón de emisión (look Stitch) — mismo patrón que los
+// íconos inline de CarritoPanel/CatalogoPanel (SVG local, sin dependencias).
+function IconoRecibo() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" />
+      <path d="M9 8h6M9 12h6" />
+    </svg>
+  )
 }
 
 interface CobroModalProps {
@@ -308,6 +320,24 @@ export default function CobroModal({
   const restante = Math.max(0, round2(total - sumaPagos))
   const cambio = cambioPago(pagosParaEnvio, total)
 
+  // Desglose Subtotal/ISV para el resumen (look Stitch): puramente
+  // informativo, mismas puras y mismo orden que usa PosClient para su
+  // preview en vivo de totales (prorratear → desglosar → totalesDocumento).
+  // NO sustituye a `total` (que sigue siendo la única fuente de verdad para
+  // sumaPagos/restante/cambio/validaciones/emisión) — solo se usa para
+  // pintar las filas Subtotal/ISV que no existían antes.
+  const exoneradoResumen = clienteActual?.exonerado ?? false
+  const lineasProrrateadas = prorratearDescuentoGlobal(lineas, descuentoGlobal)
+  const lineasDesglosadas = lineasProrrateadas.map(l => desglosarLinea(l, exoneradoResumen))
+  const totalesResumen = totalesDocumento(lineasDesglosadas, descuentoGlobal, '')
+  const subtotalResumen = round2(
+    totalesResumen.total_exento +
+    totalesResumen.total_exonerado +
+    totalesResumen.total_gravado15 +
+    totalesResumen.total_gravado18,
+  )
+  const isvResumen = round2(totalesResumen.isv15 + totalesResumen.isv18)
+
   // Art. 11: cualquier factura que supere el límite exige RTN o identidad,
   // sin importar el nombre — aplica igual a CONSUMIDOR FINAL (clienteActual
   // null) que a un cliente ya registrado sin esos datos capturados.
@@ -458,6 +488,11 @@ export default function CobroModal({
           </button>
         </div>
 
+        <div className={styles.montoPagarBlock}>
+          <span className={styles.montoPagarLabel}>Monto a pagar</span>
+          <div className={styles.montoPagarValue}>{formatPrice(total)}</div>
+        </div>
+
         {necesitaIdentificacion && (
           <div className={styles.identBlock}>
             <div className={styles.identNota}>
@@ -533,15 +568,18 @@ export default function CobroModal({
                             <div className={styles.pagoUsdRow}>
                               <label className={styles.formLabel}>
                                 Monto (USD)
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  placeholder="0.00"
-                                  className={styles.pagoMontoInput}
-                                  value={p.montoUsdTexto}
-                                  onChange={e => cambiarMontoUsd(p.metodo_id, e.target.value)}
-                                  disabled={isPending}
-                                />
+                                <div className={styles.pagoMontoWrap}>
+                                  <span className={styles.pagoMontoPrefix}>$</span>
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    placeholder="0.00"
+                                    className={styles.pagoMontoInput}
+                                    value={p.montoUsdTexto}
+                                    onChange={e => cambiarMontoUsd(p.metodo_id, e.target.value)}
+                                    disabled={isPending}
+                                  />
+                                </div>
                               </label>
                               <span className={styles.pagoUsdConversion}>≈ {formatPrice(p.monto)}</span>
                             </div>
@@ -549,15 +587,18 @@ export default function CobroModal({
                         ) : (
                           <label className={styles.formLabel}>
                             Monto
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              placeholder="0.00"
-                              className={styles.pagoMontoInput}
-                              value={p.montoTexto}
-                              onChange={e => cambiarMonto(p.metodo_id, e.target.value)}
-                              disabled={isPending}
-                            />
+                            <div className={styles.pagoMontoWrap}>
+                              <span className={styles.pagoMontoPrefix}>L.</span>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0.00"
+                                className={styles.pagoMontoInput}
+                                value={p.montoTexto}
+                                onChange={e => cambiarMonto(p.metodo_id, e.target.value)}
+                                disabled={isPending}
+                              />
+                            </div>
                           </label>
                         )}
 
@@ -616,6 +657,9 @@ export default function CobroModal({
         )}
 
         <div className={styles.cobroResumen}>
+          <div className={styles.totalesRow}><span>Subtotal</span><span>{formatPrice(subtotalResumen)}</span></div>
+          <div className={styles.totalesRow}><span>ISV</span><span>{formatPrice(isvResumen)}</span></div>
+          <div className={styles.resumenDivider} />
           <div className={styles.resumenDestacado}><span>Total</span><span>{formatPrice(total)}</span></div>
           <div className={styles.totalesRow}><span>Pagado</span><span>{formatPrice(sumaPagos)}</span></div>
           {restante > 0 && (
@@ -632,12 +676,13 @@ export default function CobroModal({
 
         {error && <div className={styles.formError}>{error}</div>}
 
-        <div className={styles.formFooter}>
-          <button type="button" className={`btnMerlinTertiary ${styles.btnCancel}`} onClick={onClose} disabled={isPending}>
+        <div className={styles.cobroFooter}>
+          <button type="button" className={styles.btnCobroCancelar} onClick={onClose} disabled={isPending}>
             Cancelar
           </button>
-          <button type="button" className={`btnMerlinPrimary ${styles.btnSubmit}`} onClick={handleEmitir} disabled={isPending}>
-            {isPending ? 'Emitiendo...' : 'Emitir'}
+          <button type="button" className={styles.btnCobroEmitir} onClick={handleEmitir} disabled={isPending}>
+            {!isPending && <IconoRecibo />}
+            {isPending ? 'Emitiendo...' : tipo === 'factura' ? 'Emitir factura' : 'Emitir comprobante'}
           </button>
         </div>
       </div>
