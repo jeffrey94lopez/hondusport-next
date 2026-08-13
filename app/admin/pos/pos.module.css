@@ -736,14 +736,14 @@
 
 .carritoLineaDesc { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
 
+/* Sin line-clamp a propósito (pase visual R4): el cajero necesita leer el
+   nombre COMPLETO del ítem al agregarlo — se envuelve en las líneas que
+   haga falta y la fila crece. El clamp de 2 líneas queda solo en las cards
+   del catálogo (.prodNombre), donde la cuadrícula sí necesita altura pareja. */
 .lineaNombre {
   color: var(--text);
   font-weight: 600;
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 .lineaVariante { color: var(--text-muted); font-size: 0.72rem; }
 .lineaDescuentoTag { color: var(--danger); font-size: 0.7rem; font-weight: 700; }
