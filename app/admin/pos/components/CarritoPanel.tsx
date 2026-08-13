@@ -1,5 +1,6 @@
 'use client'
 import { useRef, useState } from 'react'
+import Modal from '@/components/admin/Modal'
 import { brutoLinea, brutoTotalLineas, presetToDescuento } from '@/lib/pos/carrito'
 import type { LineaVenta } from '@/lib/pos/carrito'
 import { formatPrice } from '@/lib/store/format'
@@ -121,6 +122,9 @@ export default function CarritoPanel({
   // línea) se muestra el valor canónico derivado del prop (0 = vacío).
   const [descuentoTexto, setDescuentoTexto] = useState('')
   const [editandoDescuento, setEditandoDescuento] = useState(false)
+  // Pase visual R4: los chips + input manual del descuento global viven en un
+  // modal (botón compacto en el pie) para ceder espacio a la lista de ítems.
+  const [descuentoModalAbierto, setDescuentoModalAbierto] = useState(false)
   const descuentoMostrado = editandoDescuento ? descuentoTexto : valorMostrado(descuentoGlobal)
   // Chip "Otro": no guarda estado propio — solo enfoca el input manual (mismo
   // criterio que LineaEditorModal, Task 5).
@@ -231,6 +235,9 @@ export default function CarritoPanel({
               const { nombre, variante } = partesDescripcion(l)
               const producto = l.producto_id ? productosPorId.get(l.producto_id) : undefined
               const imagen = producto?.imagenes?.[0] ?? null
+              // Pase visual R4: dos filas — el nombre ocupa la primera
+              // completa (con elipsis solo en casos extremos + title);
+              // stepper/subtotal/acciones van en la segunda.
               return (
                 <div key={l.key} className={styles.carritoLineaRow}>
                   <div className={styles.carritoLineaImgWrap}>
@@ -241,41 +248,41 @@ export default function CarritoPanel({
                       <div className={styles.carritoLineaImgPlaceholder} />
                     )}
                   </div>
-                  <div className={styles.carritoLineaDesc}>
-                    {/* title: el nombre va en una sola línea con elipsis; el
-                        completo se lee al pasar el mouse (o en Editar línea) */}
-                    <div className={styles.lineaNombre} title={nombre}>{nombre}</div>
-                    {variante && <div className={styles.lineaVariante}>{variante}</div>}
-                    {l.descuento > 0 && (
-                      <div className={styles.lineaDescuentoTag}>−{formatPrice(l.descuento)}</div>
-                    )}
-                  </div>
-                  <div className={styles.lineaQty}>
-                    <div className={styles.qtyStepper}>
-                      <button type="button" className="btnMerlinIcon btnMerlinIconSm" onClick={() => onCantidad(l.key, -1)} aria-label="Restar cantidad">
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        className={styles.qtyInput}
-                        value={l.cantidad}
-                        min={1}
-                        max={tope ?? undefined}
-                        onChange={e => onCantidadInput(l.key, e.target.value)}
-                      />
-                      <button type="button" className="btnMerlinIcon btnMerlinIconSm" onClick={() => onCantidad(l.key, 1)} aria-label="Sumar cantidad">
-                        +
-                      </button>
+                  <div className={styles.carritoLineaBody}>
+                    <div className={styles.lineaNombre} title={nombre}>
+                      {nombre}
+                      {variante && <span className={styles.lineaVariante}> · {variante}</span>}
                     </div>
-                  </div>
-                  <div className={styles.lineaSubtotal}>{formatPrice(subtotal)}</div>
-                  <div className={styles.lineaAcciones}>
-                    <button type="button" className={styles.btnEditarLinea} onClick={() => onEditarLinea(l.key)} aria-label="Editar línea">
-                      ✎
-                    </button>
-                    <button type="button" className="btnMerlinIcon btnMerlinIconDanger" onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
-                      ×
-                    </button>
+                    <div className={styles.carritoLineaControls}>
+                      <div className={styles.qtyStepper}>
+                        <button type="button" className="btnMerlinIcon btnMerlinIconSm" onClick={() => onCantidad(l.key, -1)} aria-label="Restar cantidad">
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          className={styles.qtyInput}
+                          value={l.cantidad}
+                          min={1}
+                          max={tope ?? undefined}
+                          onChange={e => onCantidadInput(l.key, e.target.value)}
+                        />
+                        <button type="button" className="btnMerlinIcon btnMerlinIconSm" onClick={() => onCantidad(l.key, 1)} aria-label="Sumar cantidad">
+                          +
+                        </button>
+                      </div>
+                      {l.descuento > 0 && (
+                        <span className={styles.lineaDescuentoTag}>−{formatPrice(l.descuento)}</span>
+                      )}
+                      <div className={styles.lineaSubtotal}>{formatPrice(subtotal)}</div>
+                      <div className={styles.lineaAcciones}>
+                        <button type="button" className={styles.btnEditarLinea} onClick={() => onEditarLinea(l.key)} aria-label="Editar línea">
+                          ✎
+                        </button>
+                        <button type="button" className="btnMerlinIcon btnMerlinIconDanger" onClick={() => onQuitarLinea(l.key)} aria-label="Quitar línea">
+                          ×
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )
@@ -285,11 +292,17 @@ export default function CarritoPanel({
       </div>
 
       <div className={styles.pieCarrito}>
+        {/* Pase visual R4: el descuento global se abre en un modal (botón
+            compacto); el Total vive dentro del botón Cobrar. */}
         <div className={styles.pieTopRow}>
-          <span className={styles.descuentoGlobalLabel}>
+          <button
+            type="button"
+            className={styles.btnDescuentoPie}
+            onClick={() => setDescuentoModalAbierto(true)}
+          >
             <IconoEtiqueta />
-            Aplicar descuento global
-          </span>
+            {descuentoGlobal > 0 ? `Descuento −${formatPrice(descuentoGlobal)}` : 'Descuento'}
+          </button>
           <div className={styles.vendedorInline}>
             <label className={styles.vendedorInlineLabel} htmlFor="pos-carrito-vendedor">Vendedor</label>
             <select
@@ -306,52 +319,6 @@ export default function CarritoPanel({
           </div>
         </div>
 
-        {/* R2b: chips de descuento global — se conservan tal cual (misma
-            lógica, mismo marcado de los botones .chip/.chipActivo y del
-            input manual), solo cambia el contenedor que los envuelve. */}
-        <div className={styles.descuentoGlobalRow}>
-          <div className={styles.chipsRow}>
-            <button
-              type="button"
-              className={`${styles.chip} ${ningunoActivo ? styles.chipActivo : ''}`}
-              aria-pressed={ningunoActivo}
-              onClick={() => onDescuentoGlobal(0)}
-            >
-              Ninguno
-            </button>
-            {descuentos.map(p => (
-              <button
-                key={p.id}
-                type="button"
-                className={`${styles.chip} ${presetActivo(p) ? styles.chipActivo : ''}`}
-                aria-pressed={presetActivo(p)}
-                onClick={() => onDescuentoGlobal(presetToDescuento(p, brutoTotalActual))}
-              >
-                {p.etiqueta}
-              </button>
-            ))}
-            <button
-              type="button"
-              className={`${styles.chip} ${otroActivo ? styles.chipActivo : ''}`}
-              aria-pressed={otroActivo}
-              onClick={() => descuentoInputRef.current?.focus()}
-            >
-              Otro
-            </button>
-          </div>
-          <input
-            ref={descuentoInputRef}
-            type="text"
-            inputMode="decimal"
-            placeholder="0.00"
-            aria-label="Descuento global (L.)"
-            value={descuentoMostrado}
-            onFocus={handleDescuentoFocus}
-            onChange={e => handleDescuentoChange(e.target.value)}
-            onBlur={() => setEditandoDescuento(false)}
-          />
-        </div>
-
         <div className={styles.carritoTotales}>
           <div className={styles.carritoTotalRow}><span>Subtotal</span><span>{formatPrice(subtotalMostrado)}</span></div>
           {totales.isv15 > 0 && (
@@ -363,7 +330,6 @@ export default function CarritoPanel({
           {totales.descuento_total > 0 && (
             <div className={styles.carritoTotalRow}><span>Descuento</span><span>-{formatPrice(totales.descuento_total)}</span></div>
           )}
-          <div className={styles.carritoTotalRowTotal}><span>Total</span><span>{formatPrice(totales.total)}</span></div>
         </div>
 
         <button
@@ -372,9 +338,68 @@ export default function CarritoPanel({
           disabled={lineas.length === 0}
           onClick={onCobrar}
         >
-          Cobrar <span aria-hidden="true">→</span>
+          Cobrar {formatPrice(totales.total)} <span aria-hidden="true">→</span>
         </button>
       </div>
+
+      {descuentoModalAbierto && (
+        <Modal title="Descuento global" onClose={() => setDescuentoModalAbierto(false)}>
+          {/* R2b: chips de descuento global — misma lógica y marcado
+              (.chip/.chipActivo + input manual); solo cambió el contenedor
+              (antes el pie del carrito, ahora este modal). */}
+          <div className={styles.descuentoGlobalRow}>
+            <div className={styles.chipsRow}>
+              <button
+                type="button"
+                className={`${styles.chip} ${ningunoActivo ? styles.chipActivo : ''}`}
+                aria-pressed={ningunoActivo}
+                onClick={() => onDescuentoGlobal(0)}
+              >
+                Ninguno
+              </button>
+              {descuentos.map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`${styles.chip} ${presetActivo(p) ? styles.chipActivo : ''}`}
+                  aria-pressed={presetActivo(p)}
+                  onClick={() => onDescuentoGlobal(presetToDescuento(p, brutoTotalActual))}
+                >
+                  {p.etiqueta}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={`${styles.chip} ${otroActivo ? styles.chipActivo : ''}`}
+                aria-pressed={otroActivo}
+                onClick={() => descuentoInputRef.current?.focus()}
+              >
+                Otro
+              </button>
+            </div>
+            <input
+              ref={descuentoInputRef}
+              type="text"
+              inputMode="decimal"
+              placeholder="0.00"
+              aria-label="Descuento global (L.)"
+              value={descuentoMostrado}
+              onFocus={handleDescuentoFocus}
+              onChange={e => handleDescuentoChange(e.target.value)}
+              onBlur={() => setEditandoDescuento(false)}
+            />
+            <div className={styles.formFooter}>
+              <button
+                type="button"
+                className={`btnMerlinPrimary ${styles.btnSubmit}`}
+                onClick={() => setDescuentoModalAbierto(false)}
+              >
+                Listo
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </section>
   )
 }

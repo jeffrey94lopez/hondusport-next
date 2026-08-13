@@ -713,15 +713,31 @@
    (arriba, compartida con DevolucionModal), que sigue en dos filas. Columna
    de imagen a ancho fijo para que la descripción nunca compita por espacio
    con ella; el resto se reparte en columnas `auto` como antes. */
+/* Pase visual R4: dos filas — nombre completo arriba, controles abajo. */
 .carritoLineaRow {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto auto auto;
-  align-items: center;
+  display: flex;
+  align-items: flex-start;
   gap: 0.6rem;
   padding: 0.45rem 0;
   border-bottom: 1px solid var(--border-light);
   font-size: 0.8rem;
 }
+
+.carritoLineaBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.carritoLineaControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* El subtotal empuja las acciones al borde derecho de la fila de controles. */
+.carritoLineaControls .lineaSubtotal { margin-left: auto; }
 
 .carritoLineaImgWrap {
   width: 40px;
@@ -734,12 +750,10 @@
 .carritoLineaImg { width: 100%; height: 100%; object-fit: cover; display: block; }
 .carritoLineaImgPlaceholder { width: 100%; height: 100%; background: var(--bg-hover); }
 
-.carritoLineaDesc { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
-
-/* Una sola línea con elipsis (pase visual R4): el nombre no debe crecer la
-   fila; el nombre completo queda en el title (tooltip) y en el modal de
-   editar línea. El clamp de 2 líneas queda solo en las cards del catálogo
-   (.prodNombre), donde la cuadrícula necesita altura pareja. */
+/* Una sola línea con elipsis (pase visual R4): el nombre tiene su propia fila
+   a lo ancho, con elipsis solo en casos extremos; el completo queda en el
+   title (tooltip) y en el modal de editar línea. El clamp de 2 líneas queda
+   solo en las cards del catálogo (.prodNombre). */
 .lineaNombre {
   color: var(--text);
   font-weight: 600;
@@ -925,12 +939,23 @@
   margin: 0 -1rem -1rem -1rem;
 }
 
-/* Chips de descuento más compactos SOLO dentro del pie del carrito (los del
-   modal Editar línea conservan su tamaño). */
-.pieCarrito .chip {
-  padding: 0.3rem 0.7rem;
-  font-size: 0.75rem;
+/* Botón compacto que abre el modal de descuento global (pase visual R4);
+   muestra el monto aplicado cuando hay descuento. */
+.btnDescuentoPie {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-tag);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
 }
+.btnDescuentoPie:hover { background: var(--accent-dim); }
 
 /* R4 Task 4 (look Stitch): fila superior del pie — label "Aplicar descuento
    global" (ícono + texto dorado) a la izquierda, selector de Vendedor
@@ -941,14 +966,6 @@
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
-}
-.descuentoGlobalLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--accent);
 }
 .vendedorInline {
   display: inline-flex;
@@ -1001,18 +1018,6 @@
   font-size: 0.8rem;
   color: var(--text);
 }
-.carritoTotalRowTotal {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text);
-  padding-top: 0.25rem;
-  margin-top: 0.1rem;
-  border-top: 1px solid var(--border-light);
-}
-
 .totalesPanel {
   background: var(--bg-hover);
   border-radius: var(--radius-card);
