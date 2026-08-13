@@ -374,26 +374,79 @@
   padding: 0.85rem;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
-  overflow-x: auto;
 }
 
-.varianteRow {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1fr auto auto auto auto;
-  gap: 0.5rem;
-  align-items: center;
-  min-width: 760px;
+/* Rediseño (pase visual R5a): cada variante es una card con labels por campo
+   — reemplaza la fila única de 10 columnas (min-width 760px + overflow-x)
+   que truncaba placeholders y forzaba scroll horizontal en el modal. */
+.varianteCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-input);
 }
 
-.varianteHeadRow {
+.varianteGridTop {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1fr auto auto auto auto;
-  gap: 0.5rem;
-  font: var(--text-caption);
+  grid-template-columns: 2fr 1fr;
+  gap: 0.6rem;
+}
+
+.varianteGridMoney {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+@media (max-width: 860px) {
+  .varianteGridTop { grid-template-columns: 1fr; }
+  .varianteGridMoney { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.varianteField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: var(--text-muted);
-  padding: 0 0.1rem;
-  min-width: 760px;
+  min-width: 0;
 }
+/* Los inputs de la card usan el estilo global de inputs (pill) sobre fondo
+   gris de la card: fondo blanco para que se distingan. (0,2,1) gana a la
+   regla global input[type=...] (0,1,1). */
+.varianteCard .varianteField input {
+  background: var(--bg-card);
+}
+
+.varianteFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.varianteAcciones {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.varianteBtnMover {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+.varianteBtnMover:hover:not(:disabled) { color: var(--text); background: var(--border-light); }
+.varianteBtnMover:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Celda de Stock de una variante: el input principal y, cuando aplica, el
    campo condicional de costo de la entrada apilados verticalmente. */
@@ -468,23 +521,3 @@
 }
 .btnAgregarVariante:hover { color: var(--text); text-decoration: underline; }
 
-/* Selector compuesto a propósito (misma razón que arriba): estos inputs no
-   tienen `type` explícito distinto de "text"/"number" así que la regla
-   global `input[type=...]` (0,1,1) ya los redondea, pero para el relleno
-   compacto propio de la tabla de variantes (look Stitch) hace falta más
-   especificidad que una clase sola (0,1,0) — `.varianteRow .varianteInput`
-   (0,2,0) gana sin depender del orden de las hojas de estilo. */
-.varianteRow .varianteInput {
-  padding: 0.4rem 0.6rem;
-  font-size: 0.82rem;
-}
-.varianteRow .varianteInput:focus { border-color: var(--accent); background: var(--bg-card); }
-
-/* Celda de stock de variante: pill gris centrado, angosto (look Stitch). */
-.varianteRow .varianteStockInput {
-  width: 70px;
-  text-align: center;
-  background: var(--bg-hover);
-  border-color: transparent;
-}
-.varianteRow .varianteStockInput:focus { border-color: var(--accent); background: var(--bg-card); }

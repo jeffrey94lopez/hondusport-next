@@ -449,20 +449,11 @@ export default function ProductoFields({
       <label className={styles.formLabel}>
         Variantes (opcional) — si agregas variantes, el producto se vende por variante
       </label>
-      {form.variantes.length > 0 && (
-        <div className={styles.varianteHeadRow} aria-hidden="true">
-          <span>Nombre</span>
-          <span>SKU</span>
-          <span>Precio (vacío = hereda)</span>
-          <span>Stock (vacío = ilimitado)</span>
-          <span>Costo</span>
-          <span>P. revendedor</span>
-          <span>Activa</span>
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      )}
+      {/* Rediseño (pase visual R5a): cada variante es una CARD con labels por
+          campo — la fila única de 10 columnas truncaba placeholders y forzaba
+          scroll horizontal. Solo cambia la presentación: cada input conserva
+          su value/onChange/type/min/step exactos. Aplica en ambos layouts
+          (modal y carrusel) a propósito: el mismo formulario, un solo DOM. */}
       {form.variantes.map((v, i) => {
         const stockBase = v.id ? stockBaseVariantes.get(v.id) ?? null : null
         const cambioVariante = v.id ? calcularCambioStock(stockBase, v.stock) : { tipo: 'sin_cambio' as const }
@@ -473,94 +464,113 @@ export default function ProductoFields({
         const precioEfectivoVariante = v.precio ?? form.precio
         const margenVariante = v.costo != null ? margen(precioEfectivoVariante, v.costo) : null
         return (
-        <div key={v.id ?? `nueva-${i}`} className={styles.varianteRow}>
-          <input
-            className={sectioned ? styles.varianteInput : undefined}
-            placeholder="Nombre (ej. M, Edición retro)"
-            value={v.nombre}
-            onChange={e => setVariante(i, { nombre: e.target.value })}
-          />
-          <input
-            className={sectioned ? styles.varianteInput : undefined}
-            placeholder="SKU"
-            value={v.sku}
-            onChange={e => setVariante(i, { sku: e.target.value })}
-          />
-          <input
-            className={sectioned ? styles.varianteInput : undefined}
-            type="number"
-            placeholder="Precio (vacío = hereda)"
-            value={v.precio ?? ''}
-            onChange={e => setVariante(i, { precio: e.target.value === '' ? null : Number(e.target.value) })}
-            min="0"
-            step="0.01"
-          />
-          <div className={styles.varianteStockCell}>
-            <input
-              className={sectioned ? styles.varianteStockInput : undefined}
-              type="number"
-              placeholder="Stock (vacío = ilimitado)"
-              value={v.stock ?? ''}
-              onChange={e => setVariante(i, { stock: e.target.value === '' ? null : Number(e.target.value) })}
-              min="0"
-            />
-            {mostrarCostoEntradaVariante && (
+        <div key={v.id ?? `nueva-${i}`} className={styles.varianteCard}>
+          <div className={styles.varianteGridTop}>
+            <label className={styles.varianteField}>
+              Nombre
+              <input
+                placeholder="ej. M, Edición retro"
+                value={v.nombre}
+                onChange={e => setVariante(i, { nombre: e.target.value })}
+              />
+            </label>
+            <label className={styles.varianteField}>
+              SKU
+              <input
+                placeholder="SKU"
+                value={v.sku}
+                onChange={e => setVariante(i, { sku: e.target.value })}
+              />
+            </label>
+          </div>
+          <div className={styles.varianteGridMoney}>
+            <label className={styles.varianteField}>
+              Precio (vacío = hereda)
               <input
                 type="number"
-                className={styles.varianteCostoEntrada}
-                placeholder="Costo de esta entrada (opcional)"
-                value={v.costoEntrada ?? ''}
-                onChange={e => setVariante(i, { costoEntrada: e.target.value === '' ? null : Number(e.target.value) })}
+                placeholder="0.00"
+                value={v.precio ?? ''}
+                onChange={e => setVariante(i, { precio: e.target.value === '' ? null : Number(e.target.value) })}
                 min="0"
                 step="0.01"
               />
-            )}
-          </div>
-          {costoBloqueado ? (
-            <div className={styles.varianteCostoBloqueado}>
-              <input
-                className={sectioned ? styles.varianteInput : undefined}
-                type="text"
-                value={v.costo != null ? `L. ${v.costo}` : '—'}
-                disabled
-                readOnly
-                title="Ya tiene movimientos de inventario; usa Registrar entrada para ajustarlo"
-              />
-              {margenVariante && (
-                <small>Margen: L. {margenVariante.ganancia} ({margenVariante.porcentaje}%)</small>
+            </label>
+            <label className={styles.varianteField}>
+              Stock (vacío = ilimitado)
+              <div className={styles.varianteStockCell}>
+                <input
+                  type="number"
+                  placeholder="∞"
+                  value={v.stock ?? ''}
+                  onChange={e => setVariante(i, { stock: e.target.value === '' ? null : Number(e.target.value) })}
+                  min="0"
+                />
+                {mostrarCostoEntradaVariante && (
+                  <input
+                    type="number"
+                    className={styles.varianteCostoEntrada}
+                    placeholder="Costo de esta entrada (opcional)"
+                    value={v.costoEntrada ?? ''}
+                    onChange={e => setVariante(i, { costoEntrada: e.target.value === '' ? null : Number(e.target.value) })}
+                    min="0"
+                    step="0.01"
+                  />
+                )}
+              </div>
+            </label>
+            <label className={styles.varianteField}>
+              Costo {costoBloqueado ? '' : 'inicial (vacío = hereda)'}
+              {costoBloqueado ? (
+                <div className={styles.varianteCostoBloqueado}>
+                  <input
+                    type="text"
+                    value={v.costo != null ? `L. ${v.costo}` : '—'}
+                    disabled
+                    readOnly
+                    title="Ya tiene movimientos de inventario; usa Registrar entrada para ajustarlo"
+                  />
+                  {margenVariante && (
+                    <small>Margen: L. {margenVariante.ganancia} ({margenVariante.porcentaje}%)</small>
+                  )}
+                </div>
+              ) : (
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  value={v.costo ?? ''}
+                  onChange={e => setVariante(i, { costo: e.target.value === '' ? null : Number(e.target.value) })}
+                  min="0"
+                  step="0.01"
+                />
               )}
+            </label>
+            <label className={styles.varianteField}>
+              P. revendedor (vacío = hereda)
+              <input
+                type="number"
+                placeholder="0.00"
+                value={v.precio_revendedor ?? ''}
+                onChange={e => setVariante(i, { precio_revendedor: e.target.value === '' ? null : Number(e.target.value) })}
+                min="0"
+                step="0.01"
+              />
+            </label>
+          </div>
+          <div className={styles.varianteFooter}>
+            <label className={styles.varianteActiva}>
+              <input
+                type="checkbox"
+                checked={v.activo}
+                onChange={e => setVariante(i, { activo: e.target.checked })}
+              />{' '}
+              Activa
+            </label>
+            <div className={styles.varianteAcciones}>
+              <button type="button" className={styles.varianteBtnMover} onClick={() => moverVariante(i, -1)} disabled={i === 0} aria-label="Subir variante">↑</button>
+              <button type="button" className={styles.varianteBtnMover} onClick={() => moverVariante(i, 1)} disabled={i === form.variantes.length - 1} aria-label="Bajar variante">↓</button>
+              <button type="button" className={styles.btnQuitarVariante} onClick={() => quitarVariante(i)}>Quitar</button>
             </div>
-          ) : (
-            <input
-              className={sectioned ? styles.varianteInput : undefined}
-              type="number"
-              placeholder="Costo inicial (vacío = hereda)"
-              value={v.costo ?? ''}
-              onChange={e => setVariante(i, { costo: e.target.value === '' ? null : Number(e.target.value) })}
-              min="0"
-              step="0.01"
-            />
-          )}
-          <input
-            className={sectioned ? styles.varianteInput : undefined}
-            type="number"
-            placeholder="P. revendedor (vacío = hereda)"
-            value={v.precio_revendedor ?? ''}
-            onChange={e => setVariante(i, { precio_revendedor: e.target.value === '' ? null : Number(e.target.value) })}
-            min="0"
-            step="0.01"
-          />
-          <label className={styles.varianteActiva}>
-            <input
-              type="checkbox"
-              checked={v.activo}
-              onChange={e => setVariante(i, { activo: e.target.checked })}
-            />{' '}
-            Activa
-          </label>
-          <button type="button" onClick={() => moverVariante(i, -1)} disabled={i === 0}>↑</button>
-          <button type="button" onClick={() => moverVariante(i, 1)} disabled={i === form.variantes.length - 1}>↓</button>
-          <button type="button" className={styles.btnQuitarVariante} onClick={() => quitarVariante(i)}>Quitar</button>
+          </div>
         </div>
         )
       })}
