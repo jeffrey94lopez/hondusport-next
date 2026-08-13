@@ -1,6 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { agruparPorCliente } from '@/lib/cxc/cxc'
 import { numeroDocumento } from '@/lib/pos/documentos'
 import { formatPrice } from '@/lib/store/format'
 import type { BucketAntiguedad, Caja, Cliente, CxcFila, EstadoPago, SesionCaja } from '@/types'
@@ -58,13 +59,6 @@ function inicialesCliente(nombre: string): string {
   return (partes[0][0] + partes[1][0]).toUpperCase()
 }
 
-interface GrupoCliente {
-  cliente_id: string
-  cliente_nombre: string
-  filas: CxcFila[]
-  total: number
-}
-
 export default function CuentasPorCobrarClient({ filas, clientes, sesiones, cajas, saldosFavor }: Props) {
   const router = useRouter()
   const [clienteFiltro, setClienteFiltro] = useState<'todos' | string>('todos')
@@ -106,23 +100,11 @@ export default function CuentasPorCobrarClient({ filas, clientes, sesiones, caja
   const saldoTotal = useMemo(() => filas.reduce((s, f) => s + f.saldo, 0), [filas])
 
   // Agrupa los documentos filtrados por cliente para la cascada (nivel 1:
-  // cliente, nivel 2: documentos). Solo reagrupa filas ya calculadas por el
-  // servidor — no recalcula saldos ni antigüedad.
-  const grupos = useMemo(() => {
-    const orden: string[] = []
-    const map = new Map<string, GrupoCliente>()
-    for (const f of filtered) {
-      let g = map.get(f.cliente_id)
-      if (!g) {
-        g = { cliente_id: f.cliente_id, cliente_nombre: f.cliente_nombre || 'Sin cliente', filas: [], total: 0 }
-        map.set(f.cliente_id, g)
-        orden.push(f.cliente_id)
-      }
-      g.filas.push(f)
-      g.total += f.saldo
-    }
-    return orden.map(id => map.get(id)!)
-  }, [filtered])
+  // cliente, nivel 2: documentos). `agruparPorCliente` (lib/cxc/cxc.ts) solo
+  // reagrupa filas ya calculadas por el servidor — no recalcula saldos ni
+  // antigüedad, pero SÍ suma dinero (`total`), de ahí que sea función pura
+  // con test propio en vez de vivir inline aquí.
+  const grupos = useMemo(() => agruparPorCliente(filtered), [filtered])
 
   return (
     <div className={styles.page}>
@@ -188,26 +170,26 @@ export default function CuentasPorCobrarClient({ filas, clientes, sesiones, caja
 
       <div className={styles.cascada}>
         {grupos.map(g => {
-          const abierto = !colapsados.has(g.cliente_id)
+          const abierto = !colapsados.has(g.clienteId)
           return (
-            <div key={g.cliente_id} className={styles.grupo}>
+            <div key={g.clienteId} className={styles.grupo}>
               <div
                 className={styles.grupoHeader}
-                onClick={() => toggleGrupo(g.cliente_id)}
+                onClick={() => toggleGrupo(g.clienteId)}
               >
                 <div className={styles.grupoLeft}>
-                  <span className={styles.avatar}>{inicialesCliente(g.cliente_nombre)}</span>
-                  <span className={styles.grupoNombre}>{g.cliente_nombre}</span>
+                  <span className={styles.avatar}>{inicialesCliente(g.clienteNombre)}</span>
+                  <span className={styles.grupoNombre}>{g.clienteNombre}</span>
                 </div>
                 <div className={styles.grupoRight}>
                   <span className={styles.grupoCount}>
                     {g.filas.length} documento{g.filas.length === 1 ? '' : 's'}
                   </span>
                   <span className={styles.grupoTotal}>{formatPrice(g.total)}</span>
-                  {(saldosFavor[g.cliente_id] ?? 0) > 0 && (
+                  {(saldosFavor[g.clienteId] ?? 0) > 0 && (
                     <button
                       className={`${styles.btnAbonar} btnMerlinSecondary`}
-                      onClick={e => { e.stopPropagation(); setModalSaldoFavor(g.cliente_id) }}
+                      onClick={e => { e.stopPropagation(); setModalSaldoFavor(g.clienteId) }}
                     >
                       Aplicar saldo a favor
                     </button>
