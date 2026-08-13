@@ -55,20 +55,21 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
 
   return (
     <Modal title="Nuevo cliente" onClose={onCerrar}>
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <label className={styles.formLabel}>
+      <form className={styles.clienteForm} onSubmit={handleSubmit}>
+        <label className={styles.clienteFormLabel}>
           Nombre *
           <input
             type="text"
             value={form.nombre}
             onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))}
+            placeholder="Ej. Juan Pérez"
             autoFocus
             disabled={isPending}
           />
         </label>
 
-        <div className={styles.formRow}>
-          <label className={styles.formLabel}>
+        <div className={styles.clienteFormRow}>
+          <label className={styles.clienteFormLabel}>
             RTN
             <input
               type="text"
@@ -78,19 +79,20 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
               disabled={isPending}
             />
           </label>
-          <label className={styles.formLabel}>
+          <label className={styles.clienteFormLabel}>
             Identidad
             <input
               type="text"
               value={form.identidad}
               onChange={e => setForm(p => ({ ...p, identidad: e.target.value }))}
+              placeholder="0000-0000-00000"
               disabled={isPending}
             />
           </label>
         </div>
 
-        <div className={styles.formRow}>
-          <label className={styles.formLabel}>
+        <div className={styles.clienteFormRow}>
+          <label className={styles.clienteFormLabel}>
             Teléfono
             <input
               type="text"
@@ -99,7 +101,7 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
               disabled={isPending}
             />
           </label>
-          <label className={styles.formLabel}>
+          <label className={styles.clienteFormLabel}>
             Tipo
             <select
               value={form.tipo_cliente}
@@ -114,7 +116,7 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
 
         <button
           type="button"
-          className={styles.masDatosToggle}
+          className={styles.clienteMasDatosToggle}
           onClick={() => setMasDatos(v => !v)}
         >
           {masDatos ? '− Menos datos' : '+ Más datos'}
@@ -122,8 +124,8 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
 
         {masDatos && (
           <>
-            <div className={styles.formRow}>
-              <label className={styles.formLabel}>
+            <div className={styles.clienteFormRow}>
+              <label className={styles.clienteFormLabel}>
                 Dirección
                 <input
                   type="text"
@@ -132,18 +134,19 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
                   disabled={isPending}
                 />
               </label>
-              <label className={styles.formLabel}>
+              <label className={styles.clienteFormLabel}>
                 Correo
                 <input
                   type="email"
                   value={form.correo}
                   onChange={e => setForm(p => ({ ...p, correo: e.target.value }))}
+                  placeholder="ejemplo@correo.com"
                   disabled={isPending}
                 />
               </label>
             </div>
 
-            <div className={styles.formChecks}>
+            <div className={styles.clienteFormChecks}>
               <Toggle
                 checked={form.exonerado}
                 onChange={v => setForm(p => (
@@ -160,8 +163,8 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
             </div>
 
             {form.exonerado && (
-              <div className={styles.formRow}>
-                <label className={styles.formLabel}>
+              <div className={styles.clienteFormRow}>
+                <label className={styles.clienteFormLabel}>
                   N.º de constancia de exoneración
                   <input
                     type="text"
@@ -170,7 +173,7 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
                     disabled={isPending}
                   />
                 </label>
-                <label className={styles.formLabel}>
+                <label className={styles.clienteFormLabel}>
                   Registro SAG (opcional)
                   <input
                     type="text"
@@ -182,7 +185,7 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
               </div>
             )}
 
-            <label className={styles.formLabel}>
+            <label className={styles.clienteFormLabel}>
               Notas
               <textarea
                 value={form.notas}
@@ -194,13 +197,13 @@ export default function ClienteNuevoModal({ onCreado, onCerrar }: ClienteNuevoMo
           </>
         )}
 
-        {error && <div className={styles.formError}>{error}</div>}
+        {error && <div className={styles.clienteFormError}>{error}</div>}
 
-        <div className={styles.formFooter}>
-          <button type="button" className={`btnMerlinTertiary ${styles.btnCancel}`} onClick={onCerrar} disabled={isPending}>
+        <div className={styles.clienteFormFooter}>
+          <button type="button" className={styles.clienteBtnCancel} onClick={onCerrar} disabled={isPending}>
             Cancelar
           </button>
-          <button type="submit" className={`btnMerlinPrimary ${styles.btnSubmit}`} disabled={isPending}>
+          <button type="submit" className={`btnMerlinPrimary ${styles.clienteBtnSubmit}`} disabled={isPending}>
             {isPending ? 'Creando…' : 'Crear cliente'}
           </button>
         </div>

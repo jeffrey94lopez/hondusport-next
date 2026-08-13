@@ -257,14 +257,61 @@
   gap: 0.75rem;
 }
 
-.formChecks {
+/* R4 Task 6 (look Stitch): ClienteNuevoModal usa su PROPIO set de clases
+   `.cliente*` en vez de las `.form*` genéricas de arriba (compartidas con
+   CobroModal/CierreModal/ItemLibreModal/DevolucionModal/LineaEditorModal/
+   PosClient/DocumentosClient) — así el re-skin de este modal no cambia el
+   look de esos otros, que quedan fuera de alcance de esta tarea (R4 Task
+   7/8). Inputs sin borde, fondo gris relleno y radio grande (mockup:
+   "Nombre Completo" con caja gris pill), a diferencia del input con borde
+   de `app/globals.css` que usan el resto de formularios del admin. */
+.clienteForm {
   display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.clienteFormLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.clienteFormLabel input,
+.clienteFormLabel select,
+.clienteFormLabel textarea {
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  background: var(--bg-hover);
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.clienteFormLabel input:focus,
+.clienteFormLabel select:focus,
+.clienteFormLabel textarea:focus {
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+.clienteFormLabel textarea { resize: vertical; }
+
+.clienteFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.clienteFormChecks {
+  display: flex;
+  align-items: center;
   gap: 1.5rem;
 }
 
-/* ClienteNuevoModal: disclosure de "Más datos" — texto-botón, sin borde, para
-   no competir visualmente con los campos siempre visibles. */
-.masDatosToggle {
+/* Disclosure de "Más datos" — texto-botón, sin borde, para no competir
+   visualmente con los campos siempre visibles. */
+.clienteMasDatosToggle {
   align-self: flex-start;
   background: none;
   border: none;
@@ -274,7 +321,48 @@
   color: var(--accent);
   cursor: pointer;
 }
-.masDatosToggle:hover { text-decoration: underline; }
+.clienteMasDatosToggle:hover { text-decoration: underline; }
+
+.clienteFormError {
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.clienteFormFooter {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--border-light);
+}
+
+/* Cancelar: pill outline (mockup: borde gris fino, fondo blanco, texto
+   negro) — standalone en vez de componer con `btnMerlinTertiary` (fondo
+   relleno claro) para no depender de esa clase global aquí. */
+.clienteBtnCancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.clienteBtnCancel:hover:not(:disabled) { background: var(--bg-hover); }
+.clienteBtnCancel:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Guardar: compone con `btnMerlinPrimary` (ya renderiza negro vía --cta) —
+   solo aporta el padding/tamaño pill del mockup. */
+.clienteBtnSubmit {
+  padding: 0.65rem 1.5rem;
+  font-size: 0.85rem;
+}
 
 .formError {
   font-size: 0.8rem;
