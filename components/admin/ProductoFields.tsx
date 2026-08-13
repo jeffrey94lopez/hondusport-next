@@ -475,19 +475,19 @@ export default function ProductoFields({
         return (
         <div key={v.id ?? `nueva-${i}`} className={styles.varianteRow}>
           <input
-            className={styles.varianteInput}
+            className={sectioned ? styles.varianteInput : undefined}
             placeholder="Nombre (ej. M, Edición retro)"
             value={v.nombre}
             onChange={e => setVariante(i, { nombre: e.target.value })}
           />
           <input
-            className={styles.varianteInput}
+            className={sectioned ? styles.varianteInput : undefined}
             placeholder="SKU"
             value={v.sku}
             onChange={e => setVariante(i, { sku: e.target.value })}
           />
           <input
-            className={styles.varianteInput}
+            className={sectioned ? styles.varianteInput : undefined}
             type="number"
             placeholder="Precio (vacío = hereda)"
             value={v.precio ?? ''}
@@ -497,7 +497,7 @@ export default function ProductoFields({
           />
           <div className={styles.varianteStockCell}>
             <input
-              className={styles.varianteStockInput}
+              className={sectioned ? styles.varianteStockInput : undefined}
               type="number"
               placeholder="Stock (vacío = ilimitado)"
               value={v.stock ?? ''}
@@ -519,7 +519,7 @@ export default function ProductoFields({
           {costoBloqueado ? (
             <div className={styles.varianteCostoBloqueado}>
               <input
-                className={styles.varianteInput}
+                className={sectioned ? styles.varianteInput : undefined}
                 type="text"
                 value={v.costo != null ? `L. ${v.costo}` : '—'}
                 disabled
@@ -532,7 +532,7 @@ export default function ProductoFields({
             </div>
           ) : (
             <input
-              className={styles.varianteInput}
+              className={sectioned ? styles.varianteInput : undefined}
               type="number"
               placeholder="Costo inicial (vacío = hereda)"
               value={v.costo ?? ''}
@@ -542,7 +542,7 @@ export default function ProductoFields({
             />
           )}
           <input
-            className={styles.varianteInput}
+            className={sectioned ? styles.varianteInput : undefined}
             type="number"
             placeholder="P. revendedor (vacío = hereda)"
             value={v.precio_revendedor ?? ''}
@@ -564,7 +564,7 @@ export default function ProductoFields({
         </div>
         )
       })}
-      <button type="button" className={styles.btnAgregarVariante} onClick={agregarVariante}>+ Agregar variante</button>
+      <button type="button" className={sectioned ? styles.btnAgregarVariante : styles.btnSecondary} onClick={agregarVariante}>+ Agregar variante</button>
     </div>
   )
 
