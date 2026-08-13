@@ -960,13 +960,18 @@
 /* R4 Task 4 (look Stitch): fila superior del pie — label "Aplicar descuento
    global" (ícono + texto dorado) a la izquierda, selector de Vendedor
    compacto a la derecha (mockup: "Vendedor: [Caja 01]"). */
+/* Botón de Descuento a la par del Vendedor, siempre en UNA fila (pase
+   visual R4): sin wrap para que no se apilen en pantallas angostas; el
+   select de vendedor cede ancho si hace falta. */
 .pieTopRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.6rem;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
+.pieTopRow .btnDescuentoPie { flex-shrink: 0; white-space: nowrap; }
 .vendedorInline {
   display: inline-flex;
   align-items: center;

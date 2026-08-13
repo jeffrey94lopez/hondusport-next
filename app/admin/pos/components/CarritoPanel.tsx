@@ -338,7 +338,7 @@ export default function CarritoPanel({
           disabled={lineas.length === 0}
           onClick={onCobrar}
         >
-          Cobrar {formatPrice(totales.total)} <span aria-hidden="true">→</span>
+          Cobrar <span aria-hidden="true">→</span> Total {formatPrice(totales.total)}
         </button>
       </div>
 
