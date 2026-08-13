@@ -66,6 +66,7 @@ export default function TomaEditor({ toma, lineasIniciales, ciego }: Props) {
 
   const resumen = resumenConteo(lineas)
   const hayConteos = resumen.contadas > 0
+  const progreso = lineas.length === 0 ? 0 : Math.round((resumen.contadas / lineas.length) * 100)
 
   if (vista === 'hoja') {
     return <HojaConteo toma={toma} lineas={lineas} onVolver={() => setVista('editor')} />
@@ -181,6 +182,13 @@ export default function TomaEditor({ toma, lineasIniciales, ciego }: Props) {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Progreso visible del conteo completo (Task 4, look Stitch): mismo
+          resumen que .avance de arriba, pero como barra — útil en modo
+          Tabla, que no tiene la barra propia del carrusel. */}
+      <div className={styles.progresoBarra}>
+        <div className={styles.progresoBarraFill} style={{ width: `${progreso}%` }} />
       </div>
 
       {editable && (

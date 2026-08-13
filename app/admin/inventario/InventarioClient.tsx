@@ -180,7 +180,7 @@ function NuevaTomaModal({
       <form onSubmit={handleSubmit} className={styles.form}>
         <label className={styles.formLabel}>
           Alcance
-          <select value={alcanceTipo} onChange={e => setAlcanceTipo(e.target.value as AlcanceTipo)}>
+          <select className={styles.formInput} value={alcanceTipo} onChange={e => setAlcanceTipo(e.target.value as AlcanceTipo)}>
             {ALCANCES.map(a => (
               <option key={a} value={a}>{ALCANCE_LABEL[a]}</option>
             ))}
@@ -190,7 +190,7 @@ function NuevaTomaModal({
         {alcanceTipo === 'categoria' && (
           <label className={styles.formLabel}>
             Categoría
-            <select value={categoriaId} onChange={e => setCategoriaId(e.target.value)}>
+            <select className={styles.formInput} value={categoriaId} onChange={e => setCategoriaId(e.target.value)}>
               <option value="">Selecciona…</option>
               {categorias.map(c => (
                 <option key={c.id} value={c.id}>{c.valor}</option>
@@ -202,7 +202,7 @@ function NuevaTomaModal({
         {alcanceTipo === 'subcategoria' && (
           <label className={styles.formLabel}>
             Subcategoría
-            <select value={subcategoriaId} onChange={e => setSubcategoriaId(e.target.value)}>
+            <select className={styles.formInput} value={subcategoriaId} onChange={e => setSubcategoriaId(e.target.value)}>
               <option value="">Selecciona…</option>
               {subcategorias.map(s => (
                 <option key={s.id} value={s.id}>{s.valor}</option>
@@ -221,6 +221,7 @@ function NuevaTomaModal({
         <label className={styles.formLabel}>
           Descripción (opcional)
           <textarea
+            className={styles.formInput}
             value={descripcion}
             onChange={e => setDescripcion(e.target.value)}
             rows={2}

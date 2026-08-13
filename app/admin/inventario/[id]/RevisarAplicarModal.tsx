@@ -44,93 +44,95 @@ export default function RevisarAplicarModal({ tomaId, numero, lineas, editable, 
 
   return (
     <Modal title={`Revisar y aplicar — ${numero}`} onClose={onClose} maxWidth="760px">
-      {editable && (
-        <p className={styles.avisoIrreversible}>
-          Al aplicar, el stock se ajusta según lo contado y la toma queda inmutable: no se puede reabrir ni
-          recontar. Esta acción no se puede deshacer.
-        </p>
-      )}
-
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Producto / variante</th>
-              <th className={styles.num}>Snapshot</th>
-              <th className={styles.num}>Contado</th>
-              <th className={styles.num}>Diferencia</th>
-              <th className={styles.num}>Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lineas.map(l => {
-              const diferencia = diferenciaLinea(l.stock_snapshot, l.contado)
-              const valor = diferencia == null ? 0 : valorDiferencia(diferencia, l.costo)
-              return (
-                <tr key={l.id}>
-                  <td className={styles.skuCol}>{l.sku ?? '—'}</td>
-                  <td>{l.nombre}</td>
-                  <td className={styles.num}>{l.stock_snapshot}</td>
-                  <td className={styles.num}>{l.contado ?? '—'}</td>
-                  <td className={styles.num}>{diferencia == null ? '—' : signo(diferencia)}</td>
-                  <td className={styles.num}>{diferencia == null ? '—' : formatPrice(valor)}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        {lineas.length === 0 && (
-          <div className={styles.empty}>Esta toma no tiene líneas para revisar.</div>
-        )}
-      </div>
-
-      <div className={styles.resumenGrid}>
-        <div className={styles.resumenItem}>
-          <span>Contadas</span>
-          <strong>{resumen.contadas} / {lineas.length}</strong>
-        </div>
-        <div className={styles.resumenItem}>
-          <span>Pendientes</span>
-          <strong>{resumen.pendientes}</strong>
-        </div>
-        <div className={styles.resumenItem}>
-          <span>Sobrantes</span>
-          <strong>{resumen.sobrantes}</strong>
-        </div>
-        <div className={styles.resumenItem}>
-          <span>Faltantes</span>
-          <strong>{resumen.faltantes}</strong>
-        </div>
-        <div className={styles.resumenItem}>
-          <span>Valor neto</span>
-          <strong>{formatPrice(resumen.valorNeto)}</strong>
-        </div>
-      </div>
-
-      {editable && resumen.pendientes > 0 && (
-        <p className={styles.helpText}>
-          {resumen.pendientes} línea{resumen.pendientes === 1 ? '' : 's'} sin contar no se ajustará
-          {resumen.pendientes === 1 ? '' : 'n'}.
-        </p>
-      )}
-
-      {error && <p className={styles.formError}>{error}</p>}
-
-      <div className={styles.formFooter}>
-        <button type="button" className={styles.btnCancel} onClick={onClose} disabled={isPending}>
-          {editable ? 'Cancelar' : 'Cerrar'}
-        </button>
+      <div className={styles.revisarBody}>
         {editable && (
-          <button
-            type="button"
-            className={`${styles.btnAplicar} btnMerlinPrimary`}
-            onClick={handleAplicar}
-            disabled={isPending || lineas.length === 0}
-          >
-            {isPending ? 'Aplicando…' : 'Aplicar'}
-          </button>
+          <p className={styles.avisoIrreversible}>
+            Al aplicar, el stock se ajusta según lo contado y la toma queda inmutable: no se puede reabrir ni
+            recontar. Esta acción no se puede deshacer.
+          </p>
         )}
+
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Producto / variante</th>
+                <th className={styles.num}>Snapshot</th>
+                <th className={styles.num}>Contado</th>
+                <th className={styles.num}>Diferencia</th>
+                <th className={styles.num}>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lineas.map(l => {
+                const diferencia = diferenciaLinea(l.stock_snapshot, l.contado)
+                const valor = diferencia == null ? 0 : valorDiferencia(diferencia, l.costo)
+                return (
+                  <tr key={l.id}>
+                    <td className={styles.skuCol}>{l.sku ?? '—'}</td>
+                    <td>{l.nombre}</td>
+                    <td className={styles.num}>{l.stock_snapshot}</td>
+                    <td className={styles.num}>{l.contado ?? '—'}</td>
+                    <td className={styles.num}>{diferencia == null ? '—' : signo(diferencia)}</td>
+                    <td className={styles.num}>{diferencia == null ? '—' : formatPrice(valor)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          {lineas.length === 0 && (
+            <div className={styles.empty}>Esta toma no tiene líneas para revisar.</div>
+          )}
+        </div>
+
+        <div className={styles.resumenGrid}>
+          <div className={styles.resumenItem}>
+            <span>Contadas</span>
+            <strong>{resumen.contadas} / {lineas.length}</strong>
+          </div>
+          <div className={styles.resumenItem}>
+            <span>Pendientes</span>
+            <strong>{resumen.pendientes}</strong>
+          </div>
+          <div className={styles.resumenItem}>
+            <span>Sobrantes</span>
+            <strong>{resumen.sobrantes}</strong>
+          </div>
+          <div className={styles.resumenItem}>
+            <span>Faltantes</span>
+            <strong>{resumen.faltantes}</strong>
+          </div>
+          <div className={`${styles.resumenItem} ${styles.resumenItemDestacado}`}>
+            <span>Valor neto</span>
+            <strong>{formatPrice(resumen.valorNeto)}</strong>
+          </div>
+        </div>
+
+        {editable && resumen.pendientes > 0 && (
+          <p className={styles.helpText}>
+            {resumen.pendientes} línea{resumen.pendientes === 1 ? '' : 's'} sin contar no se ajustará
+            {resumen.pendientes === 1 ? '' : 'n'}.
+          </p>
+        )}
+
+        {error && <p className={styles.formError}>{error}</p>}
+
+        <div className={styles.formFooter}>
+          <button type="button" className={styles.btnCancel} onClick={onClose} disabled={isPending}>
+            {editable ? 'Cancelar' : 'Cerrar'}
+          </button>
+          {editable && (
+            <button
+              type="button"
+              className={`${styles.btnAplicar} btnMerlinPrimary`}
+              onClick={handleAplicar}
+              disabled={isPending || lineas.length === 0}
+            >
+              {isPending ? 'Aplicando…' : 'Aplicar'}
+            </button>
+          )}
+        </div>
       </div>
     </Modal>
   )

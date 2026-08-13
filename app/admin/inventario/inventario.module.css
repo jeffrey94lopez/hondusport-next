@@ -16,9 +16,12 @@
   flex-wrap: wrap;
 }
 
+/* Sin `font: var(--text-title)`: mismo bug de --font-poppins documentado en
+   dashboard/productos — valores explícitos, alineados al tamaño de
+   encabezado de página que ya usa productos.module.css (R5a). */
 .title {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--text);
 }
 
@@ -44,6 +47,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   overflow-x: auto;
 }
 
@@ -60,6 +64,7 @@
   font-weight: 700;
   color: var(--text-muted);
   letter-spacing: 0.5px;
+  text-transform: uppercase;
   border-bottom: 1px solid var(--border);
   background: var(--bg-card);
   white-space: nowrap;
@@ -81,14 +86,15 @@
 
 .btnAbrir {
   padding: 0.4rem 0.85rem;
-  border: 1px solid var(--border-input);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-input);
-  background: var(--bg-input);
+  background: var(--bg-hover);
   color: var(--text);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  transition: all 0.12s;
 }
 .btnAbrir:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -128,21 +134,22 @@
   color: var(--text-muted);
 }
 
-.form input,
-.form select,
-.form textarea {
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--border-input);
+/* Selector compuesto a propósito (mismo motivo que .clienteFormLabel input
+   de pos.module.css / ClienteNuevoModal): `input[type="text"]` de
+   app/globals.css tiene la misma especificidad que una clase sola —
+   `.form .formInput` (dos clases) gana siempre. Pill sin borde relleno con
+   bg-hover (look Stitch), en vez del input con borde de app/globals.css. */
+.form .formInput {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid transparent;
   border-radius: var(--radius-input);
-  background: var(--bg-input);
+  background: var(--bg-hover);
   color: var(--text);
   font-size: 0.85rem;
   font-family: inherit;
 }
-.form textarea { resize: vertical; }
-.form input:focus,
-.form select:focus,
-.form textarea:focus { outline: none; border-color: var(--accent); }
+.form .formInput:focus { outline: none; border-color: var(--accent); background: var(--bg-card); }
+.form textarea.formInput { resize: vertical; }
 
 .helpText {
   font-size: 0.78rem;
@@ -151,11 +158,15 @@
 
 .formError { font-size: 0.8rem; color: var(--danger); }
 
+/* Mismo patrón que .formFooter de DevolucionModal.module.css (coherente con
+   los modales del POS): separador antes de los botones. */
 .formFooter {
   display: flex;
   gap: 0.6rem;
   justify-content: flex-end;
   padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
 }
 /* Se usa sola (sin btnMerlin*): necesita su propia caja completa, no solo
    padding — mismo patrón que .btnCancel en PosSection.module.css. */
@@ -198,6 +209,19 @@
   font-weight: 600;
 }
 
+/* Progreso visible del conteo completo (Task 4, look Stitch): misma barra
+   que .carruselBarra/.carruselBarraFill pero a lo ancho del editor, no
+   acotada al carrusel — TomaEditor la monta una sola vez arriba de
+   scanBar/modoSwitch, útil también en modo Tabla donde no hay barra propia. */
+.progresoBarra {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-hover);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+.progresoBarraFill { height: 100%; background: var(--accent); transition: width 0.2s; }
+
 /* Badges extra sobre los de .badgeAmbar/.badgeVerde/.badgeRojo del listado:
    gris (pendiente, neutral) e info (contado a ciegas / etiqueta "A ciegas"). */
 .badgeGris { background: var(--bg-hover); color: var(--text-muted); }
@@ -215,15 +239,16 @@
    .btnAbrir de arriba. */
 .btnToolbarInv {
   padding: 0.55rem 1rem;
-  border: 1px solid var(--border-input);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-input);
-  background: var(--bg-input);
+  background: var(--bg-hover);
   color: var(--text);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;
+  transition: all 0.12s;
 }
 .btnToolbarInv:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .btnToolbarInv:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -254,17 +279,22 @@
   max-width: 440px;
 }
 
-.scanInput {
+/* Selector compuesto a propósito (mismo motivo que .searchWrap .searchInput
+   de productos.module.css): el input es type="text", la regla global
+   `input[type="text"]` de app/globals.css tiene la misma especificidad que
+   una clase sola y el orden de las hojas no está garantizado — .scanBar
+   .scanInput (dos clases) le gana siempre. */
+.scanBar .scanInput {
   flex: 1;
   padding: 0.55rem 0.75rem;
-  border: 1px solid var(--border-input);
+  border: 1px solid transparent;
   border-radius: var(--radius-input);
-  background: var(--bg-input);
+  background: var(--bg-hover);
   color: var(--text);
   font-size: 0.9rem;
   font-family: inherit;
 }
-.scanInput:focus { outline: none; border-color: var(--accent); }
+.scanBar .scanInput:focus { outline: none; border-color: var(--accent); background: var(--bg-card); }
 
 .avisoEscaneo {
   font-size: 0.82rem;
@@ -272,51 +302,66 @@
   margin: -0.3rem 0 0.8rem;
 }
 
+/* Segmentado tipo pill (look Stitch: "Vista Tabla" / "Modo Carrusel" en un
+   contenedor blanco con sombra, no un borde partido a dos mitades). */
 .modoSwitch {
   display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-input);
-  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  padding: 0.3rem;
   margin-bottom: 1rem;
 }
 
 .modoBtn {
   padding: 0.45rem 1rem;
+  border-radius: var(--radius-input);
   font-size: 0.82rem;
   font-weight: 600;
-  background: var(--bg-card);
+  background: transparent;
   color: var(--text-muted);
   border: none;
   cursor: pointer;
   font-family: inherit;
+  transition: background 0.12s, color 0.12s;
 }
 .modoBtn:hover { color: var(--text); }
-.modoBtnActivo { background: var(--accent); color: #ffffff; }
+.modoBtnActivo, .modoBtnActivo:hover { background: var(--bg-hover); color: var(--accent); }
 
 /* Columnas propias de la tabla del editor (SKU, campo Contado). */
 .num { text-align: right; }
 .skuCol { white-space: nowrap; color: var(--text-muted); }
 
-.inputContado {
-  width: 90px;
-  padding: 0.4rem 0.55rem;
-  border: 1px solid var(--border-input);
+/* Selector compuesto a propósito (mismo motivo que .varianteRow
+   .varianteInput de productos.module.css): input type="text" compite en
+   especificidad justa con la regla global `input[type="text"]` de
+   app/globals.css — .table .inputContado (dos clases) gana siempre, sin
+   depender del orden de las hojas. Compacto y centrado (look Stitch: pill
+   gris sin borde) en vez del ancho fijo alineado a la derecha de antes. */
+.table .inputContado {
+  width: 80px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid transparent;
   border-radius: var(--radius-input);
-  background: var(--bg-input);
+  background: var(--bg-hover);
   color: var(--text);
   font-size: 0.88rem;
+  font-weight: 600;
   font-family: inherit;
-  text-align: right;
+  text-align: center;
 }
-.inputContado:focus { outline: none; border-color: var(--accent); }
-.inputContado:disabled { opacity: 0.6; cursor: not-allowed; }
+.table .inputContado:focus { outline: none; border-color: var(--accent); background: var(--bg-card); }
+.table .inputContado:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Quitar de fila: caja propia completa (solo, sin btnMerlin*), discreto. */
 .btnQuitar {
   padding: 0.3rem 0.6rem;
-  border: 1px solid var(--border-input);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-input);
-  background: var(--bg-input);
+  background: var(--bg-hover);
   color: var(--text-muted);
   font-size: 0.75rem;
   cursor: pointer;
@@ -366,20 +411,24 @@
   gap: 0.4rem;
   margin-bottom: 1rem;
 }
-.carruselLabel { font-size: 0.78rem; color: var(--text-muted); }
-.carruselInput {
+.carruselLabel { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+/* Selector compuesto a propósito (mismo motivo que .table .inputContado más
+   abajo): gana siempre a `input[type="text"]` de app/globals.css. */
+.carruselCampo .carruselInput {
   width: 160px;
   padding: 0.75rem;
   font-size: 1.6rem;
+  font-weight: 700;
   text-align: center;
-  border: 1px solid var(--border-input);
+  border: 2px solid var(--border-light);
   border-radius: var(--radius-input);
-  background: var(--bg-input);
+  background: var(--bg-card);
   color: var(--text);
   font-family: inherit;
+  box-shadow: var(--shadow-card);
 }
-.carruselInput:focus { outline: none; border-color: var(--accent); }
-.carruselInput:disabled { opacity: 0.6; cursor: not-allowed; }
+.carruselCampo .carruselInput:focus { outline: none; border-color: var(--accent); }
+.carruselCampo .carruselInput:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .carruselError { color: var(--danger); text-align: center; margin-bottom: 0.8rem; font-size: 0.85rem; }
 
@@ -409,20 +458,30 @@
 
 /* ------------------------- Revisar y aplicar ------------------------- */
 
+/* Envuelve el contenido del modal (look Stitch, coherente con los modales
+   del POS): mismo `.body { display:flex; flex-direction:column; gap:1rem }`
+   que DevolucionModal.module.css, y anula el box-shadow de .tableWrap (Task
+   4: se agregó para el listado/editor de página completa; dentro de un
+   modal —que ya tiene su propia --shadow-modal— sería un doble relieve). */
+.revisarBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.revisarBody .tableWrap { box-shadow: none; }
+
 .avisoIrreversible {
   font-size: 0.85rem;
   color: var(--warning);
   background: var(--warning-bg);
   border-radius: var(--radius-input);
   padding: 0.6rem 0.8rem;
-  margin-bottom: 1rem;
 }
 
 .resumenGrid {
   display: flex;
   flex-wrap: wrap;
   gap: 0.8rem;
-  margin: 1rem 0;
 }
 .resumenGrid .resumenItem {
   flex: 1;
@@ -436,5 +495,13 @@
 }
 .resumenItem span { font-size: 0.72rem; color: var(--text-muted); }
 .resumenItem strong { font-size: 0.95rem; color: var(--text); }
+
+/* Valor neto: mismo tratamiento que .total de DevolucionModal.module.css
+   (fondo --accent-dim) para destacar la cifra que resume el ajuste.
+   Selector compuesto a propósito: `.resumenGrid .resumenItem` (dos clases)
+   ya fija background — una sola clase (`.resumenItemDestacado`) perdería la
+   pulseada de especificidad sin importar el orden; con las tres clases
+   (0,0,3,0) esta regla gana siempre. */
+.resumenGrid .resumenItem.resumenItemDestacado { background: var(--accent-dim); }
 
 .btnAplicar { padding: 0.55rem 1.1rem; white-space: nowrap; }
