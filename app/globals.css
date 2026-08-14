@@ -4,7 +4,11 @@
   --bg:           var(--page);
   --bg-card:      var(--card);
   --bg-hover:     var(--hover-input);
-  --bg-input:     var(--page);
+  /* Blanco, NO var(--page): apuntaba al mismo gris del fondo de página
+     (#dbdce1), así que sobre las cards blancas del look Stitch los inputs
+     (buscadores, filtros, formularios) se perdían — no se leían como campo.
+     El borde --border-input los sigue delimitando. (Pase visual R5b.) */
+  --bg-input:     var(--card);
   --border:       var(--line);
   --border-light: #f0f0f0;
   --border-input: var(--line);

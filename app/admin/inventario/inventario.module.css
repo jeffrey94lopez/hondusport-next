@@ -287,9 +287,9 @@
 .scanBar .scanInput {
   flex: 1;
   padding: 0.55rem 0.75rem;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-input);
-  background: var(--bg-hover);
+  background: var(--bg-card);
   color: var(--text);
   font-size: 0.9rem;
   font-family: inherit;

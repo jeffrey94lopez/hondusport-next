@@ -60,9 +60,9 @@
   width: 100%;
   min-width: 220px;
   padding: 0.55rem 0.9rem 0.55rem 2.35rem;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-btn);
-  background: var(--bg-hover);
+  background: var(--bg-card);
   color: var(--text);
   font-size: 0.85rem;
 }

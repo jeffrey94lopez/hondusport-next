@@ -48,7 +48,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--hover-input);
+  /* Fondo blanco + borde visible (regla app-wide R5b): mismo criterio que
+     .searchContainer del Nav. */
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: var(--radius-tag);
   padding: 10px 20px;
 }

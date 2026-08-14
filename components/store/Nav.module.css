@@ -89,7 +89,10 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: var(--hover-input);
+  /* Fondo blanco + borde visible (regla app-wide R5b): el gris --hover-input
+     se perdía contra el header claro y no se leía como campo. */
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: var(--radius-tag);
   padding: 0.55rem 1rem 0.55rem 2.25rem;
   transition: var(--transition);
