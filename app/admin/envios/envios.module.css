@@ -12,6 +12,7 @@
 .btnDelete { composes: btnDelete from '../tabla-admin.module.css'; }
 .tableWrap { composes: tableWrap from '../tabla-admin.module.css'; }
 .table { composes: tabla from '../tabla-admin.module.css'; }
+.table tr:last-child td { border-bottom: none; }
 .nombre { font-weight: 600; }
 .desc { font-size: 0.75rem; color: var(--text-muted); }
 .tipo { font-size: 0.75rem; font-weight: 700; background: var(--accent-dim); color: var(--accent); border-radius: var(--radius-tag); padding: 0.2rem 0.6rem; }
