@@ -1,28 +1,14 @@
-.page {
-  padding: 1.5rem;
-  min-height: 100vh;
-}
+/* Toolbar/tabla/botones/badges/empty: patrón compartido R5b (ver ../tabla-admin.module.css).
+   Se mantienen los nombres locales (.table en vez de .tabla) para no tocar
+   el .tsx. Se elimina el margin-bottom local de topbar/chipsRow: el gap:1rem
+   de .page (compartido) ya separa las secciones. */
+.page { composes: page from '../tabla-admin.module.css'; min-height: 100vh; }
 
-.topbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
+.topbar { composes: topbar from '../tabla-admin.module.css'; }
 
-.title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text);
-}
+.title { composes: title from '../tabla-admin.module.css'; }
 
-.subtitle {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 0.15rem;
-}
+.subtitle { composes: subtitle from '../tabla-admin.module.css'; margin-top: 0.15rem; }
 
 .actions {
   display: flex;
@@ -31,57 +17,26 @@
   flex-wrap: wrap;
 }
 
+/* Solo define el ancho: el fondo/borde ya salen blancos de la regla global
+   input[type="text"] tras el barrido de R5b Task 2 (--bg-input = --card). */
 .search {
   width: 240px;
 }
 
 /* Colores/tipografía/radio del CTA los da la clase global .btnMerlinPrimary
    (compuesta en el JSX); aquí solo el layout propio del botón. */
-.btnPrimary {
-  padding: 0.55rem 1rem;
-  white-space: nowrap;
-}
+.btnPrimary { composes: btnPrimary from '../tabla-admin.module.css'; }
 
 .chipsRow {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
   flex-wrap: wrap;
 }
 
-.tableWrap {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  overflow: hidden;
-}
+.tableWrap { composes: tableWrap from '../tabla-admin.module.css'; }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.855rem;
-}
-
-.table th {
-  text-align: left;
-  padding: 0.7rem 1rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-card);
-}
-
-.table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-  vertical-align: middle;
-}
-
+.table { composes: tabla from '../tabla-admin.module.css'; }
 .table tr:last-child td { border-bottom: none; }
-.table tr:hover td { background: var(--bg-hover); }
 
 .clienteName { font-weight: 600; }
 .clienteMeta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
@@ -90,11 +45,7 @@
 .badgeRevendedor,
 .badgeExonerado,
 .badgeNoExonerado {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: var(--radius-tag);
-  padding: 0.2rem 0.6rem;
+  composes: badge from '../tabla-admin.module.css';
   white-space: nowrap;
 }
 .badgeFinal { background: var(--accent-dim); color: var(--accent); }
@@ -110,11 +61,7 @@
 
 .badgeCliente,
 .badgeProveedor {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: var(--radius-tag);
-  padding: 0.2rem 0.6rem;
+  composes: badge from '../tabla-admin.module.css';
   white-space: nowrap;
 }
 .badgeCliente { background: var(--accent-dim); color: var(--accent); }
@@ -130,27 +77,10 @@
   gap: 0.4rem;
 }
 
-.btnEdit,
-.btnDelete {
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-input);
-  padding: 0.3rem 0.65rem;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.btnEdit { color: var(--text-muted); }
-.btnEdit:hover { border-color: var(--accent); color: var(--accent); }
-.btnDelete { color: var(--danger); }
-.btnDelete:hover { border-color: var(--danger); opacity: 0.75; }
+.btnEdit { composes: btnEdit from '../tabla-admin.module.css'; }
+.btnDelete { composes: btnDelete from '../tabla-admin.module.css'; }
 
-.empty {
-  padding: 3rem;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
+.empty { composes: empty from '../tabla-admin.module.css'; }
 
 /* Form */
 .form {
@@ -193,13 +123,4 @@
   margin-top: 0.25rem;
 }
 
-.btnCancel {
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-input);
-  padding: 0.55rem 1rem;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.btnCancel:hover { color: var(--text); }
+.btnCancel { composes: btnCancel from '../tabla-admin.module.css'; }

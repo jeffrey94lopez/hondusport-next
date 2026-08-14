@@ -1,23 +1,23 @@
 /* Pantalla global de movimientos (POS P5b, Task 5). Sigue el patrón de
    app/admin/productos/[id]/movimientos/kardex.module.css (tabla, badges de
    tipo/cantidad) y app/admin/pos/documentos/documentos.module.css
-   (topbar/paginación) — mismos tokens Merlin. */
+   (topbar/paginación) — mismos tokens Merlin.
+   Toolbar/tabla/botones/empty: patrón compartido R5b (ver ../tabla-admin.module.css).
+   Se elimina el margin-bottom/margin-top local de topbar/filtros/tableWrap/
+   paginacion: el gap:1rem de .page (compartido, ahora flex) ya separa las
+   secciones; con .page en flex los márgenes de hermanos ya no colapsan, así
+   que dejarlos habría duplicado el espaciado. */
+.page { composes: page from '../tabla-admin.module.css'; min-height: 100vh; }
 
-.page { padding: 1.5rem; min-height: 100vh; }
+.topbar { composes: topbar from '../tabla-admin.module.css'; }
 
-.topbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.title { font-size: 1.25rem; font-weight: 800; color: var(--text); }
-.subtitle { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem; }
+.title { composes: title from '../tabla-admin.module.css'; }
+.subtitle { composes: subtitle from '../tabla-admin.module.css'; margin-top: 0.15rem; }
 
 /* ============================ FILTROS ============================ */
+/* Panel de filtros con chrome propio (card con borde/sombra): no encaja en
+   el .filtros del compartido (pensado para una fila simple de búsqueda/chips),
+   se deja con su CSS propio. */
 .filtros {
   display: flex;
   align-items: flex-end;
@@ -28,7 +28,6 @@
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   padding: 0.9rem 1rem;
-  margin-bottom: 1.25rem;
 }
 
 .filtroCampo {
@@ -38,10 +37,16 @@
 }
 .filtroLabel { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.3px; }
 
-.filtroSelect,
-.filtroInput {
-  background: var(--bg);
-  border: 1px solid var(--border-light);
+/* Selector compuesto (.filtroCampo .filtroSelect / .filtroCampo .filtroInput):
+   el <select> pisaría la regla global `select` (0,0,1) con una clase sola
+   (0,1,0) y quedaría con el fondo gris --bg local en vez de blanco; el
+   <input type="date"> ni siquiera está cubierto por la regla global de
+   inputs. Fondo/borde explícitos aquí para que ambos casos salgan
+   consistentes con el resto de buscadores/filtros (pase visual R5b). */
+.filtroCampo .filtroSelect,
+.filtroCampo .filtroInput {
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-input);
   color: var(--text);
   padding: 0.45rem 0.65rem;
@@ -54,35 +59,11 @@
 .btnFiltro { padding: 0.5rem 1rem; min-height: 36px; white-space: nowrap; }
 
 /* ============================ TABLA ============================ */
-.tableWrap {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  overflow: hidden;
-  overflow-x: auto;
-  margin-bottom: 1.1rem;
-}
-.table { width: 100%; border-collapse: collapse; font-size: 0.855rem; }
-.table th {
-  text-align: left;
-  padding: 0.7rem 1rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-card);
-  white-space: nowrap;
-}
-.table td {
-  padding: 0.7rem 1rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-  vertical-align: middle;
-  white-space: nowrap;
-}
+.tableWrap { composes: tableWrap from '../tabla-admin.module.css'; overflow-x: auto; }
+.table { composes: tabla from '../tabla-admin.module.css'; }
+.table th { white-space: nowrap; }
+.table td { white-space: nowrap; }
 .table tr:last-child td { border-bottom: none; }
-.table tr:hover td { background: var(--bg-hover); }
 
 .num { text-align: right; }
 .fechaCol { color: var(--text-muted); }
@@ -91,7 +72,12 @@
 .productoLink:hover { color: var(--accent); text-decoration: underline; }
 
 /* Etiqueta del tipo de movimiento, coloreada por el signo real de `cantidad`
-   de la fila (mismo criterio que la vista por ítem, kardex.module.css). */
+   de la fila (mismo criterio que la vista por ítem, kardex.module.css).
+   .tipo/.tipoEntrada/.tipoSalida/.tipoNeutro se dejan con su CSS propio (no
+   .badge* del compartido): son dos clases combinadas en el mismo elemento y
+   el orden de cascada entre módulos podría hacer que una variante le gane a
+   otra sin que el orden de clases en el .tsx lo refleje (mismo caso que
+   .tipo/.pickup de envios.module.css, R5b Task 1). */
 .tipo { display: inline-block; font-size: 0.72rem; font-weight: 700; border-radius: var(--radius-tag); padding: 0.2rem 0.6rem; }
 .tipoEntrada { background: var(--success-bg); color: var(--success); }
 .tipoSalida { background: var(--error-bg); color: var(--danger); }
@@ -104,7 +90,7 @@
 .referenciaLink { color: var(--accent); text-decoration: none; }
 .referenciaLink:hover { text-decoration: underline; }
 
-.empty { padding: 3rem; text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+.empty { composes: empty from '../tabla-admin.module.css'; }
 
 /* ============================ PAGINACIÓN ============================ */
 .paginacion {
@@ -112,7 +98,6 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-top: 1.1rem;
 }
 .pagBtn { padding: 0.4rem 0.9rem; font-size: 0.8rem; min-height: 34px; }
 .pagBtn:disabled { opacity: 0.5; cursor: not-allowed; }

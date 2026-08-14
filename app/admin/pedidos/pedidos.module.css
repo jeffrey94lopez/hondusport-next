@@ -1,7 +1,12 @@
-.page { padding: 1.5rem; }
-.topbar { margin-bottom: 1rem; }
-.title { font-size: 1.25rem; font-weight: 800; }
-.subtitle { font-size: 0.8rem; color: var(--text-muted); }
+/* Toolbar/título/botones/empty: patrón compartido R5b (ver ../tabla-admin.module.css).
+   Esta pantalla usa una lista de cards expandibles, no una tabla, así que
+   NO compone .tableWrap/.tabla (no aplica). Se elimina el margin-bottom local
+   de topbar/errorBanner/filtros: el gap:1rem de .page (compartido) ya separa
+   las secciones. */
+.page { composes: page from '../tabla-admin.module.css'; }
+.topbar { composes: topbar from '../tabla-admin.module.css'; }
+.title { composes: title from '../tabla-admin.module.css'; }
+.subtitle { composes: subtitle from '../tabla-admin.module.css'; }
 
 /* Reciente (fuera del barrido Merlin): se conserva tal cual, radio 8px
    incluido, por indicación explícita del brief de Task 13. */
@@ -13,13 +18,11 @@
   padding: 0.6rem 0.9rem;
   font-size: 0.82rem;
   font-weight: 600;
-  margin-bottom: 1rem;
 }
 
 .filtros {
   display: flex;
   gap: 0.4rem;
-  margin-bottom: 1.25rem;
   flex-wrap: wrap;
 }
 
@@ -195,16 +198,7 @@
   margin-top: 0.25rem;
 }
 
-.btnCancel {
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-input);
-  padding: 0.55rem 1rem;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.btnCancel:hover { color: var(--text); }
+.btnCancel { composes: btnCancel from '../tabla-admin.module.css'; }
 
 .cardBody {
   border-top: 1px solid var(--border);
@@ -232,4 +226,4 @@
   padding-top: 0.5rem;
 }
 
-.empty { padding: 3rem; text-align: center; color: var(--text-muted); }
+.empty { composes: empty from '../tabla-admin.module.css'; }
