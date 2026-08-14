@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { formatPrice } from '@/lib/store/format'
 import { numeroDocumento } from '@/lib/pos/documentos'
 import { numeroDocumentoDevolucion } from '@/lib/pos/devoluciones'
-import type { Caja, Documento, MetodoPagoTipo, SesionCaja } from '@/types'
+import type { Caja, CobroMetodo, Documento, MetodoPagoTipo, SesionCaja } from '@/types'
 import styles from '../turnos.module.css'
 
 export interface DocumentoTurno {
@@ -23,6 +23,13 @@ interface Props {
    * congelado en `sesion.monto_esperado`. */
   esperadoEnVivo: number
   porMetodo: Record<MetodoPagoTipo, number>
+  /** Cobros de CxC en efectivo/transferencia/tarjeta/cheque de esta sesión,
+   * informativos: el efectivo ya está sumado dentro de `esperadoEnVivo` (turno
+   * abierto) o de `sesion.monto_esperado` (turno cerrado, congelado al cerrar). */
+  cobrosPorMetodo: Record<CobroMetodo, number>
+  /** Devoluciones/reembolsos de esta sesión, informativos: el efectivo ya está
+   * restado del mismo esperado (ver `cobrosPorMetodo`). */
+  devolucionesPorMetodo: Record<CobroMetodo, number>
   documentos: DocumentoTurno[]
 }
 
@@ -36,9 +43,22 @@ const NOMBRES_METODO: Record<MetodoPagoTipo, string> = {
   saldo_favor: 'Saldo a favor',
 }
 
+const NOMBRES_COBRO: Record<CobroMetodo, string> = {
+  efectivo: 'Efectivo',
+  transferencia: 'Transferencia',
+  tarjeta: 'Tarjeta',
+  cheque: 'Cheque',
+  otro: 'Otro',
+}
+
+// El servidor de Next (Vercel) corre en UTC; sin `timeZone` explícito, en
+// producción esta fecha saldría 6 horas corrida respecto a la hora hondureña
+// que ya muestra `TurnosClient` (esa sí formatea en el cliente, con la zona
+// del navegador). Se fija la zona real del negocio, no la del proceso.
 function fecha(iso: string | null): string {
   if (!iso) return '—'
   return new Date(iso).toLocaleString('es-HN', {
+    timeZone: 'America/Tegucigalpa',
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -66,12 +86,24 @@ function etiquetaDiferencia(d: number): string {
   return d > 0 ? 'Sobrante' : 'Faltante'
 }
 
-export default function TurnoDetalleView({ sesion, caja, esperadoEnVivo, porMetodo, documentos }: Props) {
+export default function TurnoDetalleView({
+  sesion,
+  caja,
+  esperadoEnVivo,
+  porMetodo,
+  cobrosPorMetodo,
+  devolucionesPorMetodo,
+  documentos,
+}: Props) {
   const cerrada = sesion.estado === 'cerrada'
   const diferencia = sesion.diferencia ?? 0
 
   const metodosConMonto = (Object.keys(porMetodo) as MetodoPagoTipo[]).filter(
     tipo => tipo !== 'credito' && porMetodo[tipo] > 0,
+  )
+  const cobrosConMonto = (Object.keys(cobrosPorMetodo) as CobroMetodo[]).filter(m => cobrosPorMetodo[m] > 0)
+  const devolucionesConMonto = (Object.keys(devolucionesPorMetodo) as CobroMetodo[]).filter(
+    m => devolucionesPorMetodo[m] > 0,
   )
 
   return (
@@ -145,6 +177,36 @@ export default function TurnoDetalleView({ sesion, caja, esperadoEnVivo, porMeto
             </>
           )}
         </div>
+
+        {cobrosConMonto.length > 0 && (
+          <div className={styles.desglose}>
+            <div className={styles.desgloseTitle}>Cobros de CxC</div>
+            <p className={styles.arqueoNota}>
+              Cobros de esta sesión. El efectivo cobrado ya está sumado al efectivo esperado de arriba.
+            </p>
+            {cobrosConMonto.map(metodo => (
+              <div key={metodo} className={styles.desgloseRow}>
+                <span>{NOMBRES_COBRO[metodo]}</span>
+                <span>{formatPrice(cobrosPorMetodo[metodo])}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {devolucionesConMonto.length > 0 && (
+          <div className={styles.desglose}>
+            <div className={styles.desgloseTitle}>Devoluciones / reembolsos</div>
+            <p className={styles.arqueoNota}>
+              Reembolsos de esta sesión. El efectivo reembolsado ya está restado del efectivo esperado de arriba.
+            </p>
+            {devolucionesConMonto.map(metodo => (
+              <div key={metodo} className={styles.desgloseRow}>
+                <span>{NOMBRES_COBRO[metodo]}</span>
+                <span>{formatPrice(devolucionesPorMetodo[metodo])}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className={styles.tableWrap}>

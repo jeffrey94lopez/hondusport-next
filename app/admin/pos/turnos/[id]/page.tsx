@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { esperadoCaja } from '@/lib/pos/emision'
+import { obtenerCobrosSesion, obtenerDevolucionesSesion } from '../../actions'
 import type { Caja, Documento, MetodoPagoTipo, SesionCaja } from '@/types'
 import TurnoDetalleView, { type DocumentoTurno } from './TurnoDetalleView'
 
@@ -23,7 +24,14 @@ export default async function TurnoDetallePage({ params }: Props) {
   if (!sesion) notFound()
 
   // `sesiones_caja` solo trae `caja_id`, no el nombre: se carga la caja aparte.
-  const [{ data: caja }, { data: documentosRows }] = await Promise.all([
+  // Cobros de CxC y devoluciones/reembolsos de la sesión: mismos datos que
+  // `cerrarSesion` releé para congelar `monto_esperado` al cerrar (ver el
+  // efectivo en cobros suma / en devoluciones resta, lib/pos/emision.ts) y que
+  // `CierreModal` muestra en el resumen previo. Se reutilizan las acciones ya
+  // exportadas (`obtenerCobrosSesion`/`obtenerDevolucionesSesion`,
+  // app/admin/pos/actions.ts) en vez de duplicar el mapeo tipo→método de los
+  // reembolsos (efectivo/saldo_favor/cxc → efectivo/otro).
+  const [{ data: caja }, { data: documentosRows }, cobrosResult, devolucionesResult] = await Promise.all([
     supabase.from('cajas').select('id, nombre').eq('id', sesion.caja_id).maybeSingle(),
     // Mismo `select` que `cerrarSesion` (app/admin/pos/actions.ts:199-203) para
     // estado/total/pagos, más los campos que el detalle muestra. `.limit()`
@@ -36,7 +44,12 @@ export default async function TurnoDetallePage({ params }: Props) {
       .eq('sesion_id', id)
       .order('created_at', { ascending: true })
       .limit(5000),
+    obtenerCobrosSesion(id),
+    obtenerDevolucionesSesion(id),
   ])
+
+  const cobros = cobrosResult.ok ? (cobrosResult.data ?? []) : []
+  const devoluciones = devolucionesResult.ok ? (devolucionesResult.data ?? []) : []
 
   // Sin tipos de Database generados, el cliente de Supabase infiere las
   // relaciones embebidas como arreglo por defecto (no puede conocer la
@@ -65,10 +78,15 @@ export default async function TurnoDetallePage({ params }: Props) {
     })),
   }))
 
-  // Solo se usa para el desglose por método, que no se persiste. Para el
-  // encabezado del arqueo de un turno cerrado se muestran los valores
-  // congelados en `sesiones_caja` (ver TurnoDetalleView).
-  const { efectivoEsperado, porMetodo } = esperadoCaja(Number(sesion.monto_inicial), docsParaEsperado)
+  // Solo se usa para el desglose por método (incluyendo cobros/devoluciones),
+  // que no se persiste. Para el encabezado del arqueo de un turno cerrado se
+  // muestran los valores congelados en `sesiones_caja` (ver TurnoDetalleView).
+  const { efectivoEsperado, porMetodo, cobrosPorMetodo, devolucionesPorMetodo } = esperadoCaja(
+    Number(sesion.monto_inicial),
+    docsParaEsperado,
+    cobros,
+    devoluciones,
+  )
 
   const documentosTurno: DocumentoTurno[] = documentos.map(d => ({
     id: d.id,
@@ -86,6 +104,8 @@ export default async function TurnoDetallePage({ params }: Props) {
       caja={(caja as Pick<Caja, 'id' | 'nombre'>) ?? null}
       esperadoEnVivo={efectivoEsperado}
       porMetodo={porMetodo}
+      cobrosPorMetodo={cobrosPorMetodo}
+      devolucionesPorMetodo={devolucionesPorMetodo}
       documentos={documentosTurno}
     />
   )
