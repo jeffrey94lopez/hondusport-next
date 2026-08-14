@@ -1,0 +1,210 @@
+/* Patrón compartido de tablas del admin (R5b, ver tabla-admin.module.css). */
+.page { composes: page from '../../tabla-admin.module.css'; }
+.topbar { composes: topbar from '../../tabla-admin.module.css'; }
+.title { composes: title from '../../tabla-admin.module.css'; }
+.subtitle { composes: subtitle from '../../tabla-admin.module.css'; }
+.filtros { composes: filtros from '../../tabla-admin.module.css'; }
+/* `overflow-x: auto` es obligatorio: el compartido trae `overflow: hidden`
+   para que el radio de la card recorte la tabla; con `nowrap` en las celdas
+   de dinero, las últimas columnas se recortarían sin scrollbar (regresión ya
+   ocurrida en la ola anterior de R5b). */
+.tableWrap { composes: tableWrap from '../../tabla-admin.module.css'; overflow-x: auto; }
+.table { composes: tabla from '../../tabla-admin.module.css'; }
+.table tr:last-child td { border-bottom: none; }
+.table td { vertical-align: middle; white-space: nowrap; }
+.empty { composes: empty from '../../tabla-admin.module.css'; }
+
+/* Enlace de la fecha de apertura hacia el detalle del turno (Task 4, aún no
+   existe: 404 esperado). Mismo tratamiento que `.numeroLink` en
+   documentos.module.css. */
+.aperturaLink {
+  color: var(--accent);
+  font-weight: 600;
+}
+.aperturaLink:hover { text-decoration: underline; }
+
+/* Fila de totales al pie de la tabla: se distingue de las filas normales con
+   un borde superior más marcado y texto en negrita. */
+.tfootRow td {
+  font-weight: 700;
+  border-top: 2px solid var(--border);
+  background: var(--bg-hover);
+}
+
+/* Diferencia (Sobrante/Faltante/Cuadra exacto): mismo criterio de color que
+   HistorialModal (app/admin/pos/components/HistorialModal.tsx) — negativa en
+   rojo, positiva en verde, cero en el color de texto normal. Aquí se aplica
+   como texto de celda (no badge/pill) porque el layout es una tabla, no una
+   lista de cards; el criterio de color es el mismo, solo cambia el contenedor.
+   Selector compuesto `.table td.diff*` (0,2,1) a propósito: el compartido
+   `.tabla td` (composes, especificidad 0,1,1) pisaría una clase de diferencia
+   sola (0,1,0) y el color nunca se vería aplicado. */
+.table td.diffNegativa { color: var(--danger); }
+.table td.diffPositiva { color: var(--success); }
+.table td.diffNeutra { color: var(--text); }
+
+/* Card de turno actual / formulario de apertura: mismo trío bg-card +
+   border-light + shadow-card que el resto de cards del admin (ver
+   tableWrap del compartido). */
+.turnoCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.turnoCards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.turnoInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.turnoCaja {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.turnoMeta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.turnoMontos {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.turnoMontoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.turnoMontoLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.turnoMontoValor {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.formRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 180px;
+}
+
+.formError {
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
+/* Campos del formulario de apertura y del modal de cierre. Selector
+   compuesto a propósito: la regla global `input[type="text"]`/`select` de
+   app/globals.css tiene especificidad (0,1,1) y pisaría una clase sola
+   (0,1,0) — `.form .formInput` (0,2,0) gana. Fondo blanco + borde visible
+   (nunca `--bg-hover` con borde transparente, convención de esta serie). */
+.form .formInput,
+.form .formSelect {
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 0.55rem 0.8rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.form .formInput:focus,
+.form .formSelect:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Filtros del historial: mismo criterio de selector compuesto que arriba —
+   `.filtros` viene del compartido (0,1,0 vía composes), así que
+   `.filtros .filtroInput`/`.filtroSelect` (0,2,0) sigue ganándole a la regla
+   global de app/globals.css. */
+.filtros .filtroInput,
+.filtros .filtroSelect {
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.filtros .filtroInput:focus,
+.filtros .filtroSelect:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.filtroLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Resultado del cierre dentro del modal (esperado/contado/diferencia). */
+.resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--bg-hover);
+  border-radius: var(--radius-card);
+  padding: 0.8rem 1rem;
+}
+.resultadoRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.resultadoDiferencia {
+  font-weight: 800;
+}
