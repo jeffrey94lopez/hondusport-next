@@ -1,14 +1,13 @@
-.page { padding: 1.5rem; }
-.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.title { font-size: 1.25rem; font-weight: 800; }
-.btnPrimary { background: var(--accent); color: var(--text); border: none; border-radius: var(--radius-input); padding: 0.55rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
-.btnPrimary:disabled { opacity: 0.5; }
-.btnCancel { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: var(--radius-input); padding: 0.55rem 1rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; }
-.btnEdit, .btnDelete { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: var(--radius-input); padding: 0.3rem 0.65rem; font-size: 0.75rem; cursor: pointer; transition: all 0.12s; }
-.btnEdit { color: var(--text-muted); }
-.btnEdit:hover { border-color: var(--accent); color: var(--accent); }
-.btnDelete { color: var(--danger); }
-.btnDelete:hover { border-color: var(--danger); opacity: 0.75; }
+/* Toolbar/botones/empty: patrón compartido R5b (ver tabla-admin.module.css).
+   Esta pantalla es una grilla de cards (.grid/.card), no tabla, así que NO
+   compone .tableWrap/.tabla — solo lo que aplica a cualquier lista admin. */
+.page { composes: page from '../tabla-admin.module.css'; }
+.topbar { composes: topbar from '../tabla-admin.module.css'; }
+.title { composes: title from '../tabla-admin.module.css'; }
+.btnPrimary { composes: btnPrimary from '../tabla-admin.module.css'; }
+.btnCancel { composes: btnCancel from '../tabla-admin.module.css'; }
+.btnEdit { composes: btnEdit from '../tabla-admin.module.css'; }
+.btnDelete { composes: btnDelete from '../tabla-admin.module.css'; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
 
@@ -27,7 +26,7 @@
 .cardFooter { display: flex; align-items: center; justify-content: space-between; margin-top: 0.75rem; }
 .cardActions { display: flex; gap: 0.4rem; }
 
-.empty { padding: 3rem; text-align: center; color: var(--text-muted); grid-column: 1/-1; }
+.empty { composes: empty from '../tabla-admin.module.css'; grid-column: 1/-1; }
 
 .form { display: flex; flex-direction: column; gap: 0.9rem; }
 .formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }

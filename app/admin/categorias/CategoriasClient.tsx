@@ -99,7 +99,7 @@ export default function CategoriasClient({ categorias }: Props) {
     <div className={styles.page}>
       <div className={styles.topbar}>
         <h1 className={styles.title}>Categorías</h1>
-        <button className={styles.btnPrimary} onClick={openCreate}>+ Nueva</button>
+        <button className={`${styles.btnPrimary} btnMerlinPrimary`} onClick={openCreate}>+ Nueva</button>
       </div>
 
       <div className={styles.tabs}>
@@ -221,7 +221,7 @@ export default function CategoriasClient({ categorias }: Props) {
             {formError && <p className={styles.formError}>{formError}</p>}
             <div className={styles.formFooter}>
               <button type="button" className={styles.btnCancel} onClick={() => setModal(null)}>Cancelar</button>
-              <button type="submit" className={styles.btnPrimary} disabled={isPending}>
+              <button type="submit" className={`${styles.btnPrimary} btnMerlinPrimary`} disabled={isPending}>
                 {isPending ? 'Guardando…' : modal === 'edit' ? 'Guardar' : 'Crear'}
               </button>
             </div>

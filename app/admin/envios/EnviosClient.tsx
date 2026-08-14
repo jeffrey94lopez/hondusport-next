@@ -78,7 +78,7 @@ export default function EnviosClient({ envios }: Props) {
     <div className={styles.page}>
       <div className={styles.topbar}>
         <h1 className={styles.title}>Opciones de Envío</h1>
-        <button className={styles.btnPrimary} onClick={() => { setForm({ ...EMPTY }); setEditing(null); setModal('create') }}>
+        <button className={`${styles.btnPrimary} btnMerlinPrimary`} onClick={() => { setForm({ ...EMPTY }); setEditing(null); setModal('create') }}>
           + Nueva opción
         </button>
       </div>
@@ -156,7 +156,7 @@ export default function EnviosClient({ envios }: Props) {
             {formError && <p className={styles.formError}>{formError}</p>}
             <div className={styles.formFooter}>
               <button type="button" className={styles.btnCancel} onClick={() => setModal(null)}>Cancelar</button>
-              <button type="submit" className={styles.btnPrimary} disabled={isPending}>
+              <button type="submit" className={`${styles.btnPrimary} btnMerlinPrimary`} disabled={isPending}>
                 {isPending ? 'Guardando…' : modal === 'edit' ? 'Guardar' : 'Crear'}
               </button>
             </div>

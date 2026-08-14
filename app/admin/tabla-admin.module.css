@@ -1,0 +1,43 @@
+/* Patrón compartido de las pantallas de tabla del admin (look Stitch, R5b).
+   Se consume con `composes` desde cada módulo de pantalla, para que los .tsx
+   conserven sus nombres de clase locales. Referencia visual validada:
+   app/admin/productos/productos.module.css (R5a). */
+.page { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.title { font-size: 1.75rem; font-weight: 700; color: var(--text); }
+.subtitle { font-size: 0.85rem; color: var(--text-muted); }
+.tableWrap { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.tabla th { background: var(--bg-hover); color: var(--text-muted); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; text-align: left; padding: 0.7rem 0.9rem; }
+.tabla td { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--border-light); color: var(--text); }
+.tabla tbody tr:hover td { background: var(--bg-hover); }
+.filtros { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.searchWrap { position: relative; display: flex; align-items: center; }
+.btnPrimary { padding: 0.55rem 1rem; white-space: nowrap; }
+.btnEdit { background: none; border: none; color: var(--accent); font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0.2rem 0.4rem; }
+.btnEdit:hover { text-decoration: underline; }
+.btnDelete { background: none; border: none; color: var(--text-muted); font-size: 0.8rem; cursor: pointer; padding: 0.2rem 0.4rem; }
+.btnDelete:hover { color: var(--danger); }
+.btnCancel { padding: 0.55rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-btn); background: var(--bg-card); color: var(--text); font-size: 0.85rem; cursor: pointer; }
+.badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: var(--radius-tag); font-size: 0.72rem; font-weight: 700; }
+.badgeOk { background: var(--success-bg); color: var(--success); }
+.badgeWarn { background: var(--accent-dim); color: var(--accent); }
+.badgeDanger { background: var(--error-bg); color: var(--danger); }
+.badgeMuted { background: var(--bg-hover); color: var(--text-muted); }
+.empty { padding: 3rem; text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+
+/* Barras de búsqueda: fondo BLANCO con borde visible. El gris (--bg-hover)
+   con borde transparente se pierde sobre las cards blancas del look Stitch
+   (pedido del usuario, pase visual R5b). Selector compuesto: la regla global
+   input[type=...] de app/globals.css (0,1,1) pisa una clase sola (0,1,0). */
+.searchWrap .search {
+  width: 100%;
+  min-width: 220px;
+  padding: 0.55rem 0.9rem 0.55rem 2.35rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-btn);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.searchWrap .search:focus { outline: none; border-color: var(--accent); }

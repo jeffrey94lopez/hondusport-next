@@ -1,8 +1,10 @@
-.page { padding: 1.5rem; }
-.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
-.title { font-size: 1.25rem; font-weight: 800; }
+/* Toolbar/tabla/botones/empty: patrón compartido R5b (ver tabla-admin.module.css).
+   Se mantienen los nombres locales (.table en vez de .tabla) para no tocar el .tsx. */
+.page { composes: page from '../tabla-admin.module.css'; }
+.topbar { composes: topbar from '../tabla-admin.module.css'; }
+.title { composes: title from '../tabla-admin.module.css'; }
 
-.tabs { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.tabs { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .tab {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
@@ -17,23 +19,17 @@
 .tab:hover { color: var(--text); }
 .tabActive { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
-.tableWrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
-.table { width: 100%; border-collapse: collapse; font-size: 0.855rem; }
-.table th { text-align: left; padding: 0.7rem 1rem; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-.table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.tableWrap { composes: tableWrap from '../tabla-admin.module.css'; }
+.table { composes: tabla from '../tabla-admin.module.css'; }
 .table tr:last-child td { border-bottom: none; }
 
 .rowActions { display: flex; gap: 0.4rem; }
-.btnEdit, .btnDelete { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: var(--radius-input); padding: 0.3rem 0.65rem; font-size: 0.75rem; cursor: pointer; transition: all 0.12s; }
-.btnEdit { color: var(--text-muted); }
-.btnEdit:hover { border-color: var(--accent); color: var(--accent); }
-.btnDelete { color: var(--danger); }
-.btnDelete:hover { border-color: var(--danger); opacity: 0.75; }
-.btnPrimary { background: var(--accent); color: var(--text); border: none; border-radius: var(--radius-input); padding: 0.55rem 1rem; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
-.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
-.btnCancel { background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: var(--radius-input); padding: 0.55rem 1rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; }
+.btnEdit { composes: btnEdit from '../tabla-admin.module.css'; }
+.btnDelete { composes: btnDelete from '../tabla-admin.module.css'; }
+.btnPrimary { composes: btnPrimary from '../tabla-admin.module.css'; }
+.btnCancel { composes: btnCancel from '../tabla-admin.module.css'; }
 
-.empty { padding: 3rem; text-align: center; color: var(--text-muted); }
+.empty { composes: empty from '../tabla-admin.module.css'; }
 
 .form { display: flex; flex-direction: column; gap: 0.9rem; }
 .formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }

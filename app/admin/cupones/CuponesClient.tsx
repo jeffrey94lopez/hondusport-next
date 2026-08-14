@@ -33,7 +33,7 @@ export default function CuponesClient({ cupones }: Props) {
     <div className={styles.page}>
       <div className={styles.topbar}>
         <h1 className={styles.title}>Cupones</h1>
-        <button className={styles.btnPrimary} onClick={() => setModal(true)}>+ Nuevo cupón</button>
+        <button className={`${styles.btnPrimary} btnMerlinPrimary`} onClick={() => setModal(true)}>+ Nuevo cupón</button>
       </div>
 
       <div className={styles.tableWrap}>
@@ -103,7 +103,7 @@ export default function CuponesClient({ cupones }: Props) {
             {formError && <p className={styles.formError}>{formError}</p>}
             <div className={styles.formFooter}>
               <button type="button" className={styles.btnCancel} onClick={() => setModal(false)}>Cancelar</button>
-              <button type="submit" className={styles.btnPrimary} disabled={isPending}>
+              <button type="submit" className={`${styles.btnPrimary} btnMerlinPrimary`} disabled={isPending}>
                 {isPending ? 'Creando…' : 'Crear cupón'}
               </button>
             </div>
