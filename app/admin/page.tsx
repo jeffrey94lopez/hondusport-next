@@ -85,7 +85,16 @@ export default async function DashboardPage({
               <span className={styles.pedidoTotal}>{formatPrice(d.total)}</span>
               <span className={styles.pedidoEstado}>{d.tipo === 'factura' ? 'Factura' : 'Comprobante'}</span>
               <span className={styles.pedidoFecha}>
-                {new Date(d.created_at).toLocaleTimeString('es-HN', { hour: '2-digit', minute: '2-digit' })}
+                {/* `timeZone` explícito: esto es un Server Component, así que el
+                    formateo corre en el servidor y las funciones de Vercel están
+                    en UTC — sin la zona, la hora salía 6 horas adelantada en
+                    producción (en local no se nota, la máquina ya está en hora
+                    de Honduras). Mismo arreglo que en el detalle de turno. */}
+                {new Date(d.created_at).toLocaleTimeString('es-HN', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  timeZone: 'America/Tegucigalpa',
+                })}
               </span>
             </Link>
           ))}
