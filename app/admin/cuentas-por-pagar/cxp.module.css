@@ -181,6 +181,21 @@
   color: var(--text-muted);
 }
 
+/* Saldo pendiente total del proveedor (modo distribución automática): el techo
+   del pago, para no teclear a ciegas. */
+.saldoTotalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--bg-hover);
+  border-radius: var(--radius-input);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.saldoTotalValor { font-weight: 700; color: var(--text); }
+
 /* Detalle manual (modo global manual) */
 .detalleManual {
   display: flex;
@@ -218,8 +233,8 @@
   padding-top: 0.4rem;
   border-top: 1px solid var(--border);
 }
-.sumaOk { color: var(--success); }
-.sumaMal { color: var(--danger); }
+/* Total del pago manual: es la suma de lo aplicado, no un dato que se teclee. */
+.totalCalculado { font-weight: 700; color: var(--text); }
 
 .formError { font-size: 0.8rem; color: var(--danger); }
 

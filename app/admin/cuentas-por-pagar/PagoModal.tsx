@@ -5,6 +5,7 @@ import { formatPrice } from '@/lib/store/format'
 import { parseMoneyInput, valorMostrado } from '@/app/admin/pos/pos-helpers'
 import type { Cliente, CxpFila, PagoMetodo } from '@/types'
 import { registrarPago, type RegistrarPagoInput } from './actions'
+import { sumaAplicaciones, validarAplicaciones } from '@/lib/cxp/cxp'
 import styles from './cxp.module.css'
 
 interface Props {
@@ -71,8 +72,16 @@ export default function PagoModal({ modo, fila, proveedores, filas, onClose, onO
     [filas, proveedorId],
   )
 
+  // Saldo pendiente total del proveedor: el techo de un pago con distribución
+  // automática. Sin él, el usuario teclea a ciegas y solo descubre que se pasó
+  // cuando el servidor responde "El monto supera el total adeudado".
+  const saldoTotalProveedor = useMemo(
+    () => sumaAplicaciones(comprasProveedor.map(c => c.saldo)),
+    [comprasProveedor],
+  )
+
   const sumaManual = useMemo(
-    () => comprasProveedor.reduce((s, c) => s + parseMoneyInput(montosCompra[c.compra_id] ?? ''), 0),
+    () => sumaAplicaciones(comprasProveedor.map(c => parseMoneyInput(montosCompra[c.compra_id] ?? ''))),
     [comprasProveedor, montosCompra],
   )
 
@@ -87,19 +96,18 @@ export default function PagoModal({ modo, fila, proveedores, filas, onClose, onO
     }
     // global
     if (!proveedorId) return 'Selecciona un proveedor.'
-    if (monto <= 0) return 'Ingresa un monto mayor a cero.'
     if (distrib === 'manual') {
-      for (const c of comprasProveedor) {
-        const m = parseMoneyInput(montosCompra[c.compra_id] ?? '')
-        // Un monto negativo (o no numérico) invalida todo el formulario: si se
-        // permitiera, `submit()` filtra las filas ≤ 0 y la RPC recibiría una
-        // suma distinta a la validada (una fila en -50 y otra en 150 pasan la
-        // validación de "Σ = monto" pero registran 150). Ver task-4-report.
-        if (m < 0) return 'Los montos no pueden ser negativos.'
-        if (m > c.saldo + 0.005) return `El abono a ${c.numero} excede su saldo.`
-      }
-      if (Math.abs(sumaManual - monto) > 0.005) return 'La suma de los abonos debe igualar el monto.'
+      // El total del pago es la suma de lo aplicado: ya no hay monto general
+      // que cuadrar, así que desaparece la validación "Σ = monto".
+      return validarAplicaciones(
+        comprasProveedor.map(c => ({
+          numero: c.numero,
+          monto: parseMoneyInput(montosCompra[c.compra_id] ?? ''),
+          saldo: c.saldo,
+        })),
+      )
     }
+    if (monto <= 0) return 'Ingresa un monto mayor a cero.'
     return null
   })()
 
@@ -190,16 +198,18 @@ export default function PagoModal({ modo, fila, proveedores, filas, onClose, onO
           </label>
         </div>
 
-        <label className={styles.formLabel}>
-          Monto
-          <input
-            type="text"
-            inputMode="decimal"
-            placeholder="0.00"
-            value={montoStr}
-            onChange={e => setMontoStr(e.target.value)}
-          />
-        </label>
+        {!(modo === 'global' && distrib === 'manual') && (
+          <label className={styles.formLabel}>
+            Monto
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={montoStr}
+              onChange={e => setMontoStr(e.target.value)}
+            />
+          </label>
+        )}
 
         {modo === 'global' && (
           <div className={styles.distribToggle}>
@@ -222,6 +232,12 @@ export default function PagoModal({ modo, fila, proveedores, filas, onClose, onO
           </div>
         )}
 
+        {modo === 'global' && distrib === 'auto' && (
+          <div className={styles.saldoTotalRow}>
+            <span>Saldo pendiente del proveedor</span>
+            <span className={styles.saldoTotalValor}>{formatPrice(saldoTotalProveedor)}</span>
+          </div>
+        )}
         {modo === 'global' && distrib === 'auto' && (
           <p className={styles.hint}>Se aplica a las compras más antiguas primero.</p>
         )}
@@ -251,10 +267,8 @@ export default function PagoModal({ modo, fila, proveedores, filas, onClose, onO
             ))}
             {comprasProveedor.length > 0 && (
               <div className={styles.detalleTotal}>
-                <span>Suma de abonos</span>
-                <span className={Math.abs(sumaManual - monto) > 0.005 ? styles.sumaMal : styles.sumaOk}>
-                  {formatPrice(sumaManual)} / {formatPrice(monto)}
-                </span>
+                <span>Total del pago</span>
+                <span className={styles.totalCalculado}>{formatPrice(sumaManual)}</span>
               </div>
             )}
           </div>
