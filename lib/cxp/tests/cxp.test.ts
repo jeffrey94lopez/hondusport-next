@@ -128,4 +128,13 @@ describe('validarAplicaciones', () => {
       { numero: 'C-001', monto: 500.004, saldo: 500 },
     ])).toBeNull()
   })
+
+  // El lado opuesto del mismo límite: sin este caso, alguien podría ampliar la
+  // tolerancia de 0.005 a 0.05 y ningún test lo detectaría — se estaría dejando
+  // pasar un abono cinco centavos por encima del saldo de la compra.
+  it('rechaza justo por encima de la tolerancia', () => {
+    expect(validarAplicaciones([
+      { numero: 'C-001', monto: 500.006, saldo: 500 },
+    ])).toBe('El abono a C-001 excede su saldo.')
+  })
 })

@@ -18,6 +18,10 @@ interface Props {
 
 const FILTRO_VACIO: FiltroTurnos = { desde: '', hasta: '', cajaId: '', usuario: '' }
 
+// `timeZone` explícito aunque esto corra en el navegador: sin él, un equipo
+// fuera de hora hondureña (portátil de viaje, VM en UTC) mostraría aquí una
+// hora distinta a la del detalle del mismo turno —que ya fija la zona— y a la
+// del filtro, que agrupa por día hondureño (lib/pos/turnos.ts).
 function fecha(iso: string | null): string {
   if (!iso) return '—'
   return new Date(iso).toLocaleString('es-HN', {
@@ -26,6 +30,7 @@ function fecha(iso: string | null): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'America/Tegucigalpa',
   })
 }
 
@@ -169,9 +174,16 @@ export default function TurnosClient({ cajas, sesionesAbiertas, historial }: Pro
                 </td>
                 <td>{fecha(t.cerrada_at)}</td>
                 <td>{formatPrice(t.monto_inicial)}</td>
-                <td>{formatPrice(t.monto_esperado ?? 0)}</td>
-                <td>{formatPrice(t.monto_contado ?? 0)}</td>
-                <td className={claseDiferencia(t.diferencia ?? 0)}>{formatPrice(t.diferencia ?? 0)}</td>
+                {/* Un turno abierto todavía no tiene arqueo: esas tres columnas
+                    son null en la BD. Pintarlas como L. 0.00 haría que una caja
+                    viva con dinero dentro se leyera como un turno cerrado que
+                    cuadró exacto — y con el mismo color neutro. Se muestran
+                    como "—", que es lo que realmente hay. */}
+                <td>{t.monto_esperado == null ? '—' : formatPrice(t.monto_esperado)}</td>
+                <td>{t.monto_contado == null ? '—' : formatPrice(t.monto_contado)}</td>
+                <td className={t.diferencia == null ? undefined : claseDiferencia(t.diferencia)}>
+                  {t.diferencia == null ? '—' : formatPrice(t.diferencia)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -238,7 +250,7 @@ function AperturaCard({ cajas, onAbierto }: AperturaCardProps) {
 
   return (
     <div className={styles.turnoCard}>
-      <div className={styles.form} style={{ flex: 1 }}>
+      <div className={`${styles.form} ${styles.formCrece}`}>
         <div className={styles.formRow}>
           <label className={styles.formLabel}>
             Caja

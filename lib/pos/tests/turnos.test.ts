@@ -33,13 +33,32 @@ describe('filtrarTurnos', () => {
   // un turno abierto el mismo día de `hasta` debe entrar, si no el usuario
   // filtra "hasta hoy" y no ve el turno de hoy.
   it('el rango de fechas es inclusivo en ambos extremos', () => {
+    // Mediodía UTC a propósito: son las 6 a. m. en Honduras, así que el día
+    // local y el día UTC coinciden y el caso prueba el rango, no la zona (eso
+    // lo cubre el test de arriba).
     const t = [
-      turno({ id: 'a', abierta_at: '2026-08-09T23:00:00Z' }),
-      turno({ id: 'b', abierta_at: '2026-08-10T01:00:00Z' }),
+      turno({ id: 'a', abierta_at: '2026-08-09T12:00:00Z' }),
+      turno({ id: 'b', abierta_at: '2026-08-10T12:00:00Z' }),
       turno({ id: 'c', abierta_at: '2026-08-11T12:00:00Z' }),
     ]
     const r = filtrarTurnos(t, { ...SIN_FILTRO, desde: '2026-08-10', hasta: '2026-08-11' })
     expect(r.map(x => x.id)).toEqual(['b', 'c'])
+  })
+
+  // El corte de día es el de HONDURAS (UTC-6), no el de UTC. Un turno abierto
+  // a las 6:30 p. m. de Tegucigalpa ya cae en el día UTC siguiente, así que
+  // filtrar por su propio día —el que la tabla muestra— lo dejaba fuera. Todo
+  // turno abierto entre las 18:00 y las 23:59 caía en el día equivocado: en una
+  // tienda con turno de tarde ese es el caso normal, no el borde.
+  it('agrupa por el dia de Honduras, no por el dia UTC', () => {
+    const t = [turno({ id: 'tarde', abierta_at: '2026-08-11T00:30:00Z' })] // 10/08 6:30 p. m. en Honduras
+    expect(filtrarTurnos(t, { ...SIN_FILTRO, desde: '2026-08-10', hasta: '2026-08-10' }).map(x => x.id)).toEqual(['tarde'])
+    expect(filtrarTurnos(t, { ...SIN_FILTRO, desde: '2026-08-11', hasta: '2026-08-11' })).toHaveLength(0)
+  })
+
+  it('un turno de la madrugada cae en su propio dia local', () => {
+    const t = [turno({ id: 'madrugada', abierta_at: '2026-08-10T07:00:00Z' })] // 10/08 1:00 a. m. en Honduras
+    expect(filtrarTurnos(t, { ...SIN_FILTRO, desde: '2026-08-10', hasta: '2026-08-10' }).map(x => x.id)).toEqual(['madrugada'])
   })
 
   it('un turno abierto (sin cierre) entra igual por su fecha de apertura', () => {

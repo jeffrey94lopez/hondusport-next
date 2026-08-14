@@ -90,7 +90,12 @@
 .numero { font-weight: 700; white-space: nowrap; }
 .num { text-align: right; white-space: nowrap; }
 .saldoCol { font-weight: 700; }
-.fechaCol { white-space: nowrap; color: var(--text-muted); }
+/* Selector compuesto obligatorio: esta clase se aplica DIRECTO sobre un <td>,
+   y la regla `td` de la tabla fija `color` con especificidad (0,1,1) contra la
+   (0,1,0) de una clase sola — el color atenuado se perdia. Mismo barrido que
+   b09c85b, que dejo fuera estas dos hojas de estado de cuenta. */
+.fechaCol { white-space: nowrap; }
+.table td.fechaCol { color: var(--text-muted); }
 
 .badge {
   display: inline-block;

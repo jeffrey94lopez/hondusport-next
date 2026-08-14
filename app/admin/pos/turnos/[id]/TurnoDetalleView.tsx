@@ -174,6 +174,14 @@ export default function TurnoDetalleView({
                   <span>{formatPrice(porMetodo.credito)}</span>
                 </div>
               )}
+              {/* Sin esta nota, quien audita suma el desglose contra el arqueo y
+                  encuentra un descuadre que no existe: `esperadoCaja` resta el
+                  cambio entregado del efectivo esperado, pero no lo devuelve
+                  como línea propia, así que el desglose queda en bruto. */}
+              <p className={styles.arqueoNota}>
+                Montos cobrados en bruto: el cambio entregado ya está restado del efectivo
+                esperado de arriba, pero no se muestra como línea aparte.
+              </p>
             </>
           )}
         </div>

@@ -340,3 +340,6 @@
 }
 .badgeEmitido { background: var(--success-bg); color: var(--success); }
 .badgeAnulado { background: var(--bg-hover); color: var(--text-muted); }
+
+/* Único estilo inline que quedaba en la pantalla; el proyecto usa CSS Modules. */
+.formCrece { flex: 1; }

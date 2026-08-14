@@ -9,17 +9,23 @@ export interface FiltroTurnos {
   usuario: string // '' = todos
 }
 
-// Día UTC (YYYY-MM-DD) de un timestamp ISO. Se compara como cadena porque el
-// formato es lexicográficamente ordenable, y así el filtro no depende de la
-// zona horaria del navegador (una comparación con Date local movería el corte
-// de día y dejaría fuera turnos de la madrugada).
-function diaUTC(iso: string): string {
-  return new Date(iso).toISOString().slice(0, 10)
+const OFFSET_HONDURAS_MS = 6 * 60 * 60 * 1000
+
+// Día calendario HONDUREÑO (YYYY-MM-DD) de un timestamp ISO. Mismo criterio que
+// `hoyHonduras` de lib/cotizaciones/cotizaciones.ts, y por el mismo motivo:
+// tomar el día UTC directo produce un off-by-one, porque en Honduras (UTC-6)
+// una operación de la tarde/noche ya cae en el día UTC siguiente. Un turno
+// abierto a las 6:30 p. m. quedaba fuera al filtrar por su propio día — el que
+// la tabla muestra —, y en una tienda con turno de tarde ese es el caso normal.
+// Se compara como cadena porque el formato es lexicográficamente ordenable, y
+// así el resultado no depende de la zona del navegador que corra el filtro.
+function diaHonduras(iso: string): string {
+  return new Date(new Date(iso).getTime() - OFFSET_HONDURAS_MS).toISOString().slice(0, 10)
 }
 
 export function filtrarTurnos(turnos: SesionCaja[], filtro: FiltroTurnos): SesionCaja[] {
   return turnos.filter(t => {
-    const dia = diaUTC(t.abierta_at)
+    const dia = diaHonduras(t.abierta_at)
     if (filtro.desde && dia < filtro.desde) return false
     if (filtro.hasta && dia > filtro.hasta) return false
     if (filtro.cajaId && t.caja_id !== filtro.cajaId) return false
