@@ -7,30 +7,40 @@ import { ICONOS, type IconoKey } from './icons'
 import styles from './Sidebar.module.css'
 
 const COLAPSADO_KEY = 'hs_admin_sidebar_colapsado'
-const GRUPOS_KEY = 'hs_admin_nav_groups'
+// v2: las etiquetas de grupo cambiaron de contenido y el valor por defecto se
+// invirtió (ahora arrancan colapsados salvo PUNTO DE VENTA). Con la clave vieja,
+// un navegador con estado guardado seguiría aplicando el mapa anterior y el
+// usuario no vería el cambio. La clave vieja se deja morir sola: el estado de
+// colapso de un menú no vale una migración.
+const GRUPOS_KEY = 'hs_admin_nav_v2'
+
+// Grupos colapsados por defecto salvo PUNTO DE VENTA, que es donde se trabaja
+// a diario. Se usa como valor inicial y como fallback cuando no hay nada
+// guardado para un grupo concreto.
+const GRUPO_COLAPSADO_DEFAULT: Record<string, boolean> = {
+  'PUNTO DE VENTA': false,
+  INGRESOS: true,
+  EGRESOS: true,
+  INVENTARIO: true,
+  TIENDA: true,
+}
 
 const INICIO = { href: '/admin', icon: 'inicio' as IconoKey, label: 'Inicio' }
 
 const NAV_GROUPS = [
   {
-    label: 'TIENDA',
+    label: 'PUNTO DE VENTA',
     items: [
-      { href: '/admin/productos', icon: 'productos', label: 'Productos' },
-      { href: '/admin/categorias', icon: 'categorias', label: 'Categorías' },
-      { href: '/admin/banners', icon: 'banners', label: 'Banners' },
-      { href: '/admin/cupones', icon: 'cupones', label: 'Cupones' },
-      { href: '/admin/envios', icon: 'envios', label: 'Envíos' },
+      { href: '/admin/pos', icon: 'pos', label: 'POS' },
+      { href: '/admin/pos/turnos', icon: 'turnos', label: 'Turnos' },
     ],
   },
   {
     label: 'INGRESOS',
     items: [
-      { href: '/admin/pos', icon: 'pos', label: 'POS' },
       { href: '/admin/pos/documentos', icon: 'documentos', label: 'Documentos' },
       { href: '/admin/cotizaciones', icon: 'cotizaciones', label: 'Cotizaciones' },
-      { href: '/admin/pedidos', icon: 'pedidos', label: 'Pedidos', badge: true },
       { href: '/admin/cuentas-por-cobrar', icon: 'cxc', label: 'Cuentas por cobrar' },
-      { href: '/admin/reportes', icon: 'reportes', label: 'Reportes' },
     ],
   },
   {
@@ -43,20 +53,33 @@ const NAV_GROUPS = [
   {
     label: 'INVENTARIO',
     items: [
+      { href: '/admin/productos', icon: 'productos', label: 'Productos' },
       { href: '/admin/inventario', icon: 'inventario', label: 'Inventario físico' },
       { href: '/admin/movimientos', icon: 'movimientos', label: 'Movimientos' },
     ],
   },
   {
-    label: 'CLIENTES',
+    label: 'TIENDA',
     items: [
-      { href: '/admin/clientes', icon: 'clientes', label: 'Clientes y proveedores' },
+      { href: '/admin/pedidos', icon: 'pedidos', label: 'Pedidos', badge: true },
+      { href: '/admin/categorias', icon: 'categorias', label: 'Categorías' },
+      { href: '/admin/banners', icon: 'banners', label: 'Banners' },
+      { href: '/admin/cupones', icon: 'cupones', label: 'Cupones' },
+      { href: '/admin/envios', icon: 'envios', label: 'Envíos' },
     ],
   },
 ] as const satisfies ReadonlyArray<{
   label: string
   items: ReadonlyArray<{ href: string; icon: IconoKey; label: string; badge?: boolean }>
 }>
+
+// Entradas sueltas del pie de la navegación (fuera de todo grupo): un grupo
+// colapsable de un solo hijo solo agrega un clic. Se pintan con el mismo
+// markup que INICIO.
+const SUELTAS = [
+  { href: '/admin/clientes', icon: 'clientes' as IconoKey, label: 'Clientes' },
+  { href: '/admin/reportes', icon: 'reportes' as IconoKey, label: 'Reportes' },
+]
 
 interface Props {
   pendingOrders: number
@@ -75,13 +98,14 @@ function getIniciales(nombre: string): string {
 export default function Sidebar({ pendingOrders, userName }: Props) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
-  const [gruposColapsados, setGruposColapsados] = useState<Record<string, boolean>>({})
+  const [gruposColapsados, setGruposColapsados] = useState<Record<string, boolean>>(GRUPO_COLAPSADO_DEFAULT)
 
   // Guard de montaje (mismo patrón que CartProvider/WishlistProvider): el SSR
-  // siempre pinta el estado por defecto (expandido, sin grupos plegados); si el
-  // initializer leyera localStorage, el primer render del cliente divergiría del
-  // HTML del servidor y React reportaría un hydration mismatch. El estado
-  // persistido se aplica recién después de montar.
+  // siempre pinta el estado por defecto (sidebar expandido, grupos según
+  // `GRUPO_COLAPSADO_DEFAULT`); si el initializer leyera localStorage, el
+  // primer render del cliente divergiría del HTML del servidor y React
+  // reportaría un hydration mismatch. El estado persistido se aplica recién
+  // después de montar.
   const [montado, setMontado] = useState(false)
 
   useEffect(() => {
@@ -116,7 +140,10 @@ export default function Sidebar({ pendingOrders, userName }: Props) {
   // OJO: /admin (Inicio) NO va aquí — es prefijo de TODAS las rutas admin y se
   // trata como match exacto aparte en isActive, para no "tragarse" ninguna otra
   // ruta (p. ej. /admin/configuracion, que no está en este arreglo).
-  const ALL_HREFS = NAV_GROUPS.flatMap(g => g.items.map(i => i.href))
+  const ALL_HREFS = [
+    ...NAV_GROUPS.flatMap(g => g.items.map(i => i.href)),
+    ...SUELTAS.map(s => s.href),
+  ]
 
   function isActive(href: string) {
     // Inicio (/admin) es prefijo de todas las rutas admin: activo solo en la ruta exacta,
@@ -164,7 +191,7 @@ export default function Sidebar({ pendingOrders, userName }: Props) {
           // antes. Fuera de ese caso, se respeta el valor persistido y, si no
           // hay ninguno guardado, el grupo arranca expandido.
           const grupoTieneActivo = group.items.some(item => isActive(item.href))
-          const grupoColapsado = grupoTieneActivo ? false : (gruposColapsados[group.label] ?? false)
+          const grupoColapsado = grupoTieneActivo ? false : (gruposColapsados[group.label] ?? GRUPO_COLAPSADO_DEFAULT[group.label] ?? true)
 
           const alternarGrupo = () => {
             setGruposColapsados(prev => ({ ...prev, [group.label]: !grupoColapsado }))
@@ -226,6 +253,21 @@ export default function Sidebar({ pendingOrders, userName }: Props) {
               })()}
               <div className={styles.divider} />
             </div>
+          )
+        })}
+
+        {SUELTAS.map(entrada => {
+          const Icono = ICONOS[entrada.icon]
+          return (
+            <Link
+              key={entrada.href}
+              href={entrada.href}
+              className={`${styles.item} ${isActive(entrada.href) ? styles.active : ''}`}
+              title={collapsed ? entrada.label : undefined}
+            >
+              <span className={styles.icon}><Icono className="iconoMerlin" /></span>
+              {!collapsed && <span className={styles.itemLabel}>{entrada.label}</span>}
+            </Link>
           )
         })}
       </nav>

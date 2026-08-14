@@ -59,6 +59,9 @@ export const IconInventario = ({ className }: IconProps) =>
 export const IconMovimientos = ({ className }: IconProps) =>
   base(<><path d="M4 7h13" /><path d="M14 3l3 4-3 4" /><path d="M20 17H7" /><path d="M10 13l-3 4 3 4" /></>, className)
 
+export const IconTurnos = ({ className }: IconProps) =>
+  base(<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>, className)
+
 export const IconClientes = ({ className }: IconProps) =>
   base(<><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0112 0" /><path d="M16 6a3 3 0 010 6" /><path d="M15 20a6 6 0 019-5" /></>, className)
 
@@ -105,6 +108,7 @@ export const ICONOS = {
   cxp: IconCxp,
   inventario: IconInventario,
   movimientos: IconMovimientos,
+  turnos: IconTurnos,
   clientes: IconClientes,
   config: IconConfig,
   salir: IconSalir,
