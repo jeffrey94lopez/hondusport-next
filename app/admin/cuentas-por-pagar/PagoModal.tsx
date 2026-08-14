@@ -139,7 +139,13 @@ export default function PagoModal({ modo, fila, proveedores, filas, onClose, onO
     } else {
       const aplicaciones = comprasProveedor
         .map(c => ({ compraId: c.compra_id, monto: parseMoneyInput(montosCompra[c.compra_id] ?? '') }))
-        .filter(a => a.monto > 0)
+        // `!== 0` y no `> 0`: descartar aquí las filas negativas las volvería un
+        // pago silenciosamente distinto al total mostrado si alguien rompiera la
+        // validación de `problema` en un refactor (no hay test de componente que
+        // fije esa invariante). Dejándolas pasar, la RPC las rechaza con
+        // "Monto de aplicacion invalido" y el pago entero falla, que es lo
+        // correcto. Las filas en cero sí se omiten: no cambian la suma.
+        .filter(a => a.monto !== 0)
       input = {
         proveedorId,
         fecha,
