@@ -1,35 +1,25 @@
 /* Compras (POS P4a). Dos vistas: el listado (tabla + filtros) y el editor de
    compra (catálogo/buscador a la izquierda, documento a la derecha), más el
-   modal de recepción. Estilos Merlin (tokens de app/merlin.css); patrones
-   visuales copiados de clientes.module.css y del editor de cotizaciones
-   (editor.module.css) — no se importan esos módulos. */
+   modal de recepción. Estilos Merlin (tokens de app/merlin.css). Toolbar/
+   tabla/botones/badges/empty del listado: patrón compartido R5b (ver
+   ../tabla-admin.module.css). El editor conserva su maquetación propia
+   (catálogo + documento a dos columnas): no encaja en el patrón de tabla, así
+   que solo se alinean header/botones/badge base (ver sección EDITOR). */
 
 /* ============================ LISTADO ============================ */
-.page {
-  padding: 1.5rem;
-  min-height: 100vh;
-}
+.page { composes: page from '../tabla-admin.module.css'; min-height: 100vh; }
 
 .topbar {
-  display: flex;
+  composes: topbar from '../tabla-admin.module.css';
+  /* Título+subtítulo apilados a la izquierda: se alinean arriba en vez del
+     centro que da el compartido. El margin-bottom local se elimina: el
+     gap:1rem de .page (compartido) ya separa topbar/filtros/tableWrap. */
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
 }
 
-.title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text);
-}
+.title { composes: title from '../tabla-admin.module.css'; }
 
-.subtitle {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 0.15rem;
-}
+.subtitle { composes: subtitle from '../tabla-admin.module.css'; margin-top: 0.15rem; }
 
 .actions {
   display: flex;
@@ -38,18 +28,13 @@
   flex-wrap: wrap;
 }
 
-.btnPrimary {
-  padding: 0.55rem 1rem;
-  white-space: nowrap;
-}
+/* Colores/tipografía/radio del CTA los da la clase global .btnMerlinPrimary
+   o .btnMerlinSecondary (compuesta en el JSX); aquí solo el layout propio. */
+.btnPrimary { composes: btnPrimary from '../tabla-admin.module.css'; }
 
-.filtros {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
+/* margin-bottom eliminado: mismo motivo que .topbar, el gap de .page ya
+   separa esta fila de la tabla. */
+.filtros { composes: filtros from '../tabla-admin.module.css'; }
 .filtroSelect {
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border-input);
@@ -61,92 +46,56 @@
 }
 .filtroSelect:focus { outline: none; border-color: var(--accent); }
 
-.tableWrap {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  overflow-x: auto;
-}
+.tableWrap { composes: tableWrap from '../tabla-admin.module.css'; }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.855rem;
-}
-
-.table th {
-  text-align: left;
-  padding: 0.7rem 1rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-card);
-  white-space: nowrap;
-}
-
-.table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-  vertical-align: middle;
-}
+.table { composes: tabla from '../tabla-admin.module.css'; }
+/* Regresión ya vista en este plan: al componer .tabla no se pierde la regla
+   de borde del último renglón, se conserva explícita debajo del compose. */
 .table tr:last-child td { border-bottom: none; }
+/* No cubierto por el compartido: encabezados sin wrap (Fecha/Proveedor). */
+.table th { white-space: nowrap; }
+.table td { vertical-align: middle; }
+/* El hover de fila ya lo da .tabla tbody tr:hover td (compartido); solo hace
+   falta el cursor para las filas clicables. */
 .rowClickable { cursor: pointer; }
-.rowClickable:hover td { background: var(--bg-hover); }
 
 .numero { font-weight: 700; white-space: nowrap; }
 .totalCol { text-align: right; font-weight: 700; white-space: nowrap; }
 .fechaCol { white-space: nowrap; color: var(--text-muted); }
 
-/* Badge de estado (mismos tonos que el brief: gris/ámbar/verde/rojo) */
-.badge {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  border-radius: var(--radius-tag);
-  padding: 0.2rem 0.6rem;
-  white-space: nowrap;
-}
+/* Badge de estado (mismos tonos que el brief: gris/ámbar/verde/rojo). Base
+   compuesta del compartido (estructura); los colores quedan locales porque en
+   el JSX se combinan dos clases en el mismo elemento (`${styles.badge}
+   ${ESTADO_BADGE[estado]}`) — no se usan las variantes badgeOk/Warn/... del
+   compartido para evitar el problema de orden de cascada entre módulos
+   documentado en envios.module.css (.tipo/.pickup). */
+.badge { composes: badge from '../tabla-admin.module.css'; }
 .badgeGris { background: var(--bg-hover); color: var(--text-muted); }
 .badgeAmbar { background: var(--warning-bg); color: var(--warning); }
 .badgeVerde { background: var(--success-bg); color: var(--success); }
 .badgeRojo { background: var(--error-bg); color: var(--danger); }
 
-.empty {
-  padding: 3rem;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
+.empty { composes: empty from '../tabla-admin.module.css'; }
 
 /* Pie del panel de reorden: selector de proveedor + botón de crear orden */
+/* Sin margin-top: es hijo directo de .page (compartido, flex-column con
+   gap:1rem), que ya lo separa de la tabla — con margin-top quedaba doble. */
 .reordenFooter {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 0.6rem;
-  margin-top: 1rem;
   flex-wrap: wrap;
 }
 
 /* ============================ EDITOR ============================ */
-.root {
-  padding: 1.5rem;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+/* Layout propio (catálogo + documento a dos columnas): no es el patrón de
+   tabla del compartido, así que no se re-maqueta. .root y .header sí
+   coinciden 1:1 con .page/.topbar del compartido (mismos valores), se
+   componen para no duplicar. */
+.root { composes: page from '../tabla-admin.module.css'; min-height: 100vh; }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
+.header { composes: topbar from '../tabla-admin.module.css'; }
 
 .headerLeft {
   display: flex;
@@ -161,7 +110,9 @@
   gap: 0.5rem;
   flex-wrap: wrap;
 }
-.btnAccion { padding: 0.55rem 1.1rem; white-space: nowrap; }
+/* Se combina en el JSX con btnMerlinSecondary/btnMerlinPrimary (color/tipo);
+   aquí solo el layout, igual que .btnPrimary del compartido. */
+.btnAccion { composes: btnPrimary from '../tabla-admin.module.css'; }
 
 .errorBanner {
   background: var(--error-bg);
@@ -521,8 +472,10 @@
   justify-content: flex-end;
   padding-top: 0.5rem;
 }
-.btnCancel { padding: 0.55rem 1rem; }
-.btnSubmit { padding: 0.55rem 1.1rem; }
+/* Ambos se combinan en el JSX con btnMerlinTertiary/btnMerlinPrimary: solo
+   layout, mismo criterio que .btnAccion arriba. */
+.btnCancel { composes: btnPrimary from '../tabla-admin.module.css'; }
+.btnSubmit { composes: btnPrimary from '../tabla-admin.module.css'; }
 
 /* Selector de variantes */
 .varianteList {

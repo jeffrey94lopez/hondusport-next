@@ -1,34 +1,22 @@
 /* Cuentas por pagar (POS P4b). Tablero: resumen de antigüedad + tabla de
    saldos + filtros, y el modal de registro de pago (abono/global). Estilos
-   Merlin (tokens de app/merlin.css); patrones visuales copiados del listado de
-   compras (compras.module.css) — no se importa ese módulo. */
+   Merlin (tokens de app/merlin.css). Toolbar/tabla/botones/badges/empty:
+   patrón compartido R5b (ver ../tabla-admin.module.css). */
 
 /* ============================ TABLERO ============================ */
-.page {
-  padding: 1.5rem;
-  min-height: 100vh;
-}
+.page { composes: page from '../tabla-admin.module.css'; min-height: 100vh; }
 
 .topbar {
-  display: flex;
+  composes: topbar from '../tabla-admin.module.css';
+  /* Título+subtítulo apilados a la izquierda: se alinean arriba en vez del
+     centro que da el compartido. Sin margin-bottom: el gap:1rem de .page
+     (compartido) ya separa topbar/resumen/filtros/tableWrap. */
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
 }
 
-.title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text);
-}
+.title { composes: title from '../tabla-admin.module.css'; }
 
-.subtitle {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 0.15rem;
-}
+.subtitle { composes: subtitle from '../tabla-admin.module.css'; margin-top: 0.15rem; }
 
 .actions {
   display: flex;
@@ -36,14 +24,17 @@
   align-items: center;
   flex-wrap: wrap;
 }
-.btnAccion { padding: 0.55rem 1rem; white-space: nowrap; }
+/* Se combina en el JSX con btnMerlinSecondary/btnMerlinPrimary (color/tipo);
+   aquí solo el layout, igual que .btnPrimary del compartido. */
+.btnAccion { composes: btnPrimary from '../tabla-admin.module.css'; }
 
 /* ---- Resumen de antigüedad ---- */
+/* Sin margin-bottom: hijo directo de .page (compartido), que ya separa con
+   gap:1rem — igual que .topbar/.filtros más abajo. */
 .resumen {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
 }
 @media (max-width: 720px) {
   .resumen { grid-template-columns: repeat(2, 1fr); }
@@ -71,13 +62,7 @@
 }
 
 /* ---- Filtros ---- */
-.filtros {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
+.filtros { composes: filtros from '../tabla-admin.module.css'; }
 .filtroSelect {
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border-input);
@@ -90,35 +75,14 @@
 .filtroSelect:focus { outline: none; border-color: var(--accent); }
 
 /* ---- Tabla ---- */
-.tableWrap {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  overflow-x: auto;
-}
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.855rem;
-}
-.table th {
-  text-align: left;
-  padding: 0.7rem 1rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-card);
-  white-space: nowrap;
-}
-.table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-  vertical-align: middle;
-}
+.tableWrap { composes: tableWrap from '../tabla-admin.module.css'; }
+.table { composes: tabla from '../tabla-admin.module.css'; }
+/* Regresión ya vista en este plan: al componer .tabla no se pierde la regla
+   de borde del último renglón, se conserva explícita debajo del compose. */
 .table tr:last-child td { border-bottom: none; }
+/* No cubierto por el compartido: encabezados sin wrap. */
+.table th { white-space: nowrap; }
+.table td { vertical-align: middle; }
 
 .numero { font-weight: 700; white-space: nowrap; }
 .num { text-align: right; white-space: nowrap; }
@@ -127,26 +91,17 @@
 .accionCol { text-align: right; white-space: nowrap; }
 .btnAbonar { padding: 0.35rem 0.85rem; font-size: 0.78rem; }
 
-/* Badge de estado (pendiente gris, parcial ámbar, vencida rojo, pagada verde) */
-.badge {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  border-radius: var(--radius-tag);
-  padding: 0.2rem 0.6rem;
-  white-space: nowrap;
-}
+/* Badge de estado (pendiente gris, parcial ámbar, vencida rojo, pagada verde).
+   Base compuesta del compartido (estructura); los colores quedan locales
+   porque en el JSX se combinan dos clases en el mismo elemento (`${styles.badge}
+   ${ESTADO_BADGE[estado]}`) — mismo criterio que compras.module.css. */
+.badge { composes: badge from '../tabla-admin.module.css'; }
 .badgeGris { background: var(--bg-hover); color: var(--text-muted); }
 .badgeAmbar { background: var(--warning-bg); color: var(--warning); }
 .badgeVerde { background: var(--success-bg); color: var(--success); }
 .badgeRojo { background: var(--error-bg); color: var(--danger); }
 
-.empty {
-  padding: 3rem;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
+.empty { composes: empty from '../tabla-admin.module.css'; }
 
 /* ============================ MODAL DE PAGO ============================ */
 .form {
@@ -266,5 +221,7 @@
   justify-content: flex-end;
   padding-top: 0.5rem;
 }
-.btnCancel { padding: 0.55rem 1rem; }
-.btnSubmit { padding: 0.55rem 1.1rem; }
+/* Ambos se combinan en el JSX con btnMerlinSecondary/btnMerlinPrimary: solo
+   layout, mismo criterio que .btnAccion arriba. */
+.btnCancel { composes: btnPrimary from '../tabla-admin.module.css'; }
+.btnSubmit { composes: btnPrimary from '../tabla-admin.module.css'; }
