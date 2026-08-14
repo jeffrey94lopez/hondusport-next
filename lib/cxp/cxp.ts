@@ -60,3 +60,26 @@ export function excedeLimite(
   const excedente = round2(Math.max(0, total - limite))
   return { excede: excedente > 0, excedente }
 }
+
+// Total de un pago manual: la suma de lo aplicado a cada compra. Se redondea a
+// 2 decimales para que el total mostrado no arrastre error de coma flotante
+// frente al que deriva el servidor a partir de las mismas aplicaciones.
+export function sumaAplicaciones(montos: number[]): number {
+  return round2(montos.reduce((s, m) => s + m, 0))
+}
+
+// Reglas de validez del reparto manual de un pago a proveedor. Devuelve el
+// motivo del rechazo (texto ya listo para mostrar) o null si es válido.
+export function validarAplicaciones(
+  aplicaciones: { numero: string; monto: number; saldo: number }[],
+): string | null {
+  for (const a of aplicaciones) {
+    // Un monto negativo invalida todo el formulario, no solo su línea: quien
+    // envía filtra las líneas <= 0, así que una fila en -50 junto a otra en 150
+    // registraría 150 mientras el total mostrado diría 100.
+    if (a.monto < 0) return 'Los montos no pueden ser negativos.'
+    if (a.monto > a.saldo + 0.005) return `El abono a ${a.numero} excede su saldo.`
+  }
+  if (!aplicaciones.some(a => a.monto > 0)) return 'Aplica un monto a por lo menos una compra.'
+  return null
+}

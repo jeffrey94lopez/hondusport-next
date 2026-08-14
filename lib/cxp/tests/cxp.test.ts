@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { saldoCompra, estadoPago, bucketAntiguedad, distribuirPago, excedeLimite } from '../cxp'
+import { saldoCompra, estadoPago, bucketAntiguedad, distribuirPago, excedeLimite, sumaAplicaciones, validarAplicaciones } from '../cxp'
 
 describe('saldoCompra', () => {
   it('resta pagado del total, redondeado a 2', () => {
@@ -69,5 +69,63 @@ describe('excedeLimite', () => {
   })
   it('excede y reporta el excedente', () => {
     expect(excedeLimite(4000, 2000, 5000)).toEqual({ excede: true, excedente: 1000 })
+  })
+})
+
+describe('sumaAplicaciones', () => {
+  it('suma redondeando a 2 decimales', () => {
+    expect(sumaAplicaciones([100.1, 200.25, 0.05])).toBe(300.4)
+  })
+
+  it('sin montos devuelve cero', () => {
+    expect(sumaAplicaciones([])).toBe(0)
+  })
+
+  // Sin redondeo, 0.1 + 0.2 da 0.30000000000000004 y el total mostrado
+  // divergiría del que registra el servidor.
+  it('no arrastra error de coma flotante', () => {
+    expect(sumaAplicaciones([0.1, 0.2])).toBe(0.3)
+  })
+})
+
+describe('validarAplicaciones', () => {
+  it('acepta un reparto válido', () => {
+    expect(validarAplicaciones([
+      { numero: 'C-001', monto: 100, saldo: 500 },
+      { numero: 'C-002', monto: 0, saldo: 200 },
+    ])).toBeNull()
+  })
+
+  it('rechaza si todo es cero', () => {
+    expect(validarAplicaciones([
+      { numero: 'C-001', monto: 0, saldo: 500 },
+    ])).toBe('Aplica un monto a por lo menos una compra.')
+  })
+
+  it('rechaza una lista vacía', () => {
+    expect(validarAplicaciones([])).toBe('Aplica un monto a por lo menos una compra.')
+  })
+
+  // Un monto negativo invalida TODO el formulario, no solo su línea: el
+  // llamador filtra las líneas <= 0 antes de enviar, así que una fila en -50
+  // junto a otra en 150 registraría 150 mientras el total mostrado dice 100.
+  it('rechaza cualquier monto negativo', () => {
+    expect(validarAplicaciones([
+      { numero: 'C-001', monto: -50, saldo: 500 },
+      { numero: 'C-002', monto: 150, saldo: 500 },
+    ])).toBe('Los montos no pueden ser negativos.')
+  })
+
+  it('rechaza un abono que excede el saldo de su compra, nombrandola', () => {
+    expect(validarAplicaciones([
+      { numero: 'C-007', monto: 600, saldo: 500 },
+    ])).toBe('El abono a C-007 excede su saldo.')
+  })
+
+  // Tolerancia de medio centavo, igual que el resto del módulo.
+  it('tolera medio centavo por encima del saldo', () => {
+    expect(validarAplicaciones([
+      { numero: 'C-001', monto: 500.004, saldo: 500 },
+    ])).toBeNull()
   })
 })
