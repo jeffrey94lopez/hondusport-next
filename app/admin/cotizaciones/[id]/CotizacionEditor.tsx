@@ -38,6 +38,55 @@ const ESTILOS_PDF: { id: string; nombre: string }[] = [
   { id: 'catalogo', nombre: 'Catálogo' },
 ]
 
+// Iconos "feather" locales (mismo estilo que components/admin/icons.tsx y los
+// encabezados de sección del editor de producto, R5a) — solo presentación,
+// para los títulos de las cards del re-skin R5b Task 5.
+function IconCatalogo() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 8V6a6 6 0 0112 0v2" />
+      <path d="M4 8h16l-1.2 12.2a2 2 0 01-2 1.8H7.2a2 2 0 01-2-1.8L4 8z" />
+    </svg>
+  )
+}
+function IconCliente() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20a7.5 7.5 0 0115 0" />
+    </svg>
+  )
+}
+function IconLineas() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 6h12M8 12h12M8 18h12" />
+      <circle cx="4" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4" cy="18" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+function IconTotales() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.2 15.3c0 1 1 1.7 2.1 1.7h1.3c1.1 0 2.1-.7 2.1-1.8 0-1.1-1-1.5-2.6-1.9-1.6-.4-2.6-.9-2.6-2 0-1.1 1.1-1.8 2.4-1.8 1 0 1.9.4 2.3 1.1" />
+      <line x1="12" y1="7.4" x2="12" y2="9.5" />
+      <line x1="12" y1="17" x2="12" y2="19.1" />
+    </svg>
+  )
+}
+function IconTerminos() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 3h7l4 4v14a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
+      <path d="M14 3v4h4" />
+      <path d="M8.5 13h7M8.5 16.5h7" />
+    </svg>
+  )
+}
+
 interface Props {
   cotizacion: CotizacionConDatos | null
   productos: Producto[]
@@ -461,6 +510,8 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
       <div className={styles.grid}>
         {/* ---- Columna izquierda: catálogo ---- */}
         <section className={styles.catalogoCol}>
+          <h2 className={styles.seccionHeader}><IconCatalogo />Catálogo</h2>
+          <div className={styles.seccionBody}>
           <div className={styles.searchRow}>
             <input
               type="text"
@@ -527,11 +578,15 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
               })}
             </div>
           )}
+          </div>
         </section>
 
         {/* ---- Columna derecha: documento en construcción ---- */}
         <section className={styles.docCol}>
           {/* Cliente */}
+          <div className={styles.seccion}>
+          <h2 className={styles.seccionHeader}><IconCliente />Cliente</h2>
+          <div className={styles.seccionBody}>
           <div className={styles.clienteBlock}>
             <div className={styles.clienteBlockHeader}>
               <label className={styles.formLabel}>Cliente</label>
@@ -572,8 +627,13 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
             </div>
             {exonerado && <span className={styles.badgeExonerado}>Exonerado</span>}
           </div>
+          </div>
+          </div>
 
           {/* Líneas */}
+          <div className={styles.seccion}>
+          <h2 className={styles.seccionHeader}><IconLineas />Líneas</h2>
+          <div className={styles.seccionBody}>
           <div className={styles.lineasList}>
             {lineas.length === 0 ? (
               <div className={styles.empty}>Agrega productos desde el catálogo o un ítem libre.</div>
@@ -637,14 +697,20 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
               })
             )}
           </div>
+          </div>
+          </div>
 
           {/* Descuento global + totales */}
+          <div className={styles.seccion}>
+          <h2 className={styles.seccionHeader}><IconTotales />Totales</h2>
+          <div className={styles.seccionBody}>
           <div className={styles.descuentoGlobalRow}>
             <label>Descuento global (L.)</label>
             <input
               type="text"
               inputMode="decimal"
               placeholder="0.00"
+              className={styles.descuentoGlobalInput}
               value={descuentoMostrado}
               onFocus={() => {
                 setDescuentoTexto(valorMostrado(descuentoGlobal))
@@ -679,13 +745,18 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
             )}
             <div className={styles.totalesRowTotal}><span>Total</span><span>{formatPrice(totales.total)}</span></div>
           </div>
+          </div>
+          </div>
 
           {/* Cabecera de la cotización */}
+          <div className={styles.seccion}>
+          <h2 className={styles.seccionHeader}><IconTerminos />Términos y notas</h2>
+          <div className={styles.seccionBody}>
           <div className={styles.cabecera}>
             <div className={styles.cabeceraRow}>
               <label className={styles.formLabel}>
                 Etapa
-                <select value={etapaId} onChange={e => { setEtapaId(e.target.value); marcarSucio() }}>
+                <select className={styles.cabeceraCampo} value={etapaId} onChange={e => { setEtapaId(e.target.value); marcarSucio() }}>
                   {etapas.map(et => (
                     <option key={et.id} value={et.id}>{et.nombre}</option>
                   ))}
@@ -693,7 +764,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
               </label>
               <label className={styles.formLabel}>
                 Vendedor
-                <select value={vendedorId ?? ''} onChange={e => { setVendedorId(e.target.value || null); marcarSucio() }}>
+                <select className={styles.cabeceraCampo} value={vendedorId ?? ''} onChange={e => { setVendedorId(e.target.value || null); marcarSucio() }}>
                   <option value="">Sin vendedor</option>
                   {vendedores.map(v => (
                     <option key={v.id} value={v.id}>{v.nombre}</option>
@@ -704,6 +775,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
                 Validez (días)
                 <input
                   type="number"
+                  className={styles.cabeceraCampo}
                   min={1}
                   step="1"
                   value={validezDias}
@@ -717,12 +789,14 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
             </div>
             <label className={styles.formLabel}>
               Condiciones
-              <textarea rows={2} value={condiciones} onChange={e => { setCondiciones(e.target.value); marcarSucio() }} />
+              <textarea className={styles.cabeceraCampo} rows={2} value={condiciones} onChange={e => { setCondiciones(e.target.value); marcarSucio() }} />
             </label>
             <label className={styles.formLabel}>
               Notas
-              <textarea rows={2} value={notas} onChange={e => { setNotas(e.target.value); marcarSucio() }} />
+              <textarea className={styles.cabeceraCampo} rows={2} value={notas} onChange={e => { setNotas(e.target.value); marcarSucio() }} />
             </label>
+          </div>
+          </div>
           </div>
         </section>
       </div>
@@ -811,17 +885,18 @@ function ItemLibreModal({
       <form className={styles.form} onSubmit={handleSubmit}>
         <label className={styles.formLabel}>
           Descripción
-          <input type="text" value={descripcion} onChange={e => setDescripcion(e.target.value)} autoFocus />
+          <input type="text" className={styles.formCampo} value={descripcion} onChange={e => setDescripcion(e.target.value)} autoFocus />
         </label>
         <label className={styles.formLabel}>
           Cantidad
-          <input type="number" min="1" step="1" value={cantidad} onChange={e => setCantidad(e.target.value)} />
+          <input type="number" className={styles.formCampo} min="1" step="1" value={cantidad} onChange={e => setCantidad(e.target.value)} />
         </label>
         <label className={styles.formLabel}>
           Precio (L.)
           <input
             type="text"
             inputMode="decimal"
+            className={styles.formCampo}
             placeholder="0.00"
             value={precio}
             onChange={e => setPrecio(e.target.value)}
@@ -829,7 +904,7 @@ function ItemLibreModal({
         </label>
         <label className={styles.formLabel}>
           ISV
-          <select value={isv} onChange={e => setIsv(e.target.value as IsvTipo)}>
+          <select className={styles.formCampo} value={isv} onChange={e => setIsv(e.target.value as IsvTipo)}>
             <option value="15">15%</option>
             <option value="18">18%</option>
             <option value="exento">Exento</option>
@@ -920,6 +995,7 @@ function LineaEditor({
             Descripción
             <input
               type="text"
+              className={styles.formCampo}
               value={borrador.descripcion}
               onChange={e => setBorrador(b => ({ ...b, descripcion: e.target.value }))}
               autoFocus
@@ -931,6 +1007,7 @@ function LineaEditor({
           Cantidad
           <input
             type="number"
+            className={styles.formCampo}
             min={1}
             max={Number.isFinite(tope) ? tope : undefined}
             step="1"
@@ -944,6 +1021,7 @@ function LineaEditor({
           <input
             type="text"
             inputMode="decimal"
+            className={styles.formCampo}
             placeholder="0.00"
             value={precioMostrado}
             onFocus={() => {
@@ -962,7 +1040,7 @@ function LineaEditor({
               type="text"
               inputMode="decimal"
               placeholder="0.00"
-              className={styles.editorDescuentoInput}
+              className={`${styles.formCampo} ${styles.editorDescuentoInput}`}
               value={descuentoMostrado}
               onFocus={() => {
                 setDescuentoTexto(valorMostrado(borrador.descuentoModo === 'monto' ? borrador.descuento : pctActual))
@@ -972,7 +1050,7 @@ function LineaEditor({
               onBlur={() => setEditandoDescuento(false)}
             />
             <select
-              className={styles.editorModoSelect}
+              className={`${styles.formCampo} ${styles.editorModoSelect}`}
               value={borrador.descuentoModo}
               onChange={e => setBorrador(b => ({ ...b, descuentoModo: e.target.value as DescuentoModo }))}
             >
@@ -985,7 +1063,7 @@ function LineaEditor({
         {esLibre && (
           <label className={styles.formLabel}>
             ISV
-            <select value={borrador.isv} onChange={e => setBorrador(b => ({ ...b, isv: e.target.value as IsvTipo }))}>
+            <select className={styles.formCampo} value={borrador.isv} onChange={e => setBorrador(b => ({ ...b, isv: e.target.value as IsvTipo }))}>
               <option value="15">15%</option>
               <option value="18">18%</option>
               <option value="exento">Exento</option>

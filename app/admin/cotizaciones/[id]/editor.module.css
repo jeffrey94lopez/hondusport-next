@@ -1,23 +1,29 @@
 /* Editor de cotización. Vive dentro del layout de /admin (con Sidebar), como
    el tablero kanban — no es un overlay a pantalla completa como el POS. Dos
    zonas: catálogo/buscador (izquierda) y el documento en construcción
-   (derecha). Estilos Merlin (tokens de app/merlin.css); patrones visuales
-   copiados de pos.module.css (no se importa ese módulo). */
+   (derecha). Estilos Merlin (tokens de app/merlin.css).
+
+   Re-skin R5b Task 5 (look Stitch): el documento se agrupa en CARDS por
+   sección (Cliente / Líneas / Totales / Términos y notas) — mismo patrón
+   "cards por sección" del editor de producto (components/admin/ProductoFields.tsx
+   + app/admin/productos/productos.module.css, R5a), ya validado visualmente
+   por el usuario: `.seccion`/`.seccionHeader`/`.seccionBody` de aquí son el
+   equivalente local de `.formSection`/`.formSectionHeader`/`.formSectionBody`
+   de ese módulo (no se importan de ahí: son pantallas distintas). El header
+   (.root/.header/.title/.badgeFacturada/.btnAccion) adopta el patrón
+   compartido (ver ../../tabla-admin.module.css), mismo criterio que
+   compras.module.css y estado.module.css (R5b Task 4). El catálogo (columna
+   izquierda) y el layout de dos columnas NO son el patrón de tabla del
+   compartido, así que conservan su maquetación propia (igual que el editor de
+   compras). */
 
 .root {
-  padding: 1.5rem;
+  composes: page from '../../tabla-admin.module.css';
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  composes: topbar from '../../tabla-admin.module.css';
 }
 
 .headerLeft {
@@ -27,17 +33,11 @@
   min-width: 0;
 }
 
-.title { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+.title { composes: title from '../../tabla-admin.module.css'; }
 
 .badgeFacturada {
-  display: inline-block;
+  composes: badge badgeOk from '../../tabla-admin.module.css';
   margin-top: 0.15rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--success);
-  background: var(--success-bg);
-  border-radius: var(--radius-tag);
-  padding: 0.15rem 0.55rem;
 }
 
 .headerActions {
@@ -47,7 +47,10 @@
   flex-wrap: wrap;
 }
 
-.btnAccion { padding: 0.55rem 1.1rem; white-space: nowrap; }
+/* Colores/tipografía/radio del CTA los da la clase global .btnMerlinPrimary/
+   .btnMerlinSecondary (compuesta en el JSX); aquí solo el layout, igual que
+   .btnPrimary del compartido. */
+.btnAccion { composes: btnPrimary from '../../tabla-admin.module.css'; }
 
 /* Dropdown de estilos del PDF */
 .pdfWrap { position: relative; }
@@ -103,21 +106,65 @@
   .grid { grid-template-columns: 1fr; }
 }
 
-/* ---- Catálogo ---- */
-.catalogoCol {
+/* ---- Card por sección (look Stitch, R5b Task 5) ----
+   Mismo lenguaje visual que .formSection/.formSectionHeader/.formSectionBody
+   de productos.module.css (R5a): card blanca con encabezado (icono + título)
+   y cuerpo en columna. Se usa tanto para el catálogo (columna izquierda, una
+   sola card) como para cada bloque del documento (columna derecha, varias
+   cards apiladas). */
+.seccion {
   display: flex;
   flex-direction: column;
+  gap: 0.9rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.1rem 1.25rem;
+}
+
+.seccionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.seccionHeader svg { width: 17px; height: 17px; color: var(--accent); flex-shrink: 0; }
+
+.seccionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
   min-width: 0;
 }
 
+/* ---- Catálogo (una sola card) ---- */
+.catalogoCol {
+  composes: seccion;
+  min-width: 0;
+}
+
+/* margin-bottom eliminado a propósito: antes separaba la barra de búsqueda
+   de la grilla de productos dentro de una sola card sin gap propio; ahora
+   ambas son hijas directas de `.seccionBody` (gap: 0.85rem, ver arriba), que
+   ya aporta esa separación — mismo criterio que .topbar/.filtros al componer
+   `.page` del compartido en compras.module.css/cxp.module.css. */
 .searchRow {
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
-  margin-bottom: 1rem;
 }
 
-.searchInput {
+/* Selector compuesto a propósito: `input[type="text"]` de app/globals.css
+   tiene especificidad (0,1,1) y pisaría una clase sola `.searchInput`
+   (0,1,0) — el padding/fondo/borde/tamaño quedarían con los valores
+   globales en vez de los de aquí. `.searchRow .searchInput` (0,2,0) gana
+   siempre, sin depender del orden de carga entre módulos. */
+.searchRow .searchInput {
   flex: 1;
   min-width: 0;
   padding: 0.65rem 0.9rem;
@@ -127,7 +174,7 @@
   color: var(--text);
   font-size: 0.9rem;
 }
-.searchInput:focus { outline: none; border-color: var(--accent); }
+.searchRow .searchInput:focus { outline: none; border-color: var(--accent); }
 
 .btnItemLibre {
   display: inline-flex;
@@ -197,25 +244,23 @@
 .prodPrecio { font-size: 0.82rem; font-weight: 800; color: var(--accent); }
 .prodStock { font-size: 0.7rem; color: var(--text-muted); }
 
-/* ---- Documento ---- */
+/* ---- Documento (columna derecha): contenedor de las cards apiladas, ya no
+   es él mismo una card (cada bloque — Cliente/Líneas/Totales/Términos — usa
+   `.seccion`). ---- */
 .docCol {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 1rem;
 }
 
+/* Card "Cliente". padding-bottom/border-bottom eliminados a propósito: antes
+   separaban este bloque de las líneas dentro de una sola card grande (docCol);
+   ahora Cliente es su propia `.seccion`, el límite lo da esa card. */
 .clienteBlock {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   position: relative;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid var(--border);
 }
 .clienteBlockHeader {
   display: flex;
@@ -235,7 +280,10 @@
 .btnNuevoCliente:hover { text-decoration: underline; }
 
 .clienteCombo { position: relative; }
-.clienteInput {
+/* Selector compuesto a propósito: mismo motivo que `.searchRow .searchInput`
+   arriba — `input[type="text"]` (0,1,1) pisaría `.clienteInput` sola
+   (0,1,0). `.clienteCombo .clienteInput` (0,2,0) gana siempre. */
+.clienteCombo .clienteInput {
   width: 100%;
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border-input);
@@ -244,7 +292,7 @@
   color: var(--text);
   font-size: 0.85rem;
 }
-.clienteInput:focus { outline: none; border-color: var(--accent); }
+.clienteCombo .clienteInput:focus { outline: none; border-color: var(--accent); }
 
 .clienteDropdown {
   position: absolute;
@@ -285,7 +333,7 @@
   padding: 0.2rem 0.6rem;
 }
 
-/* Líneas */
+/* Card "Líneas" */
 .lineasList {
   display: flex;
   flex-direction: column;
@@ -325,7 +373,10 @@
   align-items: center;
   gap: 0.3rem;
 }
-.qtyInput {
+/* Selector compuesto a propósito: mismo motivo que `.clienteCombo .clienteInput`
+   — este es `input[type="number"]`, también cubierto por la regla global
+   (0,1,1). `.lineaQty .qtyInput` (0,2,0) gana siempre. */
+.lineaQty .qtyInput {
   width: 48px;
   text-align: center;
   border: 1px solid var(--border-input);
@@ -366,7 +417,7 @@
 }
 .btnEditarLinea:hover { color: var(--accent); }
 
-/* Descuento global + totales */
+/* Card "Totales" */
 .descuentoGlobalRow {
   display: flex;
   align-items: center;
@@ -375,7 +426,12 @@
   font-size: 0.8rem;
   color: var(--text-muted);
 }
-.descuentoGlobalRow input {
+/* Selector compuesto a propósito: este input (type="text", inputMode
+   "decimal") es un `input[type="text"]` para la regla global (0,1,1) — una
+   clase sola en el propio input perdería el pulso. Se le agregó la clase
+   `descuentoGlobalInput` en el JSX para poder escribir el compuesto
+   `.descuentoGlobalRow .descuentoGlobalInput` (0,2,0), que gana siempre. */
+.descuentoGlobalRow .descuentoGlobalInput {
   width: 100px;
   border: 1px solid var(--border-input);
   border-radius: var(--radius-input);
@@ -410,22 +466,28 @@
   border-top: 1px solid var(--border-light);
 }
 
-/* Cabecera (etapa/vendedor/validez/condiciones/notas) */
+/* Card "Términos y notas" (etapa/vendedor/validez/condiciones/notas). Ya no
+   lleva su propio borde/padding superior (antes separaba de las líneas
+   dentro de una única card grande): ahora es una card independiente, el
+   límite lo da `.seccion`. */
 .cabecera {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--border);
 }
 .cabeceraRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
-.cabecera select,
-.cabecera input,
-.cabecera textarea {
+/* Selector compuesto a propósito: de los 5 campos de esta card, el de
+   "Validez (días)" es un `input[type="number"]` — cubierto por la regla
+   global (0,1,1), donde una clase sola perdería. Los otros 4 (2 selects, 2
+   textarea) ya ganarían con una clase sola porque la entrada global para
+   `select`/`textarea` no lleva atributo (0,0,1) — pero se les da la MISMA
+   clase `cabeceraCampo` para mantener una sola regla en vez de separar
+   inputs de selects/textareas. */
+.cabecera .cabeceraCampo {
   width: 100%;
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border-input);
@@ -435,10 +497,8 @@
   font-size: 0.85rem;
   font-family: inherit;
 }
-.cabecera textarea { resize: vertical; }
-.cabecera select:focus,
-.cabecera input:focus,
-.cabecera textarea:focus { outline: none; border-color: var(--accent); }
+.cabecera textarea.cabeceraCampo { resize: vertical; }
+.cabecera .cabeceraCampo:focus { outline: none; border-color: var(--accent); }
 
 /* Formularios de modal (ítem libre / editar línea) */
 .form {
@@ -454,9 +514,13 @@
   font-weight: 600;
   color: var(--text-muted);
 }
-.form input,
-.form select,
-.form textarea {
+/* Selector compuesto a propósito: mismo caso que `.cabecera .cabeceraCampo`
+   — de los campos de estos dos modales, los `<input>` (descripción/cantidad/
+   precio/descuento) son `input[type="text"|"number"]`, cubiertos por la
+   regla global (0,1,1); se unifican con los `<select>` (ISV, modo de
+   descuento) bajo la misma clase `formCampo` para una sola regla.
+   `.form .formCampo` (0,2,0) gana siempre. */
+.form .formCampo {
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border-input);
   border-radius: var(--radius-input);
@@ -465,9 +529,7 @@
   font-size: 0.85rem;
   font-family: inherit;
 }
-.form input:focus,
-.form select:focus,
-.form textarea:focus { outline: none; border-color: var(--accent); }
+.form .formCampo:focus { outline: none; border-color: var(--accent); }
 
 .editorDescuentoRow {
   display: flex;
