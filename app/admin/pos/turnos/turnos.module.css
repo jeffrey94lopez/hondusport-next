@@ -229,3 +229,114 @@
 .resultadoDiferencia.diffNegativa { color: var(--danger); }
 .resultadoDiferencia.diffPositiva { color: var(--success); }
 .resultadoDiferencia.diffNeutra { color: var(--text); }
+
+/* Detalle de turno (Task 4): cabecera + card de arqueo + tabla de documentos.
+   Reutiliza `.page`/`.tableWrap`/`.table`/`.empty` de arriba. */
+.detalleHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Mismo tratamiento visual que `.aperturaLink` (color acento + subrayado al
+   hover), con nombre propio porque aquí es "volver", no un enlace a fecha. */
+.volverLink {
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.volverLink:hover { text-decoration: underline; }
+
+/* Card de arqueo: mismo trío bg-card + border-light + shadow-card que
+   `.turnoCard` de arriba, layout vertical en vez de fila. */
+.arqueoCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.arqueoRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.arqueoLabel { color: var(--text-muted); }
+
+.arqueoValor { font-weight: 700; }
+
+.arqueoEstimado {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.arqueoNota {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Fila de diferencia del arqueo del detalle: mismo problema de especificidad
+   documentado arriba en `.resultadoDiferencia` — `.arqueoRow` (0,1,0) ya fija
+   `color: var(--text)`, así que una `.diffX` suelta (también 0,1,0) empata y
+   pierde por orden de declaración. El compuesto `.arqueoDiferencia.diffX`
+   (0,2,0) gana sin importar el orden. Verificado con getComputedStyle. */
+.arqueoDiferencia { font-weight: 800; }
+.arqueoDiferencia.diffNegativa { color: var(--danger); }
+.arqueoDiferencia.diffPositiva { color: var(--success); }
+.arqueoDiferencia.diffNeutra { color: var(--text); }
+
+/* Desglose por método de pago (esperadoCaja().porMetodo), debajo del arqueo. */
+.desglose {
+  border-top: 1px solid var(--border-light);
+  padding-top: 0.6rem;
+  margin-top: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.desgloseTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.2rem;
+}
+
+.desgloseRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+/* Enlace de número de documento en la tabla del detalle: mismo tratamiento
+   que `.numeroLink` de documentos.module.css. */
+.docLink {
+  color: var(--accent);
+  font-weight: 600;
+}
+.docLink:hover { text-decoration: underline; }
+
+/* Badges de estado de documento: mismo criterio que documentos.module.css
+   (`.badgeEmitido`/`.badgeAnulado`), reutilizando `.badge` del compartido. */
+.badgeEmitido,
+.badgeAnulado {
+  composes: badge from '../../tabla-admin.module.css';
+}
+.badgeEmitido { background: var(--success-bg); color: var(--success); }
+.badgeAnulado { background: var(--bg-hover); color: var(--text-muted); }
