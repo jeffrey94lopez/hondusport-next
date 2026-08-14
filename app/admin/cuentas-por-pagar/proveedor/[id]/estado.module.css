@@ -67,7 +67,9 @@
   margin: 0 0 0.6rem;
 }
 
-.tableWrap { composes: tableWrap from '../../../tabla-admin.module.css'; margin-bottom: 1.5rem; }
+/* `overflow-x: auto` explícito: el compartido trae `overflow: hidden` y las
+   celdas de importe llevan `nowrap`. Sin esto se recortarían sin scroll. */
+.tableWrap { composes: tableWrap from '../../../tabla-admin.module.css'; overflow-x: auto; margin-bottom: 1.5rem; }
 .table { composes: tabla from '../../../tabla-admin.module.css'; }
 /* Regresión ya vista en este plan: al componer .tabla no se pierde la regla
    de borde del último renglón, se conserva explícita debajo del compose. */

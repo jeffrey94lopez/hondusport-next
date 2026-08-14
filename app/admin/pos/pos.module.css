@@ -1122,7 +1122,10 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--bg-input);
+  /* Gris explícito, NO var(--bg-input): ese token pasó a blanco en R5b y aquí
+     el pill es un CONTENEDOR sin borde (el input interno es transparente), así
+     que se perdía dentro de la .clienteCard, también blanca. */
+  background: var(--bg-hover);
   border-radius: var(--radius-input);
   padding: 0.4rem 0.7rem;
 }

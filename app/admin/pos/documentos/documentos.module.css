@@ -45,6 +45,10 @@
 .tableWrap { composes: tableWrap from '../../tabla-admin.module.css'; overflow-x: auto; }
 .table { composes: tabla from '../../tabla-admin.module.css'; }
 .table tr:last-child td { border-bottom: none; }
+/* El compartido no las trae y el bloque anterior sí: sin `nowrap` un total como
+   `L. 12,345.67` puede partirse entre el `L.` y las cifras en esta tabla de 8
+   columnas (la de Cliente es de ancho variable). Es un listado fiscal. */
+.table td { vertical-align: middle; white-space: nowrap; }
 
 .numeroLink { font-weight: 700; color: var(--accent); }
 .numeroLink:hover { text-decoration: underline; }

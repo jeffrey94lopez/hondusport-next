@@ -46,7 +46,10 @@
 }
 .filtroSelect:focus { outline: none; border-color: var(--accent); }
 
-.tableWrap { composes: tableWrap from '../tabla-admin.module.css'; }
+/* `overflow-x: auto` explícito: el compartido trae `overflow: hidden` (para que
+   el radio de la card recorte la tabla), pero las celdas de importe llevan
+   `nowrap`, así que sin esto las últimas columnas se recortarían sin scroll. */
+.tableWrap { composes: tableWrap from '../tabla-admin.module.css'; overflow-x: auto; }
 
 .table { composes: tabla from '../tabla-admin.module.css'; }
 /* Regresión ya vista en este plan: al componer .tabla no se pierde la regla
