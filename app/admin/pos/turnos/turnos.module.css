@@ -33,12 +33,21 @@
 
 /* Diferencia (Sobrante/Faltante/Cuadra exacto): mismo criterio de color que
    HistorialModal (app/admin/pos/components/HistorialModal.tsx) — negativa en
-   rojo, positiva en verde, cero en el color de texto normal. Aquí se aplica
-   como texto de celda (no badge/pill) porque el layout es una tabla, no una
-   lista de cards; el criterio de color es el mismo, solo cambia el contenedor.
-   Selector compuesto `.table td.diff*` (0,2,1) a propósito: el compartido
-   `.tabla td` (composes, especificidad 0,1,1) pisaría una clase de diferencia
-   sola (0,1,0) y el color nunca se vería aplicado. */
+   rojo, positiva en verde, cero en el color de texto normal. Estas mismas
+   clases se reusan en DOS contextos: la celda de la tabla del historial
+   (dentro de `.table`) y la fila de resultado del modal de cierre (un `<div>`
+   suelto, fuera de cualquier tabla) — por eso hacen falta AMBAS formas:
+   - Reglas sueltas (`.diffPositiva` etc., especificidad 0,1,0): cubren el
+     `<div>` del modal, que no está dentro de `.table`.
+   - Reglas compuestas (`.table td.diffPositiva` etc., especificidad 0,2,1):
+     cubren la celda de la tabla, donde el compartido `.tabla td` (composes,
+     0,1,1) pisaría la regla suelta si fuera la única — como pasó en la
+     primera versión de este archivo (bug real, encontrado en revisión: el
+     color nunca se aplicaba dentro del modal porque solo existía la forma
+     compuesta, atada a `.table td`). */
+.diffNegativa { color: var(--danger); }
+.diffPositiva { color: var(--success); }
+.diffNeutra { color: var(--text); }
 .table td.diffNegativa { color: var(--danger); }
 .table td.diffPositiva { color: var(--success); }
 .table td.diffNeutra { color: var(--text); }
@@ -208,3 +217,15 @@
 .resultadoDiferencia {
   font-weight: 800;
 }
+/* La fila de diferencia combina `.resultadoRow` + `.resultadoDiferencia` +
+   una de las `.diff*` de arriba. Con la misma especificidad (0,1,0) que
+   `.resultadoRow` (color: var(--text)), quien gane el color depende del
+   ORDEN en el archivo, no de qué clase se listó al final en el className —
+   y `.resultadoRow` está declarada después, así que ganaba ella (bug real,
+   detectado al medir con getComputedStyle: seguía dando el color de texto
+   normal aun con `.diffPositiva` ya aplicada). El compuesto
+   `.resultadoDiferencia.diff*` (0,2,0) le gana a `.resultadoRow` (0,1,0)
+   sin importar el orden de declaración. */
+.resultadoDiferencia.diffNegativa { color: var(--danger); }
+.resultadoDiferencia.diffPositiva { color: var(--success); }
+.resultadoDiferencia.diffNeutra { color: var(--text); }

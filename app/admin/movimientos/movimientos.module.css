@@ -66,7 +66,14 @@
 .table tr:last-child td { border-bottom: none; }
 
 .num { text-align: right; }
-.fechaCol { color: var(--text-muted); }
+
+/* Selector compuesto obligatorio: estas dos clases se aplican DIRECTO sobre un
+   <td>, y la regla `.tabla td { color: var(--text) }` del módulo compartido
+   tiene especificidad (0,1,1) contra la (0,1,0) de una clase sola — el color
+   se perdía. (Bug anterior a R5b: el módulo ya traía su propia `.table td`
+   con el mismo color y la misma especificidad.) El `font-weight` de
+   .cantidad* sí se aplicaba, porque ahí no compite con nadie. */
+.table td.fechaCol { color: var(--text-muted); }
 
 .productoLink { color: var(--text); font-weight: 600; text-decoration: none; }
 .productoLink:hover { color: var(--accent); text-decoration: underline; }
@@ -83,9 +90,15 @@
 .tipoSalida { background: var(--error-bg); color: var(--danger); }
 .tipoNeutro { background: var(--bg-hover); color: var(--text-muted); }
 
-.cantidadPositiva { color: var(--success); font-weight: 700; }
-.cantidadNegativa { color: var(--danger); font-weight: 700; }
-.cantidadNeutra { color: var(--text-muted); font-weight: 700; }
+/* Ver la nota de .fechaCol: el color va en selector compuesto porque estas
+   clases se aplican directo sobre el <td> de la columna Cantidad. El peso se
+   deja en la clase suelta, que no compite con nada. */
+.cantidadPositiva,
+.cantidadNegativa,
+.cantidadNeutra { font-weight: 700; }
+.table td.cantidadPositiva { color: var(--success); }
+.table td.cantidadNegativa { color: var(--danger); }
+.table td.cantidadNeutra { color: var(--text-muted); }
 
 .referenciaLink { color: var(--accent); text-decoration: none; }
 .referenciaLink:hover { text-decoration: underline; }

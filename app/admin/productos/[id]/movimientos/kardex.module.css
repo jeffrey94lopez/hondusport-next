@@ -96,7 +96,11 @@
 .table tr:last-child td { border-bottom: none; }
 
 .num { text-align: right; }
-.fechaCol { color: var(--text-muted); }
+/* Selector compuesto obligatorio: esta clase se aplica DIRECTO sobre un <td>,
+   y `.table td` (arriba) fija `color: var(--text)` con especificidad (0,1,1)
+   contra la (0,1,0) de una clase sola — el color atenuado se perdía. Mismo
+   caso y mismo arreglo que en movimientos.module.css (kardex global). */
+.table td.fechaCol { color: var(--text-muted); }
 .notasCol { white-space: normal; color: var(--text-muted); max-width: 220px; }
 
 /* Etiqueta del tipo de movimiento, coloreada por el signo de `cantidad`
@@ -107,9 +111,15 @@
 .tipoSalida { background: var(--error-bg); color: var(--danger); }
 .tipoNeutro { background: var(--bg-hover); color: var(--text-muted); }
 
-.cantidadPositiva { color: var(--success); font-weight: 700; }
-.cantidadNegativa { color: var(--danger); font-weight: 700; }
-.cantidadNeutra { color: var(--text-muted); font-weight: 700; }
+/* Ver la nota de .fechaCol: el color va en selector compuesto porque estas
+   clases se aplican directo sobre el <td> de la columna Cantidad. El peso se
+   deja en la clase suelta, que no compite con nada. */
+.cantidadPositiva,
+.cantidadNegativa,
+.cantidadNeutra { font-weight: 700; }
+.table td.cantidadPositiva { color: var(--success); }
+.table td.cantidadNegativa { color: var(--danger); }
+.table td.cantidadNeutra { color: var(--text-muted); }
 
 .referenciaLink { color: var(--accent); text-decoration: none; }
 .referenciaLink:hover { text-decoration: underline; }

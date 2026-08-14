@@ -64,7 +64,12 @@
 
 .numero { font-weight: 700; white-space: nowrap; }
 .totalCol { text-align: right; font-weight: 700; white-space: nowrap; }
-.fechaCol { white-space: nowrap; color: var(--text-muted); }
+/* Selector compuesto obligatorio: esta clase se aplica DIRECTO sobre un <td>,
+   y la regla `td` de la tabla fija `color` con especificidad (0,1,1) contra la
+   (0,1,0) de una clase sola — el color atenuado se perdia. Las propiedades que
+   no compiten se quedan en la clase suelta. */
+.fechaCol { white-space: nowrap; }
+.table td.fechaCol { color: var(--text-muted); }
 
 /* Badge de estado (mismos tonos que el brief: gris/ámbar/verde/rojo). Base
    compuesta del compartido (estructura); los colores quedan locales porque en

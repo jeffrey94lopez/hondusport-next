@@ -154,7 +154,12 @@
   border: 1px solid var(--border-light);
 }
 
-.skuCell { color: var(--text-muted); font-size: 0.8rem; white-space: nowrap; }
+/* Selector compuesto obligatorio: esta clase se aplica DIRECTO sobre un <td>,
+   y la regla `td` de la tabla fija `color` con especificidad (0,1,1) contra la
+   (0,1,0) de una clase sola — el color atenuado se perdia. Las propiedades que
+   no compiten se quedan en la clase suelta. */
+.skuCell { font-size: 0.8rem; white-space: nowrap; }
+.table td.skuCell { color: var(--text-muted); }
 
 .productName { font-weight: 600; }
 .productMeta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
