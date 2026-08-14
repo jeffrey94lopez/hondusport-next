@@ -417,6 +417,19 @@
 }
 .btnEditarLinea:hover { color: var(--accent); }
 
+/* El botón de quitar línea (×, btnMerlinIcon 40px por defecto) se iguala al de
+   editar (28px circular). Mismo override que ya aplica el carrito del POS
+   (pos.module.css), pedido del usuario en el pase visual. Conserva el color de
+   peligro que aporta btnMerlinIconDanger. */
+.lineaAcciones :global(.btnMerlinIcon) {
+  width: 28px;
+  height: 28px;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-hover);
+}
+
 /* Card "Totales" */
 .descuentoGlobalRow {
   display: flex;
