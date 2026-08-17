@@ -288,7 +288,7 @@ function EmitirModal({ pedido, cajas, clientes, onClose, onEmitido }: EmitirModa
 
         <div className={styles.formFooter}>
           <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
-          <button type="submit" className="btnMerlinPrimary" disabled={isPending || cajas.length === 0}>
+          <button type="submit" className={`${styles.btnSubmit} btnMerlinPrimary`} disabled={isPending || cajas.length === 0}>
             {isPending ? 'Emitiendo…' : 'Emitir documento'}
           </button>
         </div>

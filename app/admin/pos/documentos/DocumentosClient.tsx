@@ -286,7 +286,7 @@ function AnularModal({ documento, onClose, onAnulado }: AnularModalProps) {
         {error && <p className={styles.formError}>{error}</p>}
         <div className={styles.formFooter}>
           <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
-          <button type="submit" className="btnMerlinPrimary" disabled={isPending}>
+          <button type="submit" className={`${styles.btnSubmit} btnMerlinPrimary`} disabled={isPending}>
             {isPending ? 'Anulando…' : 'Anular comprobante'}
           </button>
         </div>

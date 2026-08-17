@@ -171,3 +171,8 @@
 }
 
 .btnCancel { composes: btnCancel from '../../tabla-admin.module.css'; }
+
+/* Layout del boton. btnMerlin* de app/merlin.css solo aporta color, radio y
+   tipografia -sin padding ni display-, asi que un boton con unicamente la
+   clase global se pinta como texto suelto y no se lee como boton. */
+.btnSubmit { composes: btnPrimary from '../../tabla-admin.module.css'; }

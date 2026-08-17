@@ -448,7 +448,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
     <div className={styles.root}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <button type="button" className="btnMerlinTertiary" onClick={() => router.push('/admin/cotizaciones')}>
+          <button type="button" className={`${styles.btnAccion} btnMerlinTertiary`} onClick={() => router.push('/admin/cotizaciones')}>
             ← Volver
           </button>
           <div>

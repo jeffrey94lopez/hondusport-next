@@ -537,7 +537,7 @@ export default function CompraEditor({ compra, productos, proveedores, config, c
     <div className={styles.root}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <button type="button" className="btnMerlinTertiary" onClick={() => router.push('/admin/compras')}>
+          <button type="button" className={`${styles.btnAccion} btnMerlinTertiary`} onClick={() => router.push('/admin/compras')}>
             ← Volver
           </button>
           <div>

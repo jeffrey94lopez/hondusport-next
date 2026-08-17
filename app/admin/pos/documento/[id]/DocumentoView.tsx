@@ -54,7 +54,7 @@ export default function DocumentoView({
     <div className={styles.page}>
       <div className={`${styles.toolbar} ${styles.noPrint}`}>
         <div className={styles.toolbarLeft}>
-          <Link href="/admin/pos/documentos" className="btnMerlinTertiary">← Documentos</Link>
+          <Link href="/admin/pos/documentos" className={`${styles.btnToolbar} btnMerlinTertiary`}>← Documentos</Link>
           <span className={styles.toolbarTitulo}>
             {esDevolucionDoc
               ? `${documento.tipo === 'nota_credito' ? 'Nota de crédito' : 'Devolución'} ${numeroDocumentoDevolucion(documento)}`
@@ -95,11 +95,11 @@ export default function DocumentoView({
               Devolver / Nota de crédito
             </button>
           )}
-          <button type="button" className="btnMerlinPrimary" onClick={() => window.print()}>
+          <button type="button" className={`${styles.btnToolbar} btnMerlinPrimary`} onClick={() => window.print()}>
             Imprimir
           </button>
           {volverPos && (
-            <Link href="/admin/pos" className="btnMerlinSecondary">
+            <Link href="/admin/pos" className={`${styles.btnToolbar} btnMerlinSecondary`}>
               Nueva venta
             </Link>
           )}

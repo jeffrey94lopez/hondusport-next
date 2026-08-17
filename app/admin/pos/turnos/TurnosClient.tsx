@@ -91,7 +91,7 @@ export default function TurnosClient({ cajas, sesionesAbiertas, historial }: Pro
                   <span className={styles.turnoMontoValor}>{formatPrice(s.monto_inicial)}</span>
                 </div>
               </div>
-              <button type="button" className="btnMerlinPrimary" onClick={() => setCerrando(s)}>
+              <button type="button" className={`${styles.btn} btnMerlinPrimary`} onClick={() => setCerrando(s)}>
                 Cerrar turno
               </button>
             </div>
@@ -278,7 +278,7 @@ function AperturaCard({ cajas, onAbierto }: AperturaCardProps) {
               disabled={isPending}
             />
           </label>
-          <button type="button" className="btnMerlinPrimary" onClick={handleAbrir} disabled={isPending || cajas.length === 0}>
+          <button type="button" className={`${styles.btn} btnMerlinPrimary`} onClick={handleAbrir} disabled={isPending || cajas.length === 0}>
             {isPending ? 'Abriendo...' : 'Abrir turno'}
           </button>
         </div>
@@ -341,7 +341,7 @@ function CerrarTurnoModal({ sesion, cajaNombre, onClose, onListo }: CerrarTurnoM
               </div>
             </div>
             <div className={styles.formFooter}>
-              <button type="button" className="btnMerlinPrimary" onClick={onListo}>
+              <button type="button" className={`${styles.btn} btnMerlinPrimary`} onClick={onListo}>
                 Listo
               </button>
             </div>
@@ -373,10 +373,10 @@ function CerrarTurnoModal({ sesion, cajaNombre, onClose, onListo }: CerrarTurnoM
             </label>
             {error && <div className={styles.formError}>{error}</div>}
             <div className={styles.formFooter}>
-              <button type="button" className="btnMerlinTertiary" onClick={onClose} disabled={isPending}>
+              <button type="button" className={`${styles.btn} btnMerlinTertiary`} onClick={onClose} disabled={isPending}>
                 Cancelar
               </button>
-              <button type="button" className="btnMerlinPrimary" onClick={handleCerrar} disabled={isPending}>
+              <button type="button" className={`${styles.btn} btnMerlinPrimary`} onClick={handleCerrar} disabled={isPending}>
                 {isPending ? 'Cerrando...' : 'Cerrar caja'}
               </button>
             </div>

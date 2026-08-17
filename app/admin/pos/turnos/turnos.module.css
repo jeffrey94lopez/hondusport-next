@@ -10,6 +10,18 @@
    ocurrida en la ola anterior de R5b). */
 .tableWrap { composes: tableWrap from '../../tabla-admin.module.css'; overflow-x: auto; }
 .table { composes: tabla from '../../tabla-admin.module.css'; }
+
+/* Layout de los botones. `btnMerlinPrimary`/`Tertiary` de app/merlin.css SOLO
+   aportan color, radio y tipografia: no traen padding ni display, asi que un
+   boton que use unicamente la clase global se pinta como texto suelto y no se
+   lee como boton. Esta clase da el layout, igual que .btnAccion/.btnSubmit de
+   las demas pantallas. Se combina en el JSX: `${styles.btn} btnMerlinPrimary`. */
+.btn {
+  composes: btnPrimary from '../../tabla-admin.module.css';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .table tr:last-child td { border-bottom: none; }
 .table td { vertical-align: middle; white-space: nowrap; }
 .empty { composes: empty from '../../tabla-admin.module.css'; }
