@@ -7,6 +7,7 @@ import type { LineaConColumna } from '@/lib/pos/desglose'
 import { numeroALetras } from '@/lib/pos/letras'
 import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos, type ResumenCaja } from '@/lib/pos/emision'
 import { cantidadDevolvible, recalcularLineaDevuelta, totalNotaCredito, validarReembolsos } from '@/lib/pos/devoluciones'
+import { hayTruncamiento } from '@/lib/pos/truncamiento'
 import { validarRtn } from '@/lib/pos/fiscal'
 import { excedeLimite } from '@/lib/cxp/cxp'
 import { saldoCxcDeCliente } from '@/app/admin/cuentas-por-cobrar/actions'
@@ -198,12 +199,36 @@ export async function cerrarSesion(
   if (sesionError || !sesion) return { ok: false, error: 'La sesión no existe.' }
   if (sesion.estado !== 'abierta') return { ok: false, error: 'Esta sesión ya está cerrada.' }
 
-  const { data: documentosRows, error: documentosError } = await supabase
+  // `count: 'exact'` + comprobación de truncamiento: esta consulta es la que
+  // alimenta el `monto_esperado` que se CONGELA abajo. PostgREST aplica su
+  // tope de filas sin fallar —devuelve menos y no avisa—, así que un turno con
+  // muchos documentos congelaría un esperado corto y el cajero aparecería con
+  // un sobrante inexistente. Preferimos no cerrar antes que cerrar con un
+  // número incompleto: el cierre se puede reintentar, un arqueo mal firmado
+  // hay que descubrirlo primero para poder corregirlo.
+  const {
+    data: documentosRows,
+    error: documentosError,
+    count: documentosTotal,
+  } = await supabase
     .from('documentos')
-    .select('estado, total, documento_pagos(monto, metodos_pago(tipo))')
+    .select('estado, total, documento_pagos(monto, metodos_pago(tipo))', { count: 'exact' })
     .eq('sesion_id', sesionId)
 
   if (documentosError) return { ok: false, error: ERROR_GENERICO }
+
+  if (hayTruncamiento((documentosRows ?? []).length, documentosTotal)) {
+    console.error(
+      `cerrarSesion: truncamiento al leer documentos de la sesion ${sesionId} ` +
+        `(${(documentosRows ?? []).length} de ${documentosTotal})`,
+    )
+    return {
+      ok: false,
+      error:
+        'No se pudo leer la totalidad de los documentos del turno, así que el arqueo estaría incompleto. ' +
+        'No se cerró la caja. Intenta de nuevo; si persiste, avisa a soporte antes de cerrar.',
+    }
+  }
 
   // Sin tipos de Database generados, el cliente de Supabase infiere las
   // relaciones embebidas como arreglo por defecto (no puede conocer la
@@ -229,12 +254,26 @@ export async function cerrarSesion(
 
   // Cobros de CxC registrados en esta sesión (P4c): el efectivo cobrado suma
   // al esperado igual que el efectivo de ventas; el resto queda informativo.
-  const { data: cobrosRows, error: cobrosError } = await supabase
+  const { data: cobrosRows, error: cobrosError, count: cobrosTotal } = await supabase
     .from('cobros')
-    .select('metodo, monto')
+    .select('metodo, monto', { count: 'exact' })
     .eq('sesion_id', sesionId)
 
   if (cobrosError) return { ok: false, error: ERROR_GENERICO }
+
+  // Misma guarda que arriba: el efectivo cobrado suma al esperado congelado.
+  if (hayTruncamiento((cobrosRows ?? []).length, cobrosTotal)) {
+    console.error(
+      `cerrarSesion: truncamiento al leer cobros de la sesion ${sesionId} ` +
+        `(${(cobrosRows ?? []).length} de ${cobrosTotal})`,
+    )
+    return {
+      ok: false,
+      error:
+        'No se pudo leer la totalidad de los cobros del turno, así que el arqueo estaría incompleto. ' +
+        'No se cerró la caja. Intenta de nuevo; si persiste, avisa a soporte antes de cerrar.',
+    }
+  }
 
   const cobros = (cobrosRows ?? []).map(c => ({
     metodo: c.metodo as CobroMetodo,
@@ -396,21 +435,53 @@ async function devolucionesDeSesion(
   supabase: SupabaseServerClient,
   sesionId: string,
 ): Promise<PosResult<Array<{ metodo: CobroMetodo; monto: number }>>> {
-  const { data: devDocsRows, error: devDocsError } = await supabase
+  const { data: devDocsRows, error: devDocsError, count: devDocsTotal } = await supabase
     .from('documentos')
-    .select('id')
+    .select('id', { count: 'exact' })
     .eq('sesion_id', sesionId)
     .in('tipo', ['nota_credito', 'devolucion'])
     .neq('estado', 'anulado')
 
   if (devDocsError) return { ok: false, error: ERROR_GENERICO }
 
+  // Los reembolsos en efectivo RESTAN del esperado congelado: si esta lista
+  // trunca, el esperado sale de mas y el cajero aparece con un faltante que no
+  // existe. Se corta el cierre en vez de firmar un numero incompleto.
+  if (hayTruncamiento((devDocsRows ?? []).length, devDocsTotal)) {
+    console.error(
+      `devolucionesDeSesion: truncamiento al leer documentos de devolucion de la sesion ${sesionId} ` +
+        `(${(devDocsRows ?? []).length} de ${devDocsTotal})`,
+    )
+    return {
+      ok: false,
+      error:
+        'No se pudo leer la totalidad de las devoluciones del turno, así que el arqueo estaría incompleto. ' +
+        'No se cerró la caja. Intenta de nuevo; si persiste, avisa a soporte antes de cerrar.',
+    }
+  }
+
   const devDocIds = (devDocsRows ?? []).map(d => d.id)
-  const { data: devolucionesRows, error: devolucionesError } = devDocIds.length
-    ? await supabase.from('nota_credito_reembolsos').select('tipo, monto').in('documento_id', devDocIds)
-    : { data: [], error: null }
+  const { data: devolucionesRows, error: devolucionesError, count: reembolsosTotal } = devDocIds.length
+    ? await supabase
+        .from('nota_credito_reembolsos')
+        .select('tipo, monto', { count: 'exact' })
+        .in('documento_id', devDocIds)
+    : { data: [], error: null, count: 0 }
 
   if (devolucionesError) return { ok: false, error: ERROR_GENERICO }
+
+  if (hayTruncamiento((devolucionesRows ?? []).length, reembolsosTotal)) {
+    console.error(
+      `devolucionesDeSesion: truncamiento al leer reembolsos de la sesion ${sesionId} ` +
+        `(${(devolucionesRows ?? []).length} de ${reembolsosTotal})`,
+    )
+    return {
+      ok: false,
+      error:
+        'No se pudo leer la totalidad de los reembolsos del turno, así que el arqueo estaría incompleto. ' +
+        'No se cerró la caja. Intenta de nuevo; si persiste, avisa a soporte antes de cerrar.',
+    }
+  }
 
   return {
     ok: true,
