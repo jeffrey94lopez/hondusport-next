@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { hayTruncamiento } from '../truncamiento'
+import { hayTruncamiento, sinConteo } from '../truncamiento'
 
 describe('hayTruncamiento', () => {
   it('detecta cuando faltan filas', () => {
@@ -27,5 +27,30 @@ describe('hayTruncamiento', () => {
   // insercion concurrente entre la consulta y el conteo), no es truncamiento.
   it('mas filas que el conteo tampoco es truncamiento', () => {
     expect(hayTruncamiento(1001, 1000)).toBe(false)
+  })
+
+  // La guarda no depende de que llegue ALGUNA fila: una perdida total tambien
+  // se detecta.
+  it('detecta una perdida total', () => {
+    expect(hayTruncamiento(0, 5)).toBe(true)
+  })
+})
+
+describe('sinConteo', () => {
+  it('con conteo devuelve false', () => {
+    expect(sinConteo(0)).toBe(false)
+    expect(sinConteo(1342)).toBe(false)
+  })
+
+  it('sin conteo devuelve true', () => {
+    expect(sinConteo(null)).toBe(true)
+  })
+
+  // Una cabecera de rango sin total hace que parseInt devuelva NaN. Cae en el
+  // mismo camino de "guarda inerte" que un conteo ausente, y debe registrarse
+  // igual: NaN no se compara bien y hayTruncamiento tampoco lo reportaria.
+  it('NaN cuenta como sin conteo', () => {
+    expect(sinConteo(NaN)).toBe(true)
+    expect(hayTruncamiento(500, NaN)).toBe(false)
   })
 })

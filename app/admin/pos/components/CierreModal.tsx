@@ -80,13 +80,25 @@ export default function CierreModal({
   // Cobros de CxC y devoluciones/reembolsos (P5a) ya registrados en esta
   // sesión abierta, para el resumen previo (no persiste nada; `cerrarSesion`
   // los vuelve a traer en el server para el cálculo definitivo al confirmar).
+  // Si alguna de las dos lecturas falla, el resumen previo NO se puede pintar:
+  // sin los cobros el esperado sale corto y sin las devoluciones sale de mas,
+  // en ambos casos SIN aviso. Antes de la guarda de truncamiento estas
+  // consultas casi no fallaban; ahora abortan a proposito cuando detectan que
+  // faltan filas, asi que un fallo silencioso aqui mostraria un esperado peor
+  // que el de antes. Se marca y se explica en vez de pintar un numero malo.
+  const [resumenIncompleto, setResumenIncompleto] = useState(false)
+
   useEffect(() => {
     let activo = true
     obtenerCobrosSesion(sesion.id).then(result => {
-      if (activo && result.ok && result.data) setCobros(result.data)
+      if (!activo) return
+      if (result.ok && result.data) setCobros(result.data)
+      else setResumenIncompleto(true)
     })
     obtenerDevolucionesSesion(sesion.id).then(result => {
-      if (activo && result.ok && result.data) setDevoluciones(result.data)
+      if (!activo) return
+      if (result.ok && result.data) setDevoluciones(result.data)
+      else setResumenIncompleto(true)
     })
     return () => { activo = false }
   }, [sesion.id])
@@ -239,7 +251,16 @@ export default function CierreModal({
             antes de teclear el conteo. El cálculo de arriba (`esperadoCaja`)
             se sigue ejecutando igual: el interruptor decide solo qué se
             muestra, nunca qué se calcula ni qué congela `cerrarSesion`. */}
-        {!cierreCiegas && (
+        {!cierreCiegas && resumenIncompleto && (
+          <p className={styles.identNota}>
+            No se pudo leer todo el movimiento del turno, así que el resumen previo no se
+            muestra: saldría con un efectivo esperado equivocado. Puedes contar la gaveta y
+            confirmar igual — el arqueo definitivo lo calcula el servidor al cerrar, y si
+            tampoco puede leerlo todo, no cerrará la caja y te lo dirá.
+          </p>
+        )}
+
+        {!cierreCiegas && !resumenIncompleto && (
           <>
             <div className={styles.totalesPanel}>
               {(Object.keys(porMetodo) as MetodoPagoTipo[])
@@ -327,7 +348,10 @@ export default function CierreModal({
             para impedir. Con el interruptor activo, este renglón no se
             pinta; el arqueo real se sigue mostrando siempre DESPUÉS de
             confirmar, vía el comprobante. */}
-        {!cierreCiegas && diferencia !== null && (
+        {/* `!resumenIncompleto` además del interruptor: esta fila compara contra
+            el mismo `efectivoEsperado` del resumen previo, así que si ese número
+            está incompleto la diferencia en vivo también lo está. */}
+        {!cierreCiegas && !resumenIncompleto && diferencia !== null && (
           <div
             className={styles.diferenciaRow}
             style={{ color: diferencia < 0 ? 'var(--danger)' : 'var(--success)' }}

@@ -57,6 +57,12 @@ export default async function TurnoDetallePage({ params }: Props) {
       supabase.from('configuracion').select('key, value').limit(500),
     ])
 
+  // Igual que con el detalle: si cobros o devoluciones no se pudieron leer, el
+  // desglose por metodo saldria corto (sin cobros) o de mas (sin reembolsos),
+  // sin ninguna senal. Se propaga la senal para no montar un comprobante que
+  // podria mentir. Antes de la guarda de truncamiento estas lecturas casi no
+  // fallaban; ahora abortan a proposito cuando faltan filas.
+  const movimientoCompleto = cobrosResult.ok && devolucionesResult.ok
   const cobros = cobrosResult.ok ? (cobrosResult.data ?? []) : []
   const devoluciones = devolucionesResult.ok ? (devolucionesResult.data ?? []) : []
   // Si `obtenerDetalleTurno` falla, NO se sustituye por una lista vacía sin
@@ -66,7 +72,7 @@ export default async function TurnoDetallePage({ params }: Props) {
   // verdad no tuvo ninguno. Se manda la señal a `TurnoDetalleView` para que
   // deshabilite "Imprimir comprobante" en vez de montar un papel que podría
   // mentir.
-  const detalleDisponible = detalleResult.ok && !!detalleResult.data
+  const detalleDisponible = detalleResult.ok && !!detalleResult.data && movimientoCompleto
   const detalle: DetalleTurno = detalleDisponible ? detalleResult.data! : { creditos: [], cobros: [] }
   const empresaNombre = nombreComercial(toConfigMap(config ?? [])) || 'Hondusport'
 

@@ -7,7 +7,7 @@ import type { LineaConColumna } from '@/lib/pos/desglose'
 import { numeroALetras } from '@/lib/pos/letras'
 import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos, type ResumenCaja } from '@/lib/pos/emision'
 import { cantidadDevolvible, recalcularLineaDevuelta, totalNotaCredito, validarReembolsos } from '@/lib/pos/devoluciones'
-import { hayTruncamiento } from '@/lib/pos/truncamiento'
+import { hayTruncamiento, sinConteo } from '@/lib/pos/truncamiento'
 import { validarRtn } from '@/lib/pos/fiscal'
 import { excedeLimite } from '@/lib/cxp/cxp'
 import { saldoCxcDeCliente } from '@/app/admin/cuentas-por-cobrar/actions'
@@ -217,6 +217,12 @@ export async function cerrarSesion(
 
   if (documentosError) return { ok: false, error: ERROR_GENERICO }
 
+  if (sinConteo(documentosTotal)) {
+    console.warn(
+      `guarda de truncamiento inerte: sin conteo al leer documentos de la sesion ${sesionId}`,
+    )
+  }
+
   if (hayTruncamiento((documentosRows ?? []).length, documentosTotal)) {
     console.error(
       `cerrarSesion: truncamiento al leer documentos de la sesion ${sesionId} ` +
@@ -262,6 +268,12 @@ export async function cerrarSesion(
   if (cobrosError) return { ok: false, error: ERROR_GENERICO }
 
   // Misma guarda que arriba: el efectivo cobrado suma al esperado congelado.
+  if (sinConteo(cobrosTotal)) {
+    console.warn(
+      `guarda de truncamiento inerte: sin conteo al leer cobros de la sesion ${sesionId}`,
+    )
+  }
+
   if (hayTruncamiento((cobrosRows ?? []).length, cobrosTotal)) {
     console.error(
       `cerrarSesion: truncamiento al leer cobros de la sesion ${sesionId} ` +
@@ -447,6 +459,12 @@ async function devolucionesDeSesion(
   // Los reembolsos en efectivo RESTAN del esperado congelado: si esta lista
   // trunca, el esperado sale de mas y el cajero aparece con un faltante que no
   // existe. Se corta el cierre en vez de firmar un numero incompleto.
+  if (sinConteo(devDocsTotal)) {
+    console.warn(
+      `guarda de truncamiento inerte: sin conteo al leer documentos de devolucion de la sesion ${sesionId}`,
+    )
+  }
+
   if (hayTruncamiento((devDocsRows ?? []).length, devDocsTotal)) {
     console.error(
       `devolucionesDeSesion: truncamiento al leer documentos de devolucion de la sesion ${sesionId} ` +
@@ -469,6 +487,12 @@ async function devolucionesDeSesion(
     : { data: [], error: null, count: 0 }
 
   if (devolucionesError) return { ok: false, error: ERROR_GENERICO }
+
+  if (sinConteo(reembolsosTotal)) {
+    console.warn(
+      `guarda de truncamiento inerte: sin conteo al leer reembolsos de la sesion ${sesionId}`,
+    )
+  }
 
   if (hayTruncamiento((devolucionesRows ?? []).length, reembolsosTotal)) {
     console.error(

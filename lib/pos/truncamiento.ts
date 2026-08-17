@@ -31,3 +31,18 @@ export function hayTruncamiento(filasRecibidas: number, total: number | null): b
   if (total == null) return false
   return filasRecibidas < total
 }
+
+/**
+ * `true` si el conteo no llegó y, por tanto, la guarda quedó inerte para esa
+ * consulta.
+ *
+ * Existe para que el caso "sin conteo" deje rastro en el log. Sin esto, si un
+ * proxy dejara de propagar la cabecera `Content-Range`, todos los cierres
+ * pasarían a ejecutarse sin protección y nada lo distinguiría de un cierre
+ * sano: el arreglo sería inerte y nadie se enteraría. `NaN` cae aquí también:
+ * una cabecera de rango sin total (la que termina en barra-asterisco) hace que
+ * `parseInt` devuelva `NaN`.
+ */
+export function sinConteo(total: number | null): boolean {
+  return total == null || Number.isNaN(total)
+}
