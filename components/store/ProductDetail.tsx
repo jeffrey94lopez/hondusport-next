@@ -10,6 +10,7 @@ import ProductCard from './ProductCard'
 import { formatPrice } from '@/lib/store/format'
 import { getTallas } from '@/lib/store/getTallas'
 import { DEFAULT_FREE_SHIPPING_THRESHOLD } from '@/lib/store/freeShipping'
+import { estaAgotado } from '@/lib/store/variantes'
 import { addRecentView } from '@/lib/store/recentViews'
 import { useCart } from '@/lib/store/cart-context'
 import { useWishlist } from '@/lib/store/wishlist-context'
@@ -83,7 +84,12 @@ export default function ProductDetail({
 
   const selectedVariante = variantes.find(v => v.id === selectedVarianteId) ?? null
   const precioActual = selectedVariante?.precioEfectivo ?? producto.precio
-  const todasAgotadas = conVariantes && variantes.every(v => v.agotada)
+  // `estaAgotado` (la misma pura que usan ProductCard, el catálogo del POS y
+  // el editor de cotización) en vez de `conVariantes && todas agotadas`: esa
+  // condición dejaba fuera al producto PLANO con stock 0 — la card del
+  // listado lo marcaba "Agotado" y esta pantalla dejaba agregarlo al carrito.
+  // Stock null sigue siendo ilimitado, no agotado.
+  const agotado = estaAgotado(producto.stock, variantes)
   const stockDisponible = selectedVariante ? selectedVariante.stock : producto.stock
   const maxCantidad = Math.max(stockDisponible ?? Infinity, 1)
   // Deriva el valor mostrado/usado en vez de sincronizar `cantidad` con un efecto:
@@ -115,6 +121,7 @@ export default function ProductDetail({
   }
 
   function handleAddToCart() {
+    if (agotado) return
     if (conVariantes && (!selectedVariante || selectedVariante.agotada)) return
     const item = {
       id: producto.id,
@@ -323,10 +330,10 @@ export default function ProductDetail({
               type="button"
               className={styles.addBtn}
               onClick={handleAddToCart}
-              disabled={todasAgotadas || (conVariantes && !selectedVariante)}
+              disabled={agotado || (conVariantes && !selectedVariante)}
             >
-              <span>{todasAgotadas ? 'AGOTADO' : 'Agregar al carrito'}</span>
-              {!todasAgotadas && <i className="fa-solid fa-arrow-right" />}
+              <span>{agotado ? 'AGOTADO' : 'Agregar al carrito'}</span>
+              {!agotado && <i className="fa-solid fa-arrow-right" />}
             </button>
 
             <button
