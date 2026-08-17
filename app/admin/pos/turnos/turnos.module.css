@@ -252,6 +252,16 @@
   flex-wrap: wrap;
 }
 
+/* Botón "Imprimir comprobante" (R7) + enlace "Volver a turnos", agrupados a
+   la derecha del encabezado. `.btn` de abajo ya da la caja al botón Merlin
+   (padding/display: `btnMerlinSecondary` sola se pinta como texto suelto). */
+.detalleHeaderAcciones {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
 /* Mismo tratamiento visual que `.aperturaLink` (color acento + subrayado al
    hover), con nombre propio porque aquí es "volver", no un enlace a fecha. */
 .volverLink {

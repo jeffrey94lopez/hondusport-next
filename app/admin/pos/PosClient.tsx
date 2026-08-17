@@ -8,6 +8,7 @@ import { marcarCotizacionFacturada, type CotizacionPrefillPos } from '@/app/admi
 import { precioLineaPos } from '@/lib/pos/emision'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { estadoCai } from '@/lib/pos/fiscal'
+import { nombreComercial } from '@/lib/empresa/perfil'
 import {
   clampDescuentoLinea, clampDescuentoGlobal, siguienteNombrePestana, accionPersistencia,
   type LineaVenta, type DescuentoModo, type PestanaVenta,
@@ -59,6 +60,10 @@ interface Props {
   clientes: Cliente[]
   cais: CaiAutorizacion[]
   config: ConfigMap
+  // R7: interruptor `pos_cierre_ciegas` ya resuelto por el server component
+  // con el criterio "ausente = activo" (`config.pos_cierre_ciegas !== 'false'`).
+  // Gobierna qué se pinta en `CierreModal` antes de teclear el conteo.
+  cierreCiegas: boolean
   // Task 12: el page no conoce la caja seleccionada (vive en localStorage,
   // solo se lee en el cliente), así que trae TODAS las esperas/sesiones
   // cerradas y este componente filtra por `caja.id` una vez resuelta.
@@ -215,6 +220,7 @@ export default function PosClient({
   clientes,
   cais,
   config,
+  cierreCiegas,
   esperas,
   sesionesCerradas,
   documentosPorSesion,
@@ -223,6 +229,9 @@ export default function PosClient({
   descuentos,
 }: Props) {
   const router = useRouter()
+  // R7: nombre comercial para el encabezado del comprobante de cierre de
+  // turno (ComprobanteTurno). Mismo resolver y mismo fallback que DocumentoHoja.
+  const empresaNombre = nombreComercial(config) || 'Hondusport'
   const [cajaId, setCajaId] = useState<string | null>(() => leerCajaGuardada(cajas))
   const [montoInicial, setMontoInicial] = useState('')
   const [error, setError] = useState('')
@@ -1215,6 +1224,9 @@ export default function PosClient({
           sesion={sesion}
           documentos={documentosSesionActual}
           cartLineasPendientes={lineas.length}
+          cajaNombre={caja.nombre}
+          empresaNombre={empresaNombre}
+          cierreCiegas={cierreCiegas}
           onClose={() => setCierreAbierto(false)}
           onCerrado={handleCierreCerrado}
         />

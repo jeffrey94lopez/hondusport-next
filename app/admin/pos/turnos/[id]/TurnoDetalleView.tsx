@@ -1,7 +1,11 @@
+'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/store/format'
 import { numeroDocumento } from '@/lib/pos/documentos'
 import { numeroDocumentoDevolucion } from '@/lib/pos/devoluciones'
+import type { DetalleTurno } from '@/lib/pos/turnos'
+import ComprobanteTurnoModal, { type ComprobanteTurnoDatos } from '../../components/ComprobanteTurnoModal'
 import type { Caja, CobroMetodo, Documento, MetodoPagoTipo, SesionCaja } from '@/types'
 import styles from '../turnos.module.css'
 
@@ -22,6 +26,9 @@ interface Props {
    * muestra solo si la sesión sigue abierta; para una cerrada se usa el valor
    * congelado en `sesion.monto_esperado`. */
   esperadoEnVivo: number
+  /** Cambio entregado acumulado (R7, `esperadoCaja`): línea propia del
+   * comprobante para que el desglose por método reconcilie con el esperado. */
+  cambioEntregado: number
   porMetodo: Record<MetodoPagoTipo, number>
   /** Cobros de CxC en efectivo/transferencia/tarjeta/cheque de esta sesión,
    * informativos: el efectivo ya está sumado dentro de `esperadoEnVivo` (turno
@@ -31,6 +38,10 @@ interface Props {
    * restado del mismo esperado (ver `cobrosPorMetodo`). */
   devolucionesPorMetodo: Record<CobroMetodo, number>
   documentos: DocumentoTurno[]
+  /** Créditos otorgados y cobros de CxC recibidos en el turno (R7,
+   * `obtenerDetalleTurno`), para el comprobante reimprimible. */
+  detalle: DetalleTurno
+  empresaNombre: string
 }
 
 const NOMBRES_METODO: Record<MetodoPagoTipo, string> = {
@@ -90,13 +101,33 @@ export default function TurnoDetalleView({
   sesion,
   caja,
   esperadoEnVivo,
+  cambioEntregado,
   porMetodo,
   cobrosPorMetodo,
   devolucionesPorMetodo,
   documentos,
+  detalle,
+  empresaNombre,
 }: Props) {
   const cerrada = sesion.estado === 'cerrada'
   const diferencia = sesion.diferencia ?? 0
+  const [comprobante, setComprobante] = useState(false)
+
+  // Datos del comprobante (R7): el arqueo sale de `sesion` tal cual (valores
+  // congelados si está cerrada, `null` si sigue abierta — `ComprobanteTurno`
+  // ya distingue ambos casos); el desglose por método es el mismo que ya
+  // calculó el server component con `esperadoCaja` para esta pantalla.
+  const datosComprobante: ComprobanteTurnoDatos = {
+    sesion,
+    cajaNombre: caja?.nombre ?? '—',
+    empresaNombre,
+    porMetodo,
+    cobrosPorMetodo,
+    devolucionesPorMetodo,
+    cambioEntregado,
+    efectivoEsperadoDetalle: esperadoEnVivo,
+    detalle,
+  }
 
   const metodosConMonto = (Object.keys(porMetodo) as MetodoPagoTipo[]).filter(
     tipo => tipo !== 'credito' && porMetodo[tipo] > 0,
@@ -116,10 +147,23 @@ export default function TurnoDetalleView({
             {cerrada ? fecha(sesion.cerrada_at) : 'aún abierto'}
           </p>
         </div>
-        <Link href="/admin/pos/turnos" className={styles.volverLink}>
-          ← Volver a turnos
-        </Link>
+        <div className={styles.detalleHeaderAcciones}>
+          <button
+            type="button"
+            className={`btnMerlinSecondary ${styles.btn}`}
+            onClick={() => setComprobante(true)}
+          >
+            Imprimir comprobante
+          </button>
+          <Link href="/admin/pos/turnos" className={styles.volverLink}>
+            ← Volver a turnos
+          </Link>
+        </div>
       </div>
+
+      {comprobante && (
+        <ComprobanteTurnoModal datos={datosComprobante} onCerrar={() => setComprobante(false)} />
+      )}
 
       <div className={styles.arqueoCard}>
         <div className={styles.arqueoRow}>
@@ -174,14 +218,16 @@ export default function TurnoDetalleView({
                   <span>{formatPrice(porMetodo.credito)}</span>
                 </div>
               )}
-              {/* Sin esta nota, quien audita suma el desglose contra el arqueo y
-                  encuentra un descuadre que no existe: `esperadoCaja` resta el
-                  cambio entregado del efectivo esperado, pero no lo devuelve
-                  como línea propia, así que el desglose queda en bruto. */}
-              <p className={styles.arqueoNota}>
-                Montos cobrados en bruto: el cambio entregado ya está restado del efectivo
-                esperado de arriba, pero no se muestra como línea aparte.
-              </p>
+              {/* R7: la nota de R6 sobre "montos en bruto" ya no aplica — el
+                  cambio entregado ahora se muestra como línea propia (R7
+                  Task 1, `esperadoCaja` lo devuelve), así que el desglose sí
+                  reconcilia con el esperado sin advertencia. */}
+              {cambioEntregado > 0 && (
+                <div className={styles.desgloseRow}>
+                  <span>Cambio entregado</span>
+                  <span>− {formatPrice(cambioEntregado)}</span>
+                </div>
+              )}
             </>
           )}
         </div>

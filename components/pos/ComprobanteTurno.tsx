@@ -20,6 +20,13 @@ export interface ComprobanteTurnoProps {
   efectivoEsperadoDetalle: number
   detalle: DetalleTurno
   impresoEn: string // ISO; el llamador lo fija
+  /** 'modal' cuando se monta dentro de un modal (CierreModal, TurnosClient,
+   * TurnoDetalleView, vía `ComprobanteTurnoModal`): omite el envoltorio de
+   * página completa `.pageBg` (`min-height: calc(100vh - 60px)`), que dentro
+   * de un modal deja un hueco vacío enorme debajo del recibo — el modal que
+   * lo monta ya aporta su propio scroll. Por defecto 'pagina' (uso standalone,
+   * sin modal alrededor). */
+  variante?: 'pagina' | 'modal'
 }
 
 const NOMBRES_METODO: Record<MetodoPagoTipo, string> = {
@@ -86,6 +93,7 @@ export default function ComprobanteTurno({
   efectivoEsperadoDetalle,
   detalle,
   impresoEn,
+  variante = 'pagina',
 }: ComprobanteTurnoProps) {
   const diferencia = sesion.diferencia
   const diferenciaLabel = diferencia == null ? 'Diferencia' : diferencia === 0 ? 'Cuadra exacto' : diferencia > 0 ? 'Sobrante' : 'Faltante'
@@ -105,7 +113,7 @@ export default function ComprobanteTurno({
   const devolucionesPorMetodoConMonto = METODOS_COBRO.filter(m => devolucionesPorMetodo[m] > 0)
 
   return (
-    <div className={styles.pageBg}>
+    <div className={variante === 'modal' ? styles.wrapModal : styles.pageBg}>
       <div className={styles.hoja80}>
         {/* 1. Encabezado */}
         <header className={styles.header}>

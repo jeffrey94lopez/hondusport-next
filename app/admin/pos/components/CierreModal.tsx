@@ -1,10 +1,12 @@
 'use client'
 import { useState, useTransition, useEffect } from 'react'
 import Modal from '@/components/admin/Modal'
-import { cerrarSesion, obtenerCobrosSesion, obtenerDevolucionesSesion } from '../actions'
+import { cerrarSesion, obtenerCobrosSesion, obtenerDevolucionesSesion, obtenerDetalleTurno } from '../actions'
 import { esperadoCaja } from '@/lib/pos/emision'
 import { formatPrice } from '@/lib/store/format'
 import { round2, parseMoneyInput } from '../pos-helpers'
+import type { DetalleTurno } from '@/lib/pos/turnos'
+import ComprobanteTurnoModal, { type ComprobanteTurnoDatos } from './ComprobanteTurnoModal'
 import type { SesionCaja, DocumentoParaArqueo, MetodoPagoTipo, CobroMetodo } from '@/types'
 import styles from '../pos.module.css'
 
@@ -30,17 +32,37 @@ interface CierreModalProps {
   sesion: SesionCaja
   documentos: DocumentoParaArqueo[]
   cartLineasPendientes: number
+  cajaNombre: string
+  empresaNombre: string
+  /** Interruptor global `pos_cierre_ciegas` (R7): con `true` (ausente =
+   * activo), el efectivo esperado y su desglose NO se muestran antes de
+   * teclear el conteo. Solo decide qué se pinta — `esperadoCaja` se sigue
+   * invocando igual y `cerrarSesion` sigue siendo quien congela el arqueo. */
+  cierreCiegas: boolean
   onClose: () => void
   onCerrado: () => void
 }
 
-export default function CierreModal({ sesion, documentos, cartLineasPendientes, onClose, onCerrado }: CierreModalProps) {
+export default function CierreModal({
+  sesion,
+  documentos,
+  cartLineasPendientes,
+  cajaNombre,
+  empresaNombre,
+  cierreCiegas,
+  onClose,
+  onCerrado,
+}: CierreModalProps) {
   const [montoContado, setMontoContado] = useState('')
   const [notas, setNotas] = useState('')
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
   const [cobros, setCobros] = useState<Array<{ metodo: CobroMetodo; monto: number }>>([])
   const [devoluciones, setDevoluciones] = useState<Array<{ metodo: CobroMetodo; monto: number }>>([])
+  // Comprobante de cierre (R7): se llena tras un `cerrarSesion` exitoso y,
+  // mientras exista, reemplaza el formulario de conteo por el papel. `null`
+  // = todavía no se ha cerrado (o el usuario sigue tecleando el conteo).
+  const [comprobante, setComprobante] = useState<ComprobanteTurnoDatos | null>(null)
 
   // Cobros de CxC y devoluciones/reembolsos (P5a) ya registrados en esta
   // sesión abierta, para el resumen previo (no persiste nada; `cerrarSesion`
@@ -58,7 +80,7 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
 
   // Resumen previo (no persiste nada): la misma pura que usa `cerrarSesion`
   // en el server para el cálculo definitivo al confirmar.
-  const { efectivoEsperado, porMetodo, cobrosPorMetodo, devolucionesPorMetodo } = esperadoCaja(
+  const { efectivoEsperado, cambioEntregado, porMetodo, cobrosPorMetodo, devolucionesPorMetodo } = esperadoCaja(
     Number(sesion.monto_inicial),
     documentos,
     cobros,
@@ -76,12 +98,48 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
     }
     startTransition(async () => {
       const result = await cerrarSesion(sesion.id, contadoNum, notas.trim())
-      if (!result.ok) {
-        setError(result.error)
+      if (!result.ok || !result.data) {
+        setError(result.ok ? 'No se pudo cerrar la sesión.' : result.error)
         return
       }
-      onCerrado()
+
+      // El comprobante necesita el detalle de créditos otorgados y cobros de
+      // CxC recibidos (Task 3), que no viaja en la respuesta de
+      // `cerrarSesion` (solo esperado/diferencia). El desglose por método
+      // (porMetodo/cobrosPorMetodo/devolucionesPorMetodo/cambioEntregado) SÍ
+      // se reutiliza del cálculo local de arriba: viene de los mismos
+      // `documentos`/`cobros`/`devoluciones` que se acaban de usar para
+      // confirmar el cierre, así que es consistente con lo que la RPC acaba
+      // de congelar.
+      const detalleResult = await obtenerDetalleTurno(sesion.id)
+      const detalle: DetalleTurno = detalleResult.ok && detalleResult.data
+        ? detalleResult.data
+        : { creditos: [], cobros: [] }
+
+      setComprobante({
+        sesion: {
+          ...sesion,
+          estado: 'cerrada',
+          monto_esperado: result.data.esperado,
+          monto_contado: contadoNum,
+          diferencia: result.data.diferencia,
+          notas: notas.trim(),
+          cerrada_at: new Date().toISOString(),
+        },
+        cajaNombre,
+        empresaNombre,
+        porMetodo,
+        cobrosPorMetodo,
+        devolucionesPorMetodo,
+        cambioEntregado,
+        efectivoEsperadoDetalle: efectivoEsperado,
+        detalle,
+      })
     })
+  }
+
+  if (comprobante) {
+    return <ComprobanteTurnoModal datos={comprobante} onCerrar={onCerrado} />
   }
 
   return (
@@ -96,59 +154,69 @@ export default function CierreModal({ sesion, documentos, cartLineasPendientes, 
           </div>
         )}
 
-        <div className={styles.totalesPanel}>
-          {(Object.keys(porMetodo) as MetodoPagoTipo[])
-            .filter(tipo => tipo !== 'credito' && porMetodo[tipo] > 0)
-            .map(tipo => (
-              <div key={tipo} className={styles.totalesRow}>
-                <span>{NOMBRES_METODO[tipo]}</span>
-                <span>{formatPrice(porMetodo[tipo])}</span>
+        {/* Interruptor `pos_cierre_ciegas` (R7): con el cierre a ciegas activo
+            (por defecto), estos tres bloques —efectivo esperado y su
+            desglose por método, cobros de CxC y devoluciones— no se pintan
+            antes de teclear el conteo. El cálculo de arriba (`esperadoCaja`)
+            se sigue ejecutando igual: el interruptor decide solo qué se
+            muestra, nunca qué se calcula ni qué congela `cerrarSesion`. */}
+        {!cierreCiegas && (
+          <>
+            <div className={styles.totalesPanel}>
+              {(Object.keys(porMetodo) as MetodoPagoTipo[])
+                .filter(tipo => tipo !== 'credito' && porMetodo[tipo] > 0)
+                .map(tipo => (
+                  <div key={tipo} className={styles.totalesRow}>
+                    <span>{NOMBRES_METODO[tipo]}</span>
+                    <span>{formatPrice(porMetodo[tipo])}</span>
+                  </div>
+                ))}
+              {porMetodo.credito > 0 && (
+                <div className={styles.totalesRow}>
+                  <span>Crédito otorgado (no es efectivo)</span>
+                  <span>{formatPrice(porMetodo.credito)}</span>
+                </div>
+              )}
+              <div className={styles.totalesRowTotal}>
+                <span>Efectivo esperado</span>
+                <span>{formatPrice(efectivoEsperado)}</span>
               </div>
-            ))}
-          {porMetodo.credito > 0 && (
-            <div className={styles.totalesRow}>
-              <span>Crédito otorgado (no es efectivo)</span>
-              <span>{formatPrice(porMetodo.credito)}</span>
             </div>
-          )}
-          <div className={styles.totalesRowTotal}>
-            <span>Efectivo esperado</span>
-            <span>{formatPrice(efectivoEsperado)}</span>
-          </div>
-        </div>
 
-        {(Object.keys(cobrosPorMetodo) as CobroMetodo[]).some(m => cobrosPorMetodo[m] > 0) && (
-          <div className={styles.totalesPanel}>
-            <div className={styles.panelTitle}>Cobros de CxC</div>
-            <div className={styles.identNota}>
-              Cobros de esta sesión. El efectivo cobrado ya está sumado al efectivo esperado.
-            </div>
-            {(Object.keys(cobrosPorMetodo) as CobroMetodo[])
-              .filter(metodo => cobrosPorMetodo[metodo] > 0)
-              .map(metodo => (
-                <div key={metodo} className={styles.totalesRow}>
-                  <span>{NOMBRES_COBRO[metodo]}</span>
-                  <span>{formatPrice(cobrosPorMetodo[metodo])}</span>
+            {(Object.keys(cobrosPorMetodo) as CobroMetodo[]).some(m => cobrosPorMetodo[m] > 0) && (
+              <div className={styles.totalesPanel}>
+                <div className={styles.panelTitle}>Cobros de CxC</div>
+                <div className={styles.identNota}>
+                  Cobros de esta sesión. El efectivo cobrado ya está sumado al efectivo esperado.
                 </div>
-              ))}
-          </div>
-        )}
+                {(Object.keys(cobrosPorMetodo) as CobroMetodo[])
+                  .filter(metodo => cobrosPorMetodo[metodo] > 0)
+                  .map(metodo => (
+                    <div key={metodo} className={styles.totalesRow}>
+                      <span>{NOMBRES_COBRO[metodo]}</span>
+                      <span>{formatPrice(cobrosPorMetodo[metodo])}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
 
-        {(Object.keys(devolucionesPorMetodo) as CobroMetodo[]).some(m => devolucionesPorMetodo[m] > 0) && (
-          <div className={styles.totalesPanel}>
-            <div className={styles.panelTitle}>Devoluciones / reembolsos</div>
-            <div className={styles.identNota}>
-              Reembolsos de esta sesión. El efectivo reembolsado ya está restado del efectivo esperado.
-            </div>
-            {(Object.keys(devolucionesPorMetodo) as CobroMetodo[])
-              .filter(metodo => devolucionesPorMetodo[metodo] > 0)
-              .map(metodo => (
-                <div key={metodo} className={styles.totalesRow}>
-                  <span>{NOMBRES_COBRO[metodo]}</span>
-                  <span>{formatPrice(devolucionesPorMetodo[metodo])}</span>
+            {(Object.keys(devolucionesPorMetodo) as CobroMetodo[]).some(m => devolucionesPorMetodo[m] > 0) && (
+              <div className={styles.totalesPanel}>
+                <div className={styles.panelTitle}>Devoluciones / reembolsos</div>
+                <div className={styles.identNota}>
+                  Reembolsos de esta sesión. El efectivo reembolsado ya está restado del efectivo esperado.
                 </div>
-              ))}
-          </div>
+                {(Object.keys(devolucionesPorMetodo) as CobroMetodo[])
+                  .filter(metodo => devolucionesPorMetodo[metodo] > 0)
+                  .map(metodo => (
+                    <div key={metodo} className={styles.totalesRow}>
+                      <span>{NOMBRES_COBRO[metodo]}</span>
+                      <span>{formatPrice(devolucionesPorMetodo[metodo])}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* R4 Task 7 (look Stitch): mismo tratamiento que los montos de pago de

@@ -89,6 +89,12 @@ export default async function PosPage({
         .in('sesion_id', sesionIds)
     : { data: [] }
 
+  // R7: interruptor `pos_cierre_ciegas`. Criterio del proyecto ("ausente =
+  // valor por defecto"): sin la clave todavía en `configuracion`, el cierre a
+  // ciegas queda activo (el más estricto).
+  const configMap = toConfigMap(config ?? [])
+  const cierreCiegas = configMap.pos_cierre_ciegas !== 'false'
+
   const documentosPorSesion: Record<string, DocumentoParaArqueo[]> = {}
   for (const d of (documentosRows ?? []) as unknown as DocumentoConPagosEmbed[]) {
     if (!d.sesion_id) continue
@@ -119,7 +125,8 @@ export default async function PosPage({
         productos={productos ?? []}
         clientes={clientes ?? []}
         cais={cais ?? []}
-        config={toConfigMap(config ?? [])}
+        config={configMap}
+        cierreCiegas={cierreCiegas}
         esperas={esperas ?? []}
         sesionesCerradas={sesionesCerradas ?? []}
         documentosPorSesion={documentosPorSesion}

@@ -422,6 +422,74 @@ export async function obtenerDevolucionesSesion(
   return devolucionesDeSesion(supabase, sesionId)
 }
 
+// Resumen EN VIVO de una sesión (R7): documentos + cobros + devoluciones,
+// igual que `cerrarSesion`, pero de solo lectura — no persiste nada. Sirve al
+// resumen previo del cierre en `TurnosClient` (según el interruptor
+// `pos_cierre_ciegas`) y al desglose por método del comprobante justo después
+// de cerrar en ese mismo camino: a diferencia de `CierreModal` (mostrador),
+// que ya recibe los documentos de la sesión como prop desde `page.tsx` y solo
+// necesitaba los cobros/devoluciones por separado, `TurnosClient` no tenía
+// ninguno de los tres. No se fusiona con `cerrarSesion` (que sí persiste):
+// tocar su forma de consultar sería tocar el cálculo que congela
+// `sesiones_caja`, justo lo que el interruptor no debe hacer.
+export async function obtenerResumenSesion(
+  sesionId: string,
+): Promise<PosResult<ReturnType<typeof esperadoCaja>>> {
+  const supabase = await createClient()
+
+  const { data: sesion, error: sesionError } = await supabase
+    .from('sesiones_caja')
+    .select('monto_inicial')
+    .eq('id', sesionId)
+    .maybeSingle()
+
+  if (sesionError || !sesion) return { ok: false, error: 'La sesión no existe.' }
+
+  const { data: documentosRows, error: documentosError } = await supabase
+    .from('documentos')
+    .select('estado, total, documento_pagos(monto, metodos_pago(tipo))')
+    .eq('sesion_id', sesionId)
+    .limit(5000)
+
+  if (documentosError) return { ok: false, error: ERROR_GENERICO }
+
+  // Mismo caso de embed to-one (documento_pagos → metodos_pago) documentado
+  // en `cerrarSesion` más arriba en este archivo.
+  interface DocumentoConPagos {
+    estado: string
+    total: number
+    documento_pagos: Array<{ monto: number; metodos_pago: { tipo: MetodoPagoTipo } | null }>
+  }
+  const documentos = (documentosRows ?? []) as unknown as DocumentoConPagos[]
+
+  const docs = documentos.map(d => ({
+    estado: d.estado,
+    total: Number(d.total),
+    pagos: d.documento_pagos.map(dp => ({
+      tipo: dp.metodos_pago?.tipo as MetodoPagoTipo,
+      monto: Number(dp.monto),
+    })),
+  }))
+
+  const { data: cobrosRows, error: cobrosError } = await supabase
+    .from('cobros')
+    .select('metodo, monto')
+    .eq('sesion_id', sesionId)
+    .limit(5000)
+
+  if (cobrosError) return { ok: false, error: ERROR_GENERICO }
+
+  const cobros = (cobrosRows ?? []).map(c => ({ metodo: c.metodo as CobroMetodo, monto: Number(c.monto) }))
+
+  const devolucionesResult = await devolucionesDeSesion(supabase, sesionId)
+  if (!devolucionesResult.ok) return devolucionesResult
+
+  return {
+    ok: true,
+    data: esperadoCaja(Number(sesion.monto_inicial), docs, cobros, devolucionesResult.data ?? []),
+  }
+}
+
 export async function emitirVenta(input: {
   tipo: 'factura' | 'comprobante'
   cajaId: string

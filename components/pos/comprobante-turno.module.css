@@ -14,6 +14,18 @@
   padding: 2rem 1rem;
 }
 
+/* Variante embebida en un modal (R7 Task 5, `ComprobanteTurnoModal`): sin el
+   `min-height: calc(100vh - 60px)` de `.pageBg` — ese min-height fuerza casi
+   una pantalla completa de alto aun cuando el modal solo necesita el alto del
+   propio papel, dejando un hueco vacío enorme debajo del recibo. El modal que
+   monta esta variante ya aporta su propio scroll (`.body` de
+   comprobante-turno-modal.module.css); este envoltorio solo centra. */
+.wrapModal {
+  display: flex;
+  justify-content: center;
+  padding: 1.25rem 1rem;
+}
+
 .hoja80 {
   position: relative;
   width: 80mm;
@@ -117,5 +129,6 @@
 @media print {
   .noPrint { display: none !important; }
   .pageBg { padding: 0; background: none; min-height: auto; display: block; }
+  .wrapModal { padding: 0; display: block; }
   .hoja80 { box-shadow: none; margin: 0 auto; }
 }
