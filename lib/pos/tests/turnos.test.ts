@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filtrarTurnos, totalesTurnos, type FiltroTurnos } from '../turnos'
+import { filtrarTurnos, totalesTurnos, totalCreditos, totalCobros, type FiltroTurnos } from '../turnos'
 import type { SesionCaja } from '@/types'
 
 function turno(over: Partial<SesionCaja>): SesionCaja {
@@ -79,5 +79,26 @@ describe('totalesTurnos', () => {
 
   it('sin turnos devuelve ceros', () => {
     expect(totalesTurnos([])).toEqual({ inicial: 0, esperado: 0, contado: 0, diferencia: 0 })
+  })
+})
+
+describe('totales del detalle del turno', () => {
+  it('suma los creditos otorgados redondeando a 2', () => {
+    expect(totalCreditos([
+      { documentoId: 'a', numero: 'F-001', cliente: 'Ana', monto: 100.1 },
+      { documentoId: 'b', numero: 'F-002', cliente: 'Beto', monto: 200.25 },
+    ])).toBe(300.35)
+  })
+
+  it('suma los cobros redondeando a 2', () => {
+    expect(totalCobros([
+      { cobroId: 'a', numero: 'C-001', cliente: 'Ana', metodo: 'efectivo', monto: 0.1 },
+      { cobroId: 'b', numero: 'C-002', cliente: 'Ana', metodo: 'tarjeta', monto: 0.2 },
+    ])).toBe(0.3)
+  })
+
+  it('sin lineas devuelven cero', () => {
+    expect(totalCreditos([])).toBe(0)
+    expect(totalCobros([])).toBe(0)
   })
 })

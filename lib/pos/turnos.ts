@@ -1,4 +1,4 @@
-import type { SesionCaja } from '@/types'
+import type { SesionCaja, CobroMetodo } from '@/types'
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
@@ -50,4 +50,34 @@ export function totalesTurnos(
     contado: round2(contado),
     diferencia: round2(diferencia),
   }
+}
+
+// Detalle del turno (R7): ventas al crédito otorgadas y cobros de CxC
+// recibidos durante la sesión, para el comprobante de cierre en tirilla.
+export interface CreditoOtorgado {
+  documentoId: string
+  numero: string
+  cliente: string
+  monto: number
+}
+
+export interface CobroDelTurno {
+  cobroId: string
+  numero: string
+  cliente: string
+  metodo: CobroMetodo
+  monto: number
+}
+
+export interface DetalleTurno {
+  creditos: CreditoOtorgado[]
+  cobros: CobroDelTurno[]
+}
+
+export function totalCreditos(creditos: CreditoOtorgado[]): number {
+  return round2(creditos.reduce((s, c) => s + c.monto, 0))
+}
+
+export function totalCobros(cobros: CobroDelTurno[]): number {
+  return round2(cobros.reduce((s, c) => s + c.monto, 0))
 }

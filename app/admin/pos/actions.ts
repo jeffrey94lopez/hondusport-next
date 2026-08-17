@@ -10,6 +10,8 @@ import { cantidadDevolvible, recalcularLineaDevuelta, totalNotaCredito, validarR
 import { validarRtn } from '@/lib/pos/fiscal'
 import { excedeLimite } from '@/lib/cxp/cxp'
 import { saldoCxcDeCliente } from '@/app/admin/cuentas-por-cobrar/actions'
+import { numeroDocumento } from '@/lib/pos/documentos'
+import type { CreditoOtorgado, CobroDelTurno, DetalleTurno } from '@/lib/pos/turnos'
 import type {
   LineaPos,
   PagoPos,
@@ -286,6 +288,85 @@ export async function obtenerCobrosSesion(
     ok: true,
     data: (data ?? []).map(c => ({ metodo: c.metodo as CobroMetodo, monto: Number(c.monto) })),
   }
+}
+
+// Detalle del turno (R7): créditos otorgados (documentos emitidos con algún
+// pago tipo `credito`) y cobros de CxC recibidos en la sesión, para el
+// comprobante de cierre en tirilla (impresión es de otra tarea, esta solo
+// entrega los datos).
+export async function obtenerDetalleTurno(sesionId: string): Promise<PosResult<DetalleTurno>> {
+  const supabase = await createClient()
+
+  const { data: documentosRows, error: documentosError } = await supabase
+    .from('documentos')
+    .select('id, numero_comprobante, correlativo, tipo, cliente_nombre, estado, documento_pagos(monto, metodos_pago(tipo))')
+    .eq('sesion_id', sesionId)
+    .limit(5000)
+
+  if (documentosError) return { ok: false, error: ERROR_GENERICO }
+
+  // Sin tipos de Database generados, el cliente de Supabase infiere las
+  // relaciones embebidas como arreglo por defecto (no puede conocer la
+  // cardinalidad del FK). En runtime, PostgREST devuelve OBJETO para un
+  // embed to-one como documento_pagos → metodos_pago (metodo_id es FK simple,
+  // no hay muchos métodos por pago): se corrige el tipo aquí para reflejar
+  // la forma real, no la inferida. Mismo caso documentado en `cerrarSesion`
+  // más arriba en este archivo.
+  interface DocumentoConPagos {
+    id: string
+    numero_comprobante: number | null
+    correlativo: string | null
+    tipo: 'factura' | 'comprobante'
+    cliente_nombre: string
+    estado: string
+    documento_pagos: Array<{ monto: number; metodos_pago: { tipo: MetodoPagoTipo } | null }>
+  }
+  const documentos = (documentosRows ?? []) as unknown as DocumentoConPagos[]
+
+  const creditos: CreditoOtorgado[] = []
+  for (const d of documentos) {
+    if (d.estado !== 'emitido') continue
+    const montoCredito = round2(
+      d.documento_pagos.reduce(
+        (s, dp) => (dp.metodos_pago?.tipo === 'credito' ? s + Number(dp.monto) : s),
+        0,
+      ),
+    )
+    if (montoCredito <= 0) continue
+    creditos.push({
+      documentoId: d.id,
+      numero: numeroDocumento({ tipo: d.tipo, correlativo: d.correlativo, numero_comprobante: d.numero_comprobante }),
+      cliente: d.cliente_nombre,
+      monto: montoCredito,
+    })
+  }
+
+  const { data: cobrosRows, error: cobrosError } = await supabase
+    .from('cobros')
+    .select('id, numero, cliente_id, metodo, monto')
+    .eq('sesion_id', sesionId)
+    .limit(5000)
+
+  if (cobrosError) return { ok: false, error: ERROR_GENERICO }
+
+  const clienteIds = [...new Set((cobrosRows ?? []).map(c => c.cliente_id))]
+  const { data: clientesRows, error: clientesError } = clienteIds.length
+    ? await supabase.from('clientes').select('id, nombre').in('id', clienteIds)
+    : { data: [], error: null }
+
+  if (clientesError) return { ok: false, error: ERROR_GENERICO }
+
+  const nombrePorCliente = new Map((clientesRows ?? []).map(c => [c.id as string, c.nombre as string]))
+
+  const cobros: CobroDelTurno[] = (cobrosRows ?? []).map(c => ({
+    cobroId: c.id,
+    numero: c.numero,
+    cliente: nombrePorCliente.get(c.cliente_id) ?? '—',
+    metodo: c.metodo as CobroMetodo,
+    monto: Number(c.monto),
+  }))
+
+  return { ok: true, data: { creditos, cobros } }
 }
 
 // Devoluciones/reembolsos de una sesión (P5a): documentos nota_credito/devolucion
