@@ -59,7 +59,15 @@ export default async function TurnoDetallePage({ params }: Props) {
 
   const cobros = cobrosResult.ok ? (cobrosResult.data ?? []) : []
   const devoluciones = devolucionesResult.ok ? (devolucionesResult.data ?? []) : []
-  const detalle: DetalleTurno = detalleResult.ok && detalleResult.data ? detalleResult.data : { creditos: [], cobros: [] }
+  // Si `obtenerDetalleTurno` falla, NO se sustituye por una lista vacía sin
+  // más: un turno con crédito otorgado real imprimiría el renglón
+  // informativo de crédito (viene de `esperadoCaja`, abajo) sin el bloque de
+  // "Créditos otorgados" que lo respalda — indistinguible de un turno que de
+  // verdad no tuvo ninguno. Se manda la señal a `TurnoDetalleView` para que
+  // deshabilite "Imprimir comprobante" en vez de montar un papel que podría
+  // mentir.
+  const detalleDisponible = detalleResult.ok && !!detalleResult.data
+  const detalle: DetalleTurno = detalleDisponible ? detalleResult.data! : { creditos: [], cobros: [] }
   const empresaNombre = nombreComercial(toConfigMap(config ?? [])) || 'Hondusport'
 
   // Sin tipos de Database generados, el cliente de Supabase infiere las
@@ -120,6 +128,7 @@ export default async function TurnoDetallePage({ params }: Props) {
       devolucionesPorMetodo={devolucionesPorMetodo}
       documentos={documentosTurno}
       detalle={detalle}
+      detalleDisponible={detalleDisponible}
       empresaNombre={empresaNombre}
     />
   )

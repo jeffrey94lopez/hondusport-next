@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Modal from '@/components/admin/Modal'
 import { formatPrice } from '@/lib/store/format'
-import { filtrarTurnos, totalesTurnos, type FiltroTurnos, type DetalleTurno } from '@/lib/pos/turnos'
+import { filtrarTurnos, totalesTurnos, type FiltroTurnos } from '@/lib/pos/turnos'
 import { abrirSesion, cerrarSesion, obtenerResumenSesion, obtenerDetalleTurno } from '../actions'
 import type { ResumenCaja } from '@/lib/pos/emision'
 import { parseMoneyInput } from '../pos-helpers'
@@ -347,11 +347,18 @@ function CerrarTurnoModal({ sesion, cajaNombre, empresaNombre, cierreCiegas, onC
   // mientras exista, reemplaza este modal por el papel.
   const [comprobante, setComprobante] = useState<ComprobanteTurnoDatos | null>(null)
   // La caja YA se cerró (el arqueo está congelado) pero no se pudo volver a
-  // traer el desglose fresco para el comprobante (ver handleCerrar): en vez
-  // de imprimir un papel con el desglose en cero —que contradice el bloque
-  // de créditos/cobros y hace desaparecer la identidad de seis términos sin
-  // avisar—, se avisa y se ofrece ir al detalle del turno a reimprimir.
-  const [cierreSinComprobante, setCierreSinComprobante] = useState(false)
+  // traer el desglose/detalle fresco para el comprobante (ver handleCerrar):
+  // en vez de imprimir un papel con datos en cero o incompletos —que
+  // contradicen el bloque de créditos/cobros y hacen desaparecer la
+  // identidad de seis términos sin avisar—, se avisa y se ofrece ir al
+  // detalle del turno a reimprimir. Guarda el arqueo (no solo un booleano):
+  // el spec exige que esperado/contado/diferencia se muestren SIEMPRE tras
+  // confirmar, con o sin comprobante.
+  const [cierreSinComprobante, setCierreSinComprobante] = useState<{
+    esperado: number
+    contado: number
+    diferencia: number
+  } | null>(null)
 
   // Resumen en vivo de la sesión (no persiste nada): solo alimenta el resumen
   // previo de abajo, gobernado por `cierreCiegas` (igual que en CierreModal).
@@ -394,19 +401,19 @@ function CerrarTurnoModal({ sesion, cajaNombre, empresaNombre, cierreCiegas, onC
         obtenerResumenSesion(sesion.id),
       ])
 
-      if (!resumenResult.ok || !resumenResult.data) {
-        // La sesión YA se cerró (el arqueo está congelado); solo falló
-        // volver a traer el desglose. Imprimir con un desglose en cero
-        // mentiría (el renglón de crédito desaparecería mientras el bloque
-        // de créditos del comprobante seguiría mostrando el monto real) —
-        // mejor no montar el papel.
-        setCierreSinComprobante(true)
+      // Ambas consultas son igual de necesarias para que el papel no mienta:
+      // sin `resumenResult` falta el desglose por método; sin `detalleResult`
+      // el bloque de "Créditos otorgados" saldría vacío mientras el renglón
+      // informativo de crédito (que sí viene de `resumenResult`) seguiría
+      // mostrando el monto real — un papel que declara crédito y no lista
+      // ninguno, indistinguible de un turno que de verdad no tuvo ninguno.
+      if (!resumenResult.ok || !resumenResult.data || !detalleResult.ok || !detalleResult.data) {
+        // El arqueo (esperado/contado/diferencia) sí se muestra siempre tras
+        // confirmar, con o sin comprobante (spec) — se pasa lo que ya
+        // devolvió `cerrarSesion` más el monto tecleado, no un recálculo.
+        setCierreSinComprobante({ esperado: result.data.esperado, contado: monto, diferencia: result.data.diferencia })
         return
       }
-
-      const detalle: DetalleTurno = detalleResult.ok && detalleResult.data
-        ? detalleResult.data
-        : { creditos: [], cobros: [] }
 
       setComprobante({
         sesion: {
@@ -416,7 +423,7 @@ function CerrarTurnoModal({ sesion, cajaNombre, empresaNombre, cierreCiegas, onC
           monto_contado: monto,
           diferencia: result.data.diferencia,
           notas: notas.trim(),
-          cerrada_at: new Date().toISOString(),
+          cerrada_at: result.data.cerradaAt,
         },
         cajaNombre,
         empresaNombre,
@@ -425,7 +432,7 @@ function CerrarTurnoModal({ sesion, cajaNombre, empresaNombre, cierreCiegas, onC
         devolucionesPorMetodo: resumenResult.data.devolucionesPorMetodo,
         cambioEntregado: resumenResult.data.cambioEntregado,
         efectivoEsperadoDetalle: resumenResult.data.efectivoEsperado,
-        detalle,
+        detalle: detalleResult.data,
       })
     })
   }
@@ -438,6 +445,25 @@ function CerrarTurnoModal({ sesion, cajaNombre, empresaNombre, cierreCiegas, onC
     return (
       <Modal title={`Cerrar caja — ${cajaNombre}`} onClose={onListo}>
         <div className={styles.form}>
+          {/* El arqueo se muestra SIEMPRE tras confirmar (spec), con o sin
+              comprobante — estos tres valores son los que ya devolvió
+              `cerrarSesion`, no un recálculo. */}
+          <div className={styles.resultado}>
+            <div className={styles.resultadoRow}>
+              <span>Esperado</span>
+              <span>{formatPrice(cierreSinComprobante.esperado)}</span>
+            </div>
+            <div className={styles.resultadoRow}>
+              <span>Contado</span>
+              <span>{formatPrice(cierreSinComprobante.contado)}</span>
+            </div>
+            <div className={`${styles.resultadoRow} ${styles.resultadoDiferencia} ${claseDiferencia(cierreSinComprobante.diferencia)}`}>
+              <span>
+                {cierreSinComprobante.diferencia === 0 ? 'Cuadra exacto' : cierreSinComprobante.diferencia > 0 ? 'Sobrante' : 'Faltante'}
+              </span>
+              <span>{formatPrice(Math.abs(cierreSinComprobante.diferencia))}</span>
+            </div>
+          </div>
           <p className={posStyles.identNota}>
             La caja se cerró correctamente, pero no se pudo generar el comprobante en este momento.
             Puedes reimprimirlo desde el detalle del turno.

@@ -85,6 +85,14 @@
     height: auto;
     box-shadow: none;
     border-radius: 0;
+    /* `.modal` trae `overflow: hidden` en pantalla (recorta al radio de la
+       card); una caja con overflow:hidden es monolítica en paged media — no
+       fragmenta entre hojas, se recorta en la primera. Sin este reset, un
+       comprobante largo (muchos créditos/cobros) perdería el resto del
+       contenido y el pie con la hora de impresión, sin ningún aviso. Mismo
+       reset que `documento.module.css:288` para el mismo motivo. */
+    overflow: visible;
+    background: none;
   }
   .body {
     max-height: none;

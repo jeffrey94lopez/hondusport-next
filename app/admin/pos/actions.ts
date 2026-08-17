@@ -184,7 +184,7 @@ export async function cerrarSesion(
   sesionId: string,
   montoContado: number,
   notas: string,
-): Promise<PosResult<{ esperado: number; diferencia: number }>> {
+): Promise<PosResult<{ esperado: number; diferencia: number; cerradaAt: string }>> {
   if (montoContado < 0) return { ok: false, error: 'El monto contado no puede ser negativo.' }
 
   const supabase = await createClient()
@@ -250,6 +250,15 @@ export async function cerrarSesion(
 
   const { efectivoEsperado } = esperadoCaja(Number(sesion.monto_inicial), docs, cobros, devoluciones)
   const diferencia = round2(montoContado - efectivoEsperado)
+  // Reloj del SERVIDOR: es lo que se congela en `sesiones_caja` y lo que debe
+  // aparecer en el comprobante. Sintetizar esta hora en el cliente (con
+  // `new Date().toISOString()` ahí) usaría el reloj del EQUIPO del cajero,
+  // que puede estar desajustado (frecuente en cajas sin NTP) — dos copias del
+  // mismo turno dirían horas de cierre distintas. Se calcula una sola vez y
+  // se manda tal cual al `update` y al llamador, para que ambos coincidan
+  // exactamente (no basta con que ambos usen "ahora": serían dos "ahora"
+  // distintos, milisegundos aparte).
+  const cerradaAt = new Date().toISOString()
 
   const { error: updateError } = await supabase
     .from('sesiones_caja')
@@ -259,14 +268,14 @@ export async function cerrarSesion(
       monto_contado: montoContado,
       diferencia,
       notas,
-      cerrada_at: new Date().toISOString(),
+      cerrada_at: cerradaAt,
     })
     .eq('id', sesionId)
 
   if (updateError) return { ok: false, error: ERROR_GENERICO }
 
   revalidatePath('/admin/pos')
-  return { ok: true, data: { esperado: efectivoEsperado, diferencia } }
+  return { ok: true, data: { esperado: efectivoEsperado, diferencia, cerradaAt } }
 }
 
 // Carga del cierre (P4c): cobros de CxC ya registrados en la sesión abierta,

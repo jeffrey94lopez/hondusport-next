@@ -41,6 +41,13 @@ interface Props {
   /** Créditos otorgados y cobros de CxC recibidos en el turno (R7,
    * `obtenerDetalleTurno`), para el comprobante reimprimible. */
   detalle: DetalleTurno
+  /** `false` si `obtenerDetalleTurno` falló en el server component: `detalle`
+   * llegó vacío como respaldo, no porque el turno no tuviera créditos/cobros.
+   * Imprimir con ese respaldo mentiría (el renglón informativo de crédito de
+   * `porMetodo` seguiría mostrando el monto real mientras el bloque de
+   * "Créditos otorgados" saldría vacío) — el botón se deshabilita en vez de
+   * arriesgarse. */
+  detalleDisponible: boolean
   empresaNombre: string
 }
 
@@ -107,6 +114,7 @@ export default function TurnoDetalleView({
   devolucionesPorMetodo,
   documentos,
   detalle,
+  detalleDisponible,
   empresaNombre,
 }: Props) {
   const cerrada = sesion.estado === 'cerrada'
@@ -159,6 +167,8 @@ export default function TurnoDetalleView({
             type="button"
             className={`btnMerlinSecondary ${styles.btn}`}
             onClick={() => setComprobante(true)}
+            disabled={!detalleDisponible}
+            title={detalleDisponible ? undefined : 'No se pudo cargar el detalle de créditos y cobros del turno. Recarga la página e intenta de nuevo.'}
           >
             Imprimir comprobante
           </button>

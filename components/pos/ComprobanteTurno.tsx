@@ -233,6 +233,14 @@ export default function ComprobanteTurno({
                 <span>{formatPrice(c.monto)}</span>
               </div>
             ))}
+            {/* El total mezcla los cinco métodos de CobroMetodo (efectivo,
+                transferencia, tarjeta, cheque, otro) — solo la porción en
+                efectivo entró a la gaveta y ya está sumada en "Cobros de CxC
+                en efectivo" del bloque 4. Sin esta nota, un cajero cuadrando
+                a mano podría sumar este total al efectivo esperado (mismo
+                motivo que ya tiene su aclaración el bloque "Otros métodos"
+                del 4). */}
+            <div className={styles.nota}>Incluye todos los métodos de cobro, no solo efectivo.</div>
             <div className={`${styles.fila} ${styles.filaTotal}`}>
               <span>Total cobros recibidos</span>
               <span>{formatPrice(totalCobros(detalle.cobros))}</span>
