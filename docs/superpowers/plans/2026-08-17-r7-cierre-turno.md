@@ -392,7 +392,7 @@ Bloques, en este orden:
 5. **Créditos otorgados:** una línea por `CreditoOtorgado` (número, cliente, monto) y su total con `totalCreditos`. Si no hay, omite el bloque entero. Incluye la aclaración: **No entró efectivo a caja.**
 6. **Cobros de CxC recibidos:** una línea por `CobroDelTurno` (número, cliente, método, monto) y su total con `totalCobros`. Si no hay, omite el bloque.
 7. **Devoluciones / reembolsos:** por método, solo los que tengan monto > 0. Si no hay, omite el bloque.
-8. **Pie:** `Impreso el <fecha y hora de impresoEn>`. Es obligatorio: un comprobante reimpreso después de anular un documento del turno puede diferir del original, y la fecha de impresión es lo que hace explicable esa diferencia.
+8. **Pie:** `Impreso el <fecha y hora de impresoEn>`. Es obligatorio, y el motivo es concreto: `anular_comprobante` **no exige que la sesión siga abierta**, así que un comprobante de un turno ya cerrado puede anularse después. Si alguien reimprime ese cierre, el documento anulado desaparece tanto del desglose por método como de la lista de créditos otorgados, y la copia nueva muestra **un crédito menos** que el papel original — sin ninguna señal de por qué. La fecha y hora de impresión es lo que hace explicable esa diferencia entre dos copias. El arqueo (esperado, contado, diferencia) no se ve afectado: sale de los valores congelados.
 
 - [ ] **Step 2: Crear el módulo CSS**
 
