@@ -16,9 +16,10 @@
   flex-wrap: wrap;
 }
 
-/* Sin `font: var(--text-title)`: mismo bug de --font-poppins documentado en
-   dashboard/productos — valores explícitos, alineados al tamaño de
-   encabezado de página que ya usa productos.module.css (R5a). */
+/* Sin `font: var(--text-title)` por diseño: ese token es 400 28px/32px y el
+   encabezado de página va a 1.75rem/700, igual que productos.module.css (R5a).
+   El bug de --font-poppins que antes citaba este comentario ya está
+   arreglado (la clase de next/font vive en <html>). */
 .title {
   font-size: 1.75rem;
   font-weight: 700;

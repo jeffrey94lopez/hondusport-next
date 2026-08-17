@@ -7,15 +7,13 @@
   flex-wrap: wrap;
   gap: 1rem;
 }
-/* Nota: no se usa `font: var(--text-title)` — esa y las demás variables
-   --text-* de merlin.css quedan inválidas en toda la app porque referencian
-   var(--font-poppins), que next/font solo define en <body> y no en <html>
-   (donde vive el :root de merlin.css); una custom property que referencia un
-   var() no resuelto en el elemento donde se declara queda "guaranteed-invalid"
-   y se hereda así. Bug preexistente, fuera de alcance de esta tarea (tocaría
-   app/layout.tsx, compartido con la tienda) — reportado por separado. Valores
-   explícitos aquí replican el diseño pretendido de --text-title. */
-.title { font-family: var(--font-poppins), sans-serif; font-size: 1.75rem; line-height: 2rem; font-weight: 700; color: var(--text); }
+/* No se usa `font: var(--text-title)` por una razón de DISEÑO, no por el bug
+   de --font-poppins: ese ya está arreglado (la clase de next/font vive en
+   <html>, ver app/layout.tsx) y los tokens resuelven. El motivo es que
+   --text-title es 400 28px/32px y el encabezado de página del admin va a
+   1.75rem/700 — más chico y más pesado. `font-family` se hereda de
+   globals.css, así que no hace falta repetirlo. */
+.title { font-size: 1.75rem; line-height: 2rem; font-weight: 700; color: var(--text); }
 .date { font-size: 0.8rem; color: var(--text-muted); text-transform: capitalize; }
 
 .section { background: var(--bg-card); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 1.5rem; }

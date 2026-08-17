@@ -14,11 +14,10 @@
   flex-wrap: wrap;
 }
 
-/* Sin `font: var(--text-title)`: --font-poppins solo está definido en <body>
-   (next/font), no en :root donde vive --text-title en merlin.css, así que el
-   shorthand queda guaranteed-invalid y se hereda "" a toda la app (mismo bug
-   documentado en productos.module.css/dashboard.module.css). Valores
-   explícitos, alineados al resto de listas re-skinned de R5a. */
+/* Sin `font: var(--text-title)` por diseño: ese token es 400 28px/32px y el
+   encabezado de página va a 1.75rem/700, alineado con el resto de listas de
+   R5a. El bug de --font-poppins que antes citaba este comentario ya está
+   arreglado (la clase de next/font vive en <html>). */
 .title {
   font-size: 1.75rem;
   font-weight: 700;
