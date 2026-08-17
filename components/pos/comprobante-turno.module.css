@@ -1,0 +1,108 @@
+/* R7: hoja imprimible del comprobante de cierre de turno, en tirilla de
+   80mm. Mismo patrón que `.hoja80` de
+   app/admin/pos/documento/documento.module.css — copiado a propósito, no
+   importado: ese módulo sirve a hojas fiscales inmutables y este comprobante
+   es un documento distinto. Fondo blanco y tinta oscura FIJOS: esta hoja
+   simula papel impreso real y no debe seguir el tema claro/oscuro de la
+   app. */
+
+.pageBg {
+  background: var(--bg);
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.hoja80 {
+  position: relative;
+  width: 80mm;
+  background: #ffffff;
+  color: #0a0a0a;
+  box-shadow: var(--shadow-card);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.35;
+  padding: 12px 10px;
+}
+
+.header { margin-bottom: 6px; }
+.empresaNombre { font-weight: 800; font-size: 1.1em; margin-bottom: 2px; }
+
+.titulo {
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-size: 0.95em;
+  margin: 8px 0;
+  border-top: 1px dashed #999;
+  border-bottom: 1px dashed #999;
+  padding: 4px 0;
+}
+
+.seccion { margin-bottom: 8px; }
+.seccionTitulo {
+  font-weight: 700;
+  border-bottom: 1px solid #333;
+  margin-bottom: 3px;
+  padding-bottom: 2px;
+  font-size: 0.95em;
+}
+
+.subseccion {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed #999;
+}
+
+/* Fila de dos columnas (concepto / monto): el monto no debe forzar scroll
+   horizontal, así que el concepto encoge primero (min-width: 0) y el monto
+   nunca se parte de línea. */
+.fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6em;
+  padding: 1px 0;
+}
+.fila > span:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.fila > span:last-child {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.filaTotal {
+  font-weight: 800;
+  border-top: 1px solid #333;
+  margin-top: 3px;
+  padding-top: 3px;
+}
+
+.nota {
+  font-size: 0.82em;
+  font-style: italic;
+  color: #555;
+  margin: 2px 0 4px;
+}
+
+.pie {
+  font-size: 0.82em;
+  text-align: center;
+  border-top: 1px solid #333;
+  padding-top: 6px;
+  margin-top: 6px;
+}
+
+/* Elementos que no deben imprimirse (p. ej. el botón de imprimir que monta
+   quien use este componente): ocultos solo en @media print. */
+.noPrint { }
+
+@media print {
+  .noPrint { display: none !important; }
+  .pageBg { padding: 0; background: none; min-height: auto; display: block; }
+  .hoja80 { box-shadow: none; margin: 0 auto; }
+}
