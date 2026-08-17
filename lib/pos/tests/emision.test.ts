@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { precioLineaPos, validarEmision, validarPagos, cambioPago, esperadoCaja, traducirErrorPos, tasaUsdDePagos, montosPagoAlAgregar } from '../emision'
+import { round2 } from '@/app/admin/pos/pos-helpers'
 import type { MetodoPagoTipo, PagoPos, CobroMetodo } from '@/types'
 
 describe('precioLineaPos', () => {
@@ -137,6 +138,44 @@ describe('esperadoCaja', () => {
     expect(r.efectivoEsperado).toBe(700) // 100 inicial + 500 venta + 300 cobro - 200 devolución efectivo
     expect(r.devolucionesPorMetodo.efectivo).toBe(200)
     expect(r.devolucionesPorMetodo.transferencia).toBe(50) // no resta al efectivo, sí al desglose
+  })
+
+  it('acumula el cambio de cada documento', () => {
+    const r = esperadoCaja(0, [
+      { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
+    ])
+    expect(r.cambioEntregado).toBe(500)
+    expect(r.efectivoEsperado).toBe(500)
+    expect(r.porMetodo.efectivo_lps).toBe(1000)
+  })
+
+  it('suma el cambio de varios documentos', () => {
+    const r = esperadoCaja(0, [
+      { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
+      { estado: 'emitido', total: 250.5, pagos: [{ tipo: 'efectivo_lps', monto: 300 }] },
+    ])
+    expect(r.cambioEntregado).toBe(549.5)
+  })
+
+  it('sin cambio devuelve cero', () => {
+    const r = esperadoCaja(100, [
+      { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 500 }] },
+    ])
+    expect(r.cambioEntregado).toBe(0)
+  })
+
+  it('ignora los documentos que no estan emitidos', () => {
+    const r = esperadoCaja(0, [
+      { estado: 'anulado', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
+    ])
+    expect(r.cambioEntregado).toBe(0)
+  })
+
+  it('inicial + efectivo cobrado - cambio = efectivo esperado', () => {
+    const r = esperadoCaja(1000, [
+      { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
+    ])
+    expect(round2(1000 + r.porMetodo.efectivo_lps - r.cambioEntregado)).toBe(r.efectivoEsperado)
   })
 })
 

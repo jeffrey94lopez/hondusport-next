@@ -79,7 +79,9 @@ export function tasaUsdDePagos(pagos: PagoPos[]): number | null {
  * tarjeta, cheque, otro) queda solo en `cobrosPorMetodo`, informativo. El
  * crédito otorgado en ventas (porMetodo.credito) tampoco es efectivo: es
  * saldo por cobrar, no dinero en caja. Lo mismo aplica a saldo_favor: es
- * saldo del cliente, no efectivo en caja.
+ * saldo del cliente, no efectivo en caja. Acumula y devuelve también el cambio
+ * entregado (vuelto), sin el cual el desglose por método no reconcilia con el
+ * efectivo esperado.
  */
 export function esperadoCaja(
   montoInicial: number,
@@ -88,6 +90,7 @@ export function esperadoCaja(
   devoluciones: Array<{ metodo: CobroMetodo; monto: number }> = [],
 ): {
   efectivoEsperado: number
+  cambioEntregado: number
   porMetodo: Record<MetodoPagoTipo, number>
   cobrosPorMetodo: Record<CobroMetodo, number>
   devolucionesPorMetodo: Record<CobroMetodo, number>
@@ -110,10 +113,12 @@ export function esperadoCaja(
   }
 
   let efectivoEsperado = montoInicial
+  let cambioEntregado = 0
 
   for (const doc of docs) {
     if (doc.estado !== 'emitido') continue
     const cambio = cambioPago(doc.pagos as PagoPos[], doc.total)
+    cambioEntregado = round2(cambioEntregado + cambio)
     for (const pago of doc.pagos) {
       porMetodo[pago.tipo] += pago.monto
       if (pago.tipo === 'efectivo_lps' || pago.tipo === 'efectivo_usd') {
@@ -136,7 +141,7 @@ export function esperadoCaja(
     if (dev.metodo === 'efectivo') efectivoEsperado = round2(efectivoEsperado - dev.monto)
   }
 
-  return { efectivoEsperado, porMetodo, cobrosPorMetodo, devolucionesPorMetodo }
+  return { efectivoEsperado, cambioEntregado, porMetodo, cobrosPorMetodo, devolucionesPorMetodo }
 }
 
 /**
