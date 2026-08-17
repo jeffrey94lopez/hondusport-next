@@ -10,8 +10,8 @@ import { cantidadDevolvible, recalcularLineaDevuelta, totalNotaCredito, validarR
 import { validarRtn } from '@/lib/pos/fiscal'
 import { excedeLimite } from '@/lib/cxp/cxp'
 import { saldoCxcDeCliente } from '@/app/admin/cuentas-por-cobrar/actions'
-import { numeroDocumento } from '@/lib/pos/documentos'
-import type { CreditoOtorgado, CobroDelTurno, DetalleTurno } from '@/lib/pos/turnos'
+import { creditosDeDocumentos } from '@/lib/pos/turnos'
+import type { CobroDelTurno, DetalleTurno } from '@/lib/pos/turnos'
 import type {
   LineaPos,
   PagoPos,
@@ -297,10 +297,16 @@ export async function obtenerCobrosSesion(
 export async function obtenerDetalleTurno(sesionId: string): Promise<PosResult<DetalleTurno>> {
   const supabase = await createClient()
 
+  // `.in('tipo', ...)` deja el tipo local honesto (nota_credito/devolucion
+  // también llevan sesion_id, pero no son documentos facturables) y de paso
+  // trae menos filas. `.order('created_at')` da un orden estable: sin él,
+  // PostgREST no garantiza el mismo orden entre dos lecturas del mismo turno.
   const { data: documentosRows, error: documentosError } = await supabase
     .from('documentos')
     .select('id, numero_comprobante, correlativo, tipo, cliente_nombre, estado, documento_pagos(monto, metodos_pago(tipo))')
     .eq('sesion_id', sesionId)
+    .in('tipo', ['factura', 'comprobante'])
+    .order('created_at')
     .limit(5000)
 
   if (documentosError) return { ok: false, error: ERROR_GENERICO }
@@ -323,35 +329,36 @@ export async function obtenerDetalleTurno(sesionId: string): Promise<PosResult<D
   }
   const documentos = (documentosRows ?? []) as unknown as DocumentoConPagos[]
 
-  const creditos: CreditoOtorgado[] = []
-  for (const d of documentos) {
-    if (d.estado !== 'emitido') continue
-    const montoCredito = round2(
-      d.documento_pagos.reduce(
-        (s, dp) => (dp.metodos_pago?.tipo === 'credito' ? s + Number(dp.monto) : s),
-        0,
-      ),
-    )
-    if (montoCredito <= 0) continue
-    creditos.push({
-      documentoId: d.id,
-      numero: numeroDocumento({ tipo: d.tipo, correlativo: d.correlativo, numero_comprobante: d.numero_comprobante }),
-      cliente: d.cliente_nombre,
-      monto: montoCredito,
-    })
-  }
+  // La regla de dinero (solo la parte de crédito, solo emitidos) es una
+  // función pura con test en lib/pos/turnos.ts — aquí solo queda la consulta
+  // y el mapeo del embed, que no se puede testear offline.
+  const creditos = creditosDeDocumentos(
+    documentos.map(d => ({
+      id: d.id,
+      tipo: d.tipo,
+      correlativo: d.correlativo,
+      numero_comprobante: d.numero_comprobante,
+      cliente_nombre: d.cliente_nombre,
+      estado: d.estado,
+      pagos: d.documento_pagos.map(dp => ({
+        tipo: dp.metodos_pago?.tipo ?? 'otro',
+        monto: Number(dp.monto),
+      })),
+    })),
+  )
 
   const { data: cobrosRows, error: cobrosError } = await supabase
     .from('cobros')
     .select('id, numero, cliente_id, metodo, monto')
     .eq('sesion_id', sesionId)
+    .order('fecha')
     .limit(5000)
 
   if (cobrosError) return { ok: false, error: ERROR_GENERICO }
 
   const clienteIds = [...new Set((cobrosRows ?? []).map(c => c.cliente_id))]
   const { data: clientesRows, error: clientesError } = clienteIds.length
-    ? await supabase.from('clientes').select('id, nombre').in('id', clienteIds)
+    ? await supabase.from('clientes').select('id, nombre').in('id', clienteIds).limit(5000)
     : { data: [], error: null }
 
   if (clientesError) return { ok: false, error: ERROR_GENERICO }

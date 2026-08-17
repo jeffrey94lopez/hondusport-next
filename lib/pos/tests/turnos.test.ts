@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filtrarTurnos, totalesTurnos, totalCreditos, totalCobros, type FiltroTurnos } from '../turnos'
+import { filtrarTurnos, totalesTurnos, totalCreditos, totalCobros, creditosDeDocumentos, type FiltroTurnos } from '../turnos'
 import type { SesionCaja } from '@/types'
 
 function turno(over: Partial<SesionCaja>): SesionCaja {
@@ -83,11 +83,14 @@ describe('totalesTurnos', () => {
 })
 
 describe('totales del detalle del turno', () => {
+  // 0.1 + 0.2 no es exacto en punto flotante (da 0.30000000000000004): este
+  // caso sí ejercita el round2, a diferencia de 100.1 + 200.25 (exacto en
+  // JS), que pasaba igual con un totalCreditos sin redondeo.
   it('suma los creditos otorgados redondeando a 2', () => {
     expect(totalCreditos([
-      { documentoId: 'a', numero: 'F-001', cliente: 'Ana', monto: 100.1 },
-      { documentoId: 'b', numero: 'F-002', cliente: 'Beto', monto: 200.25 },
-    ])).toBe(300.35)
+      { documentoId: 'a', numero: 'F-001', cliente: 'Ana', monto: 0.1 },
+      { documentoId: 'b', numero: 'F-002', cliente: 'Beto', monto: 0.2 },
+    ])).toBe(0.3)
   })
 
   it('suma los cobros redondeando a 2', () => {
@@ -100,5 +103,53 @@ describe('totales del detalle del turno', () => {
   it('sin lineas devuelven cero', () => {
     expect(totalCreditos([])).toBe(0)
     expect(totalCobros([])).toBe(0)
+  })
+})
+
+describe('creditosDeDocumentos', () => {
+  function documento(over: Partial<Parameters<typeof creditosDeDocumentos>[0][number]>) {
+    return {
+      id: 'd1',
+      tipo: 'factura',
+      correlativo: 'FAC-001',
+      numero_comprobante: null,
+      cliente_nombre: 'Ana',
+      estado: 'emitido',
+      pagos: [],
+      ...over,
+    }
+  }
+
+  it('venta mixta: solo la parte pagada con credito entra, no el total', () => {
+    const docs = [documento({
+      pagos: [{ tipo: 'efectivo', monto: 400 }, { tipo: 'credito', monto: 600 }],
+    })]
+    expect(creditosDeDocumentos(docs)).toEqual([
+      { documentoId: 'd1', numero: 'FAC-001', cliente: 'Ana', monto: 600 },
+    ])
+  })
+
+  it('documento anulado con pago de credito no aparece', () => {
+    const docs = [documento({
+      estado: 'anulado',
+      pagos: [{ tipo: 'credito', monto: 600 }],
+    })]
+    expect(creditosDeDocumentos(docs)).toEqual([])
+  })
+
+  it('dos pagos de credito se suman en una sola linea', () => {
+    const docs = [documento({
+      pagos: [{ tipo: 'credito', monto: 300 }, { tipo: 'credito', monto: 250 }],
+    })]
+    expect(creditosDeDocumentos(docs)).toEqual([
+      { documentoId: 'd1', numero: 'FAC-001', cliente: 'Ana', monto: 550 },
+    ])
+  })
+
+  it('documento sin ningun pago de credito no aparece', () => {
+    const docs = [documento({
+      pagos: [{ tipo: 'efectivo', monto: 1000 }],
+    })]
+    expect(creditosDeDocumentos(docs)).toEqual([])
   })
 })

@@ -1,4 +1,5 @@
 import type { SesionCaja, CobroMetodo } from '@/types'
+import { numeroDocumento } from './documentos'
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
@@ -80,4 +81,47 @@ export function totalCreditos(creditos: CreditoOtorgado[]): number {
 
 export function totalCobros(cobros: CobroDelTurno[]): number {
   return round2(cobros.reduce((s, c) => s + c.monto, 0))
+}
+
+// Regla con peso (revisión R7): un documento es un crédito otorgado del turno
+// si está `emitido` y tiene al menos un pago `tipo === 'credito'`; el monto es
+// la SUMA de solo esos pagos, nunca el total del documento — una venta mixta
+// (parte efectivo, parte crédito) solo debe aportar lo que de verdad quedó por
+// cobrar. Extraída del Server Action (que solo debe quedarse con la consulta y
+// el mapeo del embed, no testeables offline) para que esta suma tenga red de
+// tests: sin ella, un `Number(d.total)` o un filtro de estado eliminado no
+// rompe nada en tsc/build y el comprobante impreso mentiría en silencio.
+export function creditosDeDocumentos(
+  docs: Array<{
+    id: string
+    tipo: string
+    correlativo: string | null
+    numero_comprobante: number | null
+    cliente_nombre: string
+    estado: string
+    pagos: Array<{ tipo: string; monto: number }>
+  }>,
+): CreditoOtorgado[] {
+  const creditos: CreditoOtorgado[] = []
+  for (const d of docs) {
+    if (d.estado !== 'emitido') continue
+    const montoCredito = round2(
+      d.pagos.reduce((s, p) => (p.tipo === 'credito' ? s + p.monto : s), 0),
+    )
+    if (montoCredito <= 0) continue
+    creditos.push({
+      documentoId: d.id,
+      // El caller garantiza (con `.in('tipo', ['factura', 'comprobante'])` en
+      // la consulta) que solo llegan documentos facturables aquí; el cast
+      // refleja esa garantía, no la reintroduce.
+      numero: numeroDocumento({
+        tipo: d.tipo as 'factura' | 'comprobante',
+        correlativo: d.correlativo,
+        numero_comprobante: d.numero_comprobante,
+      }),
+      cliente: d.cliente_nombre,
+      monto: montoCredito,
+    })
+  }
+  return creditos
 }
