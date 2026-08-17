@@ -135,6 +135,7 @@ export default async function TurnoDetallePage({ params }: Props) {
       documentos={documentosTurno}
       detalle={detalle}
       detalleDisponible={detalleDisponible}
+      movimientoCompleto={movimientoCompleto}
       empresaNombre={empresaNombre}
     />
   )

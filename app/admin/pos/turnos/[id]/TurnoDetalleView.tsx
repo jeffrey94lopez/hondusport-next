@@ -48,6 +48,13 @@ interface Props {
    * "Créditos otorgados" saldría vacío) — el botón se deshabilita en vez de
    * arriesgarse. */
   detalleDisponible: boolean
+  /**
+   * `false` si los cobros o las devoluciones del turno no se pudieron leer.
+   * Sin ellos `esperadoEnVivo` sale corto (faltan cobros) o de más (faltan
+   * reembolsos), sin ninguna señal: se muestra `—` en vez de un número que
+   * el supervisor cuadraría contra la gaveta creyendolo bueno.
+   */
+  movimientoCompleto: boolean
   empresaNombre: string
 }
 
@@ -115,6 +122,7 @@ export default function TurnoDetalleView({
   documentos,
   detalle,
   detalleDisponible,
+  movimientoCompleto,
   empresaNombre,
 }: Props) {
   const cerrada = sesion.estado === 'cerrada'
@@ -168,7 +176,7 @@ export default function TurnoDetalleView({
             className={`btnMerlinSecondary ${styles.btn}`}
             onClick={() => setComprobante(true)}
             disabled={!detalleDisponible}
-            title={detalleDisponible ? undefined : 'No se pudo cargar el detalle de créditos y cobros del turno. Recarga la página e intenta de nuevo.'}
+            title={detalleDisponible ? undefined : 'No se pudo cargar todo el movimiento del turno (créditos, cobros o devoluciones). Recarga la página e intenta de nuevo.'}
           >
             Imprimir comprobante
           </button>
@@ -205,10 +213,14 @@ export default function TurnoDetalleView({
               <span className={styles.arqueoLabel}>
                 Efectivo esperado <span className={styles.arqueoEstimado}>(estimado)</span>
               </span>
-              <span className={styles.arqueoValor}>{formatPrice(esperadoEnVivo)}</span>
+              <span className={styles.arqueoValor}>
+                {movimientoCompleto ? formatPrice(esperadoEnVivo) : '—'}
+              </span>
             </div>
             <p className={styles.arqueoNota}>
-              El turno sigue abierto. El monto contado y la diferencia se registran al cerrar la caja.
+              {movimientoCompleto
+                ? 'El turno sigue abierto. El monto contado y la diferencia se registran al cerrar la caja.'
+                : 'No se pudo leer todo el movimiento del turno, así que el efectivo esperado no se muestra: saldría equivocado. Recarga la página e intenta de nuevo.'}
             </p>
           </>
         )}
