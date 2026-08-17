@@ -71,6 +71,19 @@ export function tasaUsdDePagos(pagos: PagoPos[]): number | null {
   return pagos.find(p => p.tipo === 'efectivo_usd' && p.tasa != null)?.tasa ?? null
 }
 
+// Forma de retorno de `esperadoCaja` (R7), exportada para que los llamadores
+// que necesitan el tipo (p. ej. `obtenerResumenSesion` en
+// app/admin/pos/actions.ts, y quien consuma su resultado en el cliente) no
+// tengan que re-declararla a mano: si mañana se agrega un campo aquí, tsc
+// avisa en todos los sitios que usan `ResumenCaja`, no solo en esta función.
+export interface ResumenCaja {
+  efectivoEsperado: number
+  cambioEntregado: number
+  porMetodo: Record<MetodoPagoTipo, number>
+  cobrosPorMetodo: Record<CobroMetodo, number>
+  devolucionesPorMetodo: Record<CobroMetodo, number>
+}
+
 /**
  * Efectivo y por-método esperados en caja a partir de los documentos emitidos,
  * más (opcional) los cobros de CxC registrados en la sesión. El cambio
@@ -88,13 +101,7 @@ export function esperadoCaja(
   docs: Array<{ estado: string; total: number; pagos: Array<{ tipo: MetodoPagoTipo; monto: number }> }>,
   cobros: Array<{ metodo: CobroMetodo; monto: number }> = [],
   devoluciones: Array<{ metodo: CobroMetodo; monto: number }> = [],
-): {
-  efectivoEsperado: number
-  cambioEntregado: number
-  porMetodo: Record<MetodoPagoTipo, number>
-  cobrosPorMetodo: Record<CobroMetodo, number>
-  devolucionesPorMetodo: Record<CobroMetodo, number>
-} {
+): ResumenCaja {
   const porMetodo: Record<MetodoPagoTipo, number> = {
     efectivo_lps: 0,
     efectivo_usd: 0,

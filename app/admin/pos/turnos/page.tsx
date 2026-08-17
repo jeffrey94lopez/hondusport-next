@@ -19,7 +19,9 @@ export default async function TurnosPage() {
       .select('*')
       .order('abierta_at', { ascending: false })
       .limit(2000),
-    supabase.from('configuracion').select('key, value'),
+    // `.limit()` explícito, mismo criterio que arriba: sin él PostgREST aplica
+    // su tope por defecto en silencio.
+    supabase.from('configuracion').select('key, value').limit(500),
   ])
 
   // R7: interruptor `pos_cierre_ciegas` (mismo criterio "ausente = activo"

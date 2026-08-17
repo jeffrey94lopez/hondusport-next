@@ -1,7 +1,8 @@
 'use client'
 import { useState, useTransition, useEffect } from 'react'
+import Link from 'next/link'
 import Modal from '@/components/admin/Modal'
-import { cerrarSesion, obtenerCobrosSesion, obtenerDevolucionesSesion, obtenerDetalleTurno } from '../actions'
+import { cerrarSesion, obtenerCobrosSesion, obtenerDevolucionesSesion, obtenerDetalleTurno, obtenerResumenSesion } from '../actions'
 import { esperadoCaja } from '@/lib/pos/emision'
 import { formatPrice } from '@/lib/store/format'
 import { round2, parseMoneyInput } from '../pos-helpers'
@@ -63,6 +64,12 @@ export default function CierreModal({
   // mientras exista, reemplaza el formulario de conteo por el papel. `null`
   // = todavía no se ha cerrado (o el usuario sigue tecleando el conteo).
   const [comprobante, setComprobante] = useState<ComprobanteTurnoDatos | null>(null)
+  // La caja YA se cerró (el arqueo está congelado) pero no se pudo volver a
+  // traer el desglose fresco para el comprobante (ver handleCerrar): en vez
+  // de imprimir un papel con el desglose en cero —que contradice el bloque
+  // de créditos/cobros y hace desaparecer la identidad de seis términos sin
+  // avisar—, se avisa y se ofrece ir al detalle del turno a reimprimir.
+  const [cierreSinComprobante, setCierreSinComprobante] = useState(false)
 
   // Cobros de CxC y devoluciones/reembolsos (P5a) ya registrados en esta
   // sesión abierta, para el resumen previo (no persiste nada; `cerrarSesion`
@@ -79,8 +86,16 @@ export default function CierreModal({
   }, [sesion.id])
 
   // Resumen previo (no persiste nada): la misma pura que usa `cerrarSesion`
-  // en el server para el cálculo definitivo al confirmar.
-  const { efectivoEsperado, cambioEntregado, porMetodo, cobrosPorMetodo, devolucionesPorMetodo } = esperadoCaja(
+  // en el server para el cálculo definitivo al confirmar. Nota: esto es una
+  // FOTO tomada al abrir el modal (`documentos` viene resuelto desde
+  // `pos/page.tsx`; `cobros`/`devoluciones` se piden en el efecto de arriba).
+  // Sirve para el resumen previo (gobernado por `cierreCiegas`) y para la
+  // fila de diferencia en vivo; NO se reutiliza para el comprobante final
+  // (ver handleCerrar) — entre que se abre el modal y se confirma el cierre
+  // puede registrarse un cobro de CxC u otro movimiento desde otra pantalla,
+  // y el comprobante debe reflejar lo que `cerrarSesion` acaba de congelar,
+  // no esta foto.
+  const { efectivoEsperado, porMetodo, cobrosPorMetodo, devolucionesPorMetodo } = esperadoCaja(
     Number(sesion.monto_inicial),
     documentos,
     cobros,
@@ -103,15 +118,29 @@ export default function CierreModal({
         return
       }
 
-      // El comprobante necesita el detalle de créditos otorgados y cobros de
-      // CxC recibidos (Task 3), que no viaja en la respuesta de
-      // `cerrarSesion` (solo esperado/diferencia). El desglose por método
-      // (porMetodo/cobrosPorMetodo/devolucionesPorMetodo/cambioEntregado) SÍ
-      // se reutiliza del cálculo local de arriba: viene de los mismos
-      // `documentos`/`cobros`/`devoluciones` que se acaban de usar para
-      // confirmar el cierre, así que es consistente con lo que la RPC acaba
-      // de congelar.
-      const detalleResult = await obtenerDetalleTurno(sesion.id)
+      // Ninguno de los dos viaja en la respuesta de `cerrarSesion` (solo
+      // esperado/diferencia): se piden FRESCOS justo ahora, en vez de
+      // reutilizar la foto de arriba (`documentos`/`cobros`/`devoluciones`,
+      // tomada al abrir el modal) — así el desglose del comprobante sale del
+      // mismo instante que el propio arqueo que `cerrarSesion` acaba de
+      // congelar, y no de un cálculo que pudo quedar desactualizado mientras
+      // el cajero contaba la gaveta (p. ej. un cobro de CxC registrado desde
+      // otra pantalla en ese lapso).
+      const [detalleResult, resumenResult] = await Promise.all([
+        obtenerDetalleTurno(sesion.id),
+        obtenerResumenSesion(sesion.id),
+      ])
+
+      if (!resumenResult.ok || !resumenResult.data) {
+        // La sesión YA se cerró (el arqueo está congelado); solo falló
+        // volver a traer el desglose. Imprimir con un desglose en cero
+        // mentiría (el renglón de crédito desaparecería mientras el bloque
+        // de créditos del comprobante seguiría mostrando el monto real) —
+        // mejor no montar el papel.
+        setCierreSinComprobante(true)
+        return
+      }
+
       const detalle: DetalleTurno = detalleResult.ok && detalleResult.data
         ? detalleResult.data
         : { creditos: [], cobros: [] }
@@ -128,11 +157,11 @@ export default function CierreModal({
         },
         cajaNombre,
         empresaNombre,
-        porMetodo,
-        cobrosPorMetodo,
-        devolucionesPorMetodo,
-        cambioEntregado,
-        efectivoEsperadoDetalle: efectivoEsperado,
+        porMetodo: resumenResult.data.porMetodo,
+        cobrosPorMetodo: resumenResult.data.cobrosPorMetodo,
+        devolucionesPorMetodo: resumenResult.data.devolucionesPorMetodo,
+        cambioEntregado: resumenResult.data.cambioEntregado,
+        efectivoEsperadoDetalle: resumenResult.data.efectivoEsperado,
         detalle,
       })
     })
@@ -140,6 +169,27 @@ export default function CierreModal({
 
   if (comprobante) {
     return <ComprobanteTurnoModal datos={comprobante} onCerrar={onCerrado} />
+  }
+
+  if (cierreSinComprobante) {
+    return (
+      <Modal title="Cerrar caja" onClose={onCerrado}>
+        <div className={styles.cierreModal}>
+          <p className={styles.identNota}>
+            La caja se cerró correctamente, pero no se pudo generar el comprobante en este momento.
+            Puedes reimprimirlo desde el detalle del turno.
+          </p>
+          <div className={styles.formFooter}>
+            <Link href={`/admin/pos/turnos/${sesion.id}`} className={`btnMerlinSecondary ${styles.btnCancel}`}>
+              Ver detalle del turno
+            </Link>
+            <button type="button" className={`btnMerlinPrimary ${styles.btnSubmit}`} onClick={onCerrado}>
+              Listo
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )
   }
 
   return (
@@ -240,7 +290,15 @@ export default function CierreModal({
           </div>
         </div>
 
-        {diferencia !== null && (
+        {/* CRÍTICO (revisión de esta tarea): esta fila daba feedback EN VIVO
+            mientras el cajero teclea (`diferencia` se recalcula en cada
+            cambio, línea de arriba), sin importar el interruptor — un cajero
+            podía tantear números hasta ver "Cuadra exacto", que es
+            exactamente el ajuste de conteo que el cierre a ciegas existe
+            para impedir. Con el interruptor activo, este renglón no se
+            pinta; el arqueo real se sigue mostrando siempre DESPUÉS de
+            confirmar, vía el comprobante. */}
+        {!cierreCiegas && diferencia !== null && (
           <div
             className={styles.diferenciaRow}
             style={{ color: diferencia < 0 ? 'var(--danger)' : 'var(--success)' }}

@@ -53,7 +53,8 @@ export default async function TurnoDetallePage({ params }: Props) {
       // R7: créditos otorgados y cobros de CxC recibidos en el turno, para el
       // comprobante reimprimible (botón "Imprimir comprobante" en TurnoDetalleView).
       obtenerDetalleTurno(id),
-      supabase.from('configuracion').select('key, value'),
+      // `.limit()` explícito: sin él PostgREST aplica su tope por defecto en silencio.
+      supabase.from('configuracion').select('key, value').limit(500),
     ])
 
   const cobros = cobrosResult.ok ? (cobrosResult.data ?? []) : []

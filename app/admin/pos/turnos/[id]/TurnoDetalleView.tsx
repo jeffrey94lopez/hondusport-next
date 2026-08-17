@@ -138,7 +138,14 @@ export default function TurnoDetalleView({
   )
 
   return (
-    <div className={styles.page}>
+    <>
+    {/* `.noPrint` oculta esta pantalla al imprimir (R7): el comprobante se
+        renderiza como HERMANO de este bloque, no adentro — si estuviera
+        anidado aquí, ocultar este contenedor también lo escondería. Sin este
+        envoltorio, imprimir el comprobante arrastraría el encabezado, la
+        card de arqueo y la tabla de documentos detrás de la tirilla (papel
+        desperdiciado en cada copia). */}
+    <div className={`${styles.page} ${styles.noPrint}`}>
       <div className={styles.detalleHeader}>
         <div>
           <h1 className={styles.title}>Turno de caja — {caja?.nombre ?? '—'}</h1>
@@ -160,10 +167,6 @@ export default function TurnoDetalleView({
           </Link>
         </div>
       </div>
-
-      {comprobante && (
-        <ComprobanteTurnoModal datos={datosComprobante} onCerrar={() => setComprobante(false)} />
-      )}
 
       <div className={styles.arqueoCard}>
         <div className={styles.arqueoRow}>
@@ -295,5 +298,10 @@ export default function TurnoDetalleView({
         {documentos.length === 0 && <div className={styles.empty}>No hay documentos emitidos en este turno.</div>}
       </div>
     </div>
+
+    {comprobante && (
+      <ComprobanteTurnoModal datos={datosComprobante} onCerrar={() => setComprobante(false)} />
+    )}
+    </>
   )
 }

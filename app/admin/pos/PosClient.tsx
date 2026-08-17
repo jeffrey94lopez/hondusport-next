@@ -1219,6 +1219,19 @@ export default function PosClient({
         />
       )}
 
+      {historialAbierto && (
+        <HistorialModal sesiones={sesionesCerradasCaja} onClose={() => setHistorialAbierto(false)} />
+      )}
+      </div>
+
+      {/* `CierreModal` se renderiza FUERA de `.ventaWrap` (no dentro, como
+          antes), mismo motivo que `DocumentoModal` justo abajo: `.ventaWrap`
+          se oculta en impresión (`display: none`) para que solo el papel se
+          imprima — pero un ancestro con `display: none` esconde TODOS sus
+          descendientes en el print, sin importar que `ComprobanteTurnoModal`
+          (dentro de `CierreModal`, R7) neutralice su propio overlay a
+          `static`. Con `CierreModal` dentro de `.ventaWrap`, el botón
+          Imprimir del comprobante habría impreso una hoja en blanco. */}
       {cierreAbierto && (
         <CierreModal
           sesion={sesion}
@@ -1231,11 +1244,6 @@ export default function PosClient({
           onCerrado={handleCierreCerrado}
         />
       )}
-
-      {historialAbierto && (
-        <HistorialModal sesiones={sesionesCerradasCaja} onClose={() => setHistorialAbierto(false)} />
-      )}
-      </div>
 
       {documentoModalId && (
         <DocumentoModal

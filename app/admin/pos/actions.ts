@@ -5,7 +5,7 @@ import { toConfigMap } from '@/lib/store/adapters'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import type { LineaConColumna } from '@/lib/pos/desglose'
 import { numeroALetras } from '@/lib/pos/letras'
-import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos } from '@/lib/pos/emision'
+import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos, type ResumenCaja } from '@/lib/pos/emision'
 import { cantidadDevolvible, recalcularLineaDevuelta, totalNotaCredito, validarReembolsos } from '@/lib/pos/devoluciones'
 import { validarRtn } from '@/lib/pos/fiscal'
 import { excedeLimite } from '@/lib/cxp/cxp'
@@ -434,7 +434,7 @@ export async function obtenerDevolucionesSesion(
 // `sesiones_caja`, justo lo que el interruptor no debe hacer.
 export async function obtenerResumenSesion(
   sesionId: string,
-): Promise<PosResult<ReturnType<typeof esperadoCaja>>> {
+): Promise<PosResult<ResumenCaja>> {
   const supabase = await createClient()
 
   const { data: sesion, error: sesionError } = await supabase

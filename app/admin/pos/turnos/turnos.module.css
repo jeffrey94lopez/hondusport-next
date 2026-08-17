@@ -365,3 +365,13 @@
 
 /* Único estilo inline que quedaba en la pantalla; el proyecto usa CSS Modules. */
 .formCrece { flex: 1; }
+
+/* Oculta el contenido normal de la pantalla al imprimir (R7): el comprobante
+   de cierre (`ComprobanteTurnoModal`) se renderiza como HERMANO de este
+   contenedor, no adentro, precisamente para que ocultarlo no se lleve el
+   propio comprobante con él. Sin esto, imprimir la tirilla arrastraría el
+   encabezado, las tarjetas de turno y la tabla detrás de la tirilla — mismo
+   criterio que `.ventaWrap` en pos.module.css. */
+@media print {
+  .noPrint { display: none !important; }
+}

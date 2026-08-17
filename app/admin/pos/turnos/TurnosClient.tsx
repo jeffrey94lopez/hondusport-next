@@ -6,23 +6,12 @@ import Modal from '@/components/admin/Modal'
 import { formatPrice } from '@/lib/store/format'
 import { filtrarTurnos, totalesTurnos, type FiltroTurnos, type DetalleTurno } from '@/lib/pos/turnos'
 import { abrirSesion, cerrarSesion, obtenerResumenSesion, obtenerDetalleTurno } from '../actions'
+import type { ResumenCaja } from '@/lib/pos/emision'
 import { parseMoneyInput } from '../pos-helpers'
 import ComprobanteTurnoModal, { type ComprobanteTurnoDatos } from '../components/ComprobanteTurnoModal'
 import type { Caja, SesionCaja, MetodoPagoTipo, CobroMetodo } from '@/types'
 import posStyles from '../pos.module.css'
 import styles from './turnos.module.css'
-
-// Forma del resumen que devuelve `obtenerResumenSesion` (Server Action que
-// envuelve `esperadoCaja` en el servidor): esta pantalla nunca llama
-// `esperadoCaja` directamente, así que se declara la forma aquí en vez de
-// importar la función solo para un `ReturnType`.
-interface ResumenSesion {
-  efectivoEsperado: number
-  cambioEntregado: number
-  porMetodo: Record<MetodoPagoTipo, number>
-  cobrosPorMetodo: Record<CobroMetodo, number>
-  devolucionesPorMetodo: Record<CobroMetodo, number>
-}
 
 const NOMBRES_METODO: Record<MetodoPagoTipo, string> = {
   efectivo_lps: 'Efectivo L.',
@@ -40,28 +29,6 @@ const NOMBRES_COBRO: Record<CobroMetodo, string> = {
   tarjeta: 'Tarjeta',
   cheque: 'Cheque',
   otro: 'Otro',
-}
-
-// Respaldo si `obtenerResumenSesion` falla justo después de un cierre ya
-// confirmado (raro: la sesión ya se cerró, solo falta el desglose
-// informativo del comprobante). Deja el comprobante sin desglose por método
-// en vez de no mostrarlo — el arqueo (que sí importa) sale de `cerrarSesion`,
-// no de este resumen.
-const PORMETODO_VACIO: Record<MetodoPagoTipo, number> = {
-  efectivo_lps: 0,
-  efectivo_usd: 0,
-  tarjeta: 0,
-  transferencia: 0,
-  otro: 0,
-  credito: 0,
-  saldo_favor: 0,
-}
-const COBROMETODO_VACIO: Record<CobroMetodo, number> = {
-  efectivo: 0,
-  transferencia: 0,
-  tarjeta: 0,
-  cheque: 0,
-  otro: 0,
 }
 
 interface Props {
@@ -123,7 +90,14 @@ export default function TurnosClient({ cajas, sesionesAbiertas, historial, cierr
   }
 
   return (
-    <div className={styles.page}>
+    <>
+    {/* `.noPrint` oculta esta pantalla al imprimir (R7): el comprobante de
+        cierre se renderiza como HERMANO de este bloque, no adentro — si
+        estuviera anidado aquí, ocultar este contenedor también lo
+        escondería. Sin este envoltorio, imprimir el comprobante arrastraría
+        el encabezado, las tarjetas de turno y la tabla de turnos detrás de
+        la tirilla (papel desperdiciado en cada copia). */}
+    <div className={`${styles.page} ${styles.noPrint}`}>
       <div className={styles.topbar}>
         <div>
           <h1 className={styles.title}>Turnos de caja</h1>
@@ -262,17 +236,19 @@ export default function TurnosClient({ cajas, sesionesAbiertas, historial, cierr
         )}
       </div>
 
-      {cerrando && (
-        <CerrarTurnoModal
-          sesion={cerrando}
-          cajaNombre={nombreCaja(cerrando.caja_id)}
-          empresaNombre={empresaNombre}
-          cierreCiegas={cierreCiegas}
-          onClose={() => setCerrando(null)}
-          onListo={() => { setCerrando(null); router.refresh() }}
-        />
-      )}
     </div>
+
+    {cerrando && (
+      <CerrarTurnoModal
+        sesion={cerrando}
+        cajaNombre={nombreCaja(cerrando.caja_id)}
+        empresaNombre={empresaNombre}
+        cierreCiegas={cierreCiegas}
+        onClose={() => setCerrando(null)}
+        onListo={() => { setCerrando(null); router.refresh() }}
+      />
+    )}
+    </>
   )
 }
 
@@ -366,23 +342,33 @@ function CerrarTurnoModal({ sesion, cajaNombre, empresaNombre, cierreCiegas, onC
   const [notas, setNotas] = useState('')
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
-  const [resumen, setResumen] = useState<ResumenSesion | null>(null)
+  const [resumen, setResumen] = useState<ResumenCaja | null>(null)
   // Comprobante de cierre (R7): se llena tras un `cerrarSesion` exitoso y,
   // mientras exista, reemplaza este modal por el papel.
   const [comprobante, setComprobante] = useState<ComprobanteTurnoDatos | null>(null)
+  // La caja YA se cerró (el arqueo está congelado) pero no se pudo volver a
+  // traer el desglose fresco para el comprobante (ver handleCerrar): en vez
+  // de imprimir un papel con el desglose en cero —que contradice el bloque
+  // de créditos/cobros y hace desaparecer la identidad de seis términos sin
+  // avisar—, se avisa y se ofrece ir al detalle del turno a reimprimir.
+  const [cierreSinComprobante, setCierreSinComprobante] = useState(false)
 
-  // Resumen en vivo de la sesión (no persiste nada): sirve al resumen previo
-  // de abajo (gobernado por `cierreCiegas`, igual que en CierreModal) y se
-  // vuelve a pedir tras cerrar para el desglose del comprobante — esta
-  // pantalla, a diferencia de CierreModal (mostrador), no recibe los
-  // documentos de la sesión como prop.
+  // Resumen en vivo de la sesión (no persiste nada): solo alimenta el resumen
+  // previo de abajo, gobernado por `cierreCiegas` (igual que en CierreModal).
+  // Con el cierre a ciegas activo (el caso normal) ese bloque nunca se pinta,
+  // así que ni siquiera se pide: ahorra una consulta por cierre y evita que
+  // el esperado viaje al navegador (pestaña Red) cuando nadie lo va a ver —
+  // aunque, para que quede claro, el cierre a ciegas sigue siendo un control
+  // de proceso, no una barrera técnica: nada impide inspeccionar la respuesta
+  // de `cerrarSesion` o del propio comprobante una vez cerrado.
   useEffect(() => {
+    if (cierreCiegas) return
     let activo = true
     obtenerResumenSesion(sesion.id).then(result => {
       if (activo && result.ok && result.data) setResumen(result.data)
     })
     return () => { activo = false }
-  }, [sesion.id])
+  }, [sesion.id, cierreCiegas])
 
   function handleCerrar() {
     setError('')
@@ -400,17 +386,27 @@ function CerrarTurnoModal({ sesion, cajaNombre, empresaNombre, cierreCiegas, onC
 
       // Ninguno de los dos viaja en la respuesta de `cerrarSesion` (solo
       // esperado/diferencia): se piden justo ahora, frescos, en vez de
-      // reutilizar el `resumen` previo — así el desglose del comprobante sale
-      // del mismo instante que el propio comprobante, sin depender de cuánto
-      // haya tardado el usuario en teclear el monto contado.
+      // reutilizar el `resumen` previo (que además puede ni existir, si el
+      // interruptor estaba activo) — así el desglose del comprobante sale
+      // del mismo instante que el propio comprobante.
       const [detalleResult, resumenResult] = await Promise.all([
         obtenerDetalleTurno(sesion.id),
         obtenerResumenSesion(sesion.id),
       ])
+
+      if (!resumenResult.ok || !resumenResult.data) {
+        // La sesión YA se cerró (el arqueo está congelado); solo falló
+        // volver a traer el desglose. Imprimir con un desglose en cero
+        // mentiría (el renglón de crédito desaparecería mientras el bloque
+        // de créditos del comprobante seguiría mostrando el monto real) —
+        // mejor no montar el papel.
+        setCierreSinComprobante(true)
+        return
+      }
+
       const detalle: DetalleTurno = detalleResult.ok && detalleResult.data
         ? detalleResult.data
         : { creditos: [], cobros: [] }
-      const resumenFinal = resumenResult.ok && resumenResult.data ? resumenResult.data : null
 
       setComprobante({
         sesion: {
@@ -424,11 +420,11 @@ function CerrarTurnoModal({ sesion, cajaNombre, empresaNombre, cierreCiegas, onC
         },
         cajaNombre,
         empresaNombre,
-        porMetodo: resumenFinal?.porMetodo ?? PORMETODO_VACIO,
-        cobrosPorMetodo: resumenFinal?.cobrosPorMetodo ?? COBROMETODO_VACIO,
-        devolucionesPorMetodo: resumenFinal?.devolucionesPorMetodo ?? COBROMETODO_VACIO,
-        cambioEntregado: resumenFinal?.cambioEntregado ?? 0,
-        efectivoEsperadoDetalle: resumenFinal?.efectivoEsperado ?? result.data.esperado,
+        porMetodo: resumenResult.data.porMetodo,
+        cobrosPorMetodo: resumenResult.data.cobrosPorMetodo,
+        devolucionesPorMetodo: resumenResult.data.devolucionesPorMetodo,
+        cambioEntregado: resumenResult.data.cambioEntregado,
+        efectivoEsperadoDetalle: resumenResult.data.efectivoEsperado,
         detalle,
       })
     })
@@ -436,6 +432,27 @@ function CerrarTurnoModal({ sesion, cajaNombre, empresaNombre, cierreCiegas, onC
 
   if (comprobante) {
     return <ComprobanteTurnoModal datos={comprobante} onCerrar={onListo} />
+  }
+
+  if (cierreSinComprobante) {
+    return (
+      <Modal title={`Cerrar caja — ${cajaNombre}`} onClose={onListo}>
+        <div className={styles.form}>
+          <p className={posStyles.identNota}>
+            La caja se cerró correctamente, pero no se pudo generar el comprobante en este momento.
+            Puedes reimprimirlo desde el detalle del turno.
+          </p>
+          <div className={styles.formFooter}>
+            <Link href={`/admin/pos/turnos/${sesion.id}`} className={`${styles.btn} btnMerlinSecondary`}>
+              Ver detalle del turno
+            </Link>
+            <button type="button" className={`${styles.btn} btnMerlinPrimary`} onClick={onListo}>
+              Listo
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )
   }
 
   const metodosConMonto = resumen
