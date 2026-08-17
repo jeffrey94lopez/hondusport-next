@@ -361,6 +361,7 @@ git commit -m "feat(pos): detalle de creditos otorgados y cobros del turno (R7)"
     cobrosPorMetodo: Record<CobroMetodo, number>
     devolucionesPorMetodo: Record<CobroMetodo, number>
     cambioEntregado: number
+    efectivoEsperadoDetalle: number  // el `efectivoEsperado` que devuelve esperadoCaja AHORA
     detalle: DetalleTurno
     impresoEn: string  // ISO; el llamador lo fija
   }
@@ -388,7 +389,17 @@ Bloques, en este orden:
                      − reembolsos en efectivo     (devolucionesPorMetodo.efectivo)
    ```
 
-   Los tres últimos términos **no son opcionales**: en un turno con cobros de cuentas por cobrar o con devoluciones —lo normal en este POS— la versión corta no cuadra, y el cajero se queda sin poder explicar la diferencia. El comprobante debe mostrar **cada uno de esos seis renglones** cuando su valor no sea cero, con el efectivo esperado como total al pie. Los métodos que no son efectivo (tarjeta, transferencia, crédito, saldo a favor) se listan como informativos, claramente separados del bloque que suma, porque no entran al cuadre de la gaveta.
+   Los tres últimos términos **no son opcionales**: en un turno con cobros de cuentas por cobrar o con devoluciones —lo normal en este POS— la versión corta no cuadra, y el cajero se queda sin poder explicar la diferencia. El comprobante debe mostrar **cada uno de esos seis renglones** cuando su valor no sea cero. Los métodos que no son efectivo (tarjeta, transferencia, crédito, saldo a favor) se listan como informativos, claramente separados del bloque que suma, porque no entran al cuadre de la gaveta.
+
+   **Al pie van DOS totales, no uno.** Los seis renglones se recalculan al leer, pero el arqueo está congelado, y esas dos cosas pueden divergir: `anular_comprobante` no exige que la sesión siga abierta, así que anular un documento después del cierre saca su línea del detalle sin tocar el valor congelado. Imprimir solo uno de los dos produce un papel que se contradice a sí mismo —renglones que suman L. 1,380 bajo un total de L. 1,880, con un "Cuadra exacto" arriba— y el lector no tiene forma de saber por qué. Se imprimen los dos, y el papel se delata solo:
+
+   - `Suma del detalle` — la suma en vivo, que llega por la prop `efectivoEsperadoDetalle` (el `efectivoEsperado` que `esperadoCaja` devuelve **ahora**). Si el turno sigue abierto, el rótulo es `Suma del detalle (turno abierto — sin arqueo)`.
+   - `Efectivo esperado (arqueo del cierre)` — el congelado, desde `sesion.monto_esperado`, o `—` si el turno sigue abierto.
+   - Una **advertencia condicional**, solo cuando ambos existan y difieran: *"⚠ El detalle difiere del arqueo del cierre en L. X. Se anularon documentos después de cerrar el turno. El arqueo oficial es el de arriba."* La comparación es una **función pura con test** en `lib/pos/turnos.ts`, no lógica del componente:
+     ```ts
+     export function diferenciaDetalleArqueo(detalle: number, congelado: number | null): number | null
+     ```
+     devuelve `null` si no hay congelado o si coinciden, y la diferencia en caso contrario.
 5. **Créditos otorgados:** una línea por `CreditoOtorgado` (número, cliente, monto) y su total con `totalCreditos`. Si no hay, omite el bloque entero. Incluye la aclaración: **No entró efectivo a caja.**
 6. **Cobros de CxC recibidos:** una línea por `CobroDelTurno` (número, cliente, método, monto) y su total con `totalCobros`. Si no hay, omite el bloque.
 7. **Devoluciones / reembolsos:** por método, solo los que tengan monto > 0. Si no hay, omite el bloque.
