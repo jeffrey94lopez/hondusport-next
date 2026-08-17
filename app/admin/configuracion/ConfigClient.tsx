@@ -421,6 +421,7 @@ export default function ConfigClient({ config: initial, cais, cajas, vendedores,
                 bloquearLimite={initial.cxc_bloquear_limite ?? 'false'}
                 conteoCiego={initial.inventario_conteo_ciego ?? 'true'}
                 devolucionesSinEfectivo={initial.devoluciones_sin_efectivo ?? 'false'}
+                cierreCiegas={initial.pos_cierre_ciegas ?? 'true'}
               />
             </div>
           )}

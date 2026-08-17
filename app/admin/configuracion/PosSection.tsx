@@ -19,6 +19,7 @@ interface Props {
   bloquearLimite: string
   conteoCiego: string
   devolucionesSinEfectivo: string
+  cierreCiegas: string
 }
 
 const EMPTY_CAJA: CajaForm = { nombre: '', punto_emision: '001', formato_impresion: '80mm', activo: true }
@@ -33,7 +34,7 @@ function EstadoCell({ activo, onToggle, disabled }: { activo: boolean; onToggle:
   )
 }
 
-export default function PosSection({ cajas, vendedores, limiteConsumidorFinal, documentoModal, bloquearLimite, conteoCiego, devolucionesSinEfectivo }: Props) {
+export default function PosSection({ cajas, vendedores, limiteConsumidorFinal, documentoModal, bloquearLimite, conteoCiego, devolucionesSinEfectivo, cierreCiegas }: Props) {
   return (
     <div className={styles.wrap}>
       <LimiteConsumidorFinal inicial={limiteConsumidorFinal} />
@@ -41,6 +42,7 @@ export default function PosSection({ cajas, vendedores, limiteConsumidorFinal, d
       <BloquearLimiteToggle inicial={bloquearLimite === 'true'} />
       <ConteoCiegoToggle inicial={conteoCiego === 'true'} />
       <DevolucionesSinEfectivoToggle inicial={devolucionesSinEfectivo === 'true'} />
+      <CierreCiegasToggle inicial={cierreCiegas !== 'false'} />
       <CajasBlock cajas={cajas} />
       <VendedoresBlock vendedores={vendedores} />
     </div>
@@ -88,6 +90,57 @@ function DocumentoModalToggle({ inicial }: { inicial: boolean }) {
         onChange={handleChange}
         disabled={isPending}
         label="Abrir el documento en modal tras cobrar"
+      />
+      {saved && <p className={styles.helpText}>Guardado.</p>}
+      {error && <p className={styles.formError}>{error}</p>}
+    </div>
+  )
+}
+
+// R7: interruptor de `pos_cierre_ciegas`. Mismo patrón que
+// DocumentoModalToggle. Ausente = 'true' (a ciegas activo por defecto):
+// con el toggle activo, el cajero cuenta el efectivo de la gaveta al cerrar
+// turno sin ver antes cuánto se espera, para no sesgar el conteo; el arqueo
+// (esperado, contado y diferencia) se muestra siempre después de confirmar.
+// Nadie consume esta clave todavía — la leerán el POS y Turnos en tareas
+// posteriores.
+function CierreCiegasToggle({ inicial }: { inicial: boolean }) {
+  const [activo, setActivo] = useState(inicial)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  function handleChange(valor: boolean) {
+    setActivo(valor)
+    setError('')
+    startTransition(async () => {
+      const result = await saveConfig({ pos_cierre_ciegas: valor ? 'true' : 'false' })
+      if (result.error) {
+        setError(result.error)
+        setActivo(!valor)
+        return
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    })
+  }
+
+  return (
+    <div className={styles.block}>
+      <div className={styles.head}>
+        <div>
+          <h2 className={styles.title}>Cierre de caja a ciegas</h2>
+          <p className={styles.subtitle}>
+            El cajero cuenta el efectivo sin ver antes cuánto se espera. El arqueo (esperado, contado
+            y diferencia) se muestra siempre después de confirmar.
+          </p>
+        </div>
+      </div>
+      <Toggle
+        checked={activo}
+        onChange={handleChange}
+        disabled={isPending}
+        label="Contar el efectivo a ciegas al cerrar turno"
       />
       {saved && <p className={styles.helpText}>Guardado.</p>}
       {error && <p className={styles.formError}>{error}</p>}
