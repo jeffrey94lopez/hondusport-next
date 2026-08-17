@@ -1,5 +1,5 @@
 import { formatPrice } from '@/lib/store/format'
-import { totalCreditos, totalCobros, type DetalleTurno } from '@/lib/pos/turnos'
+import { totalCreditos, totalCobros, diferenciaDetalleArqueo, type DetalleTurno } from '@/lib/pos/turnos'
 import type { SesionCaja, MetodoPagoTipo, CobroMetodo } from '@/types'
 import styles from './comprobante-turno.module.css'
 
@@ -11,6 +11,13 @@ export interface ComprobanteTurnoProps {
   cobrosPorMetodo: Record<CobroMetodo, number>
   devolucionesPorMetodo: Record<CobroMetodo, number>
   cambioEntregado: number
+  // Suma EN VIVO del efectivo esperado (la que da `esperadoCaja` al
+  // recalcular con los documentos que siguen `emitido` hoy). Puede diferir
+  // del arqueo congelado (`sesion.monto_esperado`) si se anuló un comprobante
+  // DESPUÉS del cierre — el llamador ya invoca `esperadoCaja` para obtener
+  // `porMetodo`/`cobrosPorMetodo`/`cambioEntregado`, así que este total sale
+  // de ahí mismo, no de un cálculo nuevo en este componente.
+  efectivoEsperadoDetalle: number
   detalle: DetalleTurno
   impresoEn: string // ISO; el llamador lo fija
 }
@@ -25,10 +32,14 @@ const NOMBRES_METODO: Record<MetodoPagoTipo, string> = {
   saldo_favor: 'Saldo a favor',
 }
 
-// Los métodos que sí son efectivo se muestran en el bloque de arriba (la
-// identidad de cuadre); estos van al bloque informativo aparte porque no
-// entran al cuadre de la gaveta (ver spec R7).
-const METODOS_NO_EFECTIVO: MetodoPagoTipo[] = ['tarjeta', 'transferencia', 'otro', 'credito', 'saldo_favor']
+// Derivadas de las claves del Record (no un array suelto aparte): si mañana
+// se agrega un MetodoPagoTipo nuevo, tsc obliga a completar NOMBRES_METODO y
+// esa clave entra aquí sola. Con un array literal separado, un método nuevo
+// se imprimiría con nombre pero podría quedar fuera de esta lista sin que
+// nada lo señalara — el dinero de ese método desaparecería del papel sin
+// error de compilación ni test que lo cubra.
+const METODOS_NO_EFECTIVO = (Object.keys(NOMBRES_METODO) as MetodoPagoTipo[])
+  .filter(m => m !== 'efectivo_lps' && m !== 'efectivo_usd')
 
 const NOMBRES_COBRO: Record<CobroMetodo, string> = {
   efectivo: 'Efectivo',
@@ -38,7 +49,7 @@ const NOMBRES_COBRO: Record<CobroMetodo, string> = {
   otro: 'Otro',
 }
 
-const METODOS_COBRO: CobroMetodo[] = ['efectivo', 'transferencia', 'tarjeta', 'cheque', 'otro']
+const METODOS_COBRO = Object.keys(NOMBRES_COBRO) as CobroMetodo[]
 
 // Server Components corren en Vercel bajo UTC; sin `timeZone` explícito la
 // hora impresa sale corrida 6 horas respecto de Honduras (bug real de R6).
@@ -72,6 +83,7 @@ export default function ComprobanteTurno({
   cobrosPorMetodo,
   devolucionesPorMetodo,
   cambioEntregado,
+  efectivoEsperadoDetalle,
   detalle,
   impresoEn,
 }: ComprobanteTurnoProps) {
@@ -80,6 +92,14 @@ export default function ComprobanteTurno({
   // Colores fijos (no tokens del tema): esta hoja simula papel impreso y su
   // tinta no sigue el modo claro/oscuro de la app.
   const diferenciaColor = diferencia == null ? undefined : diferencia === 0 ? '#0a0a0a' : diferencia > 0 ? '#1b6a3a' : '#910022'
+
+  // Turno abierto: no hay arqueo congelado, así que la suma en vivo es lo
+  // único que hay para mostrar; se rotula distinto para no insinuar que es
+  // un arqueo cerrado. Cuando sí hay congelado y ambos difieren, es porque un
+  // comprobante del turno se anuló DESPUÉS del cierre (ver
+  // `diferenciaDetalleArqueo`); el arqueo de arriba sigue siendo el oficial.
+  const labelDetalle = sesion.monto_esperado == null ? 'Suma del detalle (turno abierto — sin arqueo)' : 'Suma del detalle'
+  const diferenciaDetalle = diferenciaDetalleArqueo(efectivoEsperadoDetalle, sesion.monto_esperado)
 
   const metodosInformativos = METODOS_NO_EFECTIVO.filter(m => porMetodo[m] > 0)
   const devolucionesPorMetodoConMonto = METODOS_COBRO.filter(m => devolucionesPorMetodo[m] > 0)
@@ -131,7 +151,7 @@ export default function ComprobanteTurno({
             <div className={styles.fila}><span>Efectivo L. cobrado</span><span>{formatPrice(porMetodo.efectivo_lps)}</span></div>
           )}
           {porMetodo.efectivo_usd !== 0 && (
-            <div className={styles.fila}><span>Efectivo USD cobrado</span><span>{formatPrice(porMetodo.efectivo_usd)}</span></div>
+            <div className={styles.fila}><span>Efectivo USD cobrado (equiv. en L.)</span><span>{formatPrice(porMetodo.efectivo_usd)}</span></div>
           )}
           {cambioEntregado !== 0 && (
             <div className={styles.fila}><span>Cambio entregado</span><span>− {formatPrice(cambioEntregado)}</span></div>
@@ -142,10 +162,28 @@ export default function ComprobanteTurno({
           {devolucionesPorMetodo.efectivo !== 0 && (
             <div className={styles.fila}><span>Reembolsos en efectivo</span><span>− {formatPrice(devolucionesPorMetodo.efectivo)}</span></div>
           )}
+          {/* Dos totales, no uno: la suma en vivo del detalle (recalculada
+              con lo que sigue `emitido` hoy) y el arqueo congelado al
+              cerrar. Si un comprobante del turno se anula DESPUÉS del
+              cierre, ambos dejan de coincidir — imprimir solo uno de los dos
+              haría que el papel afirmara un cuadre que el propio detalle
+              visible ya no sostiene (o, al revés, que el detalle "no
+              cuadrara" contra un arqueo que en realidad sigue siendo el
+              oficial). El arqueo oficial es siempre el segundo renglón. */}
+          <div className={styles.fila}>
+            <span>{labelDetalle}</span>
+            <span>{formatPrice(efectivoEsperadoDetalle)}</span>
+          </div>
           <div className={`${styles.fila} ${styles.filaTotal}`}>
-            <span>Efectivo esperado</span>
+            <span>Efectivo esperado (arqueo del cierre)</span>
             <span>{formatoArqueo(sesion.monto_esperado)}</span>
           </div>
+          {diferenciaDetalle != null && (
+            <div className={styles.advertencia}>
+              ⚠ El detalle difiere del arqueo del cierre en {formatPrice(diferenciaDetalle)}. Se anularon documentos
+              después de cerrar el turno. El arqueo oficial es el de arriba.
+            </div>
+          )}
 
           {metodosInformativos.length > 0 && (
             <div className={styles.subseccion}>

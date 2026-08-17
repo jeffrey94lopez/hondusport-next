@@ -89,6 +89,19 @@
   margin: 2px 0 4px;
 }
 
+/* Advertencia condicional (detalle en vivo vs. arqueo congelado, R7): tinta
+   fija de "faltante" — no un token del tema — igual criterio que el resto
+   de esta hoja impresa. */
+.advertencia {
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #910022;
+  border: 1px dashed #910022;
+  border-radius: 4px;
+  padding: 4px 6px;
+  margin: 4px 0;
+}
+
 .pie {
   font-size: 0.82em;
   text-align: center;
@@ -98,9 +111,9 @@
 }
 
 /* Elementos que no deben imprimirse (p. ej. el botón de imprimir que monta
-   quien use este componente): ocultos solo en @media print. */
-.noPrint { }
-
+   quien use este componente): ocultos solo en @media print. La clase queda
+   exportada por esta sola declaración dentro del bloque — no hace falta una
+   regla vacía fuera de él. */
 @media print {
   .noPrint { display: none !important; }
   .pageBg { padding: 0; background: none; min-height: auto; display: block; }

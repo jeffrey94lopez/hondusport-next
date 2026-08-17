@@ -83,6 +83,27 @@ export function totalCobros(cobros: CobroDelTurno[]): number {
   return round2(cobros.reduce((s, c) => s + c.monto, 0))
 }
 
+/**
+ * Diferencia entre la suma EN VIVO del detalle (recalculada a partir de
+ * `porMetodo`/`cobrosPorMetodo`/`cambioEntregado` al reimprimir) y el arqueo
+ * CONGELADO al cerrar (`sesion.monto_esperado`). Pueden divergir para un
+ * mismo turno porque `esperadoCaja` descarta los documentos que ya no están
+ * `emitido`: `anular_comprobante` no exige que la sesión siga abierta, así
+ * que anular un comprobante DESPUÉS del cierre hace que una reimpresión
+ * recalcule el detalle con un documento menos, mientras el arqueo oficial
+ * sigue congelado con el valor original — el papel no puede afirmar que
+ * cuadró cuando en realidad el detalle visible ya no suma el total que dice.
+ * Devuelve `null` cuando no hay arqueo congelado (turno abierto) o cuando
+ * ambos coinciden: en ninguno de los dos casos hay nada que advertir. El
+ * valor devuelto es la magnitud (no el signo): el comprobante solo necesita
+ * decir "difieren en L. X", no de qué lado.
+ */
+export function diferenciaDetalleArqueo(detalle: number, congelado: number | null): number | null {
+  if (congelado == null) return null
+  const diff = round2(Math.abs(detalle - congelado))
+  return diff === 0 ? null : diff
+}
+
 // Regla con peso (revisión R7): un documento es un crédito otorgado del turno
 // si está `emitido` y tiene al menos un pago `tipo === 'credito'`; el monto es
 // la SUMA de solo esos pagos, nunca el total del documento — una venta mixta

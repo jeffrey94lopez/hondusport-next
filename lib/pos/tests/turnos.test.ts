@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filtrarTurnos, totalesTurnos, totalCreditos, totalCobros, creditosDeDocumentos, type FiltroTurnos } from '../turnos'
+import { filtrarTurnos, totalesTurnos, totalCreditos, totalCobros, creditosDeDocumentos, diferenciaDetalleArqueo, type FiltroTurnos } from '../turnos'
 import type { SesionCaja } from '@/types'
 
 function turno(over: Partial<SesionCaja>): SesionCaja {
@@ -103,6 +103,28 @@ describe('totales del detalle del turno', () => {
   it('sin lineas devuelven cero', () => {
     expect(totalCreditos([])).toBe(0)
     expect(totalCobros([])).toBe(0)
+  })
+})
+
+// R7 (revisión del comprobante): la suma en vivo del detalle puede divergir
+// del arqueo congelado si se anuló un comprobante DESPUÉS del cierre — el
+// papel debe poder advertirlo en vez de imprimir un "cuadró" falso.
+describe('diferenciaDetalleArqueo', () => {
+  it('sin arqueo congelado (turno abierto) no hay nada que advertir', () => {
+    expect(diferenciaDetalleArqueo(1380, null)).toBeNull()
+  })
+
+  it('detalle y congelado iguales: no hay nada que advertir', () => {
+    expect(diferenciaDetalleArqueo(1880, 1880)).toBeNull()
+  })
+
+  it('detalle y congelado distintos: devuelve la magnitud de la diferencia', () => {
+    expect(diferenciaDetalleArqueo(1380, 1880)).toBe(500)
+    expect(diferenciaDetalleArqueo(1880, 1380)).toBe(500) // el orden no cambia la magnitud
+  })
+
+  it('una diferencia de centimos tambien se reporta (no la absorbe el redondeo)', () => {
+    expect(diferenciaDetalleArqueo(1380.02, 1380.01)).toBe(0.01)
   })
 })
 
