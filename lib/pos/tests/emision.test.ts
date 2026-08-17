@@ -140,42 +140,67 @@ describe('esperadoCaja', () => {
     expect(r.devolucionesPorMetodo.transferencia).toBe(50) // no resta al efectivo, sí al desglose
   })
 
-  it('acumula el cambio de cada documento', () => {
-    const r = esperadoCaja(0, [
-      { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
-    ])
-    expect(r.cambioEntregado).toBe(500)
-    expect(r.efectivoEsperado).toBe(500)
-    expect(r.porMetodo.efectivo_lps).toBe(1000)
-  })
+  describe('esperadoCaja — cambio entregado', () => {
+    // Venta de L. 500 pagada con L. 1000 en efectivo: entran 1000, salen 500 de
+    // cambio. El efectivo esperado sube 500, pero porMetodo registra los 1000
+    // cobrados. Sin exponer el cambio, sumar el desglose da 500 de mas.
+    it('acumula el cambio de cada documento', () => {
+      const r = esperadoCaja(0, [
+        { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
+      ])
+      expect(r.cambioEntregado).toBe(500)
+      expect(r.efectivoEsperado).toBe(500)
+      expect(r.porMetodo.efectivo_lps).toBe(1000)
+    })
 
-  it('suma el cambio de varios documentos', () => {
-    const r = esperadoCaja(0, [
-      { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
-      { estado: 'emitido', total: 250.5, pagos: [{ tipo: 'efectivo_lps', monto: 300 }] },
-    ])
-    expect(r.cambioEntregado).toBe(549.5)
-  })
+    // El cambio se acumula en cada documento emitido durante el turno.
+    it('suma el cambio de varios documentos', () => {
+      const r = esperadoCaja(0, [
+        { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
+        { estado: 'emitido', total: 250.5, pagos: [{ tipo: 'efectivo_lps', monto: 300 }] },
+      ])
+      expect(r.cambioEntregado).toBe(549.5)
+    })
 
-  it('sin cambio devuelve cero', () => {
-    const r = esperadoCaja(100, [
-      { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 500 }] },
-    ])
-    expect(r.cambioEntregado).toBe(0)
-  })
+    // Cuando el cobro es exacto no hay cambio.
+    it('sin cambio devuelve cero', () => {
+      const r = esperadoCaja(100, [
+        { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 500 }] },
+      ])
+      expect(r.cambioEntregado).toBe(0)
+    })
 
-  it('ignora los documentos que no estan emitidos', () => {
-    const r = esperadoCaja(0, [
-      { estado: 'anulado', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
-    ])
-    expect(r.cambioEntregado).toBe(0)
-  })
+    // Misma regla que el resto de la funcion: un documento no emitido no cuenta.
+    it('ignora los documentos que no estan emitidos', () => {
+      const r = esperadoCaja(0, [
+        { estado: 'anulado', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
+      ])
+      expect(r.cambioEntregado).toBe(0)
+    })
 
-  it('inicial + efectivo cobrado - cambio = efectivo esperado', () => {
-    const r = esperadoCaja(1000, [
-      { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
-    ])
-    expect(round2(1000 + r.porMetodo.efectivo_lps - r.cambioEntregado)).toBe(r.efectivoEsperado)
+    // Identidad de cuadre COMPLETA: es la que el comprobante impreso debe
+    // permitir seguir a mano. La version simplificada (sin cobros, devoluciones
+    // ni dolares) solo cuadra en turnos que no tuvieron ninguno de los tres.
+    it('la identidad de cuadre se sostiene con todos los terminos', () => {
+      const r = esperadoCaja(
+        1000,
+        [
+          { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
+          { estado: 'emitido', total: 200, pagos: [{ tipo: 'efectivo_usd', monto: 200 }] },
+        ],
+        [{ metodo: 'efectivo', monto: 300 }, { metodo: 'tarjeta', monto: 50 }],
+        [{ metodo: 'efectivo', monto: 120 }],
+      )
+      const cuadre = round2(
+        1000
+        + r.porMetodo.efectivo_lps
+        + r.porMetodo.efectivo_usd
+        - r.cambioEntregado
+        + r.cobrosPorMetodo.efectivo
+        - r.devolucionesPorMetodo.efectivo,
+      )
+      expect(cuadre).toBe(r.efectivoEsperado)
+    })
   })
 })
 
