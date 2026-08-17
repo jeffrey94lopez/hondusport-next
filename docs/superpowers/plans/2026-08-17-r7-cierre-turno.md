@@ -102,12 +102,31 @@ describe('esperadoCaja — cambio entregado', () => {
     expect(r.cambioEntregado).toBe(0)
   })
 
-  // La identidad que el comprobante impreso debe permitir cuadrar a mano.
-  it('inicial + efectivo cobrado - cambio = efectivo esperado', () => {
-    const r = esperadoCaja(1000, [
-      { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
-    ])
-    expect(round2(1000 + r.porMetodo.efectivo_lps - r.cambioEntregado)).toBe(r.efectivoEsperado)
+  // Identidad de cuadre COMPLETA: es la que el comprobante impreso debe
+  // permitir seguir a mano, y tiene SEIS terminos. La version corta
+  // (inicial + efectivo cobrado - cambio) es FALSA: solo cuadra en un turno
+  // sin cobros de CxC en efectivo, sin devoluciones en efectivo y sin pagos
+  // en dolares. Con un cobro de CxC de 300 en efectivo da 500 donde el
+  // esperado real es 800. No la simplifiques.
+  it('la identidad de cuadre se sostiene con todos los terminos', () => {
+    const r = esperadoCaja(
+      1000,
+      [
+        { estado: 'emitido', total: 500, pagos: [{ tipo: 'efectivo_lps', monto: 1000 }] },
+        { estado: 'emitido', total: 200, pagos: [{ tipo: 'efectivo_usd', monto: 200 }] },
+      ],
+      [{ metodo: 'efectivo', monto: 300 }, { metodo: 'tarjeta', monto: 50 }],
+      [{ metodo: 'efectivo', monto: 120 }],
+    )
+    const cuadre = round2(
+      1000
+      + r.porMetodo.efectivo_lps
+      + r.porMetodo.efectivo_usd
+      - r.cambioEntregado
+      + r.cobrosPorMetodo.efectivo
+      - r.devolucionesPorMetodo.efectivo,
+    )
+    expect(cuadre).toBe(r.efectivoEsperado)
   })
 })
 ```
