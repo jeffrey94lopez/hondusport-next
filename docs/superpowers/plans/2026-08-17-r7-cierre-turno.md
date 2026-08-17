@@ -375,7 +375,20 @@ Bloques, en este orden:
 1. **Encabezado:** `empresaNombre`, la caja, el usuario del turno.
 2. **Turno:** apertura y cierre con fecha y hora. **Formatea con `timeZone: 'America/Tegucigalpa'` explícito** — si esto se renderiza en un Server Component, Vercel corre en UTC y la hora saldría 6 horas corrida (bug real de R6). Si el turno sigue abierto, el cierre muestra `—`.
 3. **Arqueo:** monto inicial, efectivo esperado, contado, y la diferencia rotulada `Cuadra exacto` si es 0, `Sobrante` si es positiva, `Faltante` si es negativa, mostrando el **valor absoluto** (mismo criterio que `CierreModal`). Los tres valores del arqueo salen de `sesion.monto_esperado` / `monto_contado` / `diferencia`; si alguno es `null` (turno abierto) muestra `—`, **no** `L. 0.00`.
-4. **Ingresos por método de pago:** una línea por método con monto > 0, de `porMetodo`. Debajo, la línea **Cambio entregado** con `cambioEntregado`, para que la suma cuadre contra el esperado.
+4. **Ingresos por método de pago:** una línea por método con monto > 0, de `porMetodo`. Debajo, la línea **Cambio entregado** con `cambioEntregado`.
+
+   **La identidad que el cajero debe poder seguir a mano es esta, y tiene seis términos, no tres:**
+
+   ```
+   efectivo esperado = monto inicial
+                     + efectivo L. cobrado        (porMetodo.efectivo_lps)
+                     + efectivo USD cobrado       (porMetodo.efectivo_usd)
+                     − cambio entregado           (cambioEntregado)
+                     + cobros de CxC en efectivo  (cobrosPorMetodo.efectivo)
+                     − reembolsos en efectivo     (devolucionesPorMetodo.efectivo)
+   ```
+
+   Los tres últimos términos **no son opcionales**: en un turno con cobros de cuentas por cobrar o con devoluciones —lo normal en este POS— la versión corta no cuadra, y el cajero se queda sin poder explicar la diferencia. El comprobante debe mostrar **cada uno de esos seis renglones** cuando su valor no sea cero, con el efectivo esperado como total al pie. Los métodos que no son efectivo (tarjeta, transferencia, crédito, saldo a favor) se listan como informativos, claramente separados del bloque que suma, porque no entran al cuadre de la gaveta.
 5. **Créditos otorgados:** una línea por `CreditoOtorgado` (número, cliente, monto) y su total con `totalCreditos`. Si no hay, omite el bloque entero. Incluye la aclaración: **No entró efectivo a caja.**
 6. **Cobros de CxC recibidos:** una línea por `CobroDelTurno` (número, cliente, método, monto) y su total con `totalCobros`. Si no hay, omite el bloque.
 7. **Devoluciones / reembolsos:** por método, solo los que tengan monto > 0. Si no hay, omite el bloque.
@@ -465,7 +478,7 @@ Comprobación funcional con un turno real, **todas obligatorias**:
 1. Con el interruptor **encendido**, abre el modal de cierre en el mostrador: **no** debe verse el efectivo esperado antes de teclear el conteo. Apágalo y confirma que sí se ve.
 2. Cierra un turno con el interruptor encendido y anota los tres valores del arqueo. Vuelve a abrir uno equivalente, apaga el interruptor y ciérralo igual: **el arqueo congelado debe calcularse igual en ambos casos** — el interruptor no puede alterar el resultado.
 3. El comprobante aparece tras cerrar, en los dos caminos.
-4. En el comprobante, comprueba a mano que **monto inicial + efectivo cobrado − cambio entregado = efectivo esperado**.
+4. En el comprobante, comprueba a mano la identidad de cuadre **completa**, con sus seis términos: **monto inicial + efectivo L. + efectivo USD − cambio entregado + cobros de CxC en efectivo − reembolsos en efectivo = efectivo esperado**. Hazlo en un turno que tenga **al menos un cobro de CxC o una devolución**; si el turno no tuvo ninguno, la versión corta también cuadraría y la prueba no demuestra nada.
 5. Reimprime el comprobante desde `/admin/pos/turnos/[id]` y verifica que dice **exactamente lo mismo** que el que salió al cerrar, salvo la fecha de impresión.
 6. Vista previa de impresión: a 80 mm no se corta contenido a lo ancho.
 
