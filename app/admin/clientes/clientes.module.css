@@ -38,8 +38,13 @@
 .table { composes: tabla from '../tabla-admin.module.css'; }
 .table tr:last-child td { border-bottom: none; }
 
-.clienteName { font-weight: 600; }
 .clienteMeta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Nombre como enlace a la ficha del cliente (D1): mismo patrón que
+   .numeroLink en documentos.module.css (color --accent, negrita, subrayado
+   al hover), para que se lea como enlace y no como texto suelto. */
+.numeroLink { font-weight: 700; color: var(--accent); text-decoration: none; }
+.numeroLink:hover { text-decoration: underline; }
 
 .badgeFinal,
 .badgeRevendedor,

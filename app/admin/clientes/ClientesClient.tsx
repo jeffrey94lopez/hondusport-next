@@ -1,5 +1,6 @@
 'use client'
 import { useState, useTransition, useMemo } from 'react'
+import Link from 'next/link'
 import Modal from '@/components/admin/Modal'
 import Toggle from '@/components/admin/Toggle'
 import ClienteFields, { clienteAForm } from '@/components/admin/ClienteFields'
@@ -182,7 +183,9 @@ export default function ClientesClient({ clientes, saldosFavor }: Props) {
             {filtered.map(c => (
               <tr key={c.id}>
                 <td>
-                  <div className={styles.clienteName}>{c.nombre}</div>
+                  <Link href={`/admin/clientes/${c.id}`} className={styles.numeroLink}>
+                    {c.nombre}
+                  </Link>
                   {c.correo && <div className={styles.clienteMeta}>{c.correo}</div>}
                 </td>
                 <td>

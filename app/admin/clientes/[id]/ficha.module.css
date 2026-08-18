@@ -1,0 +1,138 @@
+/* Patrón compartido de tabla-admin.module.css, igual que el resto del admin
+   (ver clientes.module.css). Las cards de sección copian .formSection de
+   app/admin/productos/productos.module.css (card blanca validada visualmente). */
+.page { composes: page from '../../tabla-admin.module.css'; }
+.topbar { composes: topbar from '../../tabla-admin.module.css'; }
+.title { composes: title from '../../tabla-admin.module.css'; }
+.subtitle { composes: subtitle from '../../tabla-admin.module.css'; }
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Layout del botón: btnMerlin* de app/merlin.css solo aporta color, radio y
+   tipografía —sin padding ni display—, así que un botón con únicamente la
+   clase global se pinta como texto suelto. */
+.btn { composes: btnPrimary from '../../tabla-admin.module.css'; display: inline-flex; align-items: center; justify-content: center; }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.25rem 1.4rem;
+}
+
+.cardTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.9rem;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.datoLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.datoValor { font-size: 0.9rem; color: var(--text); }
+
+.notas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border-light);
+}
+.notas p { font-size: 0.85rem; color: var(--text); white-space: pre-wrap; }
+
+.saldosRow {
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.saldoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: var(--bg-hover);
+  border-radius: var(--radius-input);
+  padding: 0.8rem 1.1rem;
+  min-width: 200px;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+.saldoCard:hover { background: var(--accent-dim); }
+
+.saldoMonto { font-size: 1.25rem; font-weight: 700; color: var(--text); }
+.saldoFavor { color: var(--success); }
+
+.tableWrap { composes: tableWrap from '../../tabla-admin.module.css'; overflow-x: auto; }
+.table { composes: tabla from '../../tabla-admin.module.css'; }
+.table tr:last-child td { border-bottom: none; }
+.table td { vertical-align: middle; white-space: nowrap; }
+
+.empty { composes: empty from '../../tabla-admin.module.css'; }
+
+.verTodo {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.verTodo:hover { text-decoration: underline; }
+
+.numeroLink { font-weight: 700; color: var(--accent); text-decoration: none; }
+.numeroLink:hover { text-decoration: underline; }
+
+.badgeEmitido,
+.badgeAnulado {
+  composes: badge from '../../tabla-admin.module.css';
+  white-space: nowrap;
+}
+.badgeEmitido { background: var(--success-bg); color: var(--success); }
+.badgeAnulado { background: var(--bg-hover); color: var(--text-muted); }
+
+/* Formulario de edición (modal) */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.formError { font-size: 0.8rem; color: var(--danger); }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+
+.btnCancel { composes: btnCancel from '../../tabla-admin.module.css'; }
