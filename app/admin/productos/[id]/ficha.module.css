@@ -1,0 +1,128 @@
+/* Mismo esqueleto que app/admin/clientes/[id]/ficha.module.css (P.detalle
+   D1): patrón compartido de tabla-admin.module.css + cards blancas de
+   app/admin/productos/productos.module.css (.formSection). Este archivo vive
+   en app/admin/productos/[id]/, así que son DOS niveles hasta app/admin/. */
+.page { composes: page from '../../tabla-admin.module.css'; }
+.topbar { composes: topbar from '../../tabla-admin.module.css'; }
+.title { composes: title from '../../tabla-admin.module.css'; }
+.subtitle { composes: subtitle from '../../tabla-admin.module.css'; }
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Layout del botón: btnMerlin* de app/merlin.css solo aporta color, radio y
+   tipografía —sin padding ni display—, así que un botón con únicamente la
+   clase global se pinta como texto suelto. */
+.btn { composes: btnPrimary from '../../tabla-admin.module.css'; display: inline-flex; align-items: center; justify-content: center; }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.25rem 1.4rem;
+}
+
+.cardTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.9rem;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.datoLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.datoValor { font-size: 0.9rem; color: var(--text); }
+
+/* Stock igual o por debajo del mínimo: mismo tono de alerta que
+   .stockBadgeAlert en productos.module.css. */
+.stockBajo { color: var(--danger); font-weight: 700; }
+
+.aviso {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--danger);
+  background: var(--error-bg);
+  border-radius: var(--radius-input);
+  padding: 0.6rem 0.9rem;
+}
+
+.tableWrap { composes: tableWrap from '../../tabla-admin.module.css'; overflow-x: auto; }
+.table { composes: tabla from '../../tabla-admin.module.css'; }
+.table tr:last-child td { border-bottom: none; }
+.table td { vertical-align: middle; white-space: nowrap; }
+
+/* Color por el signo de la cantidad del movimiento (kardex). La clase va
+   sobre el <td> pero necesita el prefijo `.table` para ganarle a la regla
+   `td { color: var(--text) }` de tabla-admin.module.css (0,1,1 vs 0,1,0). */
+.table td.cantidadPositiva { color: var(--success); font-weight: 700; }
+.table td.cantidadNegativa { color: var(--danger); font-weight: 700; }
+.table td.cantidadNeutra { color: var(--text-muted); }
+
+.empty { composes: empty from '../../tabla-admin.module.css'; }
+
+.verTodo {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.verTodo:hover { text-decoration: underline; }
+
+.numeroLink { font-weight: 700; color: var(--accent); text-decoration: none; }
+.numeroLink:hover { text-decoration: underline; }
+
+.badgeEmitido,
+.badgeAnulado {
+  composes: badge from '../../tabla-admin.module.css';
+  white-space: nowrap;
+}
+.badgeEmitido { background: var(--success-bg); color: var(--success); }
+.badgeAnulado { background: var(--bg-hover); color: var(--text-muted); }
+
+/* Formulario de edición (modal) */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.formError { font-size: 0.8rem; color: var(--danger); }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+
+.btnCancel { composes: btnCancel from '../../tabla-admin.module.css'; }

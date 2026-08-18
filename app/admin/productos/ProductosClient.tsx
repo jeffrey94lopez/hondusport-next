@@ -257,7 +257,9 @@ export default function ProductosClient({ productos, categorias, subcategorias }
                 </td>
                 <td>
                   <div className={styles.productName}>
-                    {p.nombre}
+                    <Link href={`/admin/productos/${p.id}`} className={styles.numeroLink}>
+                      {p.nombre}
+                    </Link>
                     <span className={styles.canalBadge} data-canal={p.canal}>{CANAL_LABEL[p.canal]}</span>
                   </div>
                   {p.marca && <div className={styles.productMeta}>{p.marca}</div>}

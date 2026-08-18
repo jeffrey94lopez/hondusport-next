@@ -163,6 +163,12 @@
 .productName { font-weight: 600; }
 .productMeta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 
+/* Nombre como enlace a la ficha del producto (P.detalle D1): mismo criterio
+   que .numeroLink en clientes.module.css (color --accent, negrita, subrayado
+   al hover), para que se lea como enlace y no como texto suelto. */
+.numeroLink { font-weight: 700; color: var(--accent); text-decoration: none; }
+.numeroLink:hover { text-decoration: underline; }
+
 .canalBadge {
   display: inline-block;
   margin-left: 0.45rem;
