@@ -210,7 +210,13 @@ export default function ClienteFichaView({
               </div>
             </>
           )}
-          {cliente.es_proveedor && (
+          {/* Tambien para clientes, no solo proveedores: documento_saldos calcula
+              fecha_vencimiento como created_at + clientes.dias_credito, o sea que
+              es el plazo que determina los vencimientos de CxC. Esconderlo dejaba
+              a un cliente a credito viendo su saldo por cobrar sin ver el plazo
+              que lo rige. (Que el EDITOR solo lo pida a proveedores es un defecto
+              preexistente aparte, anotado en el backlog.) */}
+          {(cliente.es_cliente || cliente.es_proveedor) && (
             <div className={styles.dato}>
               <span className={styles.datoLabel}>Días de crédito</span>
               <span className={styles.datoValor}>{cliente.dias_credito}</span>
@@ -284,10 +290,16 @@ export default function ClienteFichaView({
                 <div className={styles.empty}>Este cliente no tiene documentos emitidos.</div>
               )}
             </div>
+            {/* Aviso SIN enlace a proposito: el estado de cuenta se alimenta de
+                la vista documento_saldos, que solo incluye documentos con saldo
+                de credito pendiente. Un cliente con 60 comprobantes cobrados de
+                contado aterrizaria en un estado de cuenta VACIO. El aviso de
+                Cobros si enlaza, porque alli el estado de cuenta si los trae
+                todos. */}
             {documentosHayMas && (
-              <Link href={`/admin/cuentas-por-cobrar/cliente/${cliente.id}`} className={styles.verTodo}>
-                Ver estado de cuenta completo →
-              </Link>
+              <p className={styles.nota}>
+                Se muestran los 50 documentos más recientes.
+              </p>
             )}
           </section>
 

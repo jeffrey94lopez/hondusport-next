@@ -324,7 +324,21 @@ export default function ProductoFichaView({
                 <tr key={m.id}>
                   <td>{formatFechaHora(m.created_at)}</td>
                   <td>{etiquetaTipoMovimiento(m.tipo).nombre}</td>
-                  <td>{varianteLabel(m.variante_id)}</td>
+                  {/* Cada variante enlaza a SU kardex: la pantalla de kardex
+                      muestra un solo item, asi que sin esto solo se podia llegar
+                      al del ultimo movimiento. */}
+                  <td>
+                    <Link
+                      href={
+                        m.variante_id
+                          ? `/admin/productos/${producto.id}/movimientos?variante=${m.variante_id}`
+                          : `/admin/productos/${producto.id}/movimientos`
+                      }
+                      className={styles.numeroLink}
+                    >
+                      {varianteLabel(m.variante_id)}
+                    </Link>
+                  </td>
                   <td className={claseCantidad(m.cantidad)}>
                     {m.cantidad > 0 ? `+${m.cantidad}` : m.cantidad}
                   </td>
@@ -337,8 +351,14 @@ export default function ProductoFichaView({
             <div className={styles.empty}>Este producto no tiene movimientos registrados.</div>
           )}
         </div>
+        {/* "del item", no "completo": la pantalla de kardex muestra SIEMPRE un
+            solo item (el producto sin variante, o una variante concreta), nunca
+            la mezcla que se ve arriba. Prometer "completo" era falso, y ademas
+            aterrizaba casi vacio cuando el ultimo movimiento era del padre en un
+            producto que se mueve por tallas. Para saltar a otra variante, la
+            celda Variante de cada fila enlaza a su propio kardex. */}
         <Link href={hrefKardex} className={styles.verTodo}>
-          Ver kardex completo →
+          Ver kardex del ítem →
         </Link>
       </section>
 
