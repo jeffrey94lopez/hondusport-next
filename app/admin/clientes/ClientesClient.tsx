@@ -2,6 +2,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import Modal from '@/components/admin/Modal'
 import Toggle from '@/components/admin/Toggle'
+import ClienteFields, { clienteAForm } from '@/components/admin/ClienteFields'
 import { formatPrice } from '@/lib/store/format'
 import type { Cliente, ClienteForm } from '@/types'
 import {
@@ -36,27 +37,6 @@ const EMPTY_FORM: ClienteForm = {
   contacto: '',
   dias_credito: 0,
   limite_credito: '',
-}
-
-function clienteAForm(c: Cliente): ClienteForm {
-  return {
-    nombre: c.nombre,
-    rtn: c.rtn ?? '',
-    identidad: c.identidad ?? '',
-    tipo_cliente: c.tipo_cliente,
-    exonerado: c.exonerado,
-    constancia_exonerado: c.constancia_exonerado ?? '',
-    registro_sag: c.registro_sag ?? '',
-    direccion: c.direccion ?? '',
-    telefono: c.telefono ?? '',
-    correo: c.correo ?? '',
-    notas: c.notas ?? '',
-    es_cliente: c.es_cliente,
-    es_proveedor: c.es_proveedor,
-    contacto: c.contacto ?? '',
-    dias_credito: c.dias_credito,
-    limite_credito: c.limite_credito != null ? String(c.limite_credito) : '',
-  }
 }
 
 type RoleFilter = 'todos' | 'clientes' | 'proveedores'
@@ -261,160 +241,7 @@ export default function ClientesClient({ clientes, saldosFavor }: Props) {
           maxWidth="560px"
         >
           <form onSubmit={handleSubmit} className={styles.form}>
-            <label className={styles.formLabel}>
-              Nombre *
-              <input
-                type="text"
-                value={form.nombre}
-                onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))}
-                required
-              />
-            </label>
-            <div className={styles.formChecks}>
-              <Toggle
-                checked={form.es_cliente}
-                onChange={v => setForm(p => ({ ...p, es_cliente: v }))}
-                label="Es cliente"
-              />
-              <Toggle
-                checked={form.es_proveedor}
-                onChange={v => setForm(p => ({ ...p, es_proveedor: v }))}
-                label="Es proveedor"
-              />
-            </div>
-            {form.es_cliente && (
-              <>
-                <label className={styles.formLabel}>
-                  Tipo de cliente
-                  <select
-                    value={form.tipo_cliente}
-                    onChange={e => setForm(p => ({ ...p, tipo_cliente: e.target.value as ClienteForm['tipo_cliente'] }))}
-                  >
-                    <option value="final">Consumidor final</option>
-                    <option value="revendedor">Revendedor</option>
-                  </select>
-                </label>
-                <div className={styles.formRow}>
-                  <label className={styles.formLabel}>
-                    RTN (14 dígitos, opcional)
-                    <input
-                      type="text"
-                      value={form.rtn}
-                      onChange={e => setForm(p => ({ ...p, rtn: e.target.value }))}
-                      placeholder="08011990123456"
-                    />
-                  </label>
-                  <label className={styles.formLabel}>
-                    Identidad
-                    <input
-                      type="text"
-                      value={form.identidad}
-                      onChange={e => setForm(p => ({ ...p, identidad: e.target.value }))}
-                    />
-                  </label>
-                </div>
-                <label className={styles.formLabel}>
-                  Límite de crédito (L.)
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={form.limite_credito ?? ''}
-                    onChange={e => setForm(p => ({ ...p, limite_credito: e.target.value }))}
-                    placeholder="Sin límite"
-                  />
-                </label>
-              </>
-            )}
-            {form.es_proveedor && (
-              <div className={styles.formRow}>
-                <label className={styles.formLabel}>
-                  Persona de contacto
-                  <input
-                    type="text"
-                    value={form.contacto}
-                    onChange={e => setForm(p => ({ ...p, contacto: e.target.value }))}
-                  />
-                </label>
-                <label className={styles.formLabel}>
-                  Días de crédito
-                  <input
-                    type="number"
-                    value={form.dias_credito}
-                    onChange={e => setForm(p => ({ ...p, dias_credito: parseInt(e.target.value) || 0 }))}
-                    min="0"
-                  />
-                </label>
-              </div>
-            )}
-            <div className={styles.formRow}>
-              <label className={styles.formLabel}>
-                Teléfono
-                <input
-                  type="text"
-                  value={form.telefono}
-                  onChange={e => setForm(p => ({ ...p, telefono: e.target.value }))}
-                />
-              </label>
-              <label className={styles.formLabel}>
-                Correo
-                <input
-                  type="email"
-                  value={form.correo}
-                  onChange={e => setForm(p => ({ ...p, correo: e.target.value }))}
-                />
-              </label>
-            </div>
-            <label className={styles.formLabel}>
-              Dirección
-              <input
-                type="text"
-                value={form.direccion}
-                onChange={e => setForm(p => ({ ...p, direccion: e.target.value }))}
-              />
-            </label>
-            {form.es_cliente && (
-              <>
-                <div className={styles.formChecks}>
-                  <Toggle
-                    checked={form.exonerado}
-                    onChange={v => setForm(p => (
-                      v
-                        ? { ...p, exonerado: v }
-                        : { ...p, exonerado: v, constancia_exonerado: '', registro_sag: '' }
-                    ))}
-                    label="Exonerado"
-                  />
-                </div>
-                {form.exonerado && (
-                  <div className={styles.formRow}>
-                    <label className={styles.formLabel}>
-                      N.º de constancia de exoneración
-                      <input
-                        type="text"
-                        value={form.constancia_exonerado}
-                        onChange={e => setForm(p => ({ ...p, constancia_exonerado: e.target.value }))}
-                      />
-                    </label>
-                    <label className={styles.formLabel}>
-                      Registro SAG (opcional)
-                      <input
-                        type="text"
-                        value={form.registro_sag}
-                        onChange={e => setForm(p => ({ ...p, registro_sag: e.target.value }))}
-                      />
-                    </label>
-                  </div>
-                )}
-              </>
-            )}
-            <label className={styles.formLabel}>
-              Notas
-              <textarea
-                value={form.notas}
-                onChange={e => setForm(p => ({ ...p, notas: e.target.value }))}
-                rows={3}
-              />
-            </label>
+            <ClienteFields form={form} onChange={setForm} />
             {formError && <p className={styles.formError}>{formError}</p>}
             <div className={styles.formFooter}>
               <button type="button" className={styles.btnCancel} onClick={closeModal}>
