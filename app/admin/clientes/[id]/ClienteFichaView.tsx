@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Modal from '@/components/admin/Modal'
 import ClienteFields, { clienteAForm } from '@/components/admin/ClienteFields'
 import { numeroDocumento } from '@/lib/pos/documentos'
+import { numeroDocumentoDevolucion } from '@/lib/pos/devoluciones'
 import { formatPrice } from '@/lib/store/format'
 import type { Cliente, ClienteForm, Cobro, Compra, Documento } from '@/types'
 import { updateCliente } from '../actions'
@@ -19,8 +20,36 @@ interface Props {
   saldoCxc: number
   saldoFavor: number
   documentos: DocumentoFila[]
+  documentosHayMas: boolean
   cobros: CobroFila[]
+  cobrosHayMas: boolean
   compras: CompraFila[]
+  comprasHayMas: boolean
+}
+
+// La consulta de la ficha filtra `documentos` solo por `cliente_id`, sin
+// filtro de tipo: `emitir_nota_credito` inserta la NC/devolución en la misma
+// tabla heredando el `cliente_id` del documento origen, así que las cuatro
+// variantes de `Documento['tipo']` pueden aparecer aquí — a diferencia de
+// `documento_saldos` (CxC), que termina en `where tipo in ('factura',
+// 'comprobante')` y por eso ahí SÍ es seguro castear a ese subtipo antes de
+// llamar a `numeroDocumento`. Aquí ese cast sería una mentira: nota_credito
+// no tiene `numero_comprobante` (numeroDocumento devolvería siempre
+// "C-00000000") y devolucion tiene su propia secuencia
+// (`devolucion_numero_seq`) que PISA el número real de un comprobante de
+// venta distinto. Se ramifica por tipo, mismo patrón que
+// TurnoDetalleView.tsx / DocumentosClient.tsx / reportes/ventas/data.ts /
+// DocumentoView.tsx.
+const TIPO_LABEL: Record<DocumentoFila['tipo'], string> = {
+  factura: 'Factura',
+  comprobante: 'Comprobante',
+  nota_credito: 'Nota de crédito',
+  devolucion: 'Devolución',
+}
+
+function numeroDoc(d: DocumentoFila): string {
+  if (d.tipo === 'nota_credito' || d.tipo === 'devolucion') return numeroDocumentoDevolucion(d)
+  return numeroDocumento({ tipo: d.tipo, correlativo: d.correlativo, numero_comprobante: d.numero_comprobante })
 }
 
 const METODO_LABEL: Record<string, string> = {
@@ -65,7 +94,17 @@ function formatFechaHora(iso: string): string {
   })
 }
 
-export default function ClienteFichaView({ cliente, saldoCxc, saldoFavor, documentos, cobros, compras }: Props) {
+export default function ClienteFichaView({
+  cliente,
+  saldoCxc,
+  saldoFavor,
+  documentos,
+  documentosHayMas,
+  cobros,
+  cobrosHayMas,
+  compras,
+  comprasHayMas,
+}: Props) {
   const router = useRouter()
   const [editando, setEditando] = useState(false)
   const [form, setForm] = useState<ClienteForm>(() => clienteAForm(cliente))
@@ -215,6 +254,7 @@ export default function ClienteFichaView({ cliente, saldoCxc, saldoFavor, docume
                 <thead>
                   <tr>
                     <th>Número</th>
+                    <th>Tipo</th>
                     <th>Fecha</th>
                     <th>Estado</th>
                     <th>Total</th>
@@ -225,9 +265,10 @@ export default function ClienteFichaView({ cliente, saldoCxc, saldoFavor, docume
                     <tr key={d.id}>
                       <td>
                         <Link href={`/admin/pos/documento/${d.id}`} className={styles.numeroLink}>
-                          {numeroDocumento(d as { tipo: 'factura' | 'comprobante'; correlativo: string | null; numero_comprobante: number | null })}
+                          {numeroDoc(d)}
                         </Link>
                       </td>
+                      <td>{TIPO_LABEL[d.tipo]}</td>
                       <td>{formatFechaHora(d.created_at)}</td>
                       <td>
                         <span className={d.estado === 'anulado' ? styles.badgeAnulado : styles.badgeEmitido}>
@@ -243,7 +284,7 @@ export default function ClienteFichaView({ cliente, saldoCxc, saldoFavor, docume
                 <div className={styles.empty}>Este cliente no tiene documentos emitidos.</div>
               )}
             </div>
-            {documentos.length === 50 && (
+            {documentosHayMas && (
               <Link href={`/admin/cuentas-por-cobrar/cliente/${cliente.id}`} className={styles.verTodo}>
                 Ver estado de cuenta completo →
               </Link>
@@ -279,7 +320,7 @@ export default function ClienteFichaView({ cliente, saldoCxc, saldoFavor, docume
                 <div className={styles.empty}>Este cliente no tiene cobros registrados.</div>
               )}
             </div>
-            {cobros.length === 50 && (
+            {cobrosHayMas && (
               <Link href={`/admin/cuentas-por-cobrar/cliente/${cliente.id}`} className={styles.verTodo}>
                 Ver estado de cuenta completo →
               </Link>
@@ -320,7 +361,7 @@ export default function ClienteFichaView({ cliente, saldoCxc, saldoFavor, docume
               <div className={styles.empty}>Este proveedor no tiene compras registradas.</div>
             )}
           </div>
-          {compras.length === 50 && (
+          {comprasHayMas && (
             <Link href="/admin/compras" className={styles.verTodo}>
               Ver todas las compras →
             </Link>
