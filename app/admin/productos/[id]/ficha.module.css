@@ -87,6 +87,14 @@
 
 .empty { composes: empty from '../../tabla-admin.module.css'; }
 
+/* Aviso de truncamiento sin enlace (no hay pantalla de "todas las ventas de
+   este producto" a la que apuntar): texto simple, no un link como .verTodo. */
+.nota {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 .verTodo {
   align-self: flex-start;
   font-size: 0.8rem;

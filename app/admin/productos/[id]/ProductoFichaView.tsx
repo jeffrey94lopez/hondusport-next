@@ -19,6 +19,7 @@ interface Props {
   variantes: ProductoVariante[]
   movimientos: MovimientoInventario[]
   ventas: VentaFila[]
+  ventasHayMas: boolean
   categorias: { id: string; valor: string }[]
   subcategorias: Pick<Categoria, 'id' | 'valor' | 'categorias_padre'>[]
 }
@@ -84,6 +85,7 @@ export default function ProductoFichaView({
   variantes,
   movimientos,
   ventas,
+  ventasHayMas,
   categorias,
   subcategorias,
 }: Props) {
@@ -104,6 +106,33 @@ export default function ProductoFichaView({
   const variantesActivas = variantes.filter(v => v.activo)
   const stock = stockEfectivo(producto.stock, variantesActivas)
   const stockBajo = producto.stock_minimo != null && stock != null && stock <= producto.stock_minimo
+
+  // Movimientos y ventas se leen SOLO por `producto_id`, sin filtrar por
+  // `variante_id`: un producto que vende por variantes (tallas, por
+  // ejemplo) mezcla en la misma tabla movimientos/ventas de distintos
+  // ítems. Sin esta columna, filas como "Venta POS / −1" son
+  // indistinguibles entre sí — se resuelve el nombre contra `variantes`
+  // (lista completa, no solo activas: una variante desactivada después de
+  // vender igual debe poder rotularse).
+  const variantesPorId = new Map(variantes.map(v => [v.id, v.nombre]))
+  function varianteLabel(varianteId: string | null): string {
+    if (varianteId === null) return 'Producto (sin variante)'
+    return variantesPorId.get(varianteId) ?? 'Variante eliminada'
+  }
+
+  // El kardex (`/admin/productos/${id}/movimientos`) muestra UN ítem a la
+  // vez (producto sin variante, o una variante puntual vía `?variante=`) —
+  // no existe una sola URL que sea "el kardex completo" cuando hay
+  // variantes. Enlazar siempre a la vista sin variante rompía la promesa:
+  // un producto que vende puramente por variante (talla) aterrizaba en una
+  // pantalla vacía. Se enlaza en cambio al ítem del movimiento MÁS
+  // RECIENTE (movimientos ya viene ordenado desc): así el enlace siempre
+  // lleva a una vista con contenido real cuando lo hay, y desde ahí el
+  // selector de variante de esa pantalla permite saltar a cualquier otra.
+  const varianteMasReciente = movimientos[0]?.variante_id ?? null
+  const hrefKardex = varianteMasReciente
+    ? `/admin/productos/${producto.id}/movimientos?variante=${varianteMasReciente}`
+    : `/admin/productos/${producto.id}/movimientos`
 
   function abrirEdicion() {
     setForm(productoAForm(productoConVariantes))
@@ -285,6 +314,7 @@ export default function ProductoFichaView({
               <tr>
                 <th>Fecha</th>
                 <th>Tipo</th>
+                <th>Variante</th>
                 <th>Cantidad</th>
                 <th>Notas</th>
               </tr>
@@ -294,6 +324,7 @@ export default function ProductoFichaView({
                 <tr key={m.id}>
                   <td>{formatFechaHora(m.created_at)}</td>
                   <td>{etiquetaTipoMovimiento(m.tipo).nombre}</td>
+                  <td>{varianteLabel(m.variante_id)}</td>
                   <td className={claseCantidad(m.cantidad)}>
                     {m.cantidad > 0 ? `+${m.cantidad}` : m.cantidad}
                   </td>
@@ -306,7 +337,7 @@ export default function ProductoFichaView({
             <div className={styles.empty}>Este producto no tiene movimientos registrados.</div>
           )}
         </div>
-        <Link href={`/admin/productos/${producto.id}/movimientos`} className={styles.verTodo}>
+        <Link href={hrefKardex} className={styles.verTodo}>
           Ver kardex completo →
         </Link>
       </section>
@@ -319,6 +350,7 @@ export default function ProductoFichaView({
               <tr>
                 <th>Número</th>
                 <th>Tipo</th>
+                <th>Variante</th>
                 <th>Fecha</th>
                 <th>Estado</th>
                 <th>Cantidad</th>
@@ -327,13 +359,14 @@ export default function ProductoFichaView({
             </thead>
             <tbody>
               {ventas.map(v => (
-                <tr key={`${v.documentoId}-${v.documento.id}`}>
+                <tr key={v.itemId}>
                   <td>
                     <Link href={`/admin/pos/documento/${v.documento.id}`} className={styles.numeroLink}>
                       {numeroDoc(v.documento)}
                     </Link>
                   </td>
                   <td>{TIPO_LABEL[v.documento.tipo]}</td>
+                  <td>{varianteLabel(v.varianteId)}</td>
                   <td>{formatFechaHora(v.documento.created_at)}</td>
                   <td>
                     <span className={v.documento.estado === 'anulado' ? styles.badgeAnulado : styles.badgeEmitido}>
@@ -350,6 +383,11 @@ export default function ProductoFichaView({
             <div className={styles.empty}>Este producto no tiene ventas registradas.</div>
           )}
         </div>
+        {/* Sin pantalla de "todas las ventas de este producto" a la que
+            enlazar (no existe ese filtro en /admin/pos/documentos): al
+            menos se avisa que la lista está truncada, en vez de dejar
+            creer que 50 es el total. */}
+        {ventasHayMas && <p className={styles.nota}>Hay más ventas de las que se muestran aquí.</p>}
       </section>
 
       {editando && (

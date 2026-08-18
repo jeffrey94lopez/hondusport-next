@@ -10,7 +10,9 @@ interface Props {
 }
 
 export type VentaFila = {
+  itemId: string
   documentoId: string
+  varianteId: string | null
   cantidad: number
   importe: number
   documento: Pick<Documento, 'id' | 'tipo' | 'correlativo' | 'numero_comprobante' | 'estado' | 'created_at'>
@@ -24,7 +26,9 @@ export type VentaFila = {
 // declara aquí la forma REAL (objeto | null) y se castea con `as unknown as`
 // para no arrastrar la forma inferida (arreglo) que nunca ocurre en runtime.
 type VentaItemRow = {
+  id: string
   documento_id: string
+  variante_id: string | null
   cantidad: number
   importe: number
   documentos: VentaFila['documento'] | null
@@ -66,16 +70,27 @@ export default async function ProductoFichaPage({ params }: Props) {
       .then(r => (r.data ?? []) as MovimientoInventario[]),
     supabase
       .from('documento_items')
-      .select('documento_id, cantidad, importe, documentos(id, tipo, correlativo, numero_comprobante, estado, created_at)')
+      // `documentos!inner(...)`, no `documentos(...)`: el JSDoc del propio
+      // cliente (PostgrestTransformBuilder.order) es explícito — "ordering
+      // with referencedTable doesn't affect the ordering of the parent
+      // table" salvo que el embed sea `!inner`. Con el embed normal (LEFT
+      // JOIN), el `.order(foreignTable: 'documentos')` de abajo solo
+      // reordenaba dentro de cada fila (un embed to-one es una sola fila, o
+      // sea que era un no-op) y el `.limit(50)` se quedaba con lo que
+      // Postgres devolviera en su orden físico — típicamente lo más
+      // ANTIGUO, no lo más reciente. `!inner` es seguro aquí: todo
+      // documento_items.documento_id referencia un documento existente e
+      // inmutable, así que convertir el LEFT JOIN en INNER JOIN no descarta
+      // ninguna fila real.
+      .select('id, documento_id, variante_id, cantidad, importe, documentos!inner(id, tipo, correlativo, numero_comprobante, estado, created_at)')
       // `producto_id` ya excluye los ítems libres del POS (producto_id nulo):
       // correcto y deseado, no son ventas de ESTE producto.
       .eq('producto_id', id)
-      // Ordena por la fecha del documento embebido (mismo patrón ya usado en
-      // app/admin/compras/[id]/page.tsx con `pago_aplicaciones -> pagos_proveedor`)
-      // para que "recientes" sea realmente lo último vendido, no un corte
-      // arbitrario de la tabla.
       .order('created_at', { foreignTable: 'documentos', ascending: false })
-      .limit(50)
+      // 51, no 50: uno de más para poder distinguir "hay exactamente 50" de
+      // "hay más de 50" sin una segunda consulta de conteo (mismo patrón que
+      // ClienteFichaPage con documentos/cobros/compras).
+      .limit(51)
       .then(r => (r.data ?? []) as unknown as VentaItemRow[]),
     supabase
       .from('categorias')
@@ -96,16 +111,24 @@ export default async function ProductoFichaPage({ params }: Props) {
   ])
 
   // Filtra filas cuyo documento embebido no llegó (no debería pasar: todo
-  // documento_items apunta a un documento existente e inmutable) antes de
-  // aplanar a la forma que consume la vista.
-  const ventas: VentaFila[] = ventasRaw
+  // documento_items apunta a un documento existente e inmutable, y ahora el
+  // embed es `!inner`) antes de aplanar a la forma que consume la vista.
+  const ventasCompletas: VentaFila[] = ventasRaw
     .filter((v): v is VentaItemRow & { documentos: VentaFila['documento'] } => v.documentos != null)
     .map(v => ({
+      itemId: v.id,
       documentoId: v.documento_id,
+      varianteId: v.variante_id,
       cantidad: v.cantidad,
       importe: v.importe,
       documento: v.documentos,
     }))
+  // `.slice(0, 50)` + `length > 50` (no `=== 51`, que también sería válido
+  // aquí, pero se sigue el mismo idioma que ClienteFichaPage): con
+  // `.limit(50)` a secas, un producto con EXACTAMENTE 50 ventas mostraría el
+  // aviso de "hay más" sin que se haya truncado nada.
+  const ventas = ventasCompletas.slice(0, 50)
+  const ventasHayMas = ventasCompletas.length > 50
 
   return (
     <ProductoFichaView
@@ -113,6 +136,7 @@ export default async function ProductoFichaPage({ params }: Props) {
       variantes={variantes}
       movimientos={movimientos}
       ventas={ventas}
+      ventasHayMas={ventasHayMas}
       categorias={categorias}
       subcategorias={subcategorias}
     />
