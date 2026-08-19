@@ -1,5 +1,77 @@
 .page { min-height: 100vh; }
 
+/* ---- Pantalla de plataforma (D2): compone del patrón compartido de fichas
+   (app/admin/ficha.module.css) — de app/admin/pos/documento/ hasta app/admin/
+   son dos niveles (../../). Lo propio de esta pantalla (fila de totales,
+   bloque de anulación, cabecera con badges) es CSS local, más abajo. ---- */
+.pantalla { composes: page from '../../ficha.module.css'; }
+.card { composes: card from '../../ficha.module.css'; }
+.cardTitle { composes: cardTitle from '../../ficha.module.css'; }
+.grid { composes: grid from '../../ficha.module.css'; }
+.dato { composes: dato from '../../ficha.module.css'; }
+.datoLabel { composes: datoLabel from '../../ficha.module.css'; }
+.datoValor { composes: datoValor from '../../ficha.module.css'; }
+.tableWrap { composes: tableWrap from '../../ficha.module.css'; }
+.table { composes: table from '../../ficha.module.css'; }
+.empty { composes: empty from '../../ficha.module.css'; }
+.numeroLink { composes: numeroLink from '../../ficha.module.css'; }
+
+/* Cabecera: título + badges en una fila, con el mismo borde inferior que
+   .cardTitle (compartido) — no se anida .cardTitle aquí para no duplicar
+   ese borde. */
+.cabeceraTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.cabeceraTitulo {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Fila de totales (card "Totales" de la pantalla): distinta de .desglose/
+   .desgloseRow de más abajo, que son propias del papel imprimible (fondo
+   blanco fijo) — esta pantalla no depende de esas reglas. */
+.totalesLista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.totalLinea {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.totalLineaFinal {
+  font-weight: 800;
+  font-size: 1.05rem;
+  border-top: 1px solid var(--border-light);
+  padding-top: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.enLetras {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
 /* ---- Toolbar (no imprimible) ---- */
 .toolbar {
   display: flex;
