@@ -36,13 +36,17 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
     supabase.from('documento_pagos').select('*, metodos_pago(nombre, tipo)').eq('documento_id', id),
     supabase.from('configuracion').select('key, value'),
     // POS P5a: notas de crédito/devoluciones de ESTE documento (para el badge
-    // "Devuelto" — ver estadoDevolucionDocumento).
+    // "Devuelto" — ver estadoDevolucionDocumento). D2: se amplía el select
+    // (id/tipo/correlativo/numero_comprobante) para poder enlazar a cada una
+    // desde la pantalla — el conjunto de filas (filtros) no cambia.
     supabase
       .from('documentos')
-      .select('total')
+      .select('id, tipo, correlativo, numero_comprobante, total')
       .eq('documento_origen_id', id)
       .in('tipo', ['nota_credito', 'devolucion'])
-      .neq('estado', 'anulado'),
+      .neq('estado', 'anulado')
+      .order('created_at')
+      .limit(200),
     // Sesiones de caja abiertas: para que DevolucionModal pueda ligar la
     // devolución a la caja que la recibe (mismo criterio que el listado).
     supabase.from('sesiones_caja').select('*').eq('estado', 'abierta'),
@@ -67,7 +71,7 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
       ? supabase.from('nota_credito_reembolsos').select('*').eq('documento_id', id)
       : Promise.resolve({ data: [] as NotaCreditoReembolso[] }),
     esDevolucionDoc && documento.documento_origen_id
-      ? supabase.from('documentos').select('tipo, correlativo, numero_comprobante').eq('id', documento.documento_origen_id).maybeSingle()
+      ? supabase.from('documentos').select('id, tipo, correlativo, numero_comprobante').eq('id', documento.documento_origen_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
 
@@ -103,7 +107,14 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
       sesiones={(sesiones ?? []) as unknown as SesionCaja[]}
       cajas={(cajasAbiertas ?? []) as unknown as Caja[]}
       reembolsos={(reembolsos ?? []) as NotaCreditoReembolso[]}
-      origen={(origen ?? null) as Pick<Documento, 'tipo' | 'correlativo' | 'numero_comprobante'> | null}
+      origen={(origen ?? null) as Pick<Documento, 'id' | 'tipo' | 'correlativo' | 'numero_comprobante'> | null}
+      devoluciones={(devolucionesData ?? []) as Array<{
+        id: string
+        tipo: 'nota_credito' | 'devolucion'
+        correlativo: string | null
+        numero_comprobante: number | null
+        total: number
+      }>}
     />
   )
 }

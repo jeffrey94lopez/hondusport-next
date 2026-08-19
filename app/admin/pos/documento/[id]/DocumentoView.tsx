@@ -26,7 +26,16 @@ interface Props {
   // POS P5a Task 5: solo se llenan cuando `documento.tipo` es nota_credito/
   // devolucion (ver page.tsx) — la hoja de venta (DocumentoHoja) no los usa.
   reembolsos: NotaCreditoReembolso[]
-  origen: Pick<Documento, 'tipo' | 'correlativo' | 'numero_comprobante'> | null
+  origen: Pick<Documento, 'id' | 'tipo' | 'correlativo' | 'numero_comprobante'> | null
+  // D2: datos para enlazar cada devolución/NC a su propio documento (la
+  // Task 2 los consume; esta tarea solo garantiza que lleguen).
+  devoluciones: Array<{
+    id: string
+    tipo: 'nota_credito' | 'devolucion'
+    correlativo: string | null
+    numero_comprobante: number | null
+    total: number
+  }>
 }
 
 export default function DocumentoView({
@@ -42,6 +51,7 @@ export default function DocumentoView({
   cajas,
   reembolsos,
   origen,
+  devoluciones: _devoluciones,
 }: Props) {
   const router = useRouter()
   const [formato, setFormato] = useState<Formato>(caja.formato_impresion)
