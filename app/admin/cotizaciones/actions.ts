@@ -3,12 +3,18 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase-server'
 import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/lib/pos/desglose'
 import { precioLineaPos } from '@/lib/pos/emision'
-import { numeroCotizacion, validoHasta, hoyHonduras, etapaGanadaDestino } from '@/lib/cotizaciones/cotizaciones'
+import { numeroCotizacion, validoHasta, hoyHonduras, etapaGanadaDestino, puedeEditarCotizacion } from '@/lib/cotizaciones/cotizaciones'
 import type { LineaPos, IsvTipo, CotizacionConDatos, CotizacionItem, CotizacionEtapa } from '@/types'
 
 export type CotizacionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
 
 const ERROR_GENERICO = 'No se pudo completar la operación. Intenta de nuevo.'
+
+// D3: una cotización ya facturada es el respaldo de un documento fiscal y no
+// se modifica ni se borra. El mensaje nombra la salida (duplicar) en vez de
+// dejar al usuario sin qué hacer.
+const ERROR_FACTURADA =
+  'Esta cotización ya fue facturada y no se puede modificar. Duplícala para trabajar sobre una copia.'
 
 export interface LineaCotizacionInput {
   producto_id: string | null
@@ -74,6 +80,24 @@ interface CotizacionRow extends Omit<CotizacionConDatos, 'items' | 'etapa'> {
 
 export async function guardarCotizacion(input: GuardarCotizacionInput): Promise<CotizacionResult<{ id: string }>> {
   const supabase = await createClient()
+
+  // D3 — frontera de confianza: una cotización ya facturada no se modifica.
+  // Se relee documento_id de la BD (no se acepta ningún flag del cliente) y
+  // solo cuando input.id tiene valor: con id null se está CREANDO, y ahí no
+  // hay nada que proteger. Esa distinción es la que mantiene vivo a
+  // duplicarCotizacion, que llama aquí con id: null y es la vía de escape
+  // que el bloqueo deja abierta.
+  if (input.id) {
+    const { data: actual, error: actualErr } = await supabase
+      .from('cotizaciones')
+      .select('documento_id')
+      .eq('id', input.id)
+      .maybeSingle()
+    if (actualErr) return { ok: false, error: ERROR_GENERICO }
+    if (actual && !puedeEditarCotizacion(actual.documento_id)) {
+      return { ok: false, error: ERROR_FACTURADA }
+    }
+  }
 
   // Cliente (para tipo/exonerado) — releído de BD
   let tipoCliente: 'final' | 'revendedor' = 'final'
@@ -207,6 +231,19 @@ export async function moverEtapaCotizacion(cotizacionId: string, etapaId: string
 
 export async function eliminarCotizacion(id: string): Promise<CotizacionResult> {
   const supabase = await createClient()
+
+  // D3: borrar una cotización facturada dejaría al documento apuntando a
+  // nada. Misma relectura y mismo criterio que guardarCotizacion.
+  const { data: actual, error: actualErr } = await supabase
+    .from('cotizaciones')
+    .select('documento_id')
+    .eq('id', id)
+    .maybeSingle()
+  if (actualErr) return { ok: false, error: ERROR_GENERICO }
+  if (actual && !puedeEditarCotizacion(actual.documento_id)) {
+    return { ok: false, error: ERROR_FACTURADA }
+  }
+
   const { error } = await supabase.from('cotizaciones').delete().eq('id', id)
   if (error) return { ok: false, error: ERROR_GENERICO }
   revalidatePath('/admin/cotizaciones')
