@@ -656,9 +656,10 @@ describe('el desglose por línea reconcilia con totalCompra', () => {
   })
 
   // El caso que rompería un redondeo por línea: tres líneas cuyo importe
-  // individual cae en el tercer decimal. Redondeando cada una daría 3.02
-  // (1.01 × 3) contra un total real de 3.015 → 3.02… o 3.01 según el reparto.
-  // Con la función sin redondear, ambos lados son idénticos por construcción.
+  // individual cae en el tercer decimal. Cada línea vale 1.005 y el total
+  // correcto es 3.02; redondeando línea a línea daría 1.01 × 3 = 3.03, un
+  // céntimo de más contra la fila de CxP. Con la función sin redondear,
+  // ambos lados son idénticos por construcción.
   it('cuadra con terceros decimales, que es donde falla el redondeo por línea', () => {
     const items = [
       { cantidad_ordenada: 3, costo_unitario: 0.335 },
@@ -926,8 +927,13 @@ Y dentro del componente, junto a los otros `useState`:
     setCargandoItems(null)
     if (res.ok && res.data) {
       setCache(c => ({ ...c, [compraId]: res.data! }))
+      // Se borra la clave con `delete` sobre una copia, no con un descarte
+      // desestructurado (`const { [id]: _x, ...resto }`): esa variable `_x`
+      // queda sin usar y la regla no-unused-vars la reporta.
       setErrorItems(e => {
-        const { [compraId]: _quitado, ...resto } = e
+        if (!(compraId in e)) return e
+        const resto = { ...e }
+        delete resto[compraId]
         return resto
       })
     } else {
