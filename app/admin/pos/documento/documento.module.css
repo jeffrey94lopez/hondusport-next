@@ -3,7 +3,7 @@
 /* ---- Pantalla de plataforma (D2): compone del patrón compartido de fichas
    (app/admin/ficha.module.css) — de app/admin/pos/documento/ hasta app/admin/
    son dos niveles (../../). Lo propio de esta pantalla (fila de totales,
-   bloque de anulación, cabecera con badges) es CSS local, más abajo. ---- */
+   cambio entregado, sub-encabezados) es CSS local, más abajo. ---- */
 .pantalla { composes: page from '../../ficha.module.css'; }
 .card { composes: card from '../../ficha.module.css'; }
 .cardTitle { composes: cardTitle from '../../ficha.module.css'; }
@@ -15,31 +15,6 @@
 .table { composes: table from '../../ficha.module.css'; }
 .empty { composes: empty from '../../ficha.module.css'; }
 .numeroLink { composes: numeroLink from '../../ficha.module.css'; }
-
-/* Cabecera: título + badges en una fila, con el mismo borde inferior que
-   .cardTitle (compartido) — no se anida .cardTitle aquí para no duplicar
-   ese borde. */
-.cabeceraTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.cabeceraTitulo {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--text);
-}
-
-.badges {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
 
 /* Fila de totales (card "Totales" de la pantalla): distinta de .desglose/
    .desgloseRow de más abajo, que son propias del papel imprimible (fondo
@@ -148,6 +123,23 @@
   display: flex;
   gap: 0.4rem;
 }
+
+/* Revisión final D2: Anular es la única acción irreversible de esta barra y
+   se pintaba igual que Devolver. Misma paleta que .btnAnular de la lista
+   (documentos.module.css) para que la misma acción se señalice igual desde
+   donde se lance. El padding/alto lo aporta .btnToolbar. */
+.btnAnularToolbar {
+  background: var(--error-bg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  font-weight: 600;
+  color: var(--danger);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.btnAnularToolbar:hover { border-color: var(--danger); }
+.btnAnularToolbar:disabled { opacity: 0.5; cursor: not-allowed; }
+.btnAnularToolbar:disabled:hover { border-color: transparent; }
 
 /* D2: nota en vez de botón inerte cuando Anular no aplica a una factura
    (se revierte con nota de crédito, no se anula) — texto simple, sin caja de

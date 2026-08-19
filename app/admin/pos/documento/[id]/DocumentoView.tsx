@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation'
 import DevolucionModal from '../../components/DevolucionModal'
 import AnularModal from '../../components/AnularModal'
 import NotaCreditoHoja from '../../components/NotaCreditoHoja'
-import { puedeDevolverDocumento, numeroDocumentoDevolucion, type EstadoDevolucionDocumento } from '@/lib/pos/devoluciones'
+import { puedeDevolverDocumento, type EstadoDevolucionDocumento } from '@/lib/pos/devoluciones'
 import type { Documento, DocumentoItem, Caja, CaiAutorizacion, ConfigMap, DocumentoPagoConMetodo, SesionCaja, NotaCreditoReembolso } from '@/types'
 import DocumentoHoja from './DocumentoHoja'
 import DocumentoPantalla from './DocumentoPantalla'
-import { numeroDocumento } from '@/lib/pos/documentos'
+import { numeroDocumento, TIPO_DOCUMENTO_LABEL } from '@/lib/pos/documentos'
 import styles from '../documento.module.css'
 
 type Formato = '80mm' | 'carta'
@@ -83,10 +83,12 @@ export default function DocumentoView({
       <div className={`${styles.toolbar} ${styles.noPrint}`}>
         <div className={styles.toolbarLeft}>
           <Link href="/admin/pos/documentos" className={`${styles.btnToolbar} btnMerlinTertiary`}>← Documentos</Link>
+          {/* Revisión final D2: `numeroDocumento` (lib/pos/documentos.ts) ya
+              cubre los cuatro tipos y `TIPO_DOCUMENTO_LABEL` sus rótulos —
+              justo lo que D1 unificó. Ramificar aquí a mano era la copia que
+              esa unificación vino a eliminar. */}
           <span className={styles.toolbarTitulo}>
-            {esDevolucionDoc
-              ? `${documento.tipo === 'nota_credito' ? 'Nota de crédito' : 'Devolución'} ${numeroDocumentoDevolucion(documento)}`
-              : `${esFactura ? 'Factura' : 'Comprobante'} ${numeroDocumento(documento)}`}
+            {TIPO_DOCUMENTO_LABEL[documento.tipo]} {numeroDocumento(documento)}
           </span>
           {anulado && <span className={styles.badgeAnuladoToolbar}>ANULADO</span>}
           {estadoDevolucion !== 'ninguna' && (
@@ -123,10 +125,13 @@ export default function DocumentoView({
               Devolver / Nota de crédito
             </button>
           )}
+          {/* Anular es irreversible: se señaliza con la paleta de peligro,
+              igual que en la lista (.btnAnular de documentos.module.css). Con
+              btnMerlinSecondary se leía idéntico a "Devolver". */}
           {puedeAnular && (
             <button
               type="button"
-              className={`btnMerlinSecondary ${styles.btnToolbar}`}
+              className={`${styles.btnToolbar} ${styles.btnAnularToolbar}`}
               onClick={() => setAnulando(true)}
             >
               Anular
@@ -135,14 +140,18 @@ export default function DocumentoView({
           {comprobanteYaDevuelto && (
             <button
               type="button"
-              className={`btnMerlinSecondary ${styles.btnToolbar}`}
+              className={`${styles.btnToolbar} ${styles.btnAnularToolbar}`}
               disabled
               title="No se puede anular un comprobante con devoluciones"
             >
               Anular
             </button>
           )}
-          {esFactura && (
+          {/* La nota explica por qué NO hay botón de anular. Deja de tener
+              sentido cuando la factura ya está anulada o revertida al 100%:
+              ahí tampoco queda "Devolver", y el consejo apuntaría a una
+              acción que tampoco se puede hacer. */}
+          {esFactura && documento.estado === 'emitido' && estadoDevolucion !== 'total' && (
             <span className={styles.notaAnulacion}>
               Una factura no se anula: se revierte con una nota de crédito.
             </span>
@@ -168,7 +177,6 @@ export default function DocumentoView({
           devoluciones={devoluciones}
           origen={origen}
           reembolsos={reembolsos}
-          estadoDevolucion={estadoDevolucion}
         />
       </div>
 

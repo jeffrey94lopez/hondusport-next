@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { numeroDocumento, TIPO_DOCUMENTO_LABEL } from '@/lib/pos/documentos'
 import { cambioPago } from '@/lib/pos/emision'
-import { LABEL_REEMBOLSO, type EstadoDevolucionDocumento } from '@/lib/pos/devoluciones'
+import { LABEL_REEMBOLSO } from '@/lib/pos/devoluciones'
 import { formatPrice } from '@/lib/store/format'
 import type { Documento, DocumentoItem, DocumentoPagoConMetodo, Caja, NotaCreditoReembolso, PagoPos } from '@/types'
 import styles from '../documento.module.css'
@@ -18,8 +18,7 @@ interface Props {
   // no hay dónde pegarlo para obtener el nombre — así que se pide resuelto.
   vendedorNombre: string | null
   // D2: para enlazar cada devolución/NC de este documento a su propia
-  // pantalla (bloque "Trazabilidad") y para derivar el badge Devuelto —
-  // mismo criterio que estadoDevolucionDocumento en documento/[id]/page.tsx.
+  // pantalla (bloque "Trazabilidad").
   devoluciones: Array<{
     id: string
     tipo: 'nota_credito' | 'devolucion'
@@ -29,10 +28,6 @@ interface Props {
   }>
   origen: Pick<Documento, 'id' | 'tipo' | 'correlativo' | 'numero_comprobante'> | null
   reembolsos: NotaCreditoReembolso[]
-  // D2: `page.tsx` ya calcula esto (misma suma que necesita `devoluciones`
-  // de arriba) y se lo pasa también a DocumentoView — se recibe listo en vez
-  // de recalcularlo aquí con un segundo `reduce` sobre el mismo arreglo.
-  estadoDevolucion: EstadoDevolucionDocumento
 }
 
 // `created_at`/`anulado_at` son timestamps reales (con hora): timeZone
@@ -72,7 +67,6 @@ export default function DocumentoPantalla({
   devoluciones,
   origen,
   reembolsos,
-  estadoDevolucion,
 }: Props) {
   const anulado = documento.estado === 'anulado'
   const esDevolucionDoc = documento.tipo === 'nota_credito' || documento.tipo === 'devolucion'
@@ -89,21 +83,11 @@ export default function DocumentoPantalla({
 
   return (
     <div className={styles.pantalla}>
-      {/* 1. Cabecera */}
+      {/* 1. Emisión — el tipo, el número y los badges los pinta la barra
+          superior (sticky, siempre a la vista): repetirlos aquí, a 40px de
+          distancia y visibles a la vez, era la misma línea dos veces. */}
       <section className={styles.card}>
-        <div className={styles.cabeceraTop}>
-          <h2 className={styles.cabeceraTitulo}>
-            {TIPO_DOCUMENTO_LABEL[documento.tipo]} {numeroDocumento(documento)}
-          </h2>
-          <div className={styles.badges}>
-            {anulado && <span className={styles.badgeAnuladoToolbar}>Anulado</span>}
-            {estadoDevolucion !== 'ninguna' && (
-              <span className={styles.badgeDevueltoToolbar}>
-                {estadoDevolucion === 'total' ? 'Devuelto (total)' : 'Devuelto (parcial)'}
-              </span>
-            )}
-          </div>
-        </div>
+        <h2 className={styles.cardTitle}>Emisión</h2>
         <div className={styles.grid}>
           <div className={styles.dato}>
             <span className={styles.datoLabel}>Fecha de emisión</span>
@@ -121,6 +105,23 @@ export default function DocumentoPantalla({
             <span className={styles.datoLabel}>Usuario</span>
             <span className={styles.datoValor}>{documento.usuario ?? '—'}</span>
           </div>
+          {/* Revisión final D2: la tasa y el motivo estaban SOLO en el papel
+              (DocumentoHoja: "Tasa de cambio"; NotaCreditoHoja: "Motivo").
+              Auditar un pago en dólares o saber por qué se emitió una NC
+              obligaba a mandar a imprimir — justo lo que esta pantalla viene
+              a resolver. Se muestran con el mismo criterio que la hoja. */}
+          {documento.tasa_usd != null && (
+            <div className={styles.dato}>
+              <span className={styles.datoLabel}>Tasa de cambio</span>
+              <span className={styles.datoValor}>{formatPrice(Number(documento.tasa_usd))} por US$1.00</span>
+            </div>
+          )}
+          {documento.notas && (
+            <div className={styles.dato}>
+              <span className={styles.datoLabel}>{esDevolucionDoc ? 'Motivo' : 'Notas'}</span>
+              <span className={styles.datoValor}>{documento.notas}</span>
+            </div>
+          )}
         </div>
       </section>
 
@@ -232,7 +233,14 @@ export default function DocumentoPantalla({
                 {pagos.map(p => (
                   <tr key={p.id}>
                     <td>{p.metodo_nombre}</td>
-                    <td>{p.referencia || '—'}</td>
+                    {/* Un pago en dólares se guarda convertido a Lempiras: sin
+                        el par US$/tasa no hay forma de auditar contra qué se
+                        recibió. La hoja lo imprime con este mismo criterio. */}
+                    <td>
+                      {p.metodo_tipo === 'efectivo_usd' && p.tasa != null
+                        ? `US$ ${Number(p.monto_usd ?? 0).toFixed(2)} a ${formatPrice(Number(p.tasa))}${p.referencia ? ` · ${p.referencia}` : ''}`
+                        : p.referencia || '—'}
+                    </td>
                     <td>{formatPrice(Number(p.monto))}</td>
                   </tr>
                 ))}
@@ -251,7 +259,13 @@ export default function DocumentoPantalla({
                 </tfoot>
               )}
             </table>
-            {pagos.length === 0 && <div className={styles.empty}>Este documento no tiene pagos registrados.</div>}
+            {/* `documento_pagos` vacío es un caso normal, no un dato que
+                falte: una venta al crédito y una factura emitida desde un
+                pedido se emiten sin pagos. El texto lo dice para que no se
+                lea como información perdida. */}
+            {pagos.length === 0 && (
+              <div className={styles.empty}>Sin pagos registrados (venta al crédito o emitida desde un pedido).</div>
+            )}
           </div>
         </section>
       )}
