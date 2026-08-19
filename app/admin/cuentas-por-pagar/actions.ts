@@ -3,7 +3,8 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase-server'
 import { estadoPago, bucketAntiguedad, distribuirPago } from '@/lib/cxp/cxp'
 import { hoyHonduras } from '@/lib/cotizaciones/cotizaciones'
-import type { CompraSaldo, CxpFila, PagoProveedor, PagoAplicacion, PagoMetodo } from '@/types'
+import { hayTruncamiento, sinConteo } from '@/lib/pos/truncamiento'
+import type { CompraSaldo, CxpFila, PagoProveedor, PagoAplicacion, PagoMetodo, CompraItem, CompraMoneda } from '@/types'
 
 export type CxpResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
 
@@ -187,4 +188,68 @@ export async function obtenerPagos(): Promise<
     }
   })
   return { ok: true, data: pagos }
+}
+
+// D3: qué contiene una compra, para el desglose de Cuentas por pagar.
+// La moneda y la tasa NO están en la vista compra_saldos (solo en la tabla
+// compras) y sin ellas no se puede convertir el costo a Lempiras, así que se
+// leen aquí junto a las líneas.
+export interface ItemsCompra {
+  moneda: CompraMoneda
+  tasa: number | null
+  items: CompraItem[]
+}
+
+// Tope de líneas por compra. Es holgado respecto a cualquier compra real; su
+// función es que un desbordamiento se detecte y se diga, no que se recorte en
+// silencio.
+const LIMITE_ITEMS_COMPRA = 500
+
+export async function obtenerItemsCompra(compraId: string): Promise<CxpResult<ItemsCompra>> {
+  const supabase = await createClient()
+
+  const { data: compra, error: compraErr } = await supabase
+    .from('compras')
+    .select('moneda, tasa_cambio')
+    .eq('id', compraId)
+    .maybeSingle()
+  if (compraErr) return { ok: false, error: ERROR_GENERICO }
+  if (!compra) return { ok: false, error: 'No se encontró la compra.' }
+
+  const { data: rows, error: itemsErr, count } = await supabase
+    .from('compra_items')
+    .select('*', { count: 'exact' })
+    .eq('compra_id', compraId)
+    .order('orden')
+    .limit(LIMITE_ITEMS_COMPRA)
+  if (itemsErr) return { ok: false, error: ERROR_GENERICO }
+
+  // Sin conteo la guarda de abajo no puede decidir nada: se deja constancia
+  // en vez de fingir que se verificó.
+  if (sinConteo(count)) {
+    console.warn(`guarda de truncamiento inerte: sin conteo al leer items de la compra ${compraId}`)
+  }
+
+  // Con truncamiento se prefiere no mostrar nada antes que mostrar un
+  // desglose incompleto que parece completo: el usuario está decidiendo un
+  // pago contra esta lista.
+  if (hayTruncamiento((rows ?? []).length, count)) {
+    console.error(
+      `obtenerItemsCompra: truncamiento al leer items de la compra ${compraId} ` +
+        `(${(rows ?? []).length} de ${count})`,
+    )
+    return {
+      ok: false,
+      error: 'La compra tiene más líneas de las que se pueden mostrar. Ábrela desde Compras para verlas todas.',
+    }
+  }
+
+  return {
+    ok: true,
+    data: {
+      moneda: compra.moneda as CompraMoneda,
+      tasa: compra.tasa_cambio as number | null,
+      items: (rows ?? []) as unknown as CompraItem[],
+    },
+  }
 }
