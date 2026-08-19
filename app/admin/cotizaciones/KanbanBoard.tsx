@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { agruparPorEtapa, estaVencida, hoyHonduras } from '@/lib/cotizaciones/cotizaciones'
+import { agruparPorEtapa, estaVencida, hoyHonduras, puedeEditarCotizacion } from '@/lib/cotizaciones/cotizaciones'
 import { formatPrice } from '@/lib/store/format'
 import type { CotizacionEtapa, Vendedor } from '@/types'
 import { duplicarCotizacion, moverEtapaCotizacion, eliminarCotizacion } from './actions'
@@ -195,7 +195,9 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
               {items.length === 0 && <p className={styles.columnEmpty}>Sin cotizaciones</p>}
               {items.map(c => {
                 const vencida = estaVencida(new Date(c.valido_hasta), hoy)
-                const facturada = c.documento_id !== null
+                // La condición sale de la función pura para que tablero, editor
+                // y servidor no puedan divergir.
+                const facturada = !puedeEditarCotizacion(c.documento_id)
                 return (
                   <div
                     key={c.id}

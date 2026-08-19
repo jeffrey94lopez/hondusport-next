@@ -238,7 +238,10 @@ export default function CuentasPorPagarClient({ filas, proveedores }: Props) {
                           {cache[f.compra_id].moneda === 'USD' && (
                             <div className={styles.detalleNota}>
                               {cache[f.compra_id].tasa != null
-                                ? `Compra en dólares · tasa L. ${cache[f.compra_id].tasa!.toFixed(2)} por US$1.00`
+                                ? `Compra en dólares · tasa ${formatPrice(cache[f.compra_id].tasa!)} por US$1.00`
+                                // Inalcanzable hoy: compras_usd_tasa_chk (supabase/migrations/2026-08-08-pos-p4a-compras.sql)
+                                // impide guardar una compra en USD sin tasa_cambio. Se deja el aviso por si la
+                                // restricción se quitara algún día: seguiría siendo la reacción correcta.
                                 : 'Compra en dólares sin tasa de cambio registrada: los importes no se pueden convertir.'}
                             </div>
                           )}
