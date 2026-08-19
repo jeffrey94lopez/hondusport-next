@@ -72,6 +72,26 @@
   color: var(--text-muted);
 }
 
+/* Fila "Cambio entregado" en <tfoot> de la card Métodos de pago: es una
+   SALIDA de efectivo, no un pago más — necesita distinguirse de las filas de
+   <tbody> o su monto parece sumar contra el total de la card de Totales.
+   Especificidad: `.table td` (compuesta, ver ficha.module.css → tabla-admin)
+   ya fija `color`, así que un color propio necesita ganarle con la clase
+   sobre el propio <td>, no basta con envolver en <tfoot>. */
+.table td.cambioMonto { color: var(--text-muted); font-style: italic; }
+
+/* Rótulo de una tabla que vive DENTRO de una card ya titulada (bloque
+   Trazabilidad: comparte card con "Revierte a") — va fuera de .tableWrap
+   (que no trae padding y sí borde) con su propio margen, igual que en las
+   fichas de D1. No reusa .cardTitle: ese lleva el borde inferior del techo
+   de la card, no de un sub-encabezado a mitad de card. */
+.subTitulo {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0.9rem 0 0.5rem;
+}
+
 /* ---- Toolbar (no imprimible) ---- */
 .toolbar {
   display: flex;

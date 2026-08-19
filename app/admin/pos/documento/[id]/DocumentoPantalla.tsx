@@ -11,6 +11,12 @@ interface Props {
   items: DocumentoItem[]
   pagos: DocumentoPagoConMetodo[]
   caja: Caja
+  // Revisión D2: `documento` solo trae `vendedor_id` (UUID); el nombre sale
+  // del embed `vendedores(nombre)` que resuelve `page.tsx` (mismo criterio
+  // que ya usan app/admin/reportes/ventas/data.ts y cotizaciones/page.tsx
+  // sobre la misma tabla). Un UUID en pantalla no es un dato accionable —
+  // no hay dónde pegarlo para obtener el nombre — así que se pide resuelto.
+  vendedorNombre: string | null
   // D2: para enlazar cada devolución/NC de este documento a su propia
   // pantalla (bloque "Trazabilidad") y para derivar el badge Devuelto —
   // mismo criterio que estadoDevolucionDocumento en documento/[id]/page.tsx.
@@ -58,6 +64,7 @@ export default function DocumentoPantalla({
   items,
   pagos,
   caja,
+  vendedorNombre,
   devoluciones,
   origen,
   reembolsos,
@@ -106,7 +113,7 @@ export default function DocumentoPantalla({
           </div>
           <div className={styles.dato}>
             <span className={styles.datoLabel}>Vendedor</span>
-            <span className={styles.datoValor}>{documento.vendedor_id ?? '—'}</span>
+            <span className={styles.datoValor}>{vendedorNombre ?? '—'}</span>
           </div>
           <div className={styles.dato}>
             <span className={styles.datoLabel}>Usuario</span>
@@ -202,37 +209,50 @@ export default function DocumentoPantalla({
         </div>
       </section>
 
-      {/* 4. Métodos de pago */}
-      <section className={styles.card}>
-        <h2 className={styles.cardTitle}>Métodos de pago</h2>
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Método</th>
-                <th>Referencia</th>
-                <th>Monto</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagos.map(p => (
-                <tr key={p.id}>
-                  <td>{p.metodo_nombre}</td>
-                  <td>{p.referencia || '—'}</td>
-                  <td>{formatPrice(Number(p.monto))}</td>
-                </tr>
-              ))}
-              {cambio > 0 && (
+      {/* 4. Métodos de pago — la migración de P5a no inserta en
+          `documento_pagos` para NC/devolución (usan `nota_credito_reembolsos`,
+          ver bloque 7), así que esta card no se pinta para esos tipos: no hay
+          nada que mostrar, y mostrar una tabla vacía justo encima de
+          Reembolsos (donde sí está el dinero) es peor que omitirla. */}
+      {(!esDevolucionDoc || pagos.length > 0) && (
+        <section className={styles.card}>
+          <h2 className={styles.cardTitle}>Métodos de pago</h2>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td colSpan={2}>Cambio entregado</td>
-                  <td>{formatPrice(cambio)}</td>
+                  <th>Método</th>
+                  <th>Referencia</th>
+                  <th>Monto</th>
                 </tr>
+              </thead>
+              <tbody>
+                {pagos.map(p => (
+                  <tr key={p.id}>
+                    <td>{p.metodo_nombre}</td>
+                    <td>{p.referencia || '—'}</td>
+                    <td>{formatPrice(Number(p.monto))}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {/* Fila en <tfoot>, con su propia clase de color: es una SALIDA
+                  de efectivo, no un pago más — si quedara mezclada en <tbody>
+                  con el mismo estilo, la columna Monto sumaría de más contra
+                  el total de la card de Totales. El signo "−" lo deja
+                  explícito incluso sin el color. */}
+              {cambio > 0 && (
+                <tfoot>
+                  <tr>
+                    <td className={styles.cambioMonto} colSpan={2}>Cambio entregado</td>
+                    <td className={styles.cambioMonto}>− {formatPrice(cambio)}</td>
+                  </tr>
+                </tfoot>
               )}
-            </tbody>
-          </table>
-          {pagos.length === 0 && <div className={styles.empty}>Este documento no tiene pagos registrados.</div>}
-        </div>
-      </section>
+            </table>
+            {pagos.length === 0 && <div className={styles.empty}>Este documento no tiene pagos registrados.</div>}
+          </div>
+        </section>
+      )}
 
       {/* 5. Totales — todas las cifras son columnas de `documento`, ninguna
           se recalcula; se omiten los renglones en cero salvo el total. */}
@@ -328,28 +348,30 @@ export default function DocumentoPantalla({
             </div>
           )}
           {devoluciones.length > 0 && (
-            <div className={styles.tableWrap}>
-              <span className={styles.datoLabel}>Devoluciones de este documento</span>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Número</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {devoluciones.map(d => (
-                    <tr key={d.id}>
-                      <td>
-                        <Link href={`/admin/pos/documento/${d.id}`} className={styles.numeroLink}>
-                          {numeroDocumento(d)}
-                        </Link>
-                      </td>
-                      <td>{formatPrice(Number(d.total))}</td>
+            <div>
+              <h3 className={styles.subTitulo}>Devoluciones de este documento</h3>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Número</th>
+                      <th>Total</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {devoluciones.map(d => (
+                      <tr key={d.id}>
+                        <td>
+                          <Link href={`/admin/pos/documento/${d.id}`} className={styles.numeroLink}>
+                            {numeroDocumento(d)}
+                          </Link>
+                        </td>
+                        <td>{formatPrice(Number(d.total))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </section>

@@ -12,6 +12,13 @@ interface DocumentoPagoEmbed extends DocumentoPago {
   metodos_pago: { nombre: string; tipo: MetodoPagoTipo } | null
 }
 
+// Revisión D2: `documentos.vendedor_id` es un UUID sin nombre — se resuelve
+// con el mismo embed FK que ya usan app/admin/reportes/ventas/data.ts y
+// app/admin/cotizaciones/page.tsx sobre esta misma tabla (`vendedores(nombre)`).
+interface DocumentoVendedorEmbed {
+  vendedores: { nombre: string } | null
+}
+
 interface Props {
   params: Promise<{ id: string }>
   searchParams: Promise<{ volver?: string }>
@@ -31,7 +38,7 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
     { data: sesiones },
     { data: cajasAbiertas },
   ] = await Promise.all([
-    supabase.from('documentos').select('*').eq('id', id).maybeSingle(),
+    supabase.from('documentos').select('*, vendedores(nombre)').eq('id', id).maybeSingle(),
     supabase.from('documento_items').select('*').eq('documento_id', id),
     supabase.from('documento_pagos').select('*, metodos_pago(nombre, tipo)').eq('documento_id', id),
     supabase.from('configuracion').select('key, value'),
@@ -93,10 +100,12 @@ export default async function DocumentoPage({ params, searchParams }: Props) {
 
   const sumaDevuelta = (devolucionesData ?? []).reduce((s, d) => s + Number(d.total), 0)
   const estadoDevolucion = estadoDevolucionDocumento(documento.tipo, Number(documento.total), sumaDevuelta)
+  const vendedorNombre = (documento as unknown as DocumentoVendedorEmbed).vendedores?.nombre ?? null
 
   return (
     <DocumentoView
       documento={documento as Documento}
+      vendedorNombre={vendedorNombre}
       items={(items ?? []) as DocumentoItem[]}
       pagos={pagosConMetodo}
       caja={caja as Caja}

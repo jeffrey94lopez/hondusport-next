@@ -23,6 +23,11 @@ interface Props {
   estadoDevolucion: EstadoDevolucionDocumento
   sesiones: SesionCaja[]
   cajas: Caja[]
+  // D2: nombre resuelto de `vendedor_id` (embed vendedores(nombre) en
+  // page.tsx) para la pantalla de plataforma (DocumentoPantalla, Task 2) —
+  // la hoja imprimible no lo usa; sigue sin consumidor aquí hasta que la
+  // Task 3 monte DocumentoPantalla (mismo caso que `devoluciones` abajo).
+  vendedorNombre: string | null
   // POS P5a Task 5: solo se llenan cuando `documento.tipo` es nota_credito/
   // devolucion (ver page.tsx) — la hoja de venta (DocumentoHoja) no los usa.
   reembolsos: NotaCreditoReembolso[]
@@ -52,6 +57,7 @@ export default function DocumentoView({
   reembolsos,
   origen,
   devoluciones: _devoluciones,
+  vendedorNombre: _vendedorNombre,
 }: Props) {
   const router = useRouter()
   const [formato, setFormato] = useState<Formato>(caja.formato_impresion)
