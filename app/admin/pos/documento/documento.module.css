@@ -92,6 +92,16 @@
   margin: 0.9rem 0 0.5rem;
 }
 
+/* ---- D2: la hoja imprimible solo se muestra al imprimir ----
+   `display: none` (no `visibility: hidden`, que dejaría el hueco en pantalla)
+   y sin `overflow: hidden` en ningún ancestro de la hoja: una caja con ese
+   valor no fragmenta entre páginas, recorta en la primera (pasó con el
+   comprobante de turno en R7). */
+.soloImprimir { display: none; }
+@media print {
+  .soloImprimir { display: block; }
+}
+
 /* ---- Toolbar (no imprimible) ---- */
 .toolbar {
   display: flex;
@@ -137,6 +147,15 @@
 .formatoGroup {
   display: flex;
   gap: 0.4rem;
+}
+
+/* D2: nota en vez de botón inerte cuando Anular no aplica a una factura
+   (se revierte con nota de crédito, no se anula) — texto simple, sin caja de
+   botón, para no leerse como una acción disponible. */
+.notaAnulacion {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--text-muted);
 }
 
 /* ---- Fondo de pantalla detrás del "papel" (solo preview) ---- */

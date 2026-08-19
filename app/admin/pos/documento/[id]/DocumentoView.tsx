@@ -3,10 +3,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import DevolucionModal from '../../components/DevolucionModal'
+import AnularModal from '../../components/AnularModal'
 import NotaCreditoHoja from '../../components/NotaCreditoHoja'
 import { puedeDevolverDocumento, numeroDocumentoDevolucion, type EstadoDevolucionDocumento } from '@/lib/pos/devoluciones'
 import type { Documento, DocumentoItem, Caja, CaiAutorizacion, ConfigMap, DocumentoPagoConMetodo, SesionCaja, NotaCreditoReembolso } from '@/types'
 import DocumentoHoja from './DocumentoHoja'
+import DocumentoPantalla from './DocumentoPantalla'
 import { numeroDocumento } from '@/lib/pos/documentos'
 import styles from '../documento.module.css'
 
@@ -24,16 +26,15 @@ interface Props {
   sesiones: SesionCaja[]
   cajas: Caja[]
   // D2: nombre resuelto de `vendedor_id` (embed vendedores(nombre) en
-  // page.tsx) para la pantalla de plataforma (DocumentoPantalla, Task 2) —
-  // la hoja imprimible no lo usa; sigue sin consumidor aquí hasta que la
-  // Task 3 monte DocumentoPantalla (mismo caso que `devoluciones` abajo).
+  // page.tsx), para la pantalla de plataforma (DocumentoPantalla) — la hoja
+  // imprimible no lo usa.
   vendedorNombre: string | null
   // POS P5a Task 5: solo se llenan cuando `documento.tipo` es nota_credito/
   // devolucion (ver page.tsx) — la hoja de venta (DocumentoHoja) no los usa.
   reembolsos: NotaCreditoReembolso[]
   origen: Pick<Documento, 'id' | 'tipo' | 'correlativo' | 'numero_comprobante'> | null
-  // D2: datos para enlazar cada devolución/NC a su propio documento (la
-  // Task 2 los consume; esta tarea solo garantiza que lleguen).
+  // D2: datos para enlazar cada devolución/NC a su propio documento, en la
+  // pantalla de plataforma (DocumentoPantalla).
   devoluciones: Array<{
     id: string
     tipo: 'nota_credito' | 'devolucion'
@@ -56,16 +57,26 @@ export default function DocumentoView({
   cajas,
   reembolsos,
   origen,
-  devoluciones: _devoluciones,
-  vendedorNombre: _vendedorNombre,
+  devoluciones,
+  vendedorNombre,
 }: Props) {
   const router = useRouter()
   const [formato, setFormato] = useState<Formato>(caja.formato_impresion)
   const [devolviendo, setDevolviendo] = useState(false)
+  const [anulando, setAnulando] = useState(false)
 
   const esFactura = documento.tipo === 'factura'
   const esDevolucionDoc = documento.tipo === 'nota_credito' || documento.tipo === 'devolucion'
   const anulado = documento.estado === 'anulado'
+
+  // D2: mismas condiciones que la lista (DocumentosClient.tsx) — no se
+  // relajan aquí. Solo un comprobante emitido y sin devoluciones se anula;
+  // uno ya devuelto muestra el botón deshabilitado con su motivo, igual que
+  // en la lista; una factura no se anula nunca (se revierte con nota de
+  // crédito) y una NC/devolución no ofrece ni botón ni nota.
+  const esComprobanteEmitido = documento.tipo === 'comprobante' && documento.estado === 'emitido'
+  const puedeAnular = esComprobanteEmitido && estadoDevolucion === 'ninguna'
+  const comprobanteYaDevuelto = esComprobanteEmitido && estadoDevolucion !== 'ninguna'
 
   return (
     <div className={styles.page}>
@@ -112,6 +123,30 @@ export default function DocumentoView({
               Devolver / Nota de crédito
             </button>
           )}
+          {puedeAnular && (
+            <button
+              type="button"
+              className={`btnMerlinSecondary ${styles.btnToolbar}`}
+              onClick={() => setAnulando(true)}
+            >
+              Anular
+            </button>
+          )}
+          {comprobanteYaDevuelto && (
+            <button
+              type="button"
+              className={`btnMerlinSecondary ${styles.btnToolbar}`}
+              disabled
+              title="No se puede anular un comprobante con devoluciones"
+            >
+              Anular
+            </button>
+          )}
+          {esFactura && (
+            <span className={styles.notaAnulacion}>
+              Una factura no se anula: se revierte con una nota de crédito.
+            </span>
+          )}
           <button type="button" className={`${styles.btnToolbar} btnMerlinPrimary`} onClick={() => window.print()}>
             Imprimir
           </button>
@@ -123,19 +158,42 @@ export default function DocumentoView({
         </div>
       </div>
 
-      {esDevolucionDoc ? (
-        <NotaCreditoHoja
+      <div className={styles.noPrint}>
+        <DocumentoPantalla
           documento={documento}
           items={items}
-          reembolsos={reembolsos}
+          pagos={pagos}
+          caja={caja}
+          vendedorNombre={vendedorNombre}
+          devoluciones={devoluciones}
           origen={origen}
-          cai={cai}
-          config={config}
-          formato={formato}
+          reembolsos={reembolsos}
+          estadoDevolucion={estadoDevolucion}
         />
-      ) : (
-        <DocumentoHoja documento={documento} items={items} pagos={pagos} cai={cai} config={config} formato={formato} />
-      )}
+      </div>
+
+      {/* La hoja (DocumentoHoja/NotaCreditoHoja) se sigue montando siempre —
+          no cambia lo que imprimen, solo cuándo se ven. En pantalla este
+          contenedor va oculto (`display: none`, nunca `visibility: hidden`,
+          que dejaría el hueco); al imprimir se vuelve visible y la barra +
+          DocumentoPantalla se ocultan (`.noPrint`). Sin `overflow: hidden`
+          en este contenedor ni en ningún ancestro: recortaría la hoja en la
+          primera página en vez de fragmentarla (ver R7). */}
+      <div className={styles.soloImprimir}>
+        {esDevolucionDoc ? (
+          <NotaCreditoHoja
+            documento={documento}
+            items={items}
+            reembolsos={reembolsos}
+            origen={origen}
+            cai={cai}
+            config={config}
+            formato={formato}
+          />
+        ) : (
+          <DocumentoHoja documento={documento} items={items} pagos={pagos} cai={cai} config={config} formato={formato} />
+        )}
+      </div>
 
       {devolviendo && (
         <DevolucionModal
@@ -144,6 +202,14 @@ export default function DocumentoView({
           cajas={cajas}
           onClose={() => setDevolviendo(false)}
           onEmitida={() => router.refresh()}
+        />
+      )}
+
+      {anulando && (
+        <AnularModal
+          documento={documento}
+          onClose={() => setAnulando(false)}
+          onAnulado={() => { setAnulando(false); router.refresh() }}
         />
       )}
     </div>

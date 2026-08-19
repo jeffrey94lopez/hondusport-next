@@ -1,13 +1,12 @@
 'use client'
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import Modal from '@/components/admin/Modal'
 import DevolucionModal from '../components/DevolucionModal'
+import AnularModal from '../components/AnularModal'
 import { formatPrice } from '@/lib/store/format'
 import { puedeDevolverDocumento } from '@/lib/pos/devoluciones'
 import { numeroDocumento, TIPO_DOCUMENTO_LABEL } from '@/lib/pos/documentos'
-import { anularDocumento } from '../actions'
 import type { DocumentoListItem } from './page'
 import type { Caja, SesionCaja } from '@/types'
 import styles from './documentos.module.css'
@@ -229,56 +228,5 @@ export default function DocumentosClient({ documentos, sesiones, cajas }: Props)
         />
       )}
     </div>
-  )
-}
-
-interface AnularModalProps {
-  documento: DocumentoListItem
-  onClose: () => void
-  onAnulado: () => void
-}
-
-function AnularModal({ documento, onClose, onAnulado }: AnularModalProps) {
-  const [motivo, setMotivo] = useState('')
-  const [error, setError] = useState('')
-  const [isPending, startTransition] = useTransition()
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!motivo.trim()) { setError('El motivo es requerido.'); return }
-    setError('')
-    startTransition(async () => {
-      const result = await anularDocumento(documento.id, motivo.trim())
-      if (!result.ok) { setError(result.error); return }
-      onAnulado()
-    })
-  }
-
-  return (
-    <Modal title={`Anular comprobante ${numeroDocumento(documento)}`} onClose={onClose} maxWidth="480px">
-      <form onSubmit={handleSubmit} className={styles.formAnular}>
-        <p className={styles.avisoAnular}>
-          Esta acción no se puede deshacer. Si el comprobante descontó stock
-          de mostrador, se repone automáticamente.
-        </p>
-        <label className={styles.formLabel}>
-          Motivo *
-          <textarea
-            value={motivo}
-            onChange={e => setMotivo(e.target.value)}
-            rows={3}
-            autoFocus
-            placeholder="Explica por qué se anula este comprobante"
-          />
-        </label>
-        {error && <p className={styles.formError}>{error}</p>}
-        <div className={styles.formFooter}>
-          <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
-          <button type="submit" className={`${styles.btnSubmit} btnMerlinPrimary`} disabled={isPending}>
-            {isPending ? 'Anulando…' : 'Anular comprobante'}
-          </button>
-        </div>
-      </form>
-    </Modal>
   )
 }

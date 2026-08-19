@@ -1,0 +1,42 @@
+/* Extraído de app/admin/pos/documentos/documentos.module.css (D2): mismo
+   patrón de formulario que el resto de modales del módulo (CierreModal,
+   DevolucionModal, ItemLibreModal…), cada uno con su propia copia de
+   .formLabel/.formError/.formFooter/.btnCancel/.btnSubmit — no hay un
+   módulo compartido de "form" en este repo, así que este archivo sigue esa
+   misma convención en vez de inventar una nueva. */
+.formAnular { display: flex; flex-direction: column; gap: 0.9rem; }
+
+.avisoAnular {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  border-radius: var(--radius-input);
+  padding: 0.6rem 0.8rem;
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.formError { font-size: 0.8rem; color: var(--danger); }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+
+.btnCancel { composes: btnCancel from '../../tabla-admin.module.css'; }
+
+/* Layout del boton. btnMerlin* de app/merlin.css solo aporta color, radio y
+   tipografia -sin padding ni display-, asi que un boton con unicamente la
+   clase global se pinta como texto suelto y no se lee como boton. */
+.btnSubmit { composes: btnPrimary from '../../tabla-admin.module.css'; }

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { numeroDocumento, TIPO_DOCUMENTO_LABEL } from '@/lib/pos/documentos'
 import { cambioPago } from '@/lib/pos/emision'
-import { LABEL_REEMBOLSO, estadoDevolucionDocumento } from '@/lib/pos/devoluciones'
+import { LABEL_REEMBOLSO, type EstadoDevolucionDocumento } from '@/lib/pos/devoluciones'
 import { formatPrice } from '@/lib/store/format'
 import type { Documento, DocumentoItem, DocumentoPagoConMetodo, Caja, NotaCreditoReembolso, PagoPos } from '@/types'
 import styles from '../documento.module.css'
@@ -29,6 +29,10 @@ interface Props {
   }>
   origen: Pick<Documento, 'id' | 'tipo' | 'correlativo' | 'numero_comprobante'> | null
   reembolsos: NotaCreditoReembolso[]
+  // D2: `page.tsx` ya calcula esto (misma suma que necesita `devoluciones`
+  // de arriba) y se lo pasa también a DocumentoView — se recibe listo en vez
+  // de recalcularlo aquí con un segundo `reduce` sobre el mismo arreglo.
+  estadoDevolucion: EstadoDevolucionDocumento
 }
 
 // `created_at`/`anulado_at` son timestamps reales (con hora): timeZone
@@ -56,8 +60,8 @@ function fechaHora(iso: string): string {
  * cambio entregado, y sale de `cambioPago` — no de una resta local.
  *
  * Presentación pura: sin estado, sin consultas, sin Server Actions. Las
- * acciones (anular, devolver, imprimir…) las monta la Task 3 alrededor de
- * este componente.
+ * acciones (anular, devolver, imprimir…) las monta `DocumentoView` alrededor
+ * de este componente.
  */
 export default function DocumentoPantalla({
   documento,
@@ -68,12 +72,10 @@ export default function DocumentoPantalla({
   devoluciones,
   origen,
   reembolsos,
+  estadoDevolucion,
 }: Props) {
   const anulado = documento.estado === 'anulado'
   const esDevolucionDoc = documento.tipo === 'nota_credito' || documento.tipo === 'devolucion'
-
-  const sumaDevuelta = devoluciones.reduce((s, d) => s + Number(d.total), 0)
-  const estadoDevolucion = estadoDevolucionDocumento(documento.tipo, Number(documento.total), sumaDevuelta)
 
   // cambioPago espera PagoPos[] (monto + lo mínimo de forma); DocumentoPagoConMetodo
   // no calza 1:1 (trae metodo_nombre/metodo_tipo en vez de tipo) así que se
