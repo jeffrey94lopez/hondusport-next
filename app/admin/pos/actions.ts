@@ -6,7 +6,7 @@ import { desglosarLinea, prorratearDescuentoGlobal, totalesDocumento } from '@/l
 import type { LineaConColumna } from '@/lib/pos/desglose'
 import { numeroALetras } from '@/lib/pos/letras'
 import { validarEmision, validarPagos, esperadoCaja, traducirErrorPos, tasaUsdDePagos, type ResumenCaja } from '@/lib/pos/emision'
-import { cantidadDevolvible, recalcularLineaDevuelta, totalNotaCredito, validarReembolsos } from '@/lib/pos/devoluciones'
+import { cantidadDevolvible, recalcularLineaDevuelta, totalNotaCredito, validarReembolsos, sumarDevueltoPorLinea } from '@/lib/pos/devoluciones'
 import { hayTruncamiento, sinConteo } from '@/lib/pos/truncamiento'
 import { validarRtn } from '@/lib/pos/fiscal'
 import { excedeLimite } from '@/lib/cxp/cxp'
@@ -93,26 +93,48 @@ interface DocumentoItemConEstado {
   documentos: { estado: string } | null
 }
 
-// Cuánto se ha devuelto ya de cada línea de origen: suma `cantidad` de los
-// documento_items cuyo `origen_item_id` apunta a esa línea, excluyendo
-// devoluciones anuladas. Mismo criterio que usa la RPC `emitir_nota_credito`.
+// Cuánto se ha devuelto ya de cada línea de origen. La agregación es pura y
+// vive en lib/pos/devoluciones (sumarDevueltoPorLinea, con test); aquí queda
+// solo la lectura y sus guardas.
+//
+// DEVUELVE ÉXITO O ERROR, y no un Map pelado, por una razón concreta: este
+// número es la mitad que RESTA de `cantidadDevolvible(cantidadOriginal,
+// yaDevuelto)`. Si sale corto, el sistema deja devolver más de lo vendido y
+// sale dinero de caja. Antes esta función descartaba el `error` de la
+// consulta (`const { data } = await ...`), así que un fallo transitorio de
+// red devolvía un mapa vacío — es decir, "no se ha devuelto nada todavía" —
+// y habilitaba la devolución completa por segunda vez. Fallaba ABIERTA.
+// Ahora cualquier fallo, y también el truncamiento silencioso, aborta.
 async function yaDevueltoPorLinea(
   supabase: SupabaseServerClient,
   itemIds: string[],
-): Promise<Map<string, number>> {
-  const mapa = new Map<string, number>()
-  if (itemIds.length === 0) return mapa
+): Promise<{ ok: true; mapa: Map<string, number> } | { ok: false; error: string }> {
+  if (itemIds.length === 0) return { ok: true, mapa: new Map() }
 
-  const { data } = await supabase
+  const { data, error, count } = await supabase
     .from('documento_items')
-    .select('origen_item_id, cantidad, documentos(estado)')
+    .select('origen_item_id, cantidad, documentos(estado)', { count: 'exact' })
     .in('origen_item_id', itemIds)
+    .limit(5000)
 
-  for (const row of (data ?? []) as unknown as DocumentoItemConEstado[]) {
-    if (!row.origen_item_id || row.documentos?.estado === 'anulado') continue
-    mapa.set(row.origen_item_id, (mapa.get(row.origen_item_id) ?? 0) + Number(row.cantidad))
+  if (error) return { ok: false, error: ERROR_GENERICO }
+
+  if (sinConteo(count)) {
+    console.warn('guarda de truncamiento inerte: sin conteo al leer devoluciones previas')
   }
-  return mapa
+
+  if (hayTruncamiento((data ?? []).length, count)) {
+    console.error(
+      `yaDevueltoPorLinea: truncamiento al leer devoluciones previas ` +
+        `(${(data ?? []).length} de ${count})`,
+    )
+    return {
+      ok: false,
+      error: 'No se pudo verificar cuánto se ha devuelto ya de este documento. Intenta de nuevo.',
+    }
+  }
+
+  return { ok: true, mapa: sumarDevueltoPorLinea((data ?? []) as unknown as DocumentoItemConEstado[]) }
 }
 
 // Recalcula prorrateo + desglose + totales (incluye numeroALetras del total ya
@@ -995,15 +1017,32 @@ export async function obtenerDevolvible(documentoId: string): Promise<PosResult<
     return { ok: false, error: 'Este documento no admite devolución.' }
   }
 
-  const { data: itemsRows, error: itemsError } = await supabase
+  const { data: itemsRows, error: itemsError, count: itemsTotal } = await supabase
     .from('documento_items')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('documento_id', documentoId)
+    .limit(5000)
 
   if (itemsError) return { ok: false, error: ERROR_GENERICO }
 
+  // Truncar aquí no deja devolver de más (una línea que no llega no se puede
+  // devolver), pero sí escondería líneas devolvibles sin decirlo. Se aborta
+  // en vez de pintar media pantalla con apariencia de completa.
+  if (sinConteo(itemsTotal)) {
+    console.warn(`guarda de truncamiento inerte: sin conteo al leer items del documento ${documentoId}`)
+  }
+  if (hayTruncamiento((itemsRows ?? []).length, itemsTotal)) {
+    console.error(
+      `lineasParaDevolucion: truncamiento al leer items del documento ${documentoId} ` +
+        `(${(itemsRows ?? []).length} de ${itemsTotal})`,
+    )
+    return { ok: false, error: 'El documento tiene más líneas de las que se pueden mostrar.' }
+  }
+
   const items = ((itemsRows ?? []) as DocumentoItem[]).map(normalizarItem)
-  const yaDevuelto = await yaDevueltoPorLinea(supabase, items.map(it => it.id))
+  const devueltoRes = await yaDevueltoPorLinea(supabase, items.map(it => it.id))
+  if (!devueltoRes.ok) return { ok: false, error: devueltoRes.error }
+  const yaDevuelto = devueltoRes.mapa
 
   const lineas: LineaOriginalDoc[] = items.map(it => ({
     id: it.id,
@@ -1077,17 +1116,34 @@ export async function emitirNotaCredito(input: {
     return { ok: false, error: 'Este documento no admite devolución.' }
   }
 
-  const { data: itemsRows, error: itemsError } = await supabase
+  const { data: itemsRows, error: itemsError, count: itemsTotal } = await supabase
     .from('documento_items')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('documento_id', origen.id)
+    .limit(5000)
 
   if (itemsError) return { ok: false, error: ERROR_GENERICO }
+
+  // Aquí el truncamiento falla cerrado por su cuenta (la línea no se
+  // encuentra y la devolución se rechaza), pero con un mensaje que miente:
+  // diría que la línea "ya no existe". Se detecta y se dice lo que pasa.
+  if (sinConteo(itemsTotal)) {
+    console.warn(`guarda de truncamiento inerte: sin conteo al leer items del documento ${origen.id}`)
+  }
+  if (hayTruncamiento((itemsRows ?? []).length, itemsTotal)) {
+    console.error(
+      `emitirDevolucion: truncamiento al leer items del documento ${origen.id} ` +
+        `(${(itemsRows ?? []).length} de ${itemsTotal})`,
+    )
+    return { ok: false, error: 'No se pudieron leer todas las líneas del documento. Intenta de nuevo.' }
+  }
 
   const itemsPorId = new Map(
     ((itemsRows ?? []) as DocumentoItem[]).map(normalizarItem).map(it => [it.id, it]),
   )
-  const yaDevuelto = await yaDevueltoPorLinea(supabase, [...itemsPorId.keys()])
+  const devueltoRes = await yaDevueltoPorLinea(supabase, [...itemsPorId.keys()])
+  if (!devueltoRes.ok) return { ok: false, error: devueltoRes.error }
+  const yaDevuelto = devueltoRes.mapa
 
   const lineasDevueltas: Array<LineaConColumna & { origenItemId: string }> = []
   for (const linea of input.lineas) {

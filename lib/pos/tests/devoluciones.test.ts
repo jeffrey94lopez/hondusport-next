@@ -8,6 +8,7 @@ import {
   numeroDocumentoDevolucion,
   estadoDevolucionDocumento,
   puedeDevolverDocumento,
+  sumarDevueltoPorLinea,
 } from '../devoluciones'
 
 describe('cantidadDevolvible', () => {
@@ -101,5 +102,52 @@ describe('puedeDevolverDocumento', () => {
   })
   it('false para nota_credito/devolucion', () => {
     expect(puedeDevolverDocumento('nota_credito', 'emitido', 'ninguna')).toBe(false)
+  })
+})
+
+describe('sumarDevueltoPorLinea', () => {
+  const fila = (origen: string | null, cantidad: number, estado = 'emitido') =>
+    ({ origen_item_id: origen, cantidad, documentos: { estado } })
+
+  it('agrupa por linea de origen y suma las cantidades', () => {
+    const m = sumarDevueltoPorLinea([fila('a', 2), fila('b', 1), fila('a', 3)])
+    expect(m.get('a')).toBe(5)
+    expect(m.get('b')).toBe(1)
+  })
+
+  // Al anular una devolucion la mercancia vuelve a estar vendida: su cantidad
+  // tiene que poder devolverse otra vez, asi que NO cuenta como ya devuelta.
+  it('ignora las devoluciones anuladas', () => {
+    const m = sumarDevueltoPorLinea([fila('a', 2), fila('a', 3, 'anulado')])
+    expect(m.get('a')).toBe(2)
+  })
+
+  it('ignora filas sin linea de origen', () => {
+    const m = sumarDevueltoPorLinea([fila(null, 9), fila('a', 1)])
+    expect(m.get('a')).toBe(1)
+    expect(m.size).toBe(1)
+  })
+
+  // Sin fila de documento embebida no se puede afirmar que este anulada; se
+  // cuenta, que es el lado conservador: contar de MENOS es lo que permitiria
+  // devolver mas de lo vendido.
+  it('cuenta la fila si no trae el documento embebido', () => {
+    const m = sumarDevueltoPorLinea([{ origen_item_id: 'a', cantidad: 4, documentos: null }])
+    expect(m.get('a')).toBe(4)
+  })
+
+  it('sin filas devuelve un mapa vacio', () => {
+    expect(sumarDevueltoPorLinea([]).size).toBe(0)
+  })
+
+  // La consulta devuelve `cantidad` como numeric de Postgres, que PostgREST
+  // puede entregar como cadena: sumarla sin convertir concatenaria en vez de
+  // sumar ("2" + "3" = "23"), y 23 devolvibles de menos es dinero.
+  it('convierte a numero antes de sumar', () => {
+    const m = sumarDevueltoPorLinea([
+      { origen_item_id: 'a', cantidad: '2' as unknown as number, documentos: { estado: 'emitido' } },
+      { origen_item_id: 'a', cantidad: '3' as unknown as number, documentos: { estado: 'emitido' } },
+    ])
+    expect(m.get('a')).toBe(5)
   })
 })

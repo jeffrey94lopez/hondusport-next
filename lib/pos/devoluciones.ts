@@ -101,3 +101,29 @@ export function validarReembolsos(
   if (cxc > opts.saldoCxc + 0.01) return 'El abono a la cuenta por cobrar excede el saldo pendiente.'
   return null
 }
+
+/**
+ * Cuánto se ha devuelto ya de cada línea de origen, agrupado por
+ * `origen_item_id`. Las devoluciones **anuladas no cuentan**: al anularse,
+ * la mercancía vuelve a estar vendida y su cantidad debe poder devolverse
+ * otra vez. Mismo criterio que la RPC `emitir_nota_credito`.
+ *
+ * Es la mitad que resta de `cantidadDevolvible(cantidadOriginal, yaDevuelto)`:
+ * si esta suma sale corta, el sistema deja devolver más de lo vendido. Vivía
+ * embebida en el Server Action que la consume y por eso no tenía test; la
+ * convención del proyecto es que una regla con peso vive aquí y con test.
+ *
+ * Recibe las filas ya leídas (la IO y sus guardas se quedan en la acción):
+ * función pura, sin acceso a base de datos.
+ */
+export function sumarDevueltoPorLinea(
+  filas: Array<{ origen_item_id: string | null; cantidad: number; documentos: { estado: string } | null }>,
+): Map<string, number> {
+  const mapa = new Map<string, number>()
+  for (const fila of filas) {
+    if (!fila.origen_item_id) continue
+    if (fila.documentos?.estado === 'anulado') continue
+    mapa.set(fila.origen_item_id, (mapa.get(fila.origen_item_id) ?? 0) + Number(fila.cantidad))
+  }
+  return mapa
+}
