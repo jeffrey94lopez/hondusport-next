@@ -628,11 +628,15 @@ export default function CotizacionEditor({ cotizacion, documento, productos, cli
         )}
 
         {/* ---- Columna derecha: documento en construcción ---- */}
-        {/* D3 (ronda de arreglo 1): cuando bloqueada, catalogoCol no está en
+        {/* D3 (ronda de arreglo 2): cuando bloqueada, catalogoCol no está en
             el árbol y .docCol queda como único hijo del grid de dos
-            columnas — sin este modificador el auto-placement lo deja en la
-            primera pista (angosta) sin estirarse, dejando un hueco vacío a
-            la derecha. .docColFull lo fuerza a ocupar ambas pistas. */}
+            columnas — el auto-placement lo deja en la primera pista, la
+            ANCHA de 1.4fr (no la angosta de 340-440px para la que está
+            pensado este formulario). .docColFull lo lleva a ocupar ambas
+            pistas y además lo acota a 440px centrado: los controles del
+            formulario (input de cliente, selects, validez) están
+            dimensionados para esa columna angosta, y estirarlos a las dos
+            pistas se ve tan roto como el hueco que reemplaza. */}
         <section className={`${styles.docCol} ${bloqueada ? styles.docColFull : ''}`}>
           {/* Cliente */}
           <div className={styles.seccion}>

@@ -274,13 +274,21 @@
   gap: 1rem;
 }
 
-/* D3 (ronda de arreglo 1): sin catalogoCol en el árbol (cotización
+/* D3 (ronda de arreglo 2): sin catalogoCol en el árbol (cotización
    facturada), .docCol queda como único hijo de .grid y el auto-placement lo
-   deja en la primera pista (la angosta de 1.4fr), sin estirarse — el
-   formulario quedaba a 730px con un hueco vacío de 440px a la derecha.
-   Este modificador lo fuerza a ocupar las dos pistas del grid. */
+   deja en la primera pista — la ANCHA de 1.4fr (730px), no la angosta de
+   340-440px para la que está pensado este formulario — sin estirarse a las
+   dos. grid-column lo lleva a ocupar ambas pistas, pero un formulario de una
+   sola columna a 1189px de ancho es peor que el hueco que reemplaza: cada
+   campo (el input de cliente, los selects de etapa/vendedor, el número de
+   validez) se estira 2.7× su ancho normal y se ve roto campo por campo. Como
+   los controles ya están dimensionados para 340-440px (el mismo ancho de la
+   pista angosta del caso no bloqueado), se acota a ese máximo y se centra en
+   vez de dejarlo pegado a la izquierda. */
 .docColFull {
   grid-column: 1 / -1;
+  max-width: 440px;
+  margin-inline: auto;
 }
 
 /* Card "Cliente". padding-bottom/border-bottom eliminados a propósito: antes
