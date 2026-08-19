@@ -628,7 +628,12 @@ export default function CotizacionEditor({ cotizacion, documento, productos, cli
         )}
 
         {/* ---- Columna derecha: documento en construcción ---- */}
-        <section className={styles.docCol}>
+        {/* D3 (ronda de arreglo 1): cuando bloqueada, catalogoCol no está en
+            el árbol y .docCol queda como único hijo del grid de dos
+            columnas — sin este modificador el auto-placement lo deja en la
+            primera pista (angosta) sin estirarse, dejando un hueco vacío a
+            la derecha. .docColFull lo fuerza a ocupar ambas pistas. */}
+        <section className={`${styles.docCol} ${bloqueada ? styles.docColFull : ''}`}>
           {/* Cliente */}
           <div className={styles.seccion}>
           <h2 className={styles.seccionHeader}><IconCliente />Cliente</h2>

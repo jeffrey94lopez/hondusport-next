@@ -274,6 +274,15 @@
   gap: 1rem;
 }
 
+/* D3 (ronda de arreglo 1): sin catalogoCol en el árbol (cotización
+   facturada), .docCol queda como único hijo de .grid y el auto-placement lo
+   deja en la primera pista (la angosta de 1.4fr), sin estirarse — el
+   formulario quedaba a 730px con un hueco vacío de 440px a la derecha.
+   Este modificador lo fuerza a ocupar las dos pistas del grid. */
+.docColFull {
+  grid-column: 1 / -1;
+}
+
 /* Card "Cliente". padding-bottom/border-bottom eliminados a propósito: antes
    separaban este bloque de las líneas dentro de una sola card grande (docCol);
    ahora Cliente es su propia `.seccion`, el límite lo da esa card. */
