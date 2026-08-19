@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { numeroCotizacion, validoHasta, estaVencida, hoyHonduras, agruparPorEtapa, etapaGanadaDestino } from '../cotizaciones'
+import { numeroCotizacion, validoHasta, estaVencida, hoyHonduras, agruparPorEtapa, etapaGanadaDestino, puedeEditarCotizacion } from '../cotizaciones'
 import type { CotizacionEtapa } from '@/types'
 
 const etapa = (id: string, orden: number, tipo: CotizacionEtapa['tipo'] = 'abierta'): CotizacionEtapa =>
@@ -80,5 +80,26 @@ describe('etapaGanadaDestino', () => {
   })
   it('devuelve null si no hay etapa ganada', () => {
     expect(etapaGanadaDestino([etapa('a', 0)])).toBeNull()
+  })
+})
+
+describe('puedeEditarCotizacion', () => {
+  it('una cotización sin documento se edita', () => {
+    expect(puedeEditarCotizacion(null)).toBe(true)
+  })
+
+  // Una cotización con documento_id ya produjo un documento fiscal: es su
+  // respaldo comercial y no puede cambiar después. La vía para seguir
+  // trabajando sobre ella es duplicarla (duplicarCotizacion crea la copia
+  // sin documento_id).
+  it('una cotización ya facturada NO se edita', () => {
+    expect(puedeEditarCotizacion('0d8d47ce-a55f-424a-9354-9c2fbf500f29')).toBe(false)
+  })
+
+  // Defensa contra una fila con la columna en cadena vacía: no es un
+  // documento real, pero tampoco debe abrir la puerta por accidente si
+  // alguna vez llegara así. Se trata como "sin documento".
+  it('cadena vacía cuenta como sin documento', () => {
+    expect(puedeEditarCotizacion('')).toBe(true)
   })
 })

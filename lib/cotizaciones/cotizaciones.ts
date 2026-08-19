@@ -52,3 +52,22 @@ export function etapaGanadaDestino(etapas: CotizacionEtapa[]): CotizacionEtapa |
       .sort((a, b) => a.orden - b.orden)[0] ?? null
   )
 }
+
+/**
+ * ¿Se puede editar (o eliminar) esta cotización?
+ *
+ * Una cotización con `documento_id` ya produjo un documento fiscal y es su
+ * respaldo comercial: si cambiara después, dejaría de coincidir con la
+ * factura. Antes de D3 nada lo impedía — `guardarCotizacion` borraba y
+ * reinsertaba todas las líneas releyendo los precios del día.
+ *
+ * El bloqueo es permanente, también si el documento se anula después: la
+ * factura existió. La vía para seguir trabajando es `duplicarCotizacion`,
+ * que crea la copia sin `documento_id`.
+ *
+ * La consumen las dos Server Actions y la UI: una sola regla para que
+ * pantalla y servidor no puedan divergir.
+ */
+export function puedeEditarCotizacion(documentoId: string | null): boolean {
+  return !documentoId
+}
