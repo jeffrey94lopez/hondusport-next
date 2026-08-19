@@ -40,6 +40,27 @@
   margin-top: 0.15rem;
 }
 
+/* D3: el badge "Facturada" pasa a ser enlace al documento. Hereda la caja del
+   badge (composes va primero, es obligatorio en un CSS Module) y añade el
+   color de enlace y el subrayado al pasar por encima, igual que .numeroLink
+   del CSS compartido de fichas. */
+.badgeFacturadaLink {
+  composes: badge badgeOk from '../../tabla-admin.module.css';
+  margin-top: 0.15rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.badgeFacturadaLink:hover { text-decoration: underline; }
+
+/* Aviso que sustituye a Guardar en una cotización facturada. Texto, no caja
+   de botón, para que no se lea como una acción disponible. */
+.avisoBloqueada {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--text-muted);
+  max-width: 22rem;
+}
+
 .headerActions {
   display: flex;
   align-items: center;

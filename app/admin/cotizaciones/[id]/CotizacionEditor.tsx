@@ -2,6 +2,7 @@
 import { useMemo, useRef, useState, useTransition } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Modal from '@/components/admin/Modal'
 import ClienteNuevoModal from '@/app/admin/pos/components/ClienteNuevoModal'
 import { precioLineaPos } from '@/lib/pos/emision'
@@ -19,6 +20,9 @@ import { formatPrice } from '@/lib/store/format'
 import { parseMoneyInput, preciosCatalogo, round2, topeStock, valorMostrado, variantesActivasDe } from '@/app/admin/pos/pos-helpers'
 import { duplicarCotizacion, guardarCotizacion } from '../actions'
 import type { GuardarCotizacionInput } from '../actions'
+import { puedeEditarCotizacion } from '@/lib/cotizaciones/cotizaciones'
+import { numeroDocumento, TIPO_DOCUMENTO_LABEL } from '@/lib/pos/documentos'
+import type { TipoDocumento } from '@/lib/pos/documentos'
 import type {
   Cliente,
   ConfigMap,
@@ -87,8 +91,18 @@ function IconTerminos() {
   )
 }
 
+// D3: lo mínimo del documento que produjo esta cotización, para que el badge
+// "Facturada" enlace a él con su número real. Lo carga page.tsx.
+export interface DocumentoEnlace {
+  id: string
+  tipo: TipoDocumento
+  correlativo: string | null
+  numero_comprobante: number | null
+}
+
 interface Props {
   cotizacion: CotizacionConDatos | null
+  documento: DocumentoEnlace | null
   productos: Producto[]
   clientes: Cliente[]
   vendedores: Vendedor[]
@@ -103,7 +117,7 @@ interface Props {
 // siempre es un monto en Lempiras. Al guardar se mapea a LineaCotizacionInput.
 type LineaUI = LineaVenta
 
-export default function CotizacionEditor({ cotizacion, productos, clientes, vendedores, etapas, config }: Props) {
+export default function CotizacionEditor({ cotizacion, documento, productos, clientes, vendedores, etapas, config }: Props) {
   const router = useRouter()
 
   // ---- Contador de keys de React (independiente de la BD) ----
@@ -145,6 +159,11 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
   // ---- Estado de identidad/persistencia ----
   const [cotizacionId, setCotizacionId] = useState<string | null>(cotizacion?.id ?? null)
   const documentoId = cotizacion?.documento_id ?? null
+  // D3 — UNA sola variable gobierna el modo lectura. Todo campo, botón y
+  // acción de escritura la consulta; no hay una segunda versión del
+  // formulario. La regla es la misma que aplican las Server Actions
+  // (puedeEditarCotizacion), así que pantalla y servidor no pueden divergir.
+  const bloqueada = !puedeEditarCotizacion(documentoId)
   const numero = cotizacion?.numero ?? null
   // `dirty` habilita/inhabilita Ver PDF y Facturar: ambos leen la cotización
   // YA persistida (PDF relee de BD, Facturar arranca el POS desde la fila), así
@@ -453,7 +472,20 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
           </button>
           <div>
             <h1 className={styles.title}>{numero ? `Cotización ${numero}` : 'Nueva cotización'}</h1>
-            {documentoId && <span className={styles.badgeFacturada}>Facturada</span>}
+            {/* D3: el badge deja de ser decorativo — enlaza al documento que
+                produjo la cotización, rotulado con numeroDocumento, que cubre
+                los cuatro tipos (D1). Si por lo que sea no se pudo cargar el
+                documento, se conserva el badge sin enlace: un enlace que no
+                lleva a ninguna parte es peor que texto plano. */}
+            {documentoId && (
+              documento
+                ? (
+                  <Link href={`/admin/pos/documento/${documento.id}`} className={styles.badgeFacturadaLink}>
+                    {TIPO_DOCUMENTO_LABEL[documento.tipo]} {numeroDocumento(documento)}
+                  </Link>
+                )
+                : <span className={styles.badgeFacturada}>Facturada</span>
+            )}
           </div>
         </div>
         <div className={styles.headerActions}>
@@ -494,14 +526,24 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
               {duplicando ? 'Duplicando…' : 'Duplicar'}
             </button>
           )}
-          <button
-            type="button"
-            className={`btnMerlinPrimary ${styles.btnAccion}`}
-            disabled={!puedeGuardar}
-            onClick={handleGuardar}
-          >
-            {guardando ? 'Guardando…' : 'Guardar'}
-          </button>
+          {/* D3: en una cotización facturada Guardar DESAPARECE y en su lugar
+              va la explicación. Un botón deshabilitado sin decir por qué deja
+              al usuario adivinando; aquí además existe una salida concreta
+              (Duplicar, el botón de al lado) y hay que nombrarla. */}
+          {bloqueada ? (
+            <span className={styles.avisoBloqueada}>
+              Facturada: no se puede modificar. Usa Duplicar para trabajar sobre una copia.
+            </span>
+          ) : (
+            <button
+              type="button"
+              className={`btnMerlinPrimary ${styles.btnAccion}`}
+              disabled={!puedeGuardar}
+              onClick={handleGuardar}
+            >
+              {guardando ? 'Guardando…' : 'Guardar'}
+            </button>
+          )}
         </div>
       </header>
 
@@ -509,6 +551,9 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
 
       <div className={styles.grid}>
         {/* ---- Columna izquierda: catálogo ---- */}
+        {/* D3: sin catálogo no hay forma de agregar líneas; ocupar media
+            pantalla con un buscador inerte es peor que quitarlo. */}
+        {!bloqueada && (
         <section className={styles.catalogoCol}>
           <h2 className={styles.seccionHeader}><IconCatalogo />Catálogo</h2>
           <div className={styles.seccionBody}>
@@ -580,6 +625,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
           )}
           </div>
         </section>
+        )}
 
         {/* ---- Columna derecha: documento en construcción ---- */}
         <section className={styles.docCol}>
@@ -590,15 +636,18 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
           <div className={styles.clienteBlock}>
             <div className={styles.clienteBlockHeader}>
               <label className={styles.formLabel}>Cliente</label>
-              <button type="button" className={styles.btnNuevoCliente} onClick={() => setClienteNuevoOpen(true)}>
-                + Nuevo
-              </button>
+              {!bloqueada && (
+                <button type="button" className={styles.btnNuevoCliente} onClick={() => setClienteNuevoOpen(true)}>
+                  + Nuevo
+                </button>
+              )}
             </div>
             <div className={styles.clienteCombo}>
               <input
                 type="text"
                 className={styles.clienteInput}
                 value={clienteOpen ? clienteQuery : clienteActual?.nombre ?? 'CONSUMIDOR FINAL'}
+                disabled={bloqueada}
                 onFocus={() => {
                   setClienteOpen(true)
                   setClienteQuery('')
@@ -636,7 +685,11 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
           <div className={styles.seccionBody}>
           <div className={styles.lineasList}>
             {lineas.length === 0 ? (
-              <div className={styles.empty}>Agrega productos desde el catálogo o un ítem libre.</div>
+              <div className={styles.empty}>
+                {bloqueada
+                  ? 'Esta cotización no tiene líneas.'
+                  : 'Agrega productos desde el catálogo o un ítem libre.'}
+              </div>
             ) : (
               lineas.map(l => {
                 const subtotal = brutoLinea(l) - l.descuento
@@ -651,6 +704,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
                       <button
                         type="button"
                         className="btnMerlinIcon"
+                        disabled={bloqueada}
                         onClick={() => cambiarCantidadDelta(l.key, -1)}
                         aria-label="Restar cantidad"
                       >
@@ -662,11 +716,13 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
                         value={l.cantidad}
                         min={1}
                         max={tope ?? undefined}
+                        disabled={bloqueada}
                         onChange={e => cambiarCantidadInput(l.key, e.target.value)}
                       />
                       <button
                         type="button"
                         className="btnMerlinIcon"
+                        disabled={bloqueada}
                         onClick={() => cambiarCantidadDelta(l.key, 1)}
                         aria-label="Sumar cantidad"
                       >
@@ -675,22 +731,26 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
                     </div>
                     <div className={styles.lineaSubtotal}>{formatPrice(subtotal)}</div>
                     <div className={styles.lineaAcciones}>
-                      <button
-                        type="button"
-                        className={styles.btnEditarLinea}
-                        onClick={() => setLineaEditando(l.key)}
-                        aria-label="Editar línea"
-                      >
-                        ✎
-                      </button>
-                      <button
-                        type="button"
-                        className="btnMerlinIcon btnMerlinIconDanger"
-                        onClick={() => quitarLinea(l.key)}
-                        aria-label="Quitar línea"
-                      >
-                        ×
-                      </button>
+                      {!bloqueada && (
+                        <button
+                          type="button"
+                          className={styles.btnEditarLinea}
+                          onClick={() => setLineaEditando(l.key)}
+                          aria-label="Editar línea"
+                        >
+                          ✎
+                        </button>
+                      )}
+                      {!bloqueada && (
+                        <button
+                          type="button"
+                          className="btnMerlinIcon btnMerlinIconDanger"
+                          onClick={() => quitarLinea(l.key)}
+                          aria-label="Quitar línea"
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
                   </div>
                 )
@@ -712,6 +772,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
               placeholder="0.00"
               className={styles.descuentoGlobalInput}
               value={descuentoMostrado}
+              disabled={bloqueada}
               onFocus={() => {
                 setDescuentoTexto(valorMostrado(descuentoGlobal))
                 setEditandoDescuento(true)
@@ -756,7 +817,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
             <div className={styles.cabeceraRow}>
               <label className={styles.formLabel}>
                 Etapa
-                <select className={styles.cabeceraCampo} value={etapaId} onChange={e => { setEtapaId(e.target.value); marcarSucio() }}>
+                <select className={styles.cabeceraCampo} value={etapaId} disabled={bloqueada} onChange={e => { setEtapaId(e.target.value); marcarSucio() }}>
                   {etapas.map(et => (
                     <option key={et.id} value={et.id}>{et.nombre}</option>
                   ))}
@@ -764,7 +825,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
               </label>
               <label className={styles.formLabel}>
                 Vendedor
-                <select className={styles.cabeceraCampo} value={vendedorId ?? ''} onChange={e => { setVendedorId(e.target.value || null); marcarSucio() }}>
+                <select className={styles.cabeceraCampo} value={vendedorId ?? ''} disabled={bloqueada} onChange={e => { setVendedorId(e.target.value || null); marcarSucio() }}>
                   <option value="">Sin vendedor</option>
                   {vendedores.map(v => (
                     <option key={v.id} value={v.id}>{v.nombre}</option>
@@ -779,6 +840,7 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
                   min={1}
                   step="1"
                   value={validezDias}
+                  disabled={bloqueada}
                   onChange={e => {
                     const n = Number(e.target.value)
                     setValidezDias(Number.isFinite(n) && n > 0 ? Math.round(n) : 1)
@@ -789,11 +851,11 @@ export default function CotizacionEditor({ cotizacion, productos, clientes, vend
             </div>
             <label className={styles.formLabel}>
               Condiciones
-              <textarea className={styles.cabeceraCampo} rows={2} value={condiciones} onChange={e => { setCondiciones(e.target.value); marcarSucio() }} />
+              <textarea className={styles.cabeceraCampo} rows={2} value={condiciones} disabled={bloqueada} onChange={e => { setCondiciones(e.target.value); marcarSucio() }} />
             </label>
             <label className={styles.formLabel}>
               Notas
-              <textarea className={styles.cabeceraCampo} rows={2} value={notas} onChange={e => { setNotas(e.target.value); marcarSucio() }} />
+              <textarea className={styles.cabeceraCampo} rows={2} value={notas} disabled={bloqueada} onChange={e => { setNotas(e.target.value); marcarSucio() }} />
             </label>
           </div>
           </div>

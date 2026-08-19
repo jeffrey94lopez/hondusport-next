@@ -238,12 +238,18 @@ export default function KanbanBoard({ etapas, cotizaciones, vendedores }: Props)
                               >
                                 Duplicar
                               </button>
-                              <button
-                                className={`${styles.menuItem} ${styles.menuItemDanger}`}
-                                onClick={() => eliminar(c.id, c.numero)}
-                              >
-                                Eliminar
-                              </button>
+                              {/* D3: una cotización facturada no se borra (la
+                                  acción lo rechaza en el servidor); ofrecer el
+                                  botón solo para que falle es peor que no
+                                  ofrecerlo. Duplicar sí se queda: es la salida. */}
+                              {!facturada && (
+                                <button
+                                  className={`${styles.menuItem} ${styles.menuItemDanger}`}
+                                  onClick={() => eliminar(c.id, c.numero)}
+                                >
+                                  Eliminar
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
