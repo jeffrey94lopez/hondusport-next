@@ -19,6 +19,30 @@ export function totalCompra(
   return round2(items.reduce((s, i) => s + i.cantidad_ordenada * i.costo_unitario * factor, 0))
 }
 
+/**
+ * Importe en Lempiras de una línea de compra: cantidad ordenada × costo
+ * unitario, convertido si la compra es en dólares.
+ *
+ * **No redondea, y es a propósito.** `totalCompra` redondea la suma UNA sola
+ * vez, al final. Si aquí se redondeara por línea, la suma de las líneas
+ * dejaría de dar el total en cuanto hubiera terceros decimales, y el desglose
+ * de Cuentas por pagar contradiría por céntimos a la fila que está justo
+ * encima. El redondeo es de presentación: lo hace `formatPrice()` al pintar.
+ * El test de reconciliación en tests/compras.test.ts fija este contrato.
+ *
+ * Se usa `cantidad_ordenada`, no `cantidad_recibida`: lo que se debe es lo
+ * ordenado. La recibida se muestra como dato aparte, porque la diferencia
+ * entre ambas es justo lo que se quiere ver antes de pagar.
+ */
+export function importeLineaCompra(
+  item: { cantidad_ordenada: number; costo_unitario: number },
+  moneda: CompraMoneda,
+  tasa: number | null,
+): number {
+  const factor = moneda === 'USD' ? (tasa ?? 0) : 1
+  return item.cantidad_ordenada * item.costo_unitario * factor
+}
+
 // Deriva el estado a partir de las cantidades. Sin líneas = borrador. Todo
 // recibido = recibida. Algo recibido pero no todo = parcial. Nada recibido y
 // con líneas = ordenada. (borrador/ordenada no se distinguen por cantidades,
