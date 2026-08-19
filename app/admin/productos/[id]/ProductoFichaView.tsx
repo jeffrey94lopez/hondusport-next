@@ -6,8 +6,7 @@ import Modal from '@/components/admin/Modal'
 import ProductoFields, { productoAForm } from '@/components/admin/ProductoFields'
 import { stockEfectivo } from '@/lib/store/variantes'
 import { etiquetaTipoMovimiento } from '@/lib/inventario/kardex'
-import { numeroDocumento } from '@/lib/pos/documentos'
-import { numeroDocumentoDevolucion } from '@/lib/pos/devoluciones'
+import { numeroDocumento, TIPO_DOCUMENTO_LABEL } from '@/lib/pos/documentos'
 import { formatPrice } from '@/lib/store/format'
 import type { Categoria, MovimientoInventario, Producto, ProductoForm, ProductoVariante } from '@/types'
 import type { VentaFila } from './page'
@@ -34,28 +33,6 @@ const ISV_LABEL: Record<Producto['isv'], string> = {
   '15': '15%',
   '18': '18%',
   exento: 'Exento',
-}
-
-// La consulta de ventas filtra `documento_items` solo por `producto_id`, sin
-// filtro de tipo de documento: `emitir_nota_credito` reinserta los ítems
-// devueltos en la misma tabla, así que una nota de crédito o una devolución
-// del producto también aparecen aquí — igual que en `documentos` de la ficha
-// de cliente. Por eso no se puede castear a `{ tipo: 'factura' | 'comprobante' }`
-// y llamar siempre a `numeroDocumento`: nota_credito no tiene
-// `numero_comprobante` (saldría siempre "C-00000000") y devolucion tiene su
-// propia secuencia (`devolucion_numero_seq`) que PISARÍA el número real de un
-// comprobante de venta distinto. Se ramifica por tipo, mismo criterio que
-// ClienteFichaView.tsx.
-const TIPO_LABEL: Record<VentaFila['documento']['tipo'], string> = {
-  factura: 'Factura',
-  comprobante: 'Comprobante',
-  nota_credito: 'Nota de crédito',
-  devolucion: 'Devolución',
-}
-
-function numeroDoc(d: VentaFila['documento']): string {
-  if (d.tipo === 'nota_credito' || d.tipo === 'devolucion') return numeroDocumentoDevolucion(d)
-  return numeroDocumento({ tipo: d.tipo, correlativo: d.correlativo, numero_comprobante: d.numero_comprobante })
 }
 
 // `created_at` es un timestamp real (con hora); Vercel corre en UTC, así que
@@ -382,10 +359,10 @@ export default function ProductoFichaView({
                 <tr key={v.itemId}>
                   <td>
                     <Link href={`/admin/pos/documento/${v.documento.id}`} className={styles.numeroLink}>
-                      {numeroDoc(v.documento)}
+                      {numeroDocumento(v.documento)}
                     </Link>
                   </td>
-                  <td>{TIPO_LABEL[v.documento.tipo]}</td>
+                  <td>{TIPO_DOCUMENTO_LABEL[v.documento.tipo]}</td>
                   <td>{varianteLabel(v.varianteId)}</td>
                   <td>{formatFechaHora(v.documento.created_at)}</td>
                   <td>

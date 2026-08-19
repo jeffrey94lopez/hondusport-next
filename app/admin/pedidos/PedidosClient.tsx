@@ -7,6 +7,7 @@ import { emitirDesdePedido } from '@/app/admin/pos/actions'
 import { ESTADO_COLOR } from '@/app/admin/estadoColor'
 import Modal from '@/components/admin/Modal'
 import type { DocumentoVigentePedido } from './page'
+import { numeroDocumento } from '@/lib/pos/documentos'
 import styles from './pedidos.module.css'
 
 const ESTADOS: EstadoPedido[] = ['recibido', 'preparando', 'enviado', 'entregado', 'cancelado']
@@ -16,11 +17,6 @@ const ESTADO_LABEL: Record<EstadoPedido, string> = {
   enviado: 'Enviado',
   entregado: 'Entregado',
   cancelado: 'Cancelado',
-}
-
-function numeroDocumento(d: DocumentoVigentePedido): string {
-  if (d.tipo === 'factura') return d.correlativo ?? '—'
-  return `C-${String(d.numero_comprobante ?? 0).padStart(8, '0')}`
 }
 
 interface Props {

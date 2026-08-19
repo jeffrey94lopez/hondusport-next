@@ -3,7 +3,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/store/format'
 import { numeroDocumento } from '@/lib/pos/documentos'
-import { numeroDocumentoDevolucion } from '@/lib/pos/devoluciones'
 import type { DetalleTurno } from '@/lib/pos/turnos'
 import ComprobanteTurnoModal, { type ComprobanteTurnoDatos } from '../../components/ComprobanteTurnoModal'
 import type { Caja, CobroMetodo, Documento, MetodoPagoTipo, SesionCaja } from '@/types'
@@ -90,14 +89,6 @@ function fecha(iso: string | null): string {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-// nota_credito/devolucion tienen su propio criterio de numeración (CAI '03' /
-// DEV-########); factura/comprobante usan el de `numeroDocumento`. Mismo
-// criterio que DocumentosClient (app/admin/pos/documentos/DocumentosClient.tsx).
-function numeroDoc(d: DocumentoTurno): string {
-  if (d.tipo === 'nota_credito' || d.tipo === 'devolucion') return numeroDocumentoDevolucion(d)
-  return numeroDocumento({ tipo: d.tipo, correlativo: d.correlativo, numero_comprobante: d.numero_comprobante })
 }
 
 function claseDiferencia(d: number): string {
@@ -303,7 +294,7 @@ export default function TurnoDetalleView({
               <tr key={d.id}>
                 <td>
                   <Link href={`/admin/pos/documento/${d.id}`} className={styles.docLink}>
-                    {numeroDoc(d)}
+                    {numeroDocumento(d)}
                   </Link>
                 </td>
                 <td>{fecha(d.created_at)}</td>

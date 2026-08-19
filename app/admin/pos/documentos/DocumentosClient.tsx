@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Modal from '@/components/admin/Modal'
 import DevolucionModal from '../components/DevolucionModal'
 import { formatPrice } from '@/lib/store/format'
-import { numeroDevolucion, puedeDevolverDocumento } from '@/lib/pos/devoluciones'
+import { puedeDevolverDocumento } from '@/lib/pos/devoluciones'
+import { numeroDocumento, TIPO_DOCUMENTO_LABEL } from '@/lib/pos/documentos'
 import { anularDocumento } from '../actions'
 import type { DocumentoListItem } from './page'
 import type { Caja, SesionCaja } from '@/types'
@@ -20,19 +21,6 @@ interface Props {
   documentos: DocumentoListItem[]
   sesiones: SesionCaja[]
   cajas: Caja[]
-}
-
-const TIPO_LABEL: Record<DocumentoListItem['tipo'], string> = {
-  factura: 'Factura',
-  comprobante: 'Comprobante',
-  nota_credito: 'Nota de crédito',
-  devolucion: 'Devolución',
-}
-
-function numeroDocumento(d: DocumentoListItem): string {
-  if (d.tipo === 'factura' || d.tipo === 'nota_credito') return d.correlativo ?? '—'
-  if (d.tipo === 'devolucion') return numeroDevolucion(d.numero_comprobante ?? 0)
-  return `C-${String(d.numero_comprobante ?? 0).padStart(8, '0')}`
 }
 
 function badgeTipoClass(tipo: DocumentoListItem['tipo']): string {
@@ -140,7 +128,7 @@ export default function DocumentosClient({ documentos, sesiones, cajas }: Props)
               <tr key={d.id}>
                 <td>{fecha(d.created_at)}</td>
                 <td>
-                  <span className={badgeTipoClass(d.tipo)}>{TIPO_LABEL[d.tipo]}</span>
+                  <span className={badgeTipoClass(d.tipo)}>{TIPO_DOCUMENTO_LABEL[d.tipo]}</span>
                 </td>
                 <td>
                   <Link href={`/admin/pos/documento/${d.id}`} className={styles.numeroLink}>

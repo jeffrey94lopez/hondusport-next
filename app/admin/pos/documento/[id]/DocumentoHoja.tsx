@@ -4,6 +4,7 @@ import { formatPrice } from '@/lib/store/format'
 import { nombreComercial, razonSocial, rtn, telefonoEmpresa, domicilioFiscal, logoEmpresa } from '@/lib/empresa/perfil'
 import type { Documento, DocumentoItem, CaiAutorizacion, ConfigMap, DocumentoPagoConMetodo } from '@/types'
 import styles from '../documento.module.css'
+import { numeroDocumento } from '@/lib/pos/documentos'
 
 type Formato = '80mm' | 'carta'
 
@@ -18,11 +19,6 @@ interface Props {
 
 // Exportado: DocumentoView lo reusa para el título de su toolbar (no
 // duplicar el formato del número de documento en dos archivos).
-export function numeroDocumento(documento: Documento): string {
-  if (documento.tipo === 'factura') return documento.correlativo ?? '—'
-  return `C-${String(documento.numero_comprobante ?? 0).padStart(8, '0')}`
-}
-
 function fechaHora(iso: string): string {
   return new Date(iso).toLocaleString('es-HN', {
     day: '2-digit',
