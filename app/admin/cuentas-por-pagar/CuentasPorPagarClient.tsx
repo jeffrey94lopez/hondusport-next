@@ -1,9 +1,13 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { formatPrice } from '@/lib/store/format'
+import { importeLineaCompra } from '@/lib/compras/compras'
 import type { BucketAntiguedad, Cliente, CxpFila, EstadoPago } from '@/types'
 import PagoModal from './PagoModal'
+import { obtenerItemsCompra } from './actions'
+import type { ItemsCompra } from './actions'
 import styles from './cxp.module.css'
 
 interface Props {
@@ -48,6 +52,41 @@ export default function CuentasPorPagarClient({ filas, proveedores }: Props) {
   const [estadoFiltro, setEstadoFiltro] = useState<'todos' | EstadoPago>('todos')
   // null = cerrado; { modo: 'abono', fila } | { modo: 'global' }
   const [modal, setModal] = useState<{ modo: 'abono'; fila: CxpFila } | { modo: 'global' } | null>(null)
+
+  // D3 — desglose de ítems por compra. `abierta` es la fila desplegada (una a
+  // la vez: dos desgloses abiertos a la vez alargan la tabla sin ayudar a
+  // comparar). `cache` guarda lo ya traído por compra_id, para que plegar y
+  // volver a desplegar no repita la consulta.
+  const [abierta, setAbierta] = useState<string | null>(null)
+  const [cache, setCache] = useState<Record<string, ItemsCompra>>({})
+  const [cargandoItems, setCargandoItems] = useState<string | null>(null)
+  const [errorItems, setErrorItems] = useState<Record<string, string>>({})
+
+  async function alternarDetalle(compraId: string) {
+    if (abierta === compraId) {
+      setAbierta(null)
+      return
+    }
+    setAbierta(compraId)
+    if (cache[compraId]) return
+    setCargandoItems(compraId)
+    const res = await obtenerItemsCompra(compraId)
+    setCargandoItems(null)
+    if (res.ok && res.data) {
+      setCache(c => ({ ...c, [compraId]: res.data! }))
+      // Se borra la clave con `delete` sobre una copia, no con un descarte
+      // desestructurado (`const { [id]: _x, ...resto }`): esa variable `_x`
+      // queda sin usar y la regla no-unused-vars la reporta.
+      setErrorItems(e => {
+        if (!(compraId in e)) return e
+        const resto = { ...e }
+        delete resto[compraId]
+        return resto
+      })
+    } else {
+      setErrorItems(e => ({ ...e, [compraId]: res.ok ? 'No se pudo cargar el detalle.' : res.error }))
+    }
+  }
 
   const totalesPorBucket = useMemo(() => {
     const acc: Record<BucketAntiguedad, number> = {
@@ -129,6 +168,7 @@ export default function CuentasPorPagarClient({ filas, proveedores }: Props) {
         <table className={styles.table}>
           <thead>
             <tr>
+              <th className={styles.colDetalle}></th>
               <th>Número</th>
               <th>Proveedor</th>
               <th className={styles.num}>Total</th>
@@ -141,8 +181,26 @@ export default function CuentasPorPagarClient({ filas, proveedores }: Props) {
           </thead>
           <tbody>
             {filtered.map(f => (
-              <tr key={f.compra_id}>
-                <td className={styles.numero}>{f.numero}</td>
+              <Fragment key={f.compra_id}>
+              <tr>
+                <td className={styles.colDetalle}>
+                  <button
+                    type="button"
+                    className={styles.btnDetalle}
+                    onClick={() => alternarDetalle(f.compra_id)}
+                    aria-expanded={abierta === f.compra_id}
+                    aria-label={abierta === f.compra_id ? 'Ocultar detalle' : 'Ver detalle'}
+                  >
+                    {abierta === f.compra_id ? '▾' : '▸'}
+                  </button>
+                </td>
+                {/* D3: CxP no tenía un solo enlace. compra_id ya venía en la
+                    fila; el detalle de compra ya existe. */}
+                <td className={styles.numero}>
+                  <Link href={`/admin/compras/${f.compra_id}`} className={styles.numeroLink}>
+                    {f.numero}
+                  </Link>
+                </td>
                 <td>{f.proveedor_nombre || 'Sin proveedor'}</td>
                 <td className={styles.num}>{formatPrice(f.total)}</td>
                 <td className={styles.num}>{formatPrice(f.pagado)}</td>
@@ -162,6 +220,65 @@ export default function CuentasPorPagarClient({ filas, proveedores }: Props) {
                   </button>
                 </td>
               </tr>
+              {abierta === f.compra_id && (
+                <tr className={styles.filaDetalle}>
+                  <td colSpan={9}>
+                    {cargandoItems === f.compra_id && <div className={styles.detalleEstado}>Cargando detalle…</div>}
+                    {errorItems[f.compra_id] && <div className={styles.detalleError}>{errorItems[f.compra_id]}</div>}
+                    {cache[f.compra_id] && (
+                      cache[f.compra_id].items.length === 0 ? (
+                        <div className={styles.detalleEstado}>Esta compra no tiene líneas.</div>
+                      ) : (
+                        <>
+                          {/* Una compra en dólares guarda el costo en USD y el
+                              total en Lempiras. Si la tasa falta, costoEnLempiras
+                              y totalCompra valen cero los dos: fila y desglose
+                              coinciden, pero en cero. Se dice, en vez de dejar
+                              una compra real presentada como si no valiera nada. */}
+                          {cache[f.compra_id].moneda === 'USD' && (
+                            <div className={styles.detalleNota}>
+                              {cache[f.compra_id].tasa != null
+                                ? `Compra en dólares · tasa L. ${cache[f.compra_id].tasa!.toFixed(2)} por US$1.00`
+                                : 'Compra en dólares sin tasa de cambio registrada: los importes no se pueden convertir.'}
+                            </div>
+                          )}
+                          <table className={styles.tablaDetalle}>
+                            <thead>
+                              <tr>
+                                <th>Descripción</th>
+                                <th>Ordenada</th>
+                                <th>Recibida</th>
+                                <th>Costo unitario</th>
+                                <th>Importe</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {cache[f.compra_id].items.map(it => (
+                                <tr key={it.id}>
+                                  <td>{it.descripcion}</td>
+                                  <td className={styles.num}>{it.cantidad_ordenada}</td>
+                                  <td className={styles.num}>{it.cantidad_recibida}</td>
+                                  <td className={styles.num}>
+                                    {cache[f.compra_id].moneda === 'USD'
+                                      ? `US$ ${it.costo_unitario.toFixed(2)}`
+                                      : formatPrice(it.costo_unitario)}
+                                  </td>
+                                  <td className={styles.num}>
+                                    {formatPrice(
+                                      importeLineaCompra(it, cache[f.compra_id].moneda, cache[f.compra_id].tasa),
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </>
+                      )
+                    )}
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
           </tbody>
         </table>

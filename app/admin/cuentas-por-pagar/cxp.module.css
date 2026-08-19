@@ -248,3 +248,54 @@
    layout, mismo criterio que .btnAccion arriba. */
 .btnCancel { composes: btnPrimary from '../tabla-admin.module.css'; }
 .btnSubmit { composes: btnPrimary from '../tabla-admin.module.css'; }
+
+/* ---- D3: desglose de ítems por compra ---- */
+
+/* El número de compra pasa a ser enlace al detalle. Mismo tratamiento que
+   .numeroLink del CSS compartido de fichas (D1/D2). */
+.numeroLink { font-weight: 700; color: var(--accent); text-decoration: none; }
+.numeroLink:hover { text-decoration: underline; }
+
+.colDetalle { width: 2rem; }
+
+/* Botón de desplegar: las clases btnMerlin* no traen padding ni display, así
+   que este control define su propia caja. */
+.btnDetalle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.btnDetalle:hover { color: var(--text); }
+
+.filaDetalle > td { background: var(--bg-hover); padding: 0.85rem 1rem; }
+
+.detalleEstado { font-size: 0.82rem; color: var(--text-muted); }
+.detalleError { font-size: 0.82rem; color: var(--danger); }
+.detalleNota { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+
+.tablaDetalle { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.tablaDetalle th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+.tablaDetalle td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+}
+.tablaDetalle tr:last-child td { border-bottom: none; }
+/* `.num` ya existe arriba, pero dentro de .tablaDetalle la regla `td` de esta
+   misma tabla le ganaría en especificidad si solo se usara la clase. */
+.tablaDetalle td.num { text-align: right; white-space: nowrap; }
