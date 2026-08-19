@@ -1,64 +1,31 @@
-/* Mismo esqueleto que app/admin/clientes/[id]/ficha.module.css (P.detalle
-   D1): patrón compartido de tabla-admin.module.css + cards blancas de
-   app/admin/productos/productos.module.css (.formSection). Este archivo vive
-   en app/admin/productos/[id]/, así que son DOS niveles hasta app/admin/. */
-.page { composes: page from '../../tabla-admin.module.css'; }
-.topbar { composes: topbar from '../../tabla-admin.module.css'; }
-.title { composes: title from '../../tabla-admin.module.css'; }
-.subtitle { composes: subtitle from '../../tabla-admin.module.css'; }
+/* Patrón compartido de fichas (ver ../../ficha.module.css). Aquí solo queda lo
+   propio de la ficha de producto: el aviso de stock bajo y los colores del
+   kardex por el signo de la cantidad. */
+.page { composes: page from '../../ficha.module.css'; }
+.topbar { composes: topbar from '../../ficha.module.css'; }
+.title { composes: title from '../../ficha.module.css'; }
+.subtitle { composes: subtitle from '../../ficha.module.css'; }
+.actions { composes: actions from '../../ficha.module.css'; }
+.btn { composes: btn from '../../ficha.module.css'; }
+.card { composes: card from '../../ficha.module.css'; }
+.cardTitle { composes: cardTitle from '../../ficha.module.css'; }
+.grid { composes: grid from '../../ficha.module.css'; }
+.dato { composes: dato from '../../ficha.module.css'; }
+.datoLabel { composes: datoLabel from '../../ficha.module.css'; }
+.datoValor { composes: datoValor from '../../ficha.module.css'; }
+.tableWrap { composes: tableWrap from '../../ficha.module.css'; }
+.table { composes: table from '../../ficha.module.css'; }
+.empty { composes: empty from '../../ficha.module.css'; }
+.verTodo { composes: verTodo from '../../ficha.module.css'; }
+.numeroLink { composes: numeroLink from '../../ficha.module.css'; }
+.badgeEmitido { composes: badgeEmitido from '../../ficha.module.css'; }
+.badgeAnulado { composes: badgeAnulado from '../../ficha.module.css'; }
+.form { composes: form from '../../ficha.module.css'; }
+.formError { composes: formError from '../../ficha.module.css'; }
+.formFooter { composes: formFooter from '../../ficha.module.css'; }
+.btnCancel { composes: btnCancel from '../../ficha.module.css'; }
 
-.actions {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-/* Layout del botón: btnMerlin* de app/merlin.css solo aporta color, radio y
-   tipografía —sin padding ni display—, así que un botón con únicamente la
-   clase global se pinta como texto suelto. */
-.btn { composes: btnPrimary from '../../tabla-admin.module.css'; display: inline-flex; align-items: center; justify-content: center; }
-
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: 1.25rem 1.4rem;
-}
-
-.cardTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text);
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.9rem;
-}
-
-.dato {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.datoLabel {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-}
-
-.datoValor { font-size: 0.9rem; color: var(--text); }
+/* ── Propio de la ficha de producto ── */
 
 /* Stock igual o por debajo del mínimo: mismo tono de alerta que
    .stockBadgeAlert en productos.module.css. */
@@ -73,20 +40,6 @@
   padding: 0.6rem 0.9rem;
 }
 
-.tableWrap { composes: tableWrap from '../../tabla-admin.module.css'; overflow-x: auto; }
-.table { composes: tabla from '../../tabla-admin.module.css'; }
-.table tr:last-child td { border-bottom: none; }
-.table td { vertical-align: middle; white-space: nowrap; }
-
-/* Color por el signo de la cantidad del movimiento (kardex). La clase va
-   sobre el <td> pero necesita el prefijo `.table` para ganarle a la regla
-   `td { color: var(--text) }` de tabla-admin.module.css (0,1,1 vs 0,1,0). */
-.table td.cantidadPositiva { color: var(--success); font-weight: 700; }
-.table td.cantidadNegativa { color: var(--danger); font-weight: 700; }
-.table td.cantidadNeutra { color: var(--text-muted); }
-
-.empty { composes: empty from '../../tabla-admin.module.css'; }
-
 /* Aviso de truncamiento sin enlace (no hay pantalla de "todas las ventas de
    este producto" a la que apuntar): texto simple, no un link como .verTodo. */
 .nota {
@@ -95,42 +48,9 @@
   color: var(--text-muted);
 }
 
-.verTodo {
-  align-self: flex-start;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--accent);
-  text-decoration: none;
-}
-.verTodo:hover { text-decoration: underline; }
-
-.numeroLink { font-weight: 700; color: var(--accent); text-decoration: none; }
-.numeroLink:hover { text-decoration: underline; }
-
-.badgeEmitido,
-.badgeAnulado {
-  composes: badge from '../../tabla-admin.module.css';
-  white-space: nowrap;
-}
-.badgeEmitido { background: var(--success-bg); color: var(--success); }
-.badgeAnulado { background: var(--bg-hover); color: var(--text-muted); }
-
-/* Formulario de edición (modal) */
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-.formError { font-size: 0.8rem; color: var(--danger); }
-
-.formFooter {
-  display: flex;
-  gap: 0.6rem;
-  justify-content: flex-end;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border);
-  margin-top: 0.25rem;
-}
-
-.btnCancel { composes: btnCancel from '../../tabla-admin.module.css'; }
+/* Color por el signo de la cantidad del movimiento (kardex). La clase va sobre
+   el <td> pero necesita el prefijo `.table` para ganarle a la regla
+   `td { color: var(--text) }` de tabla-admin.module.css (0,1,1 vs 0,1,0). */
+.table td.cantidadPositiva { color: var(--success); font-weight: 700; }
+.table td.cantidadNegativa { color: var(--danger); font-weight: 700; }
+.table td.cantidadNeutra { color: var(--text-muted); }

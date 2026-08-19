@@ -1,0 +1,136 @@
+/* Patrón compartido de las FICHAS del admin (P-detalle D1).
+
+   Una ficha es una página de resumen navegable de una entidad: cards por
+   sección con pares etiqueta/valor, tablas de historial acotadas con su enlace
+   a la pantalla completa, y un modal de edición que reutiliza el formulario de
+   la lista.
+
+   Se consume con `composes` desde el módulo de cada ficha, igual que
+   tabla-admin.module.css: así cada pantalla conserva sus nombres de clase
+   locales y añade lo suyo (los saldos en la de cliente, el aviso de stock en la
+   de producto) sin tocar este archivo.
+
+   Varias de estas clases componen a su vez de tabla-admin.module.css; el
+   encadenado de `composes` es válido y evita repetir aquí lo que ya vive allá.
+
+   Lo que NO va aquí: nada específico de una entidad. Si una clase solo la usa
+   una ficha, se queda en su módulo. */
+
+.page { composes: page from './tabla-admin.module.css'; }
+.topbar { composes: topbar from './tabla-admin.module.css'; }
+.title { composes: title from './tabla-admin.module.css'; }
+.subtitle { composes: subtitle from './tabla-admin.module.css'; }
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Layout del botón: btnMerlin* de app/merlin.css solo aporta color, radio y
+   tipografía —sin padding ni display—, así que un botón con únicamente la
+   clase global se pinta como texto suelto. */
+.btn {
+  composes: btnPrimary from './tabla-admin.module.css';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Cards por sección ── */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.25rem 1.4rem;
+}
+
+.cardTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* ── Pares etiqueta/valor ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.9rem;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.datoLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.datoValor { font-size: 0.9rem; color: var(--text); }
+
+/* ── Tablas de historial ──
+   `overflow-x: auto` es obligatorio: el compartido de tablas trae
+   `overflow: hidden` para que el radio de la card recorte la tabla, y con
+   `nowrap` en las celdas de dinero las últimas columnas se recortarían sin
+   scrollbar. */
+.tableWrap { composes: tableWrap from './tabla-admin.module.css'; overflow-x: auto; }
+.table { composes: tabla from './tabla-admin.module.css'; }
+.table tr:last-child td { border-bottom: none; }
+.table td { vertical-align: middle; white-space: nowrap; }
+
+.empty { composes: empty from './tabla-admin.module.css'; }
+
+/* Enlace al listado completo cuando la tabla está acotada. Ojo al usarlo: solo
+   vale si la pantalla destino realmente contiene lo que la ficha recorta. */
+.verTodo {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.verTodo:hover { text-decoration: underline; }
+
+.numeroLink { font-weight: 700; color: var(--accent); text-decoration: none; }
+.numeroLink:hover { text-decoration: underline; }
+
+.badgeEmitido,
+.badgeAnulado {
+  composes: badge from './tabla-admin.module.css';
+  white-space: nowrap;
+}
+.badgeEmitido { background: var(--success-bg); color: var(--success); }
+.badgeAnulado { background: var(--bg-hover); color: var(--text-muted); }
+
+/* ── Modal de edición (reutiliza el formulario de la lista) ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.formError { font-size: 0.8rem; color: var(--danger); }
+
+.formFooter {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+
+.btnCancel { composes: btnCancel from './tabla-admin.module.css'; }
