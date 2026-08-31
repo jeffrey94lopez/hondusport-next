@@ -59,11 +59,19 @@ function compararEnBanda(
   }
   // Desempate final SIEMPRE por nombre y, si tambien empata, por id: nombre
   // no es unico en el esquema (solo slug lo es), asi que sin el id como
-  // ultimo criterio el orden no seria una funcion total. Locale explicito
-  // ('es'): sin el, localeCompare usa el runtime, que difiere entre el
+  // ultimo criterio el orden no seria una funcion total.
+  //
+  // El nombre se compara con locale explicito ('es') porque es texto que lee una
+  // persona: sin locale, localeCompare usa el del runtime, que difiere entre el
   // servidor (Node) y el navegador en la hidratacion.
+  //
+  // El id NO: es un identificador opaco, no texto, asi que se compara byte a
+  // byte. Una colacion sensible al locale sobre un uuid es la herramienta
+  // equivocada y reintroduciria por la puerta de atras la dependencia del
+  // runtime que el locale explicito de arriba viene a cerrar.
   const porNombre = a.nombre.localeCompare(b.nombre, 'es')
-  return porNombre !== 0 ? porNombre : a.id.localeCompare(b.id)
+  if (porNombre !== 0) return porNombre
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
 }
 
 /**
