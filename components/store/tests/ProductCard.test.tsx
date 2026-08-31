@@ -46,11 +46,15 @@ function cartValue(cart: CartItem[]): CartContextValue {
   }
 }
 
-function renderCard(onQuickAdd: (id: string) => boolean, cart: CartItem[] = []) {
+function renderCard(
+  onQuickAdd: (id: string) => boolean,
+  cart: CartItem[] = [],
+  prod: StoreProducto = producto,
+) {
   return render(
     <CartContext.Provider value={cartValue(cart)}>
       <WishlistContext.Provider value={wishlist}>
-        <ProductCard producto={producto} onQuickAdd={onQuickAdd} />
+        <ProductCard producto={prod} onQuickAdd={onQuickAdd} />
       </WishlistContext.Provider>
     </CartContext.Provider>,
   )
@@ -128,5 +132,57 @@ describe('ProductCard — badge de unidades en el carrito', () => {
   it('la etiqueta accesible incluye la cuenta', () => {
     const { getByLabelText } = renderCard(() => true, [enCarrito(2)])
     expect(getByLabelText('Agregar al carrito (2 en el carrito)')).toBeTruthy()
+  })
+})
+
+describe('ProductCard — un producto agotado no se puede agregar', () => {
+  it('producto plano con stock 0: boton deshabilitado y no llama a onQuickAdd', () => {
+    let llamadas = 0
+    const { getByLabelText, queryByLabelText } = renderCard(
+      () => { llamadas++; return true },
+      [],
+      { ...producto, stock: 0 },
+    )
+    const btn = getByLabelText('Agotado') as HTMLButtonElement
+    expect(btn.disabled).toBe(true)
+    // El add-to-cart normal ya no debe existir en la tarjeta.
+    expect(queryByLabelText('Agregar al carrito')).toBeNull()
+
+    btn.click()
+    expect(llamadas).toBe(0)
+  })
+
+  it('todas las variantes agotadas: tambien queda agotado', () => {
+    let llamadas = 0
+    const conVariantesAgotadas: StoreProducto = {
+      ...producto,
+      stock: null,
+      variantes: [
+        { id: 'v1', nombre: 'M', precio: null, precioEfectivo: 500, stock: 0, agotada: true },
+        { id: 'v2', nombre: 'L', precio: null, precioEfectivo: 500, stock: 0, agotada: true },
+      ],
+    }
+    const { getByLabelText } = renderCard(() => { llamadas++; return true }, [], conVariantesAgotadas)
+    const btn = getByLabelText('Agotado') as HTMLButtonElement
+    expect(btn.disabled).toBe(true)
+    btn.click()
+    expect(llamadas).toBe(0)
+  })
+
+  it('stock null es ilimitado, NO agotado: sigue agregando', () => {
+    let llamadas = 0
+    const { getByLabelText } = renderCard(
+      () => { llamadas++; return true },
+      [],
+      { ...producto, stock: null },
+    )
+    getByLabelText('Agregar al carrito').click()
+    expect(llamadas).toBe(1)
+  })
+
+  it('agotado no muestra el badge de unidades en el carrito', () => {
+    // Puede haber unidades de antes si se agoto despues de agregarlas.
+    const { queryByTestId } = renderCard(() => true, [enCarrito(2)], { ...producto, stock: 0 })
+    expect(queryByTestId('card-cart-count')).toBeNull()
   })
 })

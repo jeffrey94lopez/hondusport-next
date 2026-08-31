@@ -169,6 +169,8 @@ export default function ProductDetail({
   function quickAddRelated(id: string): boolean {
     const rel = allProductos.find(p => p.id === id)
     if (!rel) return false
+    // Misma guarda que StoreClient.quickAdd: un agotado no entra al carrito.
+    if (estaAgotado(rel.stock, rel.variantes)) return false
     if (rel.variantes.length > 0) {
       router.push(`/producto/${rel.slug}`)
       return false
