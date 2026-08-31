@@ -2,8 +2,6 @@ import Fuse from 'fuse.js'
 import type { StoreProducto, Categoria } from '@/types/store'
 import { getTallas } from './getTallas'
 
-export type SortBy = 'default' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'
-
 export interface FilterState {
   maxPrice: number
   generos: string[]
@@ -48,21 +46,4 @@ export function filterProductos(params: FilterParams): StoreProducto[] {
   }
 
   return filtered
-}
-
-export function sortProductos(productos: StoreProducto[], sortBy: SortBy): StoreProducto[] {
-  const sorted = [...productos]
-
-  switch (sortBy) {
-    case 'price-asc':
-      return sorted.sort((a, b) => a.precio - b.precio)
-    case 'price-desc':
-      return sorted.sort((a, b) => b.precio - a.precio)
-    case 'name-asc':
-      return sorted.sort((a, b) => a.nombre.localeCompare(b.nombre))
-    case 'name-desc':
-      return sorted.sort((a, b) => b.nombre.localeCompare(a.nombre))
-    default:
-      return sorted
-  }
 }

@@ -92,6 +92,7 @@ describe('toStoreProducto', () => {
       rating: 5,
       ofertaFin: null,
       personalizable: false,
+      createdAt: '2026-01-01T00:00:00Z',
       variantes: [],
     })
     expect(result.slug).toBe('camiseta-roja')
@@ -120,5 +121,10 @@ describe('toStoreProducto', () => {
     expect(result.rating).toBe(5)
     expect(result.tallas).toEqual([])
     expect(result.imagenes).toEqual([])
+  })
+
+  it('mapea created_at a createdAt', () => {
+    const fila: Producto = { ...BASE_PRODUCTO, created_at: '2026-08-15T10:00:00.000Z' }
+    expect(toStoreProducto(fila).createdAt).toBe('2026-08-15T10:00:00.000Z')
   })
 })
