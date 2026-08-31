@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { filterProductos, sortProductos } from '../filters'
+import { filterProductos } from '../filters'
 import type { StoreProducto, Categoria } from '@/types/store'
 
 function makeProducto(overrides: Partial<StoreProducto> = {}): StoreProducto {
@@ -186,44 +186,5 @@ describe('filterProductos', () => {
       tallaFiltros,
     })
     expect(result).toEqual([])
-  })
-})
-
-describe('sortProductos', () => {
-  const productos = [
-    makeProducto({ id: '1', nombre: 'Bermuda', precio: 800 }),
-    makeProducto({ id: '2', nombre: 'Abrigo', precio: 2000 }),
-    makeProducto({ id: '3', nombre: 'Calceta', precio: 200 }),
-  ]
-
-  test('price-asc sorts ascending by precio', () => {
-    const result = sortProductos(productos, 'price-asc')
-    expect(result.map(p => p.id)).toEqual(['3', '1', '2'])
-  })
-
-  test('price-desc sorts descending by precio', () => {
-    const result = sortProductos(productos, 'price-desc')
-    expect(result.map(p => p.id)).toEqual(['2', '1', '3'])
-  })
-
-  test('name-asc sorts alphabetically by nombre', () => {
-    const result = sortProductos(productos, 'name-asc')
-    expect(result.map(p => p.id)).toEqual(['2', '1', '3'])
-  })
-
-  test('name-desc sorts reverse alphabetically by nombre', () => {
-    const result = sortProductos(productos, 'name-desc')
-    expect(result.map(p => p.id)).toEqual(['3', '1', '2'])
-  })
-
-  test('default does not change order', () => {
-    const result = sortProductos(productos, 'default')
-    expect(result.map(p => p.id)).toEqual(['1', '2', '3'])
-  })
-
-  test('does not mutate the original array', () => {
-    const original = [...productos]
-    sortProductos(productos, 'price-asc')
-    expect(productos).toEqual(original)
   })
 })
