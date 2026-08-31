@@ -28,6 +28,7 @@ export interface StoreProducto {
   rating: number
   ofertaFin: string | null
   personalizable: boolean
+  createdAt: string
   variantes: StoreVariante[]
 }
 

@@ -26,6 +26,7 @@ export function toStoreProducto(p: Producto): StoreProducto {
     rating: p.rating ?? 5,
     ofertaFin: p.oferta_fin,
     personalizable: p.personalizable,
+    createdAt: p.created_at,
     variantes: toStoreVariantes(Number(p.precio), p.producto_variantes ?? []),
   }
 }

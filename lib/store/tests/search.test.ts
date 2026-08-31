@@ -22,6 +22,7 @@ function makeProducto(overrides: Partial<StoreProducto> = {}): StoreProducto {
     rating: 5,
     ofertaFin: null,
     personalizable: false,
+    createdAt: '2026-01-01T00:00:00.000Z',
     variantes: [],
     ...overrides,
   }
