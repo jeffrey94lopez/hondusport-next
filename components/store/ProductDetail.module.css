@@ -367,6 +367,7 @@
 }
 
 .addBtn {
+  position: relative;
   flex: 1 1 200px;
   display: flex;
   align-items: center;
@@ -390,6 +391,51 @@
   background: var(--cta-disabled-bg);
   color: var(--cta-disabled-text);
   cursor: not-allowed;
+}
+
+/* Unidades de este producto ya en el carrito. Mismo lenguaje visual que el
+   badge de la tarjeta del catalogo (ProductCard.module.css). */
+.addBtnCount {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: 11px;
+  background: var(--primary);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+/* Mismo lenguaje que el icono de la tarjeta del catalogo (ProductCard). */
+.addBtnAdded,
+.addBtnAdded:hover:not(:disabled) {
+  background: var(--success);
+  color: #fff;
+}
+
+.addBtnAdded {
+  animation: addPop 0.4s ease;
+}
+
+@keyframes addPop {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.04);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .wishBtn {

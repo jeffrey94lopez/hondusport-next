@@ -10,7 +10,7 @@ const SCROLL_AMOUNT = 200
 interface ProductGridProps {
   productos: StoreProducto[]
   totalProductos: number
-  onQuickAdd?: (id: string) => void
+  onQuickAdd?: (id: string) => boolean
   onOpen?: (id: string) => void
   onClearFilters?: () => void
 }
@@ -48,7 +48,7 @@ interface CarouselSectionProps {
   productos: StoreProducto[]
   sectionClassName: string
   rankFrom?: number
-  onQuickAdd?: (id: string) => void
+  onQuickAdd?: (id: string) => boolean
   onOpen?: (id: string) => void
 }
 

@@ -104,10 +104,59 @@
   font-size: 0.8rem;
   cursor: pointer;
   transition: 0.2s;
+  position: relative;
+}
+
+/* Unidades de este producto en el carrito. Sobresale poco a proposito: .card
+   tiene overflow:hidden y un badge mas afuera se recortaria. */
+.addBtnCount {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  /* Lo separa del boton para que se lea sobre cualquier fondo. */
+  box-shadow: 0 0 0 2px var(--card);
 }
 
 .addBtn:hover {
   background: var(--btn-hover);
+}
+
+/* Confirmacion del clic. El movimiento se neutraliza solo con
+   prefers-reduced-motion (ver store-globals.css), y ahi queda el cambio de
+   color y el check, que es senal sin movimiento. */
+.addBtnAdded {
+  background: var(--success);
+  color: #fff;
+  animation: addPop 0.4s ease;
+}
+
+.addBtnAdded:hover {
+  background: var(--success);
+}
+
+@keyframes addPop {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.18);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .tag {

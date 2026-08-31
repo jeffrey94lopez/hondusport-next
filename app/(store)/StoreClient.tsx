@@ -68,12 +68,15 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
     toggle('cat', valor)
   }
 
-  function quickAdd(id: string) {
+  // Devuelve true solo si agrego al carrito, para que la tarjeta confirme el
+  // clic unicamente cuando hubo algo que confirmar: con variantes esto navega a
+  // la ficha, y ahi la navegacion ya es la respuesta visible.
+  function quickAdd(id: string): boolean {
     const producto = productos.find(p => p.id === id)
-    if (!producto) return
+    if (!producto) return false
     if (producto.variantes.length > 0) {
       router.push(`/producto/${producto.slug}`)
-      return
+      return false
     }
     const tallas = getTallas(producto, tallaFiltros)
     addToCart({
@@ -85,6 +88,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
       custom: SIN_PERSONALIZACION,
       personalizable: producto.personalizable,
     })
+    return true
   }
 
   const freeShippingActivo = isConfigActivo(config.free_shipping_activo, true)

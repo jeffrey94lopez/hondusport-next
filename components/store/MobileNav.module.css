@@ -155,3 +155,23 @@
   border-radius: var(--radius-tag);
   font-weight: bold;
 }
+
+.bottomBadgePulse {
+  animation: badgePop 0.6s ease;
+}
+
+/* Latido del contador del carrito al agregar. Solo sube: ver
+   lib/store/usePulseOnIncrease.ts. */
+@keyframes badgePop {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.55);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

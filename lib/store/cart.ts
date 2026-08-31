@@ -54,6 +54,17 @@ export function getCount(cart: CartItem[]): number {
   return cart.reduce((sum, item) => sum + item.qty, 0)
 }
 
+/**
+ * Unidades de un producto concreto en el carrito.
+ *
+ * Suma TODAS sus lineas: el mismo producto ocupa una linea por combinacion de
+ * talla, variante y personalizacion (ver addToCart), asi que leer una sola
+ * daria una cuenta corta.
+ */
+export function getCountForProduct(cart: CartItem[], productoId: string): number {
+  return cart.reduce((sum, item) => (item.id === productoId ? sum + item.qty : sum), 0)
+}
+
 export function findCoupon(cupones: Cupon[], code: string): Cupon | null {
   const normalized = code.trim().toUpperCase()
   return cupones.find(c => c.codigo === normalized) ?? null

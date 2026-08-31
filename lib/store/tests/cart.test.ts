@@ -7,6 +7,7 @@ import {
   getSubtotal,
   getFinalTotal,
   getCount,
+  getCountForProduct,
   findCoupon,
   getShippingProgress,
   normalizeStoredCart,
@@ -153,6 +154,36 @@ describe('getCount', () => {
   it('sums the quantities of all items', () => {
     const cart: CartItem[] = [{ ...ITEM_A, qty: 2 }, { ...ITEM_B, qty: 3 }]
     expect(getCount(cart)).toBe(5)
+  })
+})
+
+describe('getCountForProduct', () => {
+  it('returns 0 for an empty cart', () => {
+    expect(getCountForProduct([], 'p1')).toBe(0)
+  })
+
+  it('returns 0 when the product is not in the cart', () => {
+    const cart: CartItem[] = [{ ...ITEM_B, qty: 3 }]
+    expect(getCountForProduct(cart, 'p1')).toBe(0)
+  })
+
+  it('sums quantities ACROSS every line of the same product', () => {
+    // Un mismo producto ocupa varias lineas cuando cambia talla, variante o
+    // personalizacion: leer una sola linea daria una cuenta corta.
+    const cart: CartItem[] = [
+      { ...ITEM_A, qty: 2, size: 'M' },
+      { ...ITEM_A, qty: 3, size: 'L' },
+      { ...ITEM_B, qty: 7 },
+    ]
+    expect(getCountForProduct(cart, 'p1')).toBe(5)
+  })
+
+  it('cuenta lineas del mismo producto con variantes distintas', () => {
+    const cart: CartItem[] = [
+      { ...ITEM_A, qty: 1, varianteId: 'v1', variante: 'Roja' },
+      { ...ITEM_A, qty: 4, varianteId: 'v2', variante: 'Azul' },
+    ]
+    expect(getCountForProduct(cart, 'p1')).toBe(5)
   })
 })
 

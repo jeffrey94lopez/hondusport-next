@@ -6,6 +6,7 @@ import styles from './Nav.module.css'
 import ThemeToggle from './ThemeToggle'
 import { useCart } from '@/lib/store/cart-context'
 import { useWishlist } from '@/lib/store/wishlist-context'
+import { usePulseOnIncrease } from '@/lib/store/usePulseOnIncrease'
 import type { Categoria } from '@/types/store'
 
 const SCROLL_THRESHOLD = 50
@@ -34,6 +35,7 @@ export default function Nav({
   const [scrolled, setScrolled] = useState(false)
   const { count } = useCart()
   const { ids: wishlistIds } = useWishlist()
+  const cartPulsing = usePulseOnIncrease(count)
 
   useEffect(() => {
     function onScroll() {
@@ -100,7 +102,7 @@ export default function Nav({
         </button>
         <button className={styles.iconBtn} onClick={onOpenCart} aria-label="Ver carrito">
           <i className="fa-solid fa-cart-shopping" />
-          <span className={styles.badgeGold}>{count}</span>
+          <span className={`${styles.badgeGold} ${cartPulsing ? styles.badgePulse : ''}`}>{count}</span>
         </button>
       </div>
     </nav>

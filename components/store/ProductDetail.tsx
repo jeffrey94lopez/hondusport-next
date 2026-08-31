@@ -13,6 +13,7 @@ import { DEFAULT_FREE_SHIPPING_THRESHOLD } from '@/lib/store/freeShipping'
 import { estaAgotado } from '@/lib/store/variantes'
 import { addRecentView } from '@/lib/store/recentViews'
 import { useCart } from '@/lib/store/cart-context'
+import { getCountForProduct } from '@/lib/store/cart'
 import { useWishlist } from '@/lib/store/wishlist-context'
 import type { StoreProducto, Categoria } from '@/types/store'
 
@@ -21,6 +22,8 @@ const ZOOM_SCALE = 2
 const RELATED_SCROLL_AMOUNT = 300
 const SIN_PERSONALIZACION = 'Sin personalización'
 const TALLA_UNICA = 'Única'
+// Cuanto dura la confirmacion del boton de agregar al carrito.
+const ADDED_MS = 1200
 
 function readRecentViewIds(): string[] {
   if (typeof window === 'undefined') return []
@@ -62,7 +65,7 @@ export default function ProductDetail({
   freeShippingThreshold = DEFAULT_FREE_SHIPPING_THRESHOLD,
 }: ProductDetailProps) {
   const router = useRouter()
-  const { addToCart } = useCart()
+  const { addToCart, cart } = useCart()
   const { has: isWishlisted, toggle: toggleWishlist } = useWishlist()
   const tallas = getTallas(producto, tallaFiltros)
   const showOriginalPrice = producto.precioOriginal != null && producto.precioOriginal > producto.precio
@@ -82,6 +85,19 @@ export default function ProductDetail({
   const [recentProducts] = useState(() => readRecentProducts(producto.id, allProductos))
   const relatedScrollRef = useRef<HTMLDivElement>(null)
 
+  const [justAdded, setJustAdded] = useState(false)
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (addedTimer.current) clearTimeout(addedTimer.current)
+  }, [])
+
+  function confirmarAgregado() {
+    setJustAdded(true)
+    if (addedTimer.current) clearTimeout(addedTimer.current)
+    addedTimer.current = setTimeout(() => setJustAdded(false), ADDED_MS)
+  }
+
   const selectedVariante = variantes.find(v => v.id === selectedVarianteId) ?? null
   const precioActual = selectedVariante?.precioEfectivo ?? producto.precio
   // `estaAgotado` (la misma pura que usan ProductCard, el catálogo del POS y
@@ -96,6 +112,7 @@ export default function ProductDetail({
   // si el stock disponible baja (p.ej. al cambiar de variante), la cantidad
   // efectiva se recorta al renderizar sin necesitar un setState en efecto.
   const cantidadEfectiva = Math.min(cantidad, maxCantidad)
+  const enCarrito = getCountForProduct(cart, producto.id)
 
   useEffect(() => {
     localStorage.setItem(RECENT_VIEWS_KEY, JSON.stringify(addRecentView(readRecentViewIds(), producto.id)))
@@ -139,18 +156,21 @@ export default function ProductDetail({
     // llamarlo `cantidadEfectiva` veces reusa esa misma regla en vez de duplicarla aquí.
     for (let i = 0; i < cantidadEfectiva; i++) addToCart(item)
     setCantidad(1)
+    confirmarAgregado()
   }
 
   function openRelated(slug: string) {
     router.push(`/producto/${slug}`)
   }
 
-  function quickAddRelated(id: string) {
+  // Mismo contrato que StoreClient.quickAdd: true solo si agrego, para que la
+  // tarjeta del relacionado no confirme cuando lo que hizo fue navegar.
+  function quickAddRelated(id: string): boolean {
     const rel = allProductos.find(p => p.id === id)
-    if (!rel) return
+    if (!rel) return false
     if (rel.variantes.length > 0) {
       router.push(`/producto/${rel.slug}`)
-      return
+      return false
     }
     const relTallas = getTallas(rel, tallaFiltros)
     addToCart({
@@ -162,6 +182,7 @@ export default function ProductDetail({
       custom: SIN_PERSONALIZACION,
       personalizable: rel.personalizable,
     })
+    return true
   }
 
   function scrollRelated(delta: number) {
@@ -326,14 +347,30 @@ export default function ProductDetail({
               </button>
             </div>
 
+            {/* El badge de unidades es decorativo (aria-hidden), asi que la
+                cuenta entra en el nombre accesible via aria-label. */}
             <button
               type="button"
-              className={styles.addBtn}
+              className={`${styles.addBtn} ${justAdded ? styles.addBtnAdded : ''}`}
               onClick={handleAddToCart}
               disabled={agotado || (conVariantes && !selectedVariante)}
+              aria-label={
+                agotado
+                  ? 'Agotado'
+                  : justAdded
+                    ? 'Agregado al carrito'
+                    : enCarrito > 0
+                      ? `Agregar al carrito (${enCarrito} en el carrito)`
+                      : 'Agregar al carrito'
+              }
             >
-              <span>{agotado ? 'AGOTADO' : 'Agregar al carrito'}</span>
-              {!agotado && <i className="fa-solid fa-arrow-right" />}
+              <span>{agotado ? 'AGOTADO' : justAdded ? 'Agregado' : 'Agregar al carrito'}</span>
+              {!agotado && <i className={`fa-solid ${justAdded ? 'fa-check' : 'fa-arrow-right'}`} />}
+              {!agotado && enCarrito > 0 && (
+                <span className={styles.addBtnCount} data-testid="detail-cart-count" aria-hidden="true">
+                  {enCarrito}
+                </span>
+              )}
             </button>
 
             <button
