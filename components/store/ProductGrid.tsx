@@ -141,7 +141,7 @@ export default function ProductGrid({ productos, totalProductos, onQuickAdd, onO
   const hasMore = visibleCount < productos.length
 
   return (
-    <>
+    <div className={styles.results}>
       <CarouselSection
         title="Ofertas Especiales "
         badge={<span className={styles.offerTagPremium}>OFERTAS ACTIVAS</span>}
@@ -185,6 +185,6 @@ export default function ProductGrid({ productos, totalProductos, onQuickAdd, onO
           </div>
         )}
       </div>
-    </>
+    </div>
   )
 }

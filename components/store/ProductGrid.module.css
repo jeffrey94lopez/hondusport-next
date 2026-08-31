@@ -1,3 +1,12 @@
+/* Un unico grid item dentro de .catalogLayout: sin este contenedor cada
+   .section quedaba como item suelto de la grilla de dos columnas y las
+   secciones impares caian en la columna del FilterSidebar (220px), donde
+   .todosGrid colapsaba a una sola columna y apilaba los productos. */
+.results {
+  /* min-width:0 evita que los carruseles con overflow-x inflen la columna 1fr */
+  min-width: 0;
+}
+
 .productsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
