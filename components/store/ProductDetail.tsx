@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import ProductImage from './ProductImage'
 import { useRouter } from 'next/navigation'
 import styles from './ProductDetail.module.css'
 import SizeGuideModal from './SizeGuideModal'
@@ -218,15 +219,13 @@ export default function ProductDetail({
           <div className={styles.mainImageCard}>
             {producto.badge === 'Nuevo' && <span className={styles.newTag}>Nuevo</span>}
             <div className={styles.zoomContainer} onMouseMove={handleZoomMove} onMouseLeave={handleZoomLeave}>
-              {producto.imagenes[selectedImageIdx] && (
-                <Image
-                  src={producto.imagenes[selectedImageIdx]}
-                  alt={producto.nombre}
-                  fill
-                  sizes="(max-width: 899px) 100vw, 600px"
-                  style={zoomStyle}
-                />
-              )}
+              <ProductImage
+                src={producto.imagenes[selectedImageIdx]}
+                alt={producto.nombre}
+                fill
+                sizes="(max-width: 899px) 100vw, 600px"
+                style={zoomStyle}
+              />
             </div>
           </div>
           {producto.imagenes.length > 1 && (
@@ -439,11 +438,9 @@ export default function ProductDetail({
           <div className={styles.recentScroll}>
             {recentProducts.map(rec => (
               <Link key={rec.id} href={`/producto/${rec.slug}`} className={styles.recentItem}>
-                {rec.imagenes[0] && (
-                  <div className={styles.recentImgWrap}>
-                    <Image src={rec.imagenes[0]} alt={rec.nombre} className={styles.recentImg} fill sizes="130px" />
-                  </div>
-                )}
+                <div className={styles.recentImgWrap}>
+                  <ProductImage src={rec.imagenes[0]} alt={rec.nombre} className={styles.recentImg} fill sizes="130px" />
+                </div>
                 <p className={styles.recentTitle}>{rec.nombre}</p>
                 <p className={styles.recentPrice}>{formatPrice(rec.precio)}</p>
               </Link>

@@ -1,5 +1,5 @@
 'use client'
-import Image from 'next/image'
+import ProductImage from './ProductImage'
 import styles from './WishlistDrawer.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { useWishlist } from '@/lib/store/wishlist-context'
@@ -62,7 +62,7 @@ export default function WishlistDrawer({ productos, tallaFiltros, isOpen, onClos
           ) : (
             items.map(producto => (
               <div className={styles.item} key={producto.id}>
-                <Image src={producto.imagenes[0] ?? ''} alt={producto.nombre} className={styles.itemImg} width={70} height={70} />
+                <ProductImage src={producto.imagenes[0]} alt={producto.nombre} className={styles.itemImg} width={70} height={70} />
                 <div className={styles.itemInfo}>
                   <h4 className={styles.itemTitle} onClick={() => onOpenProduct?.(producto.slug)} style={{ cursor: 'pointer' }}>
                     {producto.nombre}

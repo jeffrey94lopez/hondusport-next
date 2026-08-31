@@ -1,0 +1,21 @@
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--hover-input);
+  color: var(--ink-disabled);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* En modo `fill` el <Image> se posiciona absoluto dentro del contenedor
+   relativo; el placeholder tiene que ocupar el mismo espacio. */
+.placeholderFill {
+  position: absolute;
+  inset: 0;
+}
+
+.icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}

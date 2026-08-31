@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
+import ProductImage from './ProductImage'
 import styles from './ProductCard.module.css'
 import { formatPrice, getBadgeColor, getDiscountPercent } from '@/lib/store/format'
 import { getOfferSecondsRemaining } from '@/lib/store/offerTimer'
@@ -98,15 +98,13 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
   return (
     <article className={styles.card}>
       <div className={styles.imgContainer} onClick={() => onOpen?.(producto.slug)}>
-        {imagen && (
-          <Image
-            src={imagen}
-            alt={producto.nombre}
-            className={styles.img}
-            fill
-            sizes="(max-width: 768px) 50vw, 200px"
-          />
-        )}
+        <ProductImage
+          src={imagen}
+          alt={producto.nombre}
+          className={styles.img}
+          fill
+          sizes="(max-width: 768px) 50vw, 200px"
+        />
         {tag && (
           <span className={`${styles.tag} ${tag.className}`} style={tag.color ? { background: tag.color } : undefined}>
             {tag.label}
