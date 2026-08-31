@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
+import ProductImage from './ProductImage'
 import styles from './CartDrawer.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { useCart } from '@/lib/store/cart-context'
@@ -109,7 +109,7 @@ export default function CartDrawer({
               cart.map((item, idx) => (
                 <div className={styles.item} key={`${item.id}-${item.varianteId ?? ''}-${item.size}-${item.custom}-${idx}`}>
                   <div className={styles.itemImgWrap}>
-                    <Image src={item.imagen} alt={item.nombre} className={styles.itemImg} width={80} height={80} />
+                    <ProductImage src={item.imagen} alt={item.nombre} className={styles.itemImg} width={80} height={80} />
                   </div>
                   <div className={styles.itemInfo}>
                     <div className={styles.itemTitleRow}>

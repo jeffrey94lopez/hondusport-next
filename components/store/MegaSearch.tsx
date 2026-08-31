@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import Image from 'next/image'
+import ProductImage from './ProductImage'
 import styles from './MegaSearch.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { searchProductos } from '@/lib/store/search'
@@ -73,8 +73,8 @@ export default function MegaSearch({ productos, categorias, isOpen, onClose, onO
               {results.map(producto => (
                 <div className={styles.resultItem} key={producto.id} onClick={() => handleSelect(producto.slug)}>
                   <div className={styles.resultImgWrap}>
-                    <Image
-                      src={producto.imagenes[0] ?? ''}
+                    <ProductImage
+                      src={producto.imagenes[0]}
                       alt={producto.nombre}
                       className={styles.resultImg}
                       fill
