@@ -57,7 +57,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         .eq('activo', true)
         .order('orden'),
       supabase.from('productos').select(PRODUCTO_SELECT).eq('slug', slug).eq('activo', true).in('canal', ['tienda', 'ambas']).maybeSingle(),
-      supabase.from('productos').select(PRODUCTO_SELECT).eq('activo', true).in('canal', ['tienda', 'ambas']),
+      supabase.from('productos').select(PRODUCTO_SELECT).eq('activo', true).in('canal', ['tienda', 'ambas']).order('created_at', { ascending: false }),
       supabase.from('envios').select('id, nombre, descripcion, tipo, costo, descuento, activo').eq('activo', true),
       supabase.from('cupones').select('id, codigo, descuento, tipo, activo, created_at').eq('activo', true),
     ])

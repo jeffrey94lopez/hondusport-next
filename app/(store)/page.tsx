@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import { toConfigMap, toStoreProducto } from '@/lib/store/adapters'
 import { nombreComercial } from '@/lib/empresa/perfil'
+import type { VentasRank } from '@/lib/store/vitrina'
 import StoreClient from './StoreClient'
 
 const PRODUCTO_SELECT =
@@ -23,18 +24,27 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function StorePage() {
   const supabase = await createClient()
-  const [{ data: config }, { data: categorias }, { data: banners }, { data: envios }, { data: cupones }, { data: productos }] =
+  const [{ data: config }, { data: categorias }, { data: banners }, { data: envios }, { data: cupones }, { data: productos }, { data: ventasRankRows }] =
     await Promise.all([
       supabase.from('configuracion').select('key,value'),
       supabase.from('categorias').select('id, tipo, valor, slug, imagen, categorias_padre, orden, activo').eq('activo', true).order('orden'),
       supabase.from('banners').select('id, titulo, subtitulo, btn_texto, btn_link, imagen, orden, activo').eq('activo', true).order('orden'),
       supabase.from('envios').select('id, nombre, descripcion, tipo, costo, descuento, activo').eq('activo', true),
       supabase.from('cupones').select('id, codigo, descuento, tipo, activo, created_at').eq('activo', true),
-      supabase.from('productos').select(PRODUCTO_SELECT).eq('activo', true).in('canal', ['tienda', 'ambas']),
+      // El .order() no fija el orden final -lo hace ordenarVitrina- pero sin el
+      // la entrada de la pura es no determinista y los empates dentro de una
+      // banda bailarian entre cargas.
+      supabase.from('productos').select(PRODUCTO_SELECT).eq('activo', true).in('canal', ['tienda', 'ambas']).order('created_at', { ascending: false }),
+      // PostgREST no puede embeber una vista sin FK, asi que va como consulta
+      // aparte en el mismo Promise.all: una ida y vuelta mas, con dos columnas.
+      supabase.from('producto_ventas_rank').select('producto_id, posicion'),
     ])
 
   const configMap = toConfigMap(config ?? [])
   const storeProductos = (productos ?? []).map(toStoreProducto)
+  const ventasRank: VentasRank = Object.fromEntries(
+    (ventasRankRows ?? []).map(v => [String(v.producto_id), Number(v.posicion)]),
+  )
 
   return (
     <Suspense fallback={null}>
@@ -45,6 +55,7 @@ export default async function StorePage() {
         envios={envios ?? []}
         cupones={cupones ?? []}
         config={configMap}
+        ventasRank={ventasRank}
       />
     </Suspense>
   )
