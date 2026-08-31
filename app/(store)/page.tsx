@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function StorePage() {
   const supabase = await createClient()
-  const [{ data: config }, { data: categorias }, { data: banners }, { data: envios }, { data: cupones }, { data: productos }, { data: ventasRankRows }] =
+  const [{ data: config }, { data: categorias }, { data: banners }, { data: envios }, { data: cupones }, { data: productos }, { data: ventasRankRows, error: ventasRankError }] =
     await Promise.all([
       supabase.from('configuracion').select('key,value'),
       supabase.from('categorias').select('id, tipo, valor, slug, imagen, categorias_padre, orden, activo').eq('activo', true).order('orden'),
@@ -40,11 +40,22 @@ export default async function StorePage() {
       supabase.from('producto_ventas_rank').select('producto_id, posicion'),
     ])
 
+  if (ventasRankError) {
+    // Degradacion silenciosa para el visitante (la banda 2 simplemente
+    // desaparece) pero visible en los logs: sin esto, un GRANT perdido o la
+    // vista caida no dejan ninguna senal.
+    console.error('No se pudo leer producto_ventas_rank; el orden comercial de la portada queda degradado (sin banda 2):', ventasRankError)
+  }
+
   const configMap = toConfigMap(config ?? [])
   const storeProductos = (productos ?? []).map(toStoreProducto)
   const ventasRank: VentasRank = Object.fromEntries(
     (ventasRankRows ?? []).map(v => [String(v.producto_id), Number(v.posicion)]),
   )
+  // Instante unico para que ordenarVitrina sea funcion de los datos, no del
+  // reloj del observador: string ISO (no Date) para no depender de que el
+  // payload RSC serialice Date.
+  const ahoraISO = new Date().toISOString()
 
   return (
     <Suspense fallback={null}>
@@ -56,6 +67,7 @@ export default async function StorePage() {
         cupones={cupones ?? []}
         config={configMap}
         ventasRank={ventasRank}
+        ahoraISO={ahoraISO}
       />
     </Suspense>
   )

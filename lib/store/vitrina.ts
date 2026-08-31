@@ -57,9 +57,13 @@ function compararEnBanda(
     const db = descuento(b)
     if (da !== db) return db - da
   }
-  // Desempate final SIEMPRE por nombre: sin el, el orden no seria una funcion
-  // total y dos cargas podrian dar resultados distintos.
-  return a.nombre.localeCompare(b.nombre)
+  // Desempate final SIEMPRE por nombre y, si tambien empata, por id: nombre
+  // no es unico en el esquema (solo slug lo es), asi que sin el id como
+  // ultimo criterio el orden no seria una funcion total. Locale explicito
+  // ('es'): sin el, localeCompare usa el runtime, que difiere entre el
+  // servidor (Node) y el navegador en la hidratacion.
+  const porNombre = a.nombre.localeCompare(b.nombre, 'es')
+  return porNombre !== 0 ? porNombre : a.id.localeCompare(b.id)
 }
 
 /**

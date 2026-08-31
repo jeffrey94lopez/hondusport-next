@@ -5,6 +5,7 @@ import { toConfigMap, toStoreProducto } from '@/lib/store/adapters'
 import { nombreComercial } from '@/lib/empresa/perfil'
 import { esUuid } from '@/lib/store/productoSlug'
 import { isConfigActivo, resolveFreeShippingThreshold } from '@/lib/store/freeShipping'
+import { ordenarVitrina } from '@/lib/store/vitrina'
 import ProductPageShell from '@/components/store/ProductPageShell'
 import Footer from '@/components/store/Footer'
 import ProductDetail from '@/components/store/ProductDetail'
@@ -80,7 +81,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const configMap = toConfigMap(config ?? [])
   const storeProducto = toStoreProducto(productoRow)
   const allProductos = (productos ?? []).map(toStoreProducto)
-  const relacionados = allProductos
+  // Ordenado por bandas antes de filtrar: sin esto, el .order('created_at')
+  // de la consulta deja SIEMPRE los mismos dos productos (los mas nuevos de
+  // la categoria) al frente, y si estan agotados la tira de relacionados
+  // queda deshabilitada para siempre. Con mapa de ventas vacio las bandas
+  // igual funcionan (los agotados van al final), asi que no hace falta
+  // consultar la vista de ventas aqui.
+  const relacionados = ordenarVitrina(allProductos, {})
     .filter(p => p.cat === storeProducto.cat && p.id !== storeProducto.id)
     .slice(0, RELACIONADOS_LIMIT)
 

@@ -35,9 +35,10 @@ interface StoreClientProps {
   cupones: Cupon[]
   config: ConfigMap
   ventasRank: VentasRank
+  ahoraISO: string
 }
 
-export default function StoreClient({ productos, categorias, banners, envios, cupones, config, ventasRank }: StoreClientProps) {
+export default function StoreClient({ productos, categorias, banners, envios, cupones, config, ventasRank, ahoraISO }: StoreClientProps) {
   const router = useRouter()
   const { addToCart } = useCart()
 
@@ -57,9 +58,12 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
 
   // El orden se aplica DESPUES de filtrar: las bandas se recalculan sobre lo
   // que el visitante esta viendo, no sobre el catalogo completo.
+  // ahoraISO viene del servidor como prop (string, no Date) para que el
+  // mismo instante se use en el render del servidor y en la hidratacion.
   const filtered = ordenarVitrina(
     filterProductos({ productos, ...filters, search: '', tallaFiltros }),
     ventasRank,
+    new Date(ahoraISO),
   )
 
   function openProduct(slug: string) {

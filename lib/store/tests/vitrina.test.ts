@@ -97,9 +97,12 @@ describe('ordenarVitrina — orden dentro de cada banda', () => {
     const productos = [
       prod({ id: 'aunNuevo', nombre: 'Zeta', createdAt: hace(DIAS_NUEVO - 1) }),
       prod({ id: 'yaNo', nombre: 'Alfa', createdAt: hace(DIAS_NUEVO + 1) }),
+      // Limite exacto: esNuevo usa "<" estricto, asi que a DIAS_NUEVO dias ya
+      // no cuenta como nuevo y cae a la banda 5, junto con 'yaNo'.
+      prod({ id: 'limite', nombre: 'Medio', createdAt: hace(DIAS_NUEVO) }),
     ]
     // Si ambos estuvieran en la banda 5, 'Alfa' iria primero por nombre.
-    expect(ids(ordenarVitrina(productos, {}, AHORA))).toEqual(['aunNuevo', 'yaNo'])
+    expect(ids(ordenarVitrina(productos, {}, AHORA))).toEqual(['aunNuevo', 'yaNo', 'limite'])
   })
 
   it('banda 4: mayor porcentaje de descuento primero', () => {
@@ -128,7 +131,7 @@ describe('ordenarVitrina — orden dentro de cada banda', () => {
       .toEqual(['muyVendido', 'pocoVendido'])
   })
 
-  it('sin ventas va al final de su banda, no al principio', () => {
+  it('banda 1: sin ventas va al final de su banda, no al principio', () => {
     const productos = [
       prod({ id: 'sinVentas', nombre: 'Aaa', badge: 'Oferta' }),
       prod({ id: 'conVentas', nombre: 'Zzz', badge: 'Oferta' }),
@@ -145,6 +148,16 @@ describe('ordenarVitrina — es una funcion total', () => {
       prod({ id: 'a', nombre: 'Abrigo' }),
     ]
     expect(ids(ordenarVitrina(productos, {}, AHORA))).toEqual(['a', 'z'])
+  })
+
+  it('dos productos con el mismo nombre no dependen del orden de llegada', () => {
+    // nombre repetido (no es unico en el esquema; solo slug lo es), misma
+    // banda y misma posicion de ventas: el unico desempate valido es el id.
+    const uno = prod({ id: 'uno', nombre: 'Repetido' })
+    const dos = prod({ id: 'dos', nombre: 'Repetido' })
+    const a = ids(ordenarVitrina([uno, dos], {}, AHORA))
+    const b = ids(ordenarVitrina([dos, uno], {}, AHORA))
+    expect(a).toEqual(b)
   })
 
   it('mismas entradas en otro orden dan el MISMO resultado', () => {
