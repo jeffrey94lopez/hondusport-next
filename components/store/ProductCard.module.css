@@ -128,8 +128,15 @@
   box-shadow: 0 0 0 2px var(--card);
 }
 
-.addBtn:hover {
+.addBtn:hover:not(:disabled) {
   background: var(--btn-hover);
+}
+
+/* Un agotado no se puede agregar: se lee como inactivo, no como pulsable. */
+.addBtn:disabled {
+  background: var(--cta-disabled-bg);
+  color: var(--cta-disabled-text);
+  cursor: not-allowed;
 }
 
 /* Confirmacion del clic. El movimiento se neutraliza solo con

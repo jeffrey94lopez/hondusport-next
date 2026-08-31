@@ -18,6 +18,7 @@ import { filterProductos } from '@/lib/store/filters'
 import { getTallas } from '@/lib/store/getTallas'
 import { useStoreFilters } from '@/lib/store/useStoreFilters'
 import { isConfigActivo, resolveFreeShippingThreshold } from '@/lib/store/freeShipping'
+import { estaAgotado } from '@/lib/store/variantes'
 import styles from './page.module.css'
 import type { StoreProducto, Categoria, Banner, ConfigMap, Envio, Cupon } from '@/types/store'
 
@@ -74,6 +75,10 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
   function quickAdd(id: string): boolean {
     const producto = productos.find(p => p.id === id)
     if (!producto) return false
+    // Un agotado no entra al carrito. La tarjeta ya deshabilita su boton, pero
+    // esta es la frontera real: crear_pedido rechaza el pedido por stock, asi
+    // que dejarlo entrar solo aplaza el fallo hasta el checkout.
+    if (estaAgotado(producto.stock, producto.variantes)) return false
     if (producto.variantes.length > 0) {
       router.push(`/producto/${producto.slug}`)
       return false

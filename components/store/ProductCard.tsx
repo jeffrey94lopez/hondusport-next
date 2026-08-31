@@ -53,6 +53,9 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
   const isWished = has(producto.id)
   const { cart } = useCart()
   const enCarrito = getCountForProduct(cart, producto.id)
+  // Se calcula aqui arriba, y no junto a las demas derivaciones, porque
+  // handleAdd lo necesita y un const declarado despues quedaria en TDZ.
+  const agotado = estaAgotado(producto.stock, producto.variantes)
 
   const [justAdded, setJustAdded] = useState(false)
   const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -62,6 +65,9 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
   }, [])
 
   function handleAdd() {
+    // El boton ya va disabled, pero onQuickAdd es interfaz publica del
+    // componente y el handler no debe depender de que el boton sea la unica via.
+    if (agotado) return
     if (!onQuickAdd?.(producto.id)) return
     setJustAdded(true)
     // Reclick antes de que expire: reinicia la cuenta en vez de encadenar dos
@@ -86,7 +92,6 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
 
   const desde = precioDesde(producto.precio, producto.variantes)
   const stock = stockEfectivo(producto.stock, producto.variantes)
-  const agotado = estaAgotado(producto.stock, producto.variantes)
 
   const discountPercent = !desde.varia ? getDiscountPercent(producto.precio, producto.precioOriginal) : null
   const showOriginalPrice = discountPercent != null
@@ -140,16 +145,21 @@ export default function ProductCard({ producto, rank, onQuickAdd, onOpen }: Prod
           <button
             className={`${styles.addBtn} ${justAdded ? styles.addBtnAdded : ''}`}
             onClick={handleAdd}
+            disabled={agotado}
             aria-label={
-              justAdded
-                ? 'Agregado al carrito'
-                : enCarrito > 0
-                  ? `Agregar al carrito (${enCarrito} en el carrito)`
-                  : 'Agregar al carrito'
+              agotado
+                ? 'Agotado'
+                : justAdded
+                  ? 'Agregado al carrito'
+                  : enCarrito > 0
+                    ? `Agregar al carrito (${enCarrito} en el carrito)`
+                    : 'Agregar al carrito'
             }
           >
-            <i className={`fa-solid ${justAdded ? 'fa-check' : 'fa-cart-shopping'}`} />
-            {enCarrito > 0 && (
+            <i
+              className={`fa-solid ${agotado ? 'fa-ban' : justAdded ? 'fa-check' : 'fa-cart-shopping'}`}
+            />
+            {!agotado && enCarrito > 0 && (
               <span className={styles.addBtnCount} data-testid="card-cart-count" aria-hidden="true">
                 {enCarrito}
               </span>
