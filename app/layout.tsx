@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Poppins } from 'next/font/google'
+import { createClient } from '@/lib/supabase-server'
 import './merlin.css'
 import './globals.css'
 
@@ -10,9 +11,23 @@ const poppins = Poppins({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  title: 'Hondusport',
-  description: 'Tienda deportiva en Honduras',
+// El favicon estático de app/favicon.ico (convención de App Router) SIEMPRE
+// gana sobre metadata.icons mientras exista — se eliminó a propósito para
+// que el ícono subido en el admin (configuracion.empresa_icono_url, mismo
+// campo "Ícono" de Empresa/Facturador que ya usan los documentos) se refleje
+// en la pestaña del navegador. Sin ese archivo estático y sin ícono
+// configurado, el navegador cae a su favicon genérico — comportamiento
+// aceptable, mejor que mostrar el ícono de scaffold de Next.js por defecto.
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient()
+  const { data } = await supabase.from('configuracion').select('value').eq('key', 'empresa_icono_url').maybeSingle()
+  const icono = data?.value?.trim()
+
+  return {
+    title: 'Hondusport',
+    description: 'Tienda deportiva en Honduras',
+    ...(icono ? { icons: { icon: icono } } : {}),
+  }
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
