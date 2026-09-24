@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StoreHeader from '@/components/store/StoreHeader'
 import HeroCarousel from '@/components/store/HeroCarousel'
@@ -51,6 +51,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
   const [searchOpen, setSearchOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [filterSidebarOpen, setFilterSidebarOpen] = useState(false)
+  const catalogRef = useRef<HTMLDivElement>(null)
 
   const catsNav = categorias.filter(c => c.tipo === 'cat')
   const subcats = categorias.filter(c => c.tipo === 'subcat')
@@ -75,9 +76,13 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
   function handleCatLink(valor: string | null) {
     if (!valor) {
       clearAll()
-      return
+    } else {
+      toggle('cat', valor)
     }
-    toggle('cat', valor)
+    // El listado de productos queda debajo del hero y las cards de categoría;
+    // sin este scroll, elegir una categoría en el nav no muestra ningún cambio
+    // visible si el usuario sigue arriba del todo en la página.
+    catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   // Devuelve true solo si agrego al carrito, para que la tarjeta confirme el
@@ -164,7 +169,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
         onClearAll={clearAll}
         onClearPrice={() => setMaxPrice(maxPriceLimit)}
       />
-      <main className={styles.main}>
+      <main className={styles.main} ref={catalogRef}>
         <button className={styles.mobileFilterTrigger} onClick={() => setFilterSidebarOpen(true)}>
           🔍 FILTROS{activeCount > 0 ? ` (${activeCount})` : ''}
         </button>

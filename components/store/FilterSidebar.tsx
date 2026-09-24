@@ -34,8 +34,17 @@ export default function FilterSidebar({
 
   const generoFiltros = categorias.filter(c => c.tipo === 'genero')
   const catFiltros = categorias.filter(c => c.tipo === 'cat')
-  const tallaFiltros = categorias.filter(c => c.tipo === 'talla')
-  const subcatFiltros = categorias.filter(c => c.tipo === 'subcat')
+
+  // Subcategoría y talla dependen de la(s) categoría(s) elegidas: sin
+  // categoría activa se ven todas (para poder navegar libremente), pero en
+  // cuanto hay una selección solo se muestran las que de verdad pertenecen a
+  // esa categoría (via categorias_padre), igual que ya hace CategoryBar.
+  const catIdsActivos = catFiltros.filter(c => filters.cats.includes(c.valor)).map(c => c.id)
+  const perteneceACatActiva = (c: Categoria) =>
+    catIdsActivos.length === 0 || (c.categorias_padre ?? []).some(id => catIdsActivos.includes(id))
+
+  const tallaFiltros = categorias.filter(c => c.tipo === 'talla').filter(perteneceACatActiva)
+  const subcatFiltros = categorias.filter(c => c.tipo === 'subcat').filter(perteneceACatActiva)
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarActive : ''}`}>

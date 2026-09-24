@@ -12,6 +12,9 @@
   padding: 2rem 5%;
   max-width: var(--max-width);
   margin: 0 auto;
+  /* Nav.module.css .nav es sticky top:0 (~65px de alto); sin este margen el
+     scrollIntoView de handleCatLink deja el inicio del catálogo tapado. */
+  scroll-margin-top: 80px;
 }
 
 .categorySection {
@@ -25,14 +28,28 @@
 }
 
 .categoryGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
+  /* Carrusel de una sola línea: antes era un grid que envolvía en varias
+     filas (auto-fit); con muchas categorías eso "amontonaba" tarjetas. Ahora
+     es una fila horizontal con scroll nativo (fluido, con inercia táctil) y
+     snap por tarjeta, igual al patrón ya usado en CategoryBar.module.css. */
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.categoryGrid::-webkit-scrollbar {
+  display: none;
 }
 
 .categoryCard {
   position: relative;
-  height: 300px;
+  flex: 0 0 110px;
+  height: 75px;
+  scroll-snap-align: start;
   border-radius: var(--radius-card);
   overflow: hidden;
   border: none;
@@ -59,31 +76,35 @@
 
 .categoryText {
   position: absolute;
-  left: 24px;
-  bottom: 24px;
+  left: 6px;
+  bottom: 6px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .categoryName {
   color: #fff;
   font: var(--text-subtitle);
-  font-size: 1.3rem;
+  /* Piso de legibilidad: no se redujo a la mitad exacta (0.45rem) porque a
+     ese tamaño el nombre de la categoría deja de ser legible. */
+  font-size: 0.72rem;
+  line-height: 1.1;
 }
 
 .categoryLink {
   color: var(--brand);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.6rem;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 3px;
 }
 
 @media (max-width: 768px) {
   .categoryCard {
-    height: 220px;
+    flex: 0 0 90px;
+    height: 55px;
   }
 }
 
