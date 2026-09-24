@@ -32,6 +32,7 @@ function variante(overrides: Partial<ProductoVariante> = {}): ProductoVariante {
     stock: 10,
     costo: null,
     precio_revendedor: null,
+    imagenes: null,
     activo: true,
     orden: 0,
     created_at: '', updated_at: '',

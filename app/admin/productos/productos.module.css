@@ -134,6 +134,30 @@
 .table tr.rowWarning td { background: var(--error-bg); }
 .table tr.rowWarning:hover td { background: var(--error-bg); }
 
+/* Columna de la flechita que expande las variantes en filas propias. */
+.expandCol { width: 32px; padding: 0.5rem 0 0.5rem 0.75rem; }
+.expandBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 1.05rem;
+  background: none;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.expandBtn:hover { opacity: 0.6; }
+.expandBtnOpen { transform: rotate(90deg); }
+
+/* Fila de variante: fondo distinto para leerse como "hija" de la fila de
+   arriba, sin el hover de :hover normal de .table (ya tiene su propio matiz). */
+.varianteRow td { background: var(--bg-hover); font-size: 0.82rem; }
+.varianteRow:hover td { background: var(--bg-hover); }
+.varianteNombreCell { color: var(--text-muted); font-style: italic; }
+
 /* Columna de imagen: thumbnail cuadrado o placeholder cuando el producto no
    tiene fotos cargadas. */
 .thumbCell { width: 56px; padding: 0.5rem 0.75rem; }
@@ -338,6 +362,48 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 0.6rem;
+}
+
+/* Título de la sección (bloqueImagenesVariantes) más grande que un
+   .formLabel normal — es el encabezado de todo el bloque, no un campo. */
+.imagenesVariantesTitulo {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Envoltorio de imágenes+botón por variante: columna, así el botón de subir
+   SIEMPRE queda debajo de las miniaturas (nunca "flotando" al lado). */
+.varianteImagenesWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+/* Igual que .imagesGrid pero con miniaturas más chicas — vive dentro de una
+   .varianteCard ya compacta, minmax(110px) la desbordaba. */
+.varianteImagenesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 0.4rem;
+  max-width: 320px;
+}
+
+/* Bloque liviano de Modo Carrusel (modo rápido): una entrada por variante,
+   solo nombre + su grilla de imágenes — sin precio/stock/costo. */
+.varianteImagenesBloque {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border-light);
+}
+.varianteImagenesBloque:first-of-type { border-top: none; padding-top: 0.75rem; }
+.varianteImagenesNombre {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.4rem;
 }
 
 .imageThumb {

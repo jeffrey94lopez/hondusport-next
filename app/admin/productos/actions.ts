@@ -132,6 +132,7 @@ async function syncVariantes(
       stock: stockParaUpsert ?? null,
       costo: v.costo ?? null,
       precio_revendedor: v.precio_revendedor ?? null,
+      imagenes: v.imagenes ?? [],
       activo: v.activo,
       orden: i,
     }

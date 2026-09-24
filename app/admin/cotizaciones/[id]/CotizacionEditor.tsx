@@ -212,7 +212,7 @@ export default function CotizacionEditor({ cotizacion, documento, productos, cli
   function agregarProducto(producto: Producto, variante: ProductoVariante | null) {
     setLineas(prev => {
       const idx = prev.findIndex(l => l.producto_id === producto.id && l.variante_id === (variante?.id ?? null))
-      const variantes = toStoreVariantes(producto.precio, producto.producto_variantes ?? [])
+      const variantes = toStoreVariantes(producto.precio, producto.imagenes ?? [], producto.producto_variantes ?? [])
       const tope =
         (variante ? variantes.find(v => v.id === variante.id)?.stock : stockEfectivo(producto.stock, variantes)) ??
         Infinity
@@ -582,7 +582,7 @@ export default function CotizacionEditor({ cotizacion, documento, productos, cli
           ) : (
             <div className={styles.catalogoGrid}>
               {productosFiltrados.map(p => {
-                const variantes = toStoreVariantes(p.precio, p.producto_variantes ?? [])
+                const variantes = toStoreVariantes(p.precio, p.imagenes ?? [], p.producto_variantes ?? [])
                 const stock = stockEfectivo(p.stock, variantes)
                 const agotado = estaAgotado(p.stock, variantes)
                 const precios = preciosCatalogo(p, tipoCliente)

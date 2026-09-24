@@ -27,6 +27,6 @@ export function toStoreProducto(p: Producto): StoreProducto {
     ofertaFin: p.oferta_fin,
     personalizable: p.personalizable,
     createdAt: p.created_at,
-    variantes: toStoreVariantes(Number(p.precio), p.producto_variantes ?? []),
+    variantes: toStoreVariantes(Number(p.precio), (p.imagenes ?? []).filter(Boolean), p.producto_variantes ?? []),
   }
 }

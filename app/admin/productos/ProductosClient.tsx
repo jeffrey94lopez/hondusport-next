@@ -1,5 +1,5 @@
 'use client'
-import { useState, useTransition, useMemo } from 'react'
+import { Fragment, useState, useTransition, useMemo } from 'react'
 import Link from 'next/link'
 import Modal from '@/components/admin/Modal'
 import Toggle from '@/components/admin/Toggle'
@@ -7,7 +7,7 @@ import ProductoFields, { productoAForm } from '@/components/admin/ProductoFields
 import ImportarPlantilla from '@/components/admin/ImportarPlantilla'
 import type { Producto, Categoria, ProductoForm } from '@/types'
 import type { ImportError } from '@/lib/store/inventoryRoundtrip'
-import { stockEfectivo } from '@/lib/store/variantes'
+import { stockEfectivo, precioEfectivo } from '@/lib/store/variantes'
 import { formatPrice } from '@/lib/store/format'
 import {
   createProducto,
@@ -59,6 +59,7 @@ const CANAL_LABEL: Record<Producto['canal'], string> = {
 
 export default function ProductosClient({ productos, categorias, subcategorias }: Props) {
   const [search, setSearch] = useState('')
+  const [expandidos, setExpandidos] = useState<Set<string>>(new Set())
   const [modal, setModal] = useState<'create' | 'edit' | null>(null)
   const [editing, setEditing] = useState<Producto | null>(null)
   const [form, setForm] = useState<ProductoForm>(EMPTY_FORM)
@@ -139,6 +140,15 @@ export default function ProductosClient({ productos, categorias, subcategorias }
     obtenerHistorialCosto(p.id, varianteIds).then(({ producto, variantes }) => {
       setHistorialCosto(producto)
       setHistorialCostoVariantes(new Set(variantes))
+    })
+  }
+
+  function toggleExpandido(id: string) {
+    setExpandidos(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
     })
   }
 
@@ -230,6 +240,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
         <table className={styles.table}>
           <thead>
             <tr>
+              <th className={styles.expandCol}></th>
               <th>Img</th>
               <th>Nombre</th>
               <th>SKU</th>
@@ -246,8 +257,30 @@ export default function ProductosClient({ productos, categorias, subcategorias }
               const stockBajo = p.stock_minimo != null && stock != null && stock <= p.stock_minimo
               const stockLow = stock !== null && stock < 5
               const thumb = p.imagenes?.[0]
+              const variantes = p.producto_variantes ?? []
+              const tieneVariantes = variantes.length > 0
+              const abierto = expandidos.has(p.id)
               return (
-              <tr key={p.id} className={stockBajo ? styles.rowWarning : undefined}>
+              <Fragment key={p.id}>
+              <tr className={stockBajo ? styles.rowWarning : undefined}>
+                <td className={styles.expandCol}>
+                  {tieneVariantes && (
+                    <button
+                      type="button"
+                      className={`${styles.expandBtn} ${abierto ? styles.expandBtnOpen : ''}`}
+                      onClick={() => toggleExpandido(p.id)}
+                      aria-expanded={abierto}
+                      aria-label={abierto ? 'Ocultar variantes' : 'Ver variantes'}
+                    >
+                      {/* SVG propio, no fa-solid: el admin no carga Font Awesome
+                          (solo lo hace la tienda vía store-globals.css) — el
+                          ícono de fuente quedaba invisible. */}
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9 6l6 6-6 6" />
+                      </svg>
+                    </button>
+                  )}
+                </td>
                 <td className={styles.thumbCell}>
                   {thumb ? (
                     <img src={thumb} alt="" className={styles.thumb} />
@@ -302,6 +335,34 @@ export default function ProductosClient({ productos, categorias, subcategorias }
                   </div>
                 </td>
               </tr>
+              {abierto && variantes.map(v => {
+                const precioVar = precioEfectivo(p.precio, v.precio != null ? Number(v.precio) : null)
+                const thumbVar = v.imagenes?.[0]
+                return (
+                  <tr key={v.id} className={styles.varianteRow}>
+                    <td />
+                    <td className={styles.thumbCell}>
+                      {thumbVar ? (
+                        <img src={thumbVar} alt="" className={styles.thumb} />
+                      ) : (
+                        <div className={styles.thumbPlaceholder} />
+                      )}
+                    </td>
+                    <td className={styles.varianteNombreCell}>↳ {v.nombre}</td>
+                    <td className={styles.skuCell}>{v.sku ?? '—'}</td>
+                    <td>—</td>
+                    <td>
+                      <div className={styles.precio}>{formatPrice(precioVar)}</div>
+                    </td>
+                    <td>
+                      <span className={styles.stockBadge}>{v.stock ?? '∞'}</span>
+                    </td>
+                    <td>{v.activo ? 'Activa' : <span className={styles.productMeta}>Inactiva</span>}</td>
+                    <td />
+                  </tr>
+                )
+              })}
+              </Fragment>
               )
             })}
           </tbody>

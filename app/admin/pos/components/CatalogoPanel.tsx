@@ -156,7 +156,7 @@ export default function CatalogoPanel({ productos, categorias, tipoCliente, onAg
   const ancladosFiltrados = useMemo(() => anclados.filter(p => coincideBusqueda(p, busqueda)), [anclados, busqueda])
 
   function renderCard(p: Producto) {
-    const variantes = toStoreVariantes(p.precio, p.producto_variantes ?? [])
+    const variantes = toStoreVariantes(p.precio, p.imagenes ?? [], p.producto_variantes ?? [])
     const stock = stockEfectivo(p.stock, variantes)
     const agotado = estaAgotado(p.stock, variantes)
     const precios = preciosCatalogo(p, tipoCliente)

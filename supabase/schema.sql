@@ -104,6 +104,7 @@ create table if not exists producto_variantes (
   stock             integer check (stock is null or stock >= 0),
   costo             numeric check (costo is null or costo >= 0),
   precio_revendedor numeric check (precio_revendedor is null or precio_revendedor > 0),
+  imagenes          text[],  -- null/[] = hereda productos.imagenes (ver lib/store/variantes.ts)
   activo            boolean not null default true,
   orden             integer not null default 0,
   created_at        timestamptz default now(),

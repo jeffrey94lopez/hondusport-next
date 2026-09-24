@@ -93,7 +93,7 @@ function prod(overrides: Partial<Producto> = {}): Producto {
 function varianteBD(overrides: Partial<ProductoVariante> = {}): ProductoVariante {
   return {
     id: 'v1', producto_id: 'p1', nombre: 'M', sku: null, precio: null, stock: null,
-    costo: null, precio_revendedor: null,
+    costo: null, precio_revendedor: null, imagenes: null,
     activo: true, orden: 0, created_at: '', updated_at: '',
     ...overrides,
   }

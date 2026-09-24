@@ -44,7 +44,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
 
   const maxPriceLimit = useMemo(() => Math.max(DEFAULT_MAX_PRICE, ...productos.map(p => p.precio)), [productos])
   const ctx = useMemo(() => ({ categorias, maxPriceLimit }), [categorias, maxPriceLimit])
-  const { filters, toggle, setMaxPrice, clearOne, clearTipo, clearAll, activeCount } = useStoreFilters(ctx)
+  const { filters, toggle, setOnly, setMaxPrice, clearOne, clearTipo, clearAll, activeCount } = useStoreFilters(ctx)
 
   const [cartOpen, setCartOpen] = useState(false)
   const [wishlistOpen, setWishlistOpen] = useState(false)
@@ -72,16 +72,33 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
   }
 
   // StoreHeader/Footer envían '' o null para "todos" (limpiar); cualquier otro
-  // valor es una categoría real.
+  // valor es una categoría real. Categoría es de selección única: elegir una
+  // reemplaza la anterior (no se acumulan) y descarta las subcategorías ya
+  // elegidas, porque pertenecían a la categoría que se acaba de abandonar.
   function handleCatLink(valor: string | null) {
     if (!valor) {
       clearAll()
     } else {
-      toggle('cat', valor)
+      setOnly('cat', valor)
+      clearTipo('subcat')
     }
     // El listado de productos queda debajo del hero y las cards de categoría;
     // sin este scroll, elegir una categoría en el nav no muestra ningún cambio
     // visible si el usuario sigue arriba del todo en la página.
+    catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  // Elegir una subcategoría desde el menú "Categorías" del nav activa también
+  // su categoría padre. Si esa categoría no era ya la única activa, es un
+  // cambio de categoría: se reemplaza (selección única) y se descartan las
+  // subcategorías previas, que pertenecían a la categoría anterior.
+  function handleSubcatLink(catValor: string, subValor: string) {
+    const mismaCategoria = filters.cats.length === 1 && filters.cats[0] === catValor
+    if (!mismaCategoria) {
+      setOnly('cat', catValor)
+      clearTipo('subcat')
+    }
+    toggle('subcat', subValor)
     catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -122,8 +139,11 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
       <StoreHeader
         logoUrl={config.logo_url}
         categorias={catsNav}
+        subcategorias={subcats}
         activeCats={filters.cats}
+        activeSubcats={filters.subcats}
         onSelectCat={handleCatLink}
+        onSelectSubcat={handleSubcatLink}
         onOpenSearch={() => setSearchOpen(true)}
         onOpenCart={() => setCartOpen(true)}
         onOpenWishlist={() => setWishlistOpen(true)}
@@ -181,6 +201,7 @@ export default function StoreClient({ productos, categorias, banners, envios, cu
             isOpen={filterSidebarOpen}
             onClose={() => setFilterSidebarOpen(false)}
             onToggle={toggle}
+            onSelectCat={valor => handleCatLink(valor)}
             onMaxPrice={setMaxPrice}
             onClearAll={clearAll}
           />

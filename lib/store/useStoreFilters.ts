@@ -14,6 +14,7 @@ const FIELD: Record<FilterTipo, keyof Omit<FilterState, 'maxPrice'>> = {
 export interface UseStoreFilters {
   filters: FilterState
   toggle: (tipo: FilterTipo, valor: string) => void
+  setOnly: (tipo: FilterTipo, valor: string) => void
   setMaxPrice: (n: number) => void
   clearOne: (tipo: FilterTipo, valor: string) => void
   clearTipo: (tipo: FilterTipo) => void
@@ -60,6 +61,19 @@ export function useStoreFilters(ctx: FilterParamsCtx): UseStoreFilters {
     [write],
   )
 
+  // Selección única (radio, no checkbox): reemplaza el array por [valor], o lo
+  // vacía si ya era la única selección (permite "deseleccionar" con un segundo
+  // clic, ya que un <input type="radio"> nativo no dispara onChange en ese caso).
+  const setOnly = useCallback(
+    (tipo: FilterTipo, valor: string) => {
+      const field = FIELD[tipo]
+      const current = pendingRef.current[field]
+      const next = current.length === 1 && current[0] === valor ? [] : [valor]
+      write({ ...pendingRef.current, [field]: next })
+    },
+    [write],
+  )
+
   const clearOne = useCallback(
     (tipo: FilterTipo, valor: string) => {
       const field = FIELD[tipo]
@@ -84,5 +98,5 @@ export function useStoreFilters(ctx: FilterParamsCtx): UseStoreFilters {
     filters.cats.length + filters.subcats.length + filters.generos.length + filters.tallas.length +
     (filters.maxPrice < ctx.maxPriceLimit ? 1 : 0)
 
-  return { filters, toggle, setMaxPrice, clearOne, clearTipo, clearAll, activeCount }
+  return { filters, toggle, setOnly, setMaxPrice, clearOne, clearTipo, clearAll, activeCount }
 }

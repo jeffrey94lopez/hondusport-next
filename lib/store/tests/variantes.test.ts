@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { precioEfectivo, toStoreVariantes, stockEfectivo, estaAgotado, precioDesde, validarCompra, traducirErrorPedido } from '../variantes'
+import { precioEfectivo, imagenesEfectivas, toStoreVariantes, stockEfectivo, estaAgotado, precioDesde, validarCompra, traducirErrorPedido } from '../variantes'
 import type { ProductoVariante } from '@/types'
 
 function variante(over: Partial<ProductoVariante>): ProductoVariante {
   return {
     id: 'v1', producto_id: 'p1', nombre: 'M', sku: null, precio: null,
-    stock: null, costo: null, precio_revendedor: null, activo: true, orden: 0, created_at: '', updated_at: '', ...over,
+    stock: null, costo: null, precio_revendedor: null, imagenes: null, activo: true, orden: 0, created_at: '', updated_at: '', ...over,
   }
 }
 
@@ -14,9 +14,20 @@ describe('precioEfectivo', () => {
   it('hereda el del padre si es null', () => expect(precioEfectivo(100, null)).toBe(100))
 })
 
+describe('imagenesEfectivas', () => {
+  const padre = ['padre1.jpg', 'padre2.jpg']
+  it('usa las propias de la variante si no está vacío', () => {
+    expect(imagenesEfectivas(padre, ['v1.jpg'])).toEqual(['v1.jpg'])
+  })
+  it('hereda las del padre si la variante viene null', () => expect(imagenesEfectivas(padre, null)).toEqual(padre))
+  it('hereda las del padre si la variante viene undefined', () => expect(imagenesEfectivas(padre, undefined)).toEqual(padre))
+  it('hereda las del padre si la variante viene vacía', () => expect(imagenesEfectivas(padre, [])).toEqual(padre))
+  it('el padre sin imágenes propias se queda vacío', () => expect(imagenesEfectivas([], null)).toEqual([]))
+})
+
 describe('toStoreVariantes', () => {
   it('excluye inactivas y ordena por orden y nombre', () => {
-    const out = toStoreVariantes(100, [
+    const out = toStoreVariantes(100, [], [
       variante({ id: 'b', nombre: 'B', orden: 1 }),
       variante({ id: 'x', nombre: 'X', activo: false }),
       variante({ id: 'a', nombre: 'A', orden: 0 }),
@@ -25,12 +36,20 @@ describe('toStoreVariantes', () => {
     expect(out.map(v => v.id)).toEqual(['a', 'b', 'a2'])
   })
   it('calcula precioEfectivo y agotada', () => {
-    const out = toStoreVariantes(100, [
+    const out = toStoreVariantes(100, [], [
       variante({ id: 'v1', precio: 150, stock: 0 }),
       variante({ id: 'v2', precio: null, stock: null }),
     ])
     expect(out[0]).toMatchObject({ precioEfectivo: 150, agotada: true })
     expect(out[1]).toMatchObject({ precioEfectivo: 100, agotada: false })
+  })
+  it('hereda las imágenes del producto cuando la variante no tiene propias', () => {
+    const out = toStoreVariantes(100, ['padre.jpg'], [variante({ id: 'v1', imagenes: null })])
+    expect(out[0].imagenes).toEqual(['padre.jpg'])
+  })
+  it('usa las imágenes propias de la variante cuando las tiene', () => {
+    const out = toStoreVariantes(100, ['padre.jpg'], [variante({ id: 'v1', imagenes: ['propia.jpg'] })])
+    expect(out[0].imagenes).toEqual(['propia.jpg'])
   })
 })
 

@@ -123,6 +123,7 @@ export interface ProductoVariante {
   stock: number | null    // null = ilimitado
   costo: number | null    // null = hereda producto.costo
   precio_revendedor: number | null  // null = hereda producto.precio_revendedor
+  imagenes: string[] | null  // null/[] = hereda productos.imagenes (ver lib/store/variantes.ts:imagenesEfectivas)
   activo: boolean
   orden: number
   created_at: string
@@ -137,6 +138,7 @@ export interface VarianteForm {
   stock: number | null
   costo: number | null
   precio_revendedor: number | null
+  imagenes: string[]
   activo: boolean
   // Costo de la entrada cuando `stock` sube respecto al valor guardado en BD
   // (kardexable vía registrar_entrada). No se persiste como campo propio.

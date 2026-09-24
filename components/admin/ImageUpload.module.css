@@ -49,4 +49,27 @@
 .uploadBtn:hover, .changeBtn:hover { border-color: var(--accent); color: var(--accent); }
 .uploading { opacity: 0.6; cursor: not-allowed; }
 
+/* compact=true: pill chica y simple, no la caja punteada grande — pensada
+   para repetirse una vez por variante sin alargar el formulario. */
+.wrapCompact { display: block; }
+.uploadBtnCompact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  /* Fondo relleno + texto oscuro a propósito: el borde solo (transparente)
+     se perdía visualmente debajo de las miniaturas ya subidas. */
+  background: var(--bg-hover);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-tag);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.12s;
+  width: auto;
+}
+.uploadBtnCompact:hover { border-color: var(--accent); color: var(--accent); background: var(--bg-card); }
+
 .error { font-size: 0.78rem; color: var(--danger); }

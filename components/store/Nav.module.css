@@ -44,15 +44,12 @@
   list-style: none;
   align-items: center;
   flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  /* Ya no hay overflow-x:auto: con "TODOS" + "CATEGORÍAS" (2 ítems fijos) no
+     hace falta scroll, y un overflow-x no-visible aquí recorta el panel
+     desplegable de .catsMenuPanel aunque sea position:absolute con z-index
+     alto (el ancestro con overflow sigue clipeando). */
   margin: 0;
   padding: 0;
-}
-
-.navLinks::-webkit-scrollbar {
-  display: none;
 }
 
 .navCatBtn {
@@ -80,6 +77,136 @@
   opacity: 1;
   color: var(--primary);
   border-bottom-color: var(--primary);
+}
+
+.catsMenuWrapper {
+  position: relative;
+}
+
+.catsMenuChevron {
+  font-size: 0.6rem;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+.catsMenuChevronOpen {
+  transform: rotate(180deg);
+}
+
+.catsMenuBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+}
+
+.catsMenuPanel {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  z-index: 1002;
+  display: flex;
+  min-width: 420px;
+  max-width: 90vw;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+
+.catsMenuList {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 8px;
+  border-right: 1px solid var(--border);
+}
+
+.catsMenuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-btn);
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  opacity: 0.7;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.catsMenuItem i {
+  font-size: 0.65rem;
+  opacity: 0.5;
+}
+
+.catsMenuItem:hover,
+.catsMenuItemActive {
+  opacity: 1;
+  background: var(--hover-input);
+  color: var(--primary);
+}
+
+.catsMenuItemSelected {
+  opacity: 1;
+  color: var(--primary);
+}
+
+.catsMenuSubpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  min-width: 200px;
+  /* "Desliza" al cambiar de categoría: cada vez que expandedCatId cambia,
+     React remonta este bloque (key distinta) y la animación vuelve a correr. */
+  animation: catsSubpanelSlideIn 0.18s ease;
+}
+
+@keyframes catsSubpanelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.catsMenuSubItem {
+  background: none;
+  border: none;
+  border-radius: var(--radius-btn);
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.7;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.catsMenuSubItem:hover {
+  opacity: 1;
+  background: var(--hover-input);
+  color: var(--primary);
+}
+
+.catsMenuSubEmpty {
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  opacity: 0.5;
 }
 
 .searchContainer {

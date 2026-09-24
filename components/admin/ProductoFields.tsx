@@ -41,6 +41,7 @@ export function productoAForm(p: Producto): ProductoForm {
         stock: v.stock,
         costo: v.costo,
         precio_revendedor: v.precio_revendedor,
+        imagenes: v.imagenes ?? [],
         activo: v.activo,
         costoEntrada: null,
       })),
@@ -162,10 +163,49 @@ export default function ProductoFields({
   const setVariante = (i: number, patch: Partial<VarianteForm>) =>
     setForm(prev => ({ ...prev, variantes: prev.variantes.map((v, idx) => (idx === i ? { ...v, ...patch } : v)) }))
 
+  // Compartido entre la card completa de variante (bloqueVariantes, modo
+  // completo) y bloqueImagenesVariantes (modo rápido, ver abajo): mismo
+  // patrón visual que la galería del producto, sin las demás columnas
+  // (precio/stock/costo) que solo tienen sentido en el form completo.
+  function varianteImagenesGrid(v: VarianteForm, i: number) {
+    const imagenes = v.imagenes ?? []
+    return (
+      <div className={styles.varianteImagenesWrap}>
+        {/* El botón va SIEMPRE primero, justo después del título — posición
+            fija sin importar si ya hay 0 o 5 imágenes. Antes vivía después
+            de la grilla y "saltaba" hacia abajo en cuanto se subía la primera
+            imagen, dando la sensación de que el botón se perdía/movía. */}
+        <ImageUpload
+          bucket="productos"
+          value=""
+          label=""
+          compact
+          onChange={url => url && setVariante(i, { imagenes: [...imagenes, url] })}
+        />
+        {imagenes.length > 0 && (
+          <div className={styles.varianteImagenesGrid}>
+            {imagenes.map((url, idx) => (
+              <div key={url} className={styles.imageThumb}>
+                <img src={url} alt={`Imagen ${idx + 1} de ${v.nombre || 'la variante'}`} />
+                <button
+                  type="button"
+                  className={styles.imageRemove}
+                  onClick={() => setVariante(i, { imagenes: imagenes.filter((_, j) => j !== idx) })}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const agregarVariante = () =>
     setForm(prev => ({
       ...prev,
-      variantes: [...prev.variantes, { nombre: '', sku: '', precio: null, stock: null, costo: null, precio_revendedor: null, activo: true, costoEntrada: null }],
+      variantes: [...prev.variantes, { nombre: '', sku: '', precio: null, stock: null, costo: null, precio_revendedor: null, imagenes: [], activo: true, costoEntrada: null }],
     }))
 
   // Stock base de cada variante existente (BD), para saber si su stock subió
@@ -556,6 +596,10 @@ export default function ProductoFields({
               />
             </label>
           </div>
+          <label className={styles.varianteField}>
+            Imágenes propias (vacío = usa las del producto)
+            {varianteImagenesGrid(v, i)}
+          </label>
           <div className={styles.varianteFooter}>
             <label className={styles.varianteActiva}>
               <input
@@ -601,6 +645,24 @@ export default function ProductoFields({
           onChange={url => url && setForm(p => ({ ...p, imagenes: [...p.imagenes, url] }))}
         />
       </div>
+    </div>
+  )
+
+  // Antes, para subirle foto a una variante había que abrir "Ver más campos"
+  // (modo completo) y toparse con precio/stock/costo/etc. de TODAS las
+  // variantes — en Modo Carrusel (revisión rápida producto por producto) eso
+  // era mucho de más solo para poner una foto. Este bloque solo se ve en modo
+  // RÁPIDO (!completo): en modo completo la imagen ya está dentro de cada
+  // card de bloqueVariantes, mostrarlo aquí también duplicaría el uploader.
+  const bloqueImagenesVariantes = !completo && form.variantes.length > 0 && (
+    <div className={styles.formLabel}>
+      <span className={styles.imagenesVariantesTitulo}>Imágenes por variante</span>
+      {form.variantes.map((v, i) => (
+        <div key={v.id ?? `nueva-${i}`} className={styles.varianteImagenesBloque}>
+          <span className={styles.varianteImagenesNombre}>{v.nombre || `Variante ${i + 1}`}</span>
+          {varianteImagenesGrid(v, i)}
+        </div>
+      ))}
     </div>
   )
 
@@ -673,6 +735,7 @@ export default function ProductoFields({
       {bloqueColores}
       {bloqueVariantes}
       {bloqueImagenes}
+      {bloqueImagenesVariantes}
       {bloqueDescripcion}
       {bloqueToggles}
     </>

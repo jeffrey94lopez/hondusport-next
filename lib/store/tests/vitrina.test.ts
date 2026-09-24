@@ -42,11 +42,11 @@ describe('ordenarVitrina — reparto en bandas', () => {
     const productos = [
       prod({
         id: 'todasAgotadas', stock: null, variantes: [
-          { id: 'v1', nombre: 'M', precio: null, precioEfectivo: 500, stock: 0, agotada: true },
+          { id: 'v1', nombre: 'M', precio: null, precioEfectivo: 500, stock: 0, agotada: true, imagenes: [] },
         ],
       }),
       prod({ id: 'conStock', stock: null, variantes: [
-        { id: 'v2', nombre: 'L', precio: null, precioEfectivo: 500, stock: 4, agotada: false },
+        { id: 'v2', nombre: 'L', precio: null, precioEfectivo: 500, stock: 4, agotada: false, imagenes: [] },
       ] }),
     ]
     expect(ids(ordenarVitrina(productos, {}, AHORA))).toEqual(['conStock', 'todasAgotadas'])

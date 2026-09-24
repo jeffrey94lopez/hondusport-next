@@ -159,8 +159,8 @@ describe('ProductCard — un producto agotado no se puede agregar', () => {
       ...producto,
       stock: null,
       variantes: [
-        { id: 'v1', nombre: 'M', precio: null, precioEfectivo: 500, stock: 0, agotada: true },
-        { id: 'v2', nombre: 'L', precio: null, precioEfectivo: 500, stock: 0, agotada: true },
+        { id: 'v1', nombre: 'M', precio: null, precioEfectivo: 500, stock: 0, agotada: true, imagenes: [] },
+        { id: 'v2', nombre: 'L', precio: null, precioEfectivo: 500, stock: 0, agotada: true, imagenes: [] },
       ],
     }
     const { getByLabelText } = renderCard(() => { llamadas++; return true }, [], conVariantesAgotadas)

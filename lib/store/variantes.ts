@@ -5,7 +5,15 @@ export function precioEfectivo(precioPadre: number, precioVariante: number | nul
   return precioVariante ?? precioPadre
 }
 
-export function toStoreVariantes(precioPadre: number, hijas: ProductoVariante[]): StoreVariante[] {
+// A diferencia de precio/stock (donde `null` marca "sin propio, heredar"),
+// un array no tiene un `null` natural en JSON/JSONB una vez pasa por Postgres
+// — el sentinela de "sin imágenes propias" es el array vacío. Reemplaza del
+// todo (no mezcla) las imágenes del padre cuando la variante trae las suyas.
+export function imagenesEfectivas(imagenesPadre: string[], imagenesVariante: string[] | null | undefined): string[] {
+  return imagenesVariante && imagenesVariante.length > 0 ? imagenesVariante : imagenesPadre
+}
+
+export function toStoreVariantes(precioPadre: number, imagenesPadre: string[], hijas: ProductoVariante[]): StoreVariante[] {
   return hijas
     .filter(v => v.activo)
     .sort((a, b) => a.orden - b.orden)
@@ -16,6 +24,7 @@ export function toStoreVariantes(precioPadre: number, hijas: ProductoVariante[])
       precioEfectivo: precioEfectivo(precioPadre, v.precio != null ? Number(v.precio) : null),
       stock: v.stock,
       agotada: v.stock === 0,
+      imagenes: imagenesEfectivas(imagenesPadre, v.imagenes),
     }))
 }
 

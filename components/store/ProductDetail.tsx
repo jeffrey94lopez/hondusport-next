@@ -100,6 +100,9 @@ export default function ProductDetail({
   }
 
   const selectedVariante = variantes.find(v => v.id === selectedVarianteId) ?? null
+  // Ya resuelto por toStoreVariantes (imagenesEfectivas): si la variante no
+  // tiene fotos propias, esto ya es producto.imagenes — nunca queda vacío.
+  const imagenesActuales = selectedVariante?.imagenes ?? producto.imagenes
   const precioActual = selectedVariante?.precioEfectivo ?? producto.precio
   // `estaAgotado` (la misma pura que usan ProductCard, el catálogo del POS y
   // el editor de cotización) en vez de `conVariantes && todas agotadas`: esa
@@ -222,7 +225,7 @@ export default function ProductDetail({
             {producto.badge === 'Nuevo' && <span className={styles.newTag}>Nuevo</span>}
             <div className={styles.zoomContainer} onMouseMove={handleZoomMove} onMouseLeave={handleZoomLeave}>
               <ProductImage
-                src={producto.imagenes[selectedImageIdx]}
+                src={imagenesActuales[selectedImageIdx] ?? imagenesActuales[0]}
                 alt={producto.nombre}
                 fill
                 sizes="(max-width: 899px) 100vw, 600px"
@@ -230,9 +233,9 @@ export default function ProductDetail({
               />
             </div>
           </div>
-          {producto.imagenes.length > 1 && (
+          {imagenesActuales.length > 1 && (
             <div className={styles.thumbRow}>
-              {producto.imagenes.map((img, i) => (
+              {imagenesActuales.map((img, i) => (
                 <button
                   key={img}
                   type="button"
@@ -269,7 +272,13 @@ export default function ProductDetail({
                 id="variante-select"
                 className={styles.varianteSelect}
                 value={selectedVarianteId}
-                onChange={e => setSelectedVarianteId(e.target.value)}
+                onChange={e => {
+                  setSelectedVarianteId(e.target.value)
+                  // La variante nueva puede tener menos imágenes (o ninguna
+                  // propia, y volver a heredar las del producto) — el índice
+                  // de la variante anterior ya no tiene por qué existir.
+                  setSelectedImageIdx(0)
+                }}
               >
                 {selectedVarianteId === '' && <option value="">Selecciona…</option>}
                 {variantes.map(v => (

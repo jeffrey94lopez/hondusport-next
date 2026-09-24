@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import styles from './FilterSidebar.module.css'
 import { formatPrice } from '@/lib/store/format'
 import { useEscapeKey } from '@/hooks/useEscapeKey'
@@ -9,6 +10,8 @@ import type { Categoria } from '@/types/store'
 const PRICE_MIN = 500
 const PRICE_STEP = 100
 
+type SeccionId = 'precio' | 'genero' | 'categoria' | 'subcategoria' | 'talla'
+
 interface FilterSidebarProps {
   categorias: Categoria[]
   filters: FilterState
@@ -16,8 +19,49 @@ interface FilterSidebarProps {
   isOpen?: boolean
   onClose?: () => void
   onToggle: (tipo: FilterTipo, valor: string) => void
+  onSelectCat: (valor: string) => void
   onMaxPrice: (n: number) => void
   onClearAll: () => void
+}
+
+// Sección contraíble estilo Amazon: encabezado clickeable con flecha que
+// expande/colapsa el contenido con una transición suave (grid-template-rows
+// 0fr->1fr, en vez de mostrar/ocultar de golpe). Precio y Categoría son fijas
+// (collapsible=false): siempre visibles, sin botón ni flecha, porque son el
+// filtro principal y no tiene sentido tener que reabrirlas cada vez.
+function FilterSection({
+  title,
+  open,
+  onToggle,
+  collapsible = true,
+  children,
+}: {
+  title: React.ReactNode
+  open: boolean
+  onToggle: () => void
+  collapsible?: boolean
+  children: React.ReactNode
+}) {
+  if (!collapsible) {
+    return (
+      <div className={styles.filterGroup}>
+        <h4 className={styles.filterGroupTitleFija}>{title}</h4>
+        {children}
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.filterGroup}>
+      <button type="button" className={styles.filterGroupHeader} onClick={onToggle} aria-expanded={open}>
+        <h4>{title}</h4>
+        <i className={`fa-solid fa-chevron-down ${styles.chevron} ${open ? styles.chevronOpen : ''}`} />
+      </button>
+      <div className={`${styles.filterGroupBody} ${open ? styles.filterGroupBodyOpen : ''}`}>
+        <div className={styles.filterGroupBodyContent}>{children}</div>
+      </div>
+    </div>
+  )
 }
 
 export default function FilterSidebar({
@@ -27,10 +71,22 @@ export default function FilterSidebar({
   isOpen,
   onClose,
   onToggle,
+  onSelectCat,
   onMaxPrice,
   onClearAll,
 }: FilterSidebarProps) {
   useEscapeKey(isOpen ?? false, () => onClose?.())
+
+  // Precio y Categoría son fijas (no colapsables, ver FilterSection). Las
+  // demás arrancan contraídas para que el panel se vea corto de entrada.
+  const [seccionesAbiertas, setSeccionesAbiertas] = useState<Record<SeccionId, boolean>>({
+    precio: true,
+    genero: false,
+    categoria: true,
+    subcategoria: false,
+    talla: false,
+  })
+  const toggleSeccion = (id: SeccionId) => setSeccionesAbiertas(prev => ({ ...prev, [id]: !prev[id] }))
 
   const generoFiltros = categorias.filter(c => c.tipo === 'genero')
   const catFiltros = categorias.filter(c => c.tipo === 'cat')
@@ -52,9 +108,25 @@ export default function FilterSidebar({
         ✕
       </button>
 
+      <FilterSection
+        title={<>PRECIO MÁXIMO: <span>{formatPrice(filters.maxPrice)}</span></>}
+        open={seccionesAbiertas.precio}
+        onToggle={() => toggleSeccion('precio')}
+        collapsible={false}
+      >
+        <input
+          type="range"
+          className={styles.priceRange}
+          min={PRICE_MIN}
+          max={maxPriceLimit}
+          step={PRICE_STEP}
+          value={filters.maxPrice}
+          onChange={e => onMaxPrice(Number(e.target.value))}
+        />
+      </FilterSection>
+
       {generoFiltros.length > 0 && (
-        <div className={styles.filterGroup}>
-          <h4>GÉNERO</h4>
+        <FilterSection title="GÉNERO" open={seccionesAbiertas.genero} onToggle={() => toggleSeccion('genero')}>
           {generoFiltros.map(f => (
             <label key={f.id} className={styles.checkLabel}>
               <input
@@ -66,46 +138,28 @@ export default function FilterSidebar({
               {f.valor}
             </label>
           ))}
-        </div>
+        </FilterSection>
       )}
 
       {catFiltros.length > 0 && (
-        <div className={styles.filterGroup}>
-          <h4>CATEGORÍA</h4>
+        <FilterSection title="CATEGORÍA" open={seccionesAbiertas.categoria} onToggle={() => toggleSeccion('categoria')} collapsible={false}>
           {catFiltros.map(f => (
             <label key={f.id} className={styles.checkLabel}>
               <input
-                type="checkbox"
+                type="radio"
+                name="filtro-categoria"
                 className={styles.filterCheck}
                 checked={filters.cats.includes(f.valor)}
-                onChange={() => onToggle('cat', f.valor)}
+                onChange={() => onSelectCat(f.valor)}
               />
               {f.valor}
             </label>
           ))}
-        </div>
-      )}
-
-      {tallaFiltros.length > 0 && (
-        <div className={styles.filterGroup}>
-          <h4>TALLA</h4>
-          <div className={styles.tallaBtnGroup}>
-            {tallaFiltros.map(f => (
-              <button
-                key={f.id}
-                className={`${styles.tallaBtn} ${filters.tallas.includes(f.valor) ? styles.tallaBtnActive : ''}`}
-                onClick={() => onToggle('talla', f.valor)}
-              >
-                {f.valor}
-              </button>
-            ))}
-          </div>
-        </div>
+        </FilterSection>
       )}
 
       {subcatFiltros.length > 0 && (
-        <div className={styles.filterGroup}>
-          <h4>SUBCATEGORÍA</h4>
+        <FilterSection title="SUBCATEGORÍA" open={seccionesAbiertas.subcategoria} onToggle={() => toggleSeccion('subcategoria')}>
           <div className={styles.tallaBtnGroup}>
             {subcatFiltros.map(f => (
               <button
@@ -117,23 +171,24 @@ export default function FilterSidebar({
               </button>
             ))}
           </div>
-        </div>
+        </FilterSection>
       )}
 
-      <div className={styles.filterGroup}>
-        <h4>
-          PRECIO MÁXIMO: <span>{formatPrice(filters.maxPrice)}</span>
-        </h4>
-        <input
-          type="range"
-          className={styles.priceRange}
-          min={PRICE_MIN}
-          max={maxPriceLimit}
-          step={PRICE_STEP}
-          value={filters.maxPrice}
-          onChange={e => onMaxPrice(Number(e.target.value))}
-        />
-      </div>
+      {tallaFiltros.length > 0 && (
+        <FilterSection title="TALLA" open={seccionesAbiertas.talla} onToggle={() => toggleSeccion('talla')}>
+          <div className={styles.tallaBtnGroup}>
+            {tallaFiltros.map(f => (
+              <button
+                key={f.id}
+                className={`${styles.tallaBtn} ${filters.tallas.includes(f.valor) ? styles.tallaBtnActive : ''}`}
+                onClick={() => onToggle('talla', f.valor)}
+              >
+                {f.valor}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
+      )}
 
       <button className={styles.clearBtn} onClick={onClearAll}>
         <i className="fa-solid fa-trash-can" /> LIMPIAR FILTROS

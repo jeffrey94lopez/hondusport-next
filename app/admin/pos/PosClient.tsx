@@ -349,7 +349,7 @@ export default function PosClient({
   function agregarProducto(producto: Producto, variante: ProductoVariante | null) {
     setLineas(prev => {
       const idx = prev.findIndex(l => l.producto_id === producto.id && l.variante_id === (variante?.id ?? null))
-      const variantes = toStoreVariantes(producto.precio, producto.producto_variantes ?? [])
+      const variantes = toStoreVariantes(producto.precio, producto.imagenes ?? [], producto.producto_variantes ?? [])
       const tope = (variante ? variantes.find(v => v.id === variante.id)?.stock : stockEfectivo(producto.stock, variantes)) ?? Infinity
       if (idx === -1) {
         if (tope <= 0) return prev

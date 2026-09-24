@@ -8,9 +8,13 @@ interface Props {
   value: string
   onChange: (url: string) => void
   label?: string
+  // Botón chico y simple (pill, sin la caja punteada grande) — para
+  // contextos donde se repite muchas veces (ej. una fila por variante) y la
+  // caja grande de siempre alargaba demasiado el formulario.
+  compact?: boolean
 }
 
-export default function ImageUpload({ bucket, value, onChange, label = 'Imagen' }: Props) {
+export default function ImageUpload({ bucket, value, onChange, label = 'Imagen', compact = false }: Props) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
@@ -37,8 +41,8 @@ export default function ImageUpload({ bucket, value, onChange, label = 'Imagen' 
   }
 
   return (
-    <div className={styles.wrap}>
-      <span className={styles.labelText}>{label}</span>
+    <div className={compact ? styles.wrapCompact : styles.wrap}>
+      {label && <span className={styles.labelText}>{label}</span>}
       {value && (
         <div className={styles.preview}>
           <img src={value} alt="preview" className={styles.previewImg} />
@@ -52,8 +56,8 @@ export default function ImageUpload({ bucket, value, onChange, label = 'Imagen' 
         </div>
       )}
       {!value && (
-        <label className={`${styles.uploadBtn} ${uploading ? styles.uploading : ''}`}>
-          {uploading ? 'Subiendo…' : '+ Subir imagen'}
+        <label className={`${compact ? styles.uploadBtnCompact : styles.uploadBtn} ${uploading ? styles.uploading : ''}`}>
+          {uploading ? 'Subiendo…' : compact ? '+ Subir' : '+ Subir imagen'}
           <input
             type="file"
             accept="image/*"

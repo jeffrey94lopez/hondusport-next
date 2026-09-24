@@ -7,6 +7,9 @@ export interface StoreVariante {
   precioEfectivo: number
   stock: number | null
   agotada: boolean
+  // Ya resuelto (ver lib/store/variantes.ts:imagenesEfectivas): propias si
+  // las tiene, si no las del producto — nunca vacío si el producto tiene fotos.
+  imagenes: string[]
 }
 
 export interface StoreProducto {

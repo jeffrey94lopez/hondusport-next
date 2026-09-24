@@ -33,6 +33,13 @@
      es una fila horizontal con scroll nativo (fluido, con inercia táctil) y
      snap por tarjeta, igual al patrón ya usado en CategoryBar.module.css. */
   display: flex;
+  /* "safe center": centra cuando todas las cards caben sin overflow; en
+     cuanto no caben (muchas categorías) se comporta como flex-start, para no
+     esconder las primeras tarjetas fuera del área alcanzable por scroll (bug
+     clásico de centrar contenido con overflow-x). Si el navegador no
+     entiende "safe", ignora la declaración completa y queda como estaba
+     (flex-start) — no hay regresión posible. */
+  justify-content: safe center;
   gap: 0.4rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;

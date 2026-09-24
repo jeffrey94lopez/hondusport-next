@@ -46,7 +46,7 @@ export function topeStock(linea: LineaVenta, productosPorId: Map<string, Product
   if (!linea.producto_id) return null
   const producto = productosPorId.get(linea.producto_id)
   if (!producto) return null
-  const variantes = toStoreVariantes(producto.precio, producto.producto_variantes ?? [])
+  const variantes = toStoreVariantes(producto.precio, producto.imagenes ?? [], producto.producto_variantes ?? [])
   if (linea.variante_id) return variantes.find(v => v.id === linea.variante_id)?.stock ?? null
   return stockEfectivo(producto.stock, variantes)
 }
