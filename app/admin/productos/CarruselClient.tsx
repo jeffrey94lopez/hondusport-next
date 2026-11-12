@@ -12,9 +12,10 @@ interface Props {
   productos: Producto[]
   categorias: { id: string; valor: string }[]
   subcategorias: Pick<Categoria, 'id' | 'valor' | 'categorias_padre'>[]
+  temporadas: { id: string; valor: string; orden: number }[]
 }
 
-export default function CarruselClient({ productos, categorias, subcategorias }: Props) {
+export default function CarruselClient({ productos, categorias, subcategorias, temporadas }: Props) {
   const [criterios, setCriterios] = useState<CriteriosInventario>({})
   const [catId, setCatId] = useState('')
   const [genero, setGenero] = useState('')
@@ -185,6 +186,7 @@ export default function CarruselClient({ productos, categorias, subcategorias }:
           setForm={setFormDirty}
           categorias={categorias}
           subcategorias={subcategorias}
+          temporadas={temporadas}
           modo={modoCampos}
           producto={actual}
           historialCosto={historialCosto}

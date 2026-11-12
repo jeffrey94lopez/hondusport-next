@@ -22,6 +22,7 @@ interface Props {
   productos: Producto[]
   categorias: { id: string; valor: string }[]
   subcategorias: Pick<Categoria, 'id' | 'valor' | 'categorias_padre'>[]
+  temporadas: { id: string; valor: string; orden: number }[]
 }
 
 const EMPTY_FORM: ProductoForm = {
@@ -57,7 +58,7 @@ const CANAL_LABEL: Record<Producto['canal'], string> = {
   ambas: 'Ambas',
 }
 
-export default function ProductosClient({ productos, categorias, subcategorias }: Props) {
+export default function ProductosClient({ productos, categorias, subcategorias, temporadas }: Props) {
   const [search, setSearch] = useState('')
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set())
   const [modal, setModal] = useState<'create' | 'edit' | null>(null)
@@ -386,6 +387,7 @@ export default function ProductosClient({ productos, categorias, subcategorias }
               setForm={setForm}
               categorias={categorias}
               subcategorias={subcategorias}
+              temporadas={temporadas}
               modo="completo"
               producto={editing}
               historialCosto={historialCosto}
