@@ -216,6 +216,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.tallaGroup:last-child {
+  margin-bottom: 0;
 }
 
 .tallaChip {
