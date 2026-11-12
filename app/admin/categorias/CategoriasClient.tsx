@@ -6,13 +6,14 @@ import type { Categoria } from '@/types'
 import { createCategoria, updateCategoria, deleteCategoria } from './actions'
 import styles from './categorias.module.css'
 
-const TIPOS = ['cat', 'subcat', 'talla', 'genero'] as const
+const TIPOS = ['cat', 'subcat', 'talla', 'genero', 'temporada'] as const
 type TipoTab = typeof TIPOS[number]
 const TIPO_LABEL: Record<TipoTab, string> = {
   cat: 'Categorías',
   subcat: 'Subcategorías',
   talla: 'Tallas',
   genero: 'Géneros',
+  temporada: 'Temporadas',
 }
 
 interface Props { categorias: Categoria[] }

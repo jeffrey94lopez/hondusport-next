@@ -5,7 +5,7 @@ import type { ActionResult } from '@/types'
 import { slugify, uniqueSlug } from '@/lib/store/slug'
 
 interface CategoriaForm {
-  tipo: 'cat' | 'subcat' | 'talla' | 'genero'
+  tipo: 'cat' | 'subcat' | 'talla' | 'genero' | 'temporada'
   valor: string
   slug: string
   imagen: string
