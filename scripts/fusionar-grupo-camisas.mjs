@@ -3,14 +3,16 @@
 // docs/superpowers/specs/2026-11-11-camisas-temporada-version-design.md,
 // decisión 7: el dueño aprueba cada grupo antes de tocar producción).
 //
-// ⚠️  NUNCA correr sin --dry-run contra un grupo que el dueño no haya
-//     aprobado explícitamente (survivor, nombre final, y a qué temporada
-//     pertenece cada perdedor). Correr primero SIEMPRE con --dry-run y
-//     revisar la salida antes de quitar la bandera.
+// ⚠️  El script es dry-run POR DEFECTO: sin flags nunca muta producción,
+//     solo imprime lo que haría. La fusión real de un grupo que el dueño no
+//     haya aprobado explícitamente (survivor, nombre final, y a qué
+//     temporada pertenece cada perdedor) requiere pasar --execute a
+//     propósito. Correr primero SIEMPRE sin --execute y revisar la salida
+//     antes de agregar la bandera.
 //
 // Uso:
-//   node scripts/fusionar-grupo-camisas.mjs --dry-run   (recomendado siempre primero)
-//   node scripts/fusionar-grupo-camisas.mjs             (ejecución real, solo tras aprobar el dry-run)
+//   node scripts/fusionar-grupo-camisas.mjs             (dry-run, seguro — default)
+//   node scripts/fusionar-grupo-camisas.mjs --execute    (ejecución real, solo tras aprobar el dry-run)
 //
 // Edita la constante GRUPO de abajo con los datos del grupo aprobado antes de
 // correr (mismo patrón que scripts/import-productos.mjs: constantes al inicio
@@ -30,7 +32,11 @@ const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY
 const headers = { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` }
 
-const DRY_RUN = process.argv.includes('--dry-run')
+// Dry-run-por-defecto: solo --execute habilita mutaciones reales (el
+// script más destructivo de todo el plan no debía quedar "vivo por
+// defecto" — ver revisión de Task 9).
+const EXECUTE = process.argv.includes('--execute')
+const DRY_RUN = !EXECUTE
 
 // ─────────────────────────────────────────────────────────────────────────
 // GRUPO: el único dato que cambia entre corridas. Reemplazar con los valores
@@ -201,6 +207,14 @@ async function migrarStockDelSobreviviente(survivor, survivorTemporadaId, stockP
         temporada_id: survivorTemporadaId,
         activo: true,
       })
+    }
+    if (survivor.stock != null) {
+      // Mismo cierre que el lado del perdedor (ver migrarLoser): el stock
+      // plano ya quedó repartido en las filas de producto_variantes de
+      // arriba (alta inicial, sin kardex); dejar productos.stock con el
+      // valor viejo sería un dato muerto para cualquier lectura que no pase
+      // por stockEfectivo().
+      await patch('productos', survivor.id, { stock: 0 })
     }
   } else {
     // Ya tiene producto_variantes sin los ejes nuevos: solo se les marca
