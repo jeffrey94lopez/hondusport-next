@@ -53,7 +53,7 @@ export default async function ProductoFichaPage({ params }: Props) {
   // `.limit()` explícito en cada consulta: sin él, PostgREST trunca en
   // silencio. La ficha es un resumen, así que se acota a lo reciente y se
   // enlaza a la pantalla completa (kardex) en vez de mostrar todo.
-  const [variantes, movimientos, ventasRaw, categorias, subcategorias] = await Promise.all([
+  const [variantes, movimientos, ventasRaw, categorias, subcategorias, temporadas] = await Promise.all([
     supabase
       .from('producto_variantes')
       .select('*')
@@ -108,6 +108,14 @@ export default async function ProductoFichaPage({ params }: Props) {
       .order('valor')
       .limit(300)
       .then(r => (r.data ?? []) as Pick<Categoria, 'id' | 'valor' | 'categorias_padre'>[]),
+    supabase
+      .from('categorias')
+      .select('id, valor, orden')
+      .eq('tipo', 'temporada')
+      .eq('activo', true)
+      .order('orden')
+      .limit(300)
+      .then(r => (r.data ?? []) as { id: string; valor: string; orden: number }[]),
   ])
 
   // Filtra filas cuyo documento embebido no llegó (no debería pasar: todo
@@ -139,6 +147,7 @@ export default async function ProductoFichaPage({ params }: Props) {
       ventasHayMas={ventasHayMas}
       categorias={categorias}
       subcategorias={subcategorias}
+      temporadas={temporadas}
     />
   )
 }

@@ -10,6 +10,8 @@ export interface StoreVariante {
   // Ya resuelto (ver lib/store/variantes.ts:imagenesEfectivas): propias si
   // las tiene, si no las del producto — nunca vacío si el producto tiene fotos.
   imagenes: string[]
+  version: 'fan' | 'jugador' | null
+  temporada: { id: string; etiqueta: string; orden: number } | null
 }
 
 export interface StoreProducto {

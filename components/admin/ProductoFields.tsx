@@ -44,6 +44,8 @@ export function productoAForm(p: Producto): ProductoForm {
         imagenes: v.imagenes ?? [],
         activo: v.activo,
         costoEntrada: null,
+        version: v.version,
+        temporada_id: v.temporada_id,
       })),
     // Campo transitorio para el "costo de esta entrada": nunca viene de BD,
     // se resetea cada vez que se carga un producto en el form.
@@ -56,6 +58,9 @@ interface Props {
   setForm: React.Dispatch<React.SetStateAction<ProductoForm>>
   categorias: { id: string; valor: string }[]
   subcategorias: Pick<Categoria, 'id' | 'valor' | 'categorias_padre'>[]
+  // Opciones para el select de Temporada (gated a Camisas Deportivas, ver
+  // `esCamisasDeportivas` más abajo) — mismo patrón que categorias/subcategorias.
+  temporadas: { id: string; valor: string; orden: number }[]
   modo?: 'completo' | 'rapido'
   // Producto original en BD (null al crear): sirve de base para decidir si un
   // cambio de stock es un delta (aumento/reducción) o un cambio de modalidad.
@@ -134,11 +139,16 @@ function SeccionCard({ titulo, icono, children }: { titulo: string; icono: React
 }
 
 export default function ProductoFields({
-  form, setForm, categorias, subcategorias, modo = 'completo', producto = null, historialCosto = false,
+  form, setForm, categorias, subcategorias, temporadas, modo = 'completo', producto = null, historialCosto = false,
   historialCostoVariantes, layout = 'flat',
 }: Props) {
   const completo = modo === 'completo'
   const sectioned = layout === 'modal'
+
+  // Las columnas Versión/Temporada de variante solo aplican a Camisas
+  // Deportivas (alcance confirmado del diseño) — mismo match por `valor` que
+  // usa `handleCategoriaChange`/`bloqueCategoria` para el resto del form.
+  const esCamisasDeportivas = categorias.find(c => c.id === form.categoria_id)?.valor === 'Camisas Deportivas'
 
   const f = (field: keyof ProductoForm) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -202,10 +212,27 @@ export default function ProductoFields({
     )
   }
 
+  // Copia precio + imagenes de la variante `i` a toda otra variante del MISMO
+  // form que comparta version+temporada_id (solo estado local vía setForm,
+  // igual que setVariante — no dispara ningún Server Action).
+  const aplicarATemporada = (i: number) =>
+    setForm(prev => {
+      const origen = prev.variantes[i]
+      if (!origen.version || !origen.temporada_id) return prev
+      return {
+        ...prev,
+        variantes: prev.variantes.map((v, idx) =>
+          idx !== i && v.version === origen.version && v.temporada_id === origen.temporada_id
+            ? { ...v, precio: origen.precio, imagenes: origen.imagenes }
+            : v
+        ),
+      }
+    })
+
   const agregarVariante = () =>
     setForm(prev => ({
       ...prev,
-      variantes: [...prev.variantes, { nombre: '', sku: '', precio: null, stock: null, costo: null, precio_revendedor: null, imagenes: [], activo: true, costoEntrada: null }],
+      variantes: [...prev.variantes, { nombre: '', sku: '', precio: null, stock: null, costo: null, precio_revendedor: null, imagenes: [], activo: true, costoEntrada: null, version: null, temporada_id: null }],
     }))
 
   // Stock base de cada variante existente (BD), para saber si su stock subió
@@ -503,6 +530,12 @@ export default function ProductoFields({
         const costoBloqueado = !!v.id && !!historialCostoVariantes?.has(v.id)
         const precioEfectivoVariante = v.precio ?? form.precio
         const margenVariante = v.costo != null ? margen(precioEfectivoVariante, v.costo) : null
+        // Variantes que comparten version+temporada con esta fila (sin
+        // contarse a sí misma): si hay alguna, esta fila puede "empujar" su
+        // precio/imágenes al resto del grupo con un clic.
+        const compañerasDeTemporada = esCamisasDeportivas && v.version && v.temporada_id
+          ? form.variantes.filter((o, oi) => oi !== i && o.version === v.version && o.temporada_id === v.temporada_id).length
+          : 0
         return (
         <div key={v.id ?? `nueva-${i}`} className={styles.varianteCard}>
           <div className={styles.varianteGridTop}>
@@ -522,6 +555,25 @@ export default function ProductoFields({
                 onChange={e => setVariante(i, { sku: e.target.value })}
               />
             </label>
+            {esCamisasDeportivas && (
+              <>
+                <label className={styles.varianteField}>
+                  Versión
+                  <select value={v.version ?? ''} onChange={e => setVariante(i, { version: (e.target.value || null) as VarianteForm['version'] })}>
+                    <option value="">—</option>
+                    <option value="fan">Fan</option>
+                    <option value="jugador">Jugador</option>
+                  </select>
+                </label>
+                <label className={styles.varianteField}>
+                  Temporada
+                  <select value={v.temporada_id ?? ''} onChange={e => setVariante(i, { temporada_id: e.target.value || null })}>
+                    <option value="">—</option>
+                    {temporadas.map(t => <option key={t.id} value={t.id}>{t.valor}</option>)}
+                  </select>
+                </label>
+              </>
+            )}
           </div>
           <div className={styles.varianteGridMoney}>
             <label className={styles.varianteField}>
@@ -610,6 +662,16 @@ export default function ProductoFields({
               Activa
             </label>
             <div className={styles.varianteAcciones}>
+              {compañerasDeTemporada > 0 && (
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => aplicarATemporada(i)}
+                  title="Copia el precio y las imágenes de esta fila a las demás variantes de la misma versión y temporada"
+                >
+                  Aplicar precio/imágenes de esta fila a toda la temporada
+                </button>
+              )}
               <button type="button" className={styles.varianteBtnMover} onClick={() => moverVariante(i, -1)} disabled={i === 0} aria-label="Subir variante">↑</button>
               <button type="button" className={styles.varianteBtnMover} onClick={() => moverVariante(i, 1)} disabled={i === form.variantes.length - 1} aria-label="Bajar variante">↓</button>
               <button type="button" className={styles.btnQuitarVariante} onClick={() => quitarVariante(i)}>Quitar</button>

@@ -6,7 +6,7 @@ export function toConfigMap(rows: ConfigEntry[]): ConfigMap {
   return Object.fromEntries(rows.map(r => [r.key, r.value ?? '']))
 }
 
-export function toStoreProducto(p: Producto): StoreProducto {
+export function toStoreProducto(p: Producto, temporadas: { id: string; valor: string; orden: number }[] = []): StoreProducto {
   return {
     id: p.id,
     nombre: p.nombre,
@@ -27,6 +27,6 @@ export function toStoreProducto(p: Producto): StoreProducto {
     ofertaFin: p.oferta_fin,
     personalizable: p.personalizable,
     createdAt: p.created_at,
-    variantes: toStoreVariantes(Number(p.precio), (p.imagenes ?? []).filter(Boolean), p.producto_variantes ?? []),
+    variantes: toStoreVariantes(Number(p.precio), (p.imagenes ?? []).filter(Boolean), p.producto_variantes ?? [], temporadas),
   }
 }

@@ -13,19 +13,29 @@ export function imagenesEfectivas(imagenesPadre: string[], imagenesVariante: str
   return imagenesVariante && imagenesVariante.length > 0 ? imagenesVariante : imagenesPadre
 }
 
-export function toStoreVariantes(precioPadre: number, imagenesPadre: string[], hijas: ProductoVariante[]): StoreVariante[] {
+export function toStoreVariantes(
+  precioPadre: number,
+  imagenesPadre: string[],
+  hijas: ProductoVariante[],
+  temporadas: { id: string; valor: string; orden: number }[] = [],
+): StoreVariante[] {
   return hijas
     .filter(v => v.activo)
     .sort((a, b) => a.orden - b.orden)
-    .map(v => ({
-      id: v.id,
-      nombre: v.nombre,
-      precio: v.precio != null ? Number(v.precio) : null,
-      precioEfectivo: precioEfectivo(precioPadre, v.precio != null ? Number(v.precio) : null),
-      stock: v.stock,
-      agotada: v.stock === 0,
-      imagenes: imagenesEfectivas(imagenesPadre, v.imagenes),
-    }))
+    .map(v => {
+      const temporadaCat = v.temporada_id ? temporadas.find(t => t.id === v.temporada_id) : undefined
+      return {
+        id: v.id,
+        nombre: v.nombre,
+        precio: v.precio != null ? Number(v.precio) : null,
+        precioEfectivo: precioEfectivo(precioPadre, v.precio != null ? Number(v.precio) : null),
+        stock: v.stock,
+        agotada: v.stock === 0,
+        imagenes: imagenesEfectivas(imagenesPadre, v.imagenes),
+        version: v.version,
+        temporada: temporadaCat ? { id: temporadaCat.id, etiqueta: temporadaCat.valor, orden: temporadaCat.orden } : null,
+      }
+    })
 }
 
 export function stockEfectivo(stockPadre: number | null, variantes: { stock: number | null }[]): number | null {
@@ -90,4 +100,56 @@ export function traducirErrorPedido(message: string | null | undefined): string 
     default:
       return null
   }
+}
+
+export function tieneEjesTemporada(variantes: { version: string | null; temporada_id: string | null }[]): boolean {
+  return variantes.some(v => v.version != null || v.temporada_id != null)
+}
+
+export function versionesDisponibles(variantes: { version: string | null }[]): ('fan' | 'jugador')[] {
+  const out: ('fan' | 'jugador')[] = []
+  for (const v of variantes) {
+    if (v.version != null && !out.includes(v.version as 'fan' | 'jugador')) {
+      out.push(v.version as 'fan' | 'jugador')
+    }
+  }
+  return out
+}
+
+export function temporadasDisponibles(
+  variantes: { version: string | null; temporada: { id: string; etiqueta: string; orden: number } | null }[],
+  version: string | null,
+): { id: string; etiqueta: string; orden: number }[] {
+  const vistas = new Set<string>()
+  const out: { id: string; etiqueta: string; orden: number }[] = []
+  for (const v of variantes) {
+    if (v.version !== version || !v.temporada) continue
+    if (vistas.has(v.temporada.id)) continue
+    vistas.add(v.temporada.id)
+    out.push(v.temporada)
+  }
+  return out.sort((a, b) => a.orden - b.orden)
+}
+
+export function tallasDisponibles(
+  variantes: StoreVariante[],
+  version: string | null,
+  temporadaId: string | null,
+): string[] {
+  const out: string[] = []
+  for (const v of variantes) {
+    if (v.version === version && v.temporada?.id === temporadaId && !out.includes(v.nombre)) {
+      out.push(v.nombre)
+    }
+  }
+  return out
+}
+
+export function resolverVariante(
+  variantes: StoreVariante[],
+  version: string | null,
+  temporadaId: string | null,
+  talla: string,
+): StoreVariante | undefined {
+  return variantes.find(v => v.version === version && v.temporada?.id === temporadaId && v.nombre === talla)
 }

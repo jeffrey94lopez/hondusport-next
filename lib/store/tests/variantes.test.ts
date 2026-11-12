@@ -1,11 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { precioEfectivo, imagenesEfectivas, toStoreVariantes, stockEfectivo, estaAgotado, precioDesde, validarCompra, traducirErrorPedido } from '../variantes'
+import {
+  precioEfectivo, imagenesEfectivas, toStoreVariantes, stockEfectivo, estaAgotado, precioDesde,
+  validarCompra, traducirErrorPedido, tieneEjesTemporada, versionesDisponibles,
+  temporadasDisponibles, tallasDisponibles, resolverVariante,
+} from '../variantes'
 import type { ProductoVariante } from '@/types'
 
 function variante(over: Partial<ProductoVariante>): ProductoVariante {
   return {
     id: 'v1', producto_id: 'p1', nombre: 'M', sku: null, precio: null,
-    stock: null, costo: null, precio_revendedor: null, imagenes: null, activo: true, orden: 0, created_at: '', updated_at: '', ...over,
+    stock: null, costo: null, precio_revendedor: null, imagenes: null, activo: true, orden: 0, created_at: '', updated_at: '',
+    version: null, temporada_id: null, ...over,
   }
 }
 
@@ -50,6 +55,29 @@ describe('toStoreVariantes', () => {
   it('usa las imágenes propias de la variante cuando las tiene', () => {
     const out = toStoreVariantes(100, ['padre.jpg'], [variante({ id: 'v1', imagenes: ['propia.jpg'] })])
     expect(out[0].imagenes).toEqual(['propia.jpg'])
+  })
+})
+
+describe('toStoreVariantes: ejes version/temporada', () => {
+  it('copia version y temporada_id a la variante de tienda', () => {
+    const out = toStoreVariantes(100, [], [
+      variante({ id: 'v1', version: 'fan', temporada_id: 'temp-24-25' }),
+    ])
+    expect(out[0].version).toBe('fan')
+  })
+  it('resuelve temporada contra el array de categorias tipo temporada', () => {
+    const temporadas = [
+      { id: 'temp-24-25', valor: '24/25', orden: 2 },
+      { id: 'temp-23-24', valor: '23/24', orden: 1 },
+    ]
+    const out = toStoreVariantes(100, [], [
+      variante({ id: 'v1', version: 'fan', temporada_id: 'temp-24-25' }),
+    ], temporadas)
+    expect(out[0].temporada).toEqual({ id: 'temp-24-25', etiqueta: '24/25', orden: 2 })
+  })
+  it('temporada es null cuando temporada_id es null', () => {
+    const out = toStoreVariantes(100, [], [variante({ id: 'v1' })])
+    expect(out[0].temporada).toBeNull()
   })
 })
 
@@ -119,6 +147,73 @@ describe('validarCompra', () => {
   it('variante válida se devuelve', () => {
     const v = variante({ id: 'v1', producto_id: 'p1' })
     expect(validarCompra(prod, [v], 'v1')).toEqual({ ok: true, variante: v })
+  })
+})
+
+describe('validarCompra: producto fusionado-fuera (Review Focus)', () => {
+  it('rechaza un carrito con varianteId de un producto ya desactivado', () => {
+    const producto = { id: 'loser-1', nombre: 'Real Madrid Local (viejo)', activo: false }
+    const result = validarCompra(producto, [], 'cualquier-variante-id')
+    expect(result).toEqual({ ok: false, motivo: `"${producto.nombre}" ya no está disponible` })
+  })
+})
+
+describe('tieneEjesTemporada', () => {
+  it('false si ninguna variante trae los ejes nuevos', () =>
+    expect(tieneEjesTemporada([variante({ version: null, temporada_id: null })])).toBe(false))
+  it('true si alguna variante trae version o temporada_id', () =>
+    expect(tieneEjesTemporada([variante({ version: 'fan', temporada_id: 'x' })])).toBe(true))
+})
+
+describe('versionesDisponibles', () => {
+  it('devuelve los valores únicos presentes', () => {
+    const out = versionesDisponibles([
+      variante({ version: 'fan' }), variante({ version: 'jugador' }), variante({ version: 'fan' }),
+    ])
+    expect(out).toEqual(['fan', 'jugador'])
+  })
+})
+
+const temporadasCat = [
+  { id: 't24', valor: '24/25', orden: 2 },
+  { id: 't23', valor: '23/24', orden: 1 },
+]
+
+const hijasVersionTemporada: ProductoVariante[] = [
+  variante({ id: 'f24-m', nombre: 'M', version: 'fan', temporada_id: 't24' }),
+  variante({ id: 'f24-l', nombre: 'L', version: 'fan', temporada_id: 't24' }),
+  variante({ id: 'f23-s', nombre: 'S', version: 'fan', temporada_id: 't23' }),
+  variante({ id: 'j24-m', nombre: 'M', version: 'jugador', temporada_id: 't24' }),
+]
+
+const variantesTienda = toStoreVariantes(100, [], hijasVersionTemporada, temporadasCat)
+
+describe('temporadasDisponibles', () => {
+  it('filtra por version, deduplica y ordena por categorias.orden', () => {
+    const out = temporadasDisponibles(variantesTienda, 'fan')
+    expect(out).toEqual([
+      { id: 't23', etiqueta: '23/24', orden: 1 },
+      { id: 't24', etiqueta: '24/25', orden: 2 },
+    ])
+  })
+})
+
+describe('tallasDisponibles', () => {
+  it('solo tallas de la combinación version+temporada exacta', () => {
+    const out = tallasDisponibles(variantesTienda, 'fan', 't24')
+    expect(out).toEqual(['M', 'L'])
+    expect(out).not.toContain('S')
+  })
+})
+
+describe('resolverVariante', () => {
+  it('encuentra la variante exacta', () => {
+    const v = resolverVariante(variantesTienda, 'fan', 't24', 'M')
+    expect(v?.id).toBe('f24-m')
+  })
+  it('devuelve undefined si la combinación no existe', () => {
+    expect(resolverVariante(variantesTienda, 'fan', 't24', 'XL')).toBeUndefined()
+    expect(resolverVariante(variantesTienda, 'jugador', 't23', 'M')).toBeUndefined()
   })
 })
 

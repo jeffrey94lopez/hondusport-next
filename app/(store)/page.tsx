@@ -48,7 +48,8 @@ export default async function StorePage() {
   }
 
   const configMap = toConfigMap(config ?? [])
-  const storeProductos = (productos ?? []).map(toStoreProducto)
+  const temporadas = (categorias ?? []).filter(c => c.tipo === 'temporada')
+  const storeProductos = (productos ?? []).map(p => toStoreProducto(p, temporadas))
   const ventasRank: VentasRank = Object.fromEntries(
     (ventasRankRows ?? []).map(v => [String(v.producto_id), Number(v.posicion)]),
   )

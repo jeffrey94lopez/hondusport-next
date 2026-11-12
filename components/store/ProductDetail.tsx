@@ -11,7 +11,7 @@ import ProductCard from './ProductCard'
 import { formatPrice } from '@/lib/store/format'
 import { getTallas } from '@/lib/store/getTallas'
 import { DEFAULT_FREE_SHIPPING_THRESHOLD } from '@/lib/store/freeShipping'
-import { estaAgotado } from '@/lib/store/variantes'
+import { estaAgotado, tieneEjesTemporada, versionesDisponibles, temporadasDisponibles, tallasDisponibles, resolverVariante } from '@/lib/store/variantes'
 import { addRecentView } from '@/lib/store/recentViews'
 import { useCart } from '@/lib/store/cart-context'
 import { getCountForProduct } from '@/lib/store/cart'
@@ -79,6 +79,25 @@ export default function ProductDetail({
   const [selectedVarianteId, setSelectedVarianteId] = useState(
     () => variantes.find(v => !v.agotada)?.id ?? ''
   )
+  // Camisas Deportivas con eje version/temporada capturado (Task 5): 3 filas
+  // de chips (Versión → Temporada → Talla) en vez del <select> único. Se
+  // decide por presencia de datos, no por nombre de categoría (Task 2/6).
+  const conEjesTemporada = tieneEjesTemporada(
+    // `tieneEjesTemporada` opera sobre la forma cruda (`temporada_id`) que
+    // expone `producto_variantes`; acá ya llegamos con `StoreVariante`
+    // (Task 3 resolvió `.temporada` a {id, etiqueta, orden}) — se adapta la
+    // forma sin tocar la pura de lib/store/variantes.ts.
+    variantes.map(v => ({ version: v.version, temporada_id: v.temporada?.id ?? null }))
+  )
+  const [selectedVersion, setSelectedVersion] = useState<string | null>(
+    () => versionesDisponibles(variantes)[0] ?? null
+  )
+  const [selectedTemporadaId, setSelectedTemporadaId] = useState<string | null>(
+    () => temporadasDisponibles(variantes, versionesDisponibles(variantes)[0] ?? null)[0]?.id ?? null
+  )
+  const [selectedTallaTemporada, setSelectedTallaTemporada] = useState<string>(
+    () => tallasDisponibles(variantes, selectedVersion, selectedTemporadaId)[0] ?? ''
+  )
   const [custom, setCustom] = useState('')
   const [cantidad, setCantidad] = useState(1)
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
@@ -99,7 +118,12 @@ export default function ProductDetail({
     addedTimer.current = setTimeout(() => setJustAdded(false), ADDED_MS)
   }
 
-  const selectedVariante = variantes.find(v => v.id === selectedVarianteId) ?? null
+  const varianteTresEjes = conEjesTemporada
+    ? resolverVariante(variantes, selectedVersion, selectedTemporadaId, selectedTallaTemporada)
+    : undefined
+  const selectedVariante = conEjesTemporada
+    ? (varianteTresEjes ?? null)
+    : (variantes.find(v => v.id === selectedVarianteId) ?? null)
   // Ya resuelto por toStoreVariantes (imagenesEfectivas): si la variante no
   // tiene fotos propias, esto ya es producto.imagenes — nunca queda vacío.
   const imagenesActuales = selectedVariante?.imagenes ?? producto.imagenes
@@ -265,7 +289,65 @@ export default function ProductDetail({
 
           {producto.descripcion && <p className={styles.desc}>{producto.descripcion}</p>}
 
-          {conVariantes && (
+          {conEjesTemporada && (
+            <div className={styles.section}>
+              <label className={styles.label}>VERSIÓN</label>
+              <div className={styles.tallaGroup}>
+                {versionesDisponibles(variantes).map(v => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={`${styles.tallaChip} ${selectedVersion === v ? styles.tallaChipActive : ''}`}
+                    onClick={() => {
+                      setSelectedVersion(v)
+                      const temporadas = temporadasDisponibles(variantes, v)
+                      const nuevaTemporada = temporadas[0]?.id ?? null
+                      setSelectedTemporadaId(nuevaTemporada)
+                      setSelectedTallaTemporada(tallasDisponibles(variantes, v, nuevaTemporada)[0] ?? '')
+                      setSelectedImageIdx(0)
+                    }}
+                  >
+                    {v === 'fan' ? 'Fan' : 'Jugador'}
+                  </button>
+                ))}
+              </div>
+              <label className={styles.label}>TEMPORADA</label>
+              <div className={styles.tallaGroup}>
+                {temporadasDisponibles(variantes, selectedVersion).map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`${styles.tallaChip} ${selectedTemporadaId === t.id ? styles.tallaChipActive : ''}`}
+                    onClick={() => {
+                      setSelectedTemporadaId(t.id)
+                      setSelectedTallaTemporada(tallasDisponibles(variantes, selectedVersion, t.id)[0] ?? '')
+                      setSelectedImageIdx(0)
+                    }}
+                  >
+                    {t.etiqueta}
+                  </button>
+                ))}
+              </div>
+              <label className={styles.label}>TALLA</label>
+              <div className={styles.tallaGroup}>
+                {tallasDisponibles(variantes, selectedVersion, selectedTemporadaId).map(talla => (
+                  <button
+                    key={talla}
+                    type="button"
+                    className={`${styles.tallaChip} ${selectedTallaTemporada === talla ? styles.tallaChipActive : ''}`}
+                    onClick={() => {
+                      setSelectedTallaTemporada(talla)
+                      setSelectedImageIdx(0)
+                    }}
+                  >
+                    {talla}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {conVariantes && !conEjesTemporada && (
             <div className={styles.section}>
               <label className={styles.label} htmlFor="variante-select">ELIGE UNA OPCIÓN</label>
               <select

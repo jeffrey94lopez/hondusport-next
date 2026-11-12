@@ -21,6 +21,7 @@ interface Props {
   ventasHayMas: boolean
   categorias: { id: string; valor: string }[]
   subcategorias: Pick<Categoria, 'id' | 'valor' | 'categorias_padre'>[]
+  temporadas: { id: string; valor: string; orden: number }[]
 }
 
 const CANAL_LABEL: Record<Producto['canal'], string> = {
@@ -65,6 +66,7 @@ export default function ProductoFichaView({
   ventasHayMas,
   categorias,
   subcategorias,
+  temporadas,
 }: Props) {
   const router = useRouter()
   const [editando, setEditando] = useState(false)
@@ -79,6 +81,11 @@ export default function ProductoFichaView({
   // decidir delta de stock vs. cambio de modalidad) — ver
   // components/admin/ProductoFields.tsx.
   const productoConVariantes: Producto = { ...producto, producto_variantes: variantes }
+
+  // Mismo criterio de gating que ProductoFields.tsx (componentes.admin): las
+  // columnas Versión/Temporada solo tienen sentido para Camisas Deportivas.
+  const esCamisasDeportivas = categorias.find(c => c.id === producto.categoria_id)?.valor === 'Camisas Deportivas'
+  const temporadasPorId = new Map(temporadas.map(t => [t.id, t.valor]))
 
   const variantesActivas = variantes.filter(v => v.activo)
   const stock = stockEfectivo(producto.stock, variantesActivas)
@@ -257,6 +264,12 @@ export default function ProductoFichaView({
               <thead>
                 <tr>
                   <th>Nombre</th>
+                  {esCamisasDeportivas && (
+                    <>
+                      <th>Versión</th>
+                      <th>Temporada</th>
+                    </>
+                  )}
                   <th>SKU</th>
                   <th>Precio</th>
                   <th>Stock</th>
@@ -267,6 +280,12 @@ export default function ProductoFichaView({
                 {variantes.map(v => (
                   <tr key={v.id}>
                     <td>{v.nombre}</td>
+                    {esCamisasDeportivas && (
+                      <>
+                        <td>{v.version ?? '—'}</td>
+                        <td>{v.temporada_id ? temporadasPorId.get(v.temporada_id) ?? '—' : '—'}</td>
+                      </>
+                    )}
                     <td>{v.sku ?? '—'}</td>
                     <td>{v.precio != null ? formatPrice(Number(v.precio)) : 'Hereda'}</td>
                     <td>{v.stock === null ? 'Ilimitado' : v.stock}</td>
@@ -395,6 +414,7 @@ export default function ProductoFichaView({
               setForm={setForm}
               categorias={categorias}
               subcategorias={subcategorias}
+              temporadas={temporadas}
               modo="completo"
               producto={productoConVariantes}
               historialCosto={historialCosto}

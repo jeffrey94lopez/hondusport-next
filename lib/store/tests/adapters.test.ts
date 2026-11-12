@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { toConfigMap, toStoreProducto } from '../adapters'
-import type { Producto, ConfigEntry } from '@/types'
+import type { Producto, ConfigEntry, ProductoVariante } from '@/types'
 
 const BASE_PRODUCTO: Producto = {
   id: 'p1',
@@ -126,5 +126,28 @@ describe('toStoreProducto', () => {
   it('mapea created_at a createdAt', () => {
     const fila: Producto = { ...BASE_PRODUCTO, created_at: '2026-08-15T10:00:00.000Z' }
     expect(toStoreProducto(fila).createdAt).toBe('2026-08-15T10:00:00.000Z')
+  })
+
+  it('resuelve la temporada de las variantes a partir del 2do argumento', () => {
+    const variante: ProductoVariante = {
+      id: 'v1',
+      producto_id: 'p1',
+      nombre: 'M',
+      sku: null,
+      precio: null,
+      stock: 10,
+      costo: null,
+      precio_revendedor: null,
+      imagenes: null,
+      activo: true,
+      orden: 1,
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+      version: 'fan',
+      temporada_id: 'temp-1',
+    }
+    const temporadas = [{ id: 'temp-1', valor: '2026', orden: 1 }]
+    const result = toStoreProducto({ ...BASE_PRODUCTO, producto_variantes: [variante] }, temporadas)
+    expect(result.variantes[0].temporada).toEqual({ id: 'temp-1', etiqueta: '2026', orden: 1 })
   })
 })
