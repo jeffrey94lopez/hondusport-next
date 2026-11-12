@@ -71,7 +71,7 @@ export interface CaiForm {
 
 export interface Categoria {
   id: string
-  tipo: 'cat' | 'subcat' | 'talla' | 'genero'
+  tipo: 'cat' | 'subcat' | 'talla' | 'genero' | 'temporada'
   valor: string
   imagen: string | null
   slug: string
@@ -128,6 +128,8 @@ export interface ProductoVariante {
   orden: number
   created_at: string
   updated_at: string
+  version: 'fan' | 'jugador' | null
+  temporada_id: string | null
 }
 
 export interface VarianteForm {
@@ -143,6 +145,8 @@ export interface VarianteForm {
   // Costo de la entrada cuando `stock` sube respecto al valor guardado en BD
   // (kardexable vía registrar_entrada). No se persiste como campo propio.
   costoEntrada: number | null
+  version: 'fan' | 'jugador' | null
+  temporada_id: string | null
 }
 
 export interface ProductoForm {
