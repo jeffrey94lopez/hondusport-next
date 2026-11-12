@@ -1052,6 +1052,15 @@ describe('parseInventoryUpload: variantes con version/temporada', () => {
     // fila con variante_id existente, celdas version/temporada vacías ->
     // conserva base.version/base.temporada_id (mismo patrón que precio/stock)
   })
+
+  it('rechaza version/temporada en un producto que no es Camisas Deportivas', () => {
+    const ctx = { ...baseCtx, temporadas: [{ id: 'tmp-1', valor: '24/25' }] }
+    // producto_id de un Tenis en ctx.existentes/ctx.categorias
+    const result = parseInventoryUpload({ actualizar: [], nuevos: [], variantes: [
+      { producto_id: 'p-tenis', variante: '42', version: 'fan', temporada: '24/25' },
+    ] }, ctx)
+    expect(result.errors).toContainEqual({ pestaña: 'Variantes', fila: 2, motivo: expect.stringContaining('Camisas Deportivas') })
+  })
 })
 ```
 
@@ -1088,6 +1097,20 @@ if (temporadaCell !== undefined) {
 ```
 Thread `version`/`temporada_id` into both the `varUpdates.push(...)` (L743)
 and `varCreates.push(...)` (L751) object literals.
+
+**Preflight ruling (scope guard):** the parser has no existing concept of
+"which category can use which axis" — any `producto_id` is accepted
+regardless of category today. Without a check, an Excel row could set
+`version`/`temporada_id` on a Tenis/Tacos/Accesorios/Personalizados/Ropa
+product, which the admin UI (Task 5) never shows and which would wrongly
+flip `tieneEjesTemporada` on for that product's storefront page — a direct
+violation of this plan's Global Constraint that only Camisas Deportivas gets
+the 3-axis model. Add a row-level guard: when `versionCell`/`temporadaCell`
+is present and the row's resolved product's `categoria_id` doesn't match the
+"Camisas Deportivas" category's id (looked up once from `ctx.categorias` by
+`valor === 'Camisas Deportivas'`, same name-match convention Task 5 uses),
+push `rowErrors.push('version/temporada solo aplican a Camisas Deportivas')`
+instead of accepting the value.
 
 - [ ] **Step 7: Run tests to verify they pass**
 
