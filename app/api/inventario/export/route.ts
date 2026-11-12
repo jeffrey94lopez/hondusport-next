@@ -9,11 +9,12 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  const [{ data: productos, error: prodError }, { data: categorias }, { data: subcategorias }, { data: variantes }] = await Promise.all([
+  const [{ data: productos, error: prodError }, { data: categorias }, { data: subcategorias }, { data: variantes }, { data: temporadas }] = await Promise.all([
     supabase.from('productos').select('*').order('nombre').limit(5000),
     supabase.from('categorias').select('id, valor').eq('tipo', 'cat'),
     supabase.from('categorias').select('id, valor').eq('tipo', 'subcat'),
     supabase.from('producto_variantes').select('*').limit(5000),
+    supabase.from('categorias').select('id, valor').eq('tipo', 'temporada'),
   ])
 
   if (prodError) return NextResponse.json({ error: prodError.message }, { status: 500 })
@@ -23,6 +24,7 @@ export async function GET() {
     categorias ?? [],
     subcategorias ?? [],
     (variantes ?? []) as ProductoVariante[],
+    temporadas ?? [],
   )
 
   const wb = XLSX.utils.book_new()

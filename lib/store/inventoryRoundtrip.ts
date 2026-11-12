@@ -10,7 +10,7 @@ export const COLUMNAS = [
 
 export const VARIANTES_COLUMNAS = [
   'producto_id', 'producto', 'variante_id', 'variante', 'sku', 'precio', 'stock',
-  'costo', 'precio_revendedor', 'costo_entrada', 'activo',
+  'costo', 'precio_revendedor', 'costo_entrada', 'version', 'temporada', 'activo',
 ] as const
 
 export const CANALES = ['tienda', 'mostrador', 'ambas'] as const
@@ -48,6 +48,7 @@ export const INSTRUCCIONES: string[] = [
   '- stock: vacío = no cambia (en filas nuevas = ilimitado); 0 = agotada.',
   '- costo: solo informativo (no se puede editar desde aquí); costo_entrada aplica igual que en "Actualizar"/"Nuevos".',
   '- Si un producto tiene variantes, su stock y tallas en "Actualizar" se ignoran.',
+  '- version y temporada: solo aplican a Camisas Deportivas. version: "fan" o "jugador". temporada: nombre exacto ya existente en /admin/categorias (no se crea una temporada nueva desde aquí).',
 ]
 
 export interface InventoryRow {
@@ -115,9 +116,11 @@ export function buildExportData(
   categorias: CategoriaRef[],
   subcategorias: CategoriaRef[],
   variantes: ProductoVariante[],
+  temporadas: CategoriaRef[] = [],
 ): { actualizar: Record<string, string | number>[]; variantes: Record<string, string | number>[] } {
   const catById = new Map(categorias.map(c => [c.id, c.valor]))
   const subById = new Map(subcategorias.map(c => [c.id, c.valor]))
+  const temporadaById = new Map(temporadas.map(t => [t.id, t.valor]))
   const conVariantes = new Set(variantes.map(v => v.producto_id))
 
   const actualizar = productos.map(p => ({
@@ -168,6 +171,8 @@ export function buildExportData(
         costo: v.costo ?? '', // solo-lectura informativo: el import lo ignora
         precio_revendedor: v.precio_revendedor ?? '',
         costo_entrada: '', // campo de entrada (acción), no informativo: siempre vacío al exportar
+        version: v.version ?? '',
+        temporada: v.temporada_id ? (temporadaById.get(v.temporada_id) ?? '') : '',
         activo: v.activo ? 'VERDADERO' : 'FALSO',
       })
     }
@@ -212,6 +217,11 @@ export interface ParseContext {
   categorias: CategoriaRef[]
   subcategorias: SubcategoriaRef[]
   variantesExistentes: ProductoVariante[]
+  // Opcional: el import externo (lib/store/externalImport.ts) no maneja
+  // version/temporada (esas columnas no existen en su formato de origen), así
+  // que no necesita proveer este catálogo. vacío/ausente = ninguna temporada
+  // resuelve por nombre (toda celda "temporada" se rechaza como inexistente).
+  temporadas?: CategoriaRef[]
 }
 
 // Movimiento de kardex calculado por el parser a partir de un diff de stock.
@@ -255,6 +265,8 @@ export interface VarianteRow {
   costo?: string | number         // solo-lectura informativo: el import lo ignora
   precio_revendedor?: string | number
   costo_entrada?: string | number
+  version?: string
+  temporada?: string
   activo?: string | boolean | number
 }
 
@@ -264,6 +276,11 @@ export interface VarianteData {
   precio: number | null
   stock: number | null
   precio_revendedor: number | null
+  // Opcionales: solo el round-trip (este archivo) los resuelve/escribe. El
+  // import externo (lib/store/externalImport.ts) no los toca — su formato de
+  // origen no tiene columnas version/temporada.
+  version?: 'fan' | 'jugador' | null
+  temporada_id?: string | null
   activo: boolean
 }
 
@@ -384,6 +401,10 @@ export function parseInventoryUpload(
   const porId = new Map(ctx.existentes.map(p => [p.id, p]))
   const catByNombre = new Map(ctx.categorias.map(c => [normNombre(c.valor), c]))
   const subByNombre = new Map(ctx.subcategorias.map(c => [normNombre(c.valor), c]))
+  const temporadaByNombre = new Map((ctx.temporadas ?? []).map(t => [normNombre(t.valor), t]))
+  // id de la categoría "Camisas Deportivas" (si existe) — version/temporada
+  // solo aplican a esta categoría (ver guard en la pestaña Variantes).
+  const camisasDeportivasId = ctx.categorias.find(c => c.valor === 'Camisas Deportivas')?.id ?? null
 
   // SKU (recortado) -> id del producto dueño en BD
   const idPorSku = new Map<string, string>()
@@ -725,6 +746,31 @@ export function parseInventoryUpload(
     // Alta de variante: no hay stock previo (la variante no existe todavía) -> stock_anterior = 0.
     const movInfo = calcularMovimientoStock(base ? base.stock : 0, stock, costoEntrada, rowErrors)
 
+    const versionCell = cellText(row.version)
+    const version: 'fan' | 'jugador' | null = versionCell !== undefined
+      ? ((['fan', 'jugador'] as const).includes(versionCell as 'fan' | 'jugador')
+        ? versionCell as 'fan' | 'jugador'
+        : (rowErrors.push(`la version "${versionCell}" no es válida`), null))
+      : (base ? base.version : null)
+
+    const temporadaCell = cellText(row.temporada)
+    let temporada_id: string | null = base ? base.temporada_id : null
+    if (temporadaCell !== undefined) {
+      const match = temporadaByNombre.get(normNombre(temporadaCell))
+      if (!match) {
+        rowErrors.push(`la temporada "${temporadaCell}" no existe`)
+      } else {
+        temporada_id = match.id
+      }
+    }
+
+    // Guard de alcance: version/temporada solo aplican a Camisas Deportivas.
+    // producto_id en esta pestaña siempre refiere a un producto YA existente
+    // (ver validación arriba), así que porId.get(...) siempre resuelve aquí.
+    if ((versionCell !== undefined || temporadaCell !== undefined) && porId.get(producto_id)?.categoria_id !== camisasDeportivasId) {
+      rowErrors.push('version/temporada solo aplican a Camisas Deportivas')
+    }
+
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Variantes', fila, motivo: m })); return }
 
     // Nombre y SKU solo se validan (sin reservar todavía) en este punto. Si
@@ -740,7 +786,7 @@ export function parseInventoryUpload(
     if (sku) skuVarVistos.set(sku, fila)
 
     if (variante_id) {
-      varUpdates.push({ id: variante_id, producto_id, nombre: nombre!, sku, precio, stock, precio_revendedor, activo })
+      varUpdates.push({ id: variante_id, producto_id, nombre: nombre!, sku, precio, stock, precio_revendedor, version, temporada_id, activo })
       // Update: variante_id conocido directamente.
       if (movInfo) movimientos.push({ ...movInfo, producto_id, variante_id, referencia: REFERENCIA_IMPORT })
     } else {
@@ -748,7 +794,7 @@ export function parseInventoryUpload(
       const posicion = nuevasVarPorProducto.get(producto_id) ?? 0
       const orden = maxOrden + 1 + posicion
       nuevasVarPorProducto.set(producto_id, posicion + 1)
-      varCreates.push({ producto_id, nombre: nombre!, sku, precio, stock, precio_revendedor, activo, orden })
+      varCreates.push({ producto_id, nombre: nombre!, sku, precio, stock, precio_revendedor, version, temporada_id, activo, orden })
       // Alta: variante_id null (se resuelve al crear); producto_id ya es real
       // porque en round-trip la pestaña Variantes solo liga a productos
       // existentes (ver validación arriba). `orden` es la clave de correlación

@@ -95,6 +95,7 @@ function varianteBD(overrides: Partial<ProductoVariante> = {}): ProductoVariante
     id: 'v1', producto_id: 'p1', nombre: 'M', sku: null, precio: null, stock: null,
     costo: null, precio_revendedor: null, imagenes: null,
     activo: true, orden: 0, created_at: '', updated_at: '',
+    version: null, temporada_id: null,
     ...overrides,
   }
 }
@@ -128,10 +129,10 @@ describe('buildExportData', () => {
     expect(actualizar[0].categoria).toBe('')
   })
 
-  it('VARIANTES_COLUMNAS trae las 11 columnas esperadas (incluye costo/precio_revendedor/costo_entrada)', () => {
+  it('VARIANTES_COLUMNAS trae las 13 columnas esperadas (incluye costo/precio_revendedor/costo_entrada/version/temporada)', () => {
     expect(VARIANTES_COLUMNAS).toEqual([
       'producto_id', 'producto', 'variante_id', 'variante', 'sku', 'precio', 'stock',
-      'costo', 'precio_revendedor', 'costo_entrada', 'activo',
+      'costo', 'precio_revendedor', 'costo_entrada', 'version', 'temporada', 'activo',
     ])
   })
 
@@ -141,9 +142,17 @@ describe('buildExportData', () => {
       varianteBD({ id: 'v2', producto_id: prod().id, nombre: 'L', sku: null, precio: null, stock: null, orden: 1 }),
     ])
     expect(variantes).toEqual([
-      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v1', variante: 'M', sku: 'SKU-M', precio: 150, stock: 3, costo: '', precio_revendedor: '', costo_entrada: '', activo: 'VERDADERO' },
-      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v2', variante: 'L', sku: '', precio: '', stock: '', costo: '', precio_revendedor: '', costo_entrada: '', activo: 'VERDADERO' },
+      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v1', variante: 'M', sku: 'SKU-M', precio: 150, stock: 3, costo: '', precio_revendedor: '', costo_entrada: '', version: '', temporada: '', activo: 'VERDADERO' },
+      { producto_id: prod().id, producto: prod().nombre, variante_id: 'v2', variante: 'L', sku: '', precio: '', stock: '', costo: '', precio_revendedor: '', costo_entrada: '', version: '', temporada: '', activo: 'VERDADERO' },
     ])
+  })
+
+  it('exporta version y temporada resueltos', () => {
+    const { variantes } = buildExportData([prod()], [], [], [
+      varianteBD({ id: 'v1', producto_id: prod().id, nombre: 'M', version: 'jugador', temporada_id: 'tmp-1' }),
+    ], [{ id: 'tmp-1', valor: '24/25' }])
+    expect(variantes[0].version).toBe('jugador')
+    expect(variantes[0].temporada).toBe('24/25')
   })
 
   it('un producto con variantes exporta stock y tallas con la nota', () => {
@@ -200,12 +209,13 @@ function ctxBase(): ParseContext {
              sku: 'SKU1', categoria_id: 'c1', subcategoria_id: 's1', tallas: ['S'], colores: ['Rojo'],
              descripcion: 'vieja', precio_original: null, marca: 'Nike', activo: true, personalizable: false }),
     ],
-    categorias: [{ id: 'c1', valor: 'Ropa' }, { id: 'c2', valor: 'Calzado' }],
+    categorias: [{ id: 'c1', valor: 'Ropa' }, { id: 'c2', valor: 'Calzado' }, { id: 'c3', valor: 'Camisas Deportivas' }],
     subcategorias: [
       { id: 's1', valor: 'Camisetas', categorias_padre: ['c1'] },
       { id: 's2', valor: 'Tenis', categorias_padre: ['c2'] },
     ],
     variantesExistentes: [],
+    temporadas: [],
   }
 }
 
@@ -736,5 +746,71 @@ describe('parseInventoryUpload — pestaña Variantes', () => {
     expect(r.errors).toEqual([])
     expect(r.variantes.updates).toEqual([])
     expect(r.variantes.creates).toEqual([])
+  })
+})
+
+describe('parseInventoryUpload: variantes con version/temporada', () => {
+  function baseCtx(): ParseContext {
+    const ctx = ctxBase()
+    return {
+      ...ctx,
+      existentes: [
+        ...ctx.existentes,
+        prod({ id: 'p-camisa', nombre: 'Jersey', slug: 'jersey', categoria_id: 'c3', subcategoria_id: null }),
+        prod({ id: 'p-tenis', nombre: 'Tenis Nike', slug: 'tenis-nike', categoria_id: 'c2', subcategoria_id: 's2' }),
+      ],
+    }
+  }
+  const vacio = { actualizar: [], nuevos: [] }
+
+  it('resuelve una temporada por nombre exacto', () => {
+    const ctx = { ...baseCtx(), temporadas: [{ id: 'tmp-1', valor: '24/25' }] }
+    const result = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: 'p-camisa', variante: 'M', version: 'fan', temporada: '24/25' },
+    ] }, ctx)
+    expect(result.errors).toEqual([])
+    expect(result.variantes.creates[0].temporada_id).toBe('tmp-1')
+    expect(result.variantes.creates[0].version).toBe('fan')
+  })
+
+  it('rechaza una temporada que no existe', () => {
+    const ctx = { ...baseCtx(), temporadas: [{ id: 'tmp-1', valor: '24/25' }] }
+    const result = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: 'p-camisa', variante: 'M', version: 'fan', temporada: '25/26' },
+    ] }, ctx)
+    expect(result.errors).toContainEqual({ pestaña: 'Variantes', fila: 2, motivo: expect.stringContaining('temporada') })
+    expect(result.variantes.creates).toHaveLength(0)
+  })
+
+  it('rechaza una version inválida', () => {
+    const ctx = { ...baseCtx(), temporadas: [{ id: 'tmp-1', valor: '24/25' }] }
+    const result = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: 'p-camisa', variante: 'M', version: 'arbitro' },
+    ] }, ctx)
+    expect(result.errors).toContainEqual({ pestaña: 'Variantes', fila: 2, motivo: expect.stringContaining('version') })
+    expect(result.variantes.creates).toHaveLength(0)
+  })
+
+  it('vacío = no cambia, en un update existente', () => {
+    const ctx = {
+      ...baseCtx(),
+      temporadas: [{ id: 'tmp-1', valor: '24/25' }],
+      variantesExistentes: [varianteBD({ id: 'v1', producto_id: 'p-camisa', nombre: 'M', version: 'jugador', temporada_id: 'tmp-1' })],
+    }
+    const result = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: 'p-camisa', variante_id: 'v1', variante: 'M' },
+    ] }, ctx)
+    expect(result.errors).toEqual([])
+    expect(result.variantes.updates[0].version).toBe('jugador')
+    expect(result.variantes.updates[0].temporada_id).toBe('tmp-1')
+  })
+
+  it('rechaza version/temporada en un producto que no es Camisas Deportivas', () => {
+    const ctx = { ...baseCtx(), temporadas: [{ id: 'tmp-1', valor: '24/25' }] }
+    const result = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: 'p-tenis', variante: '42', version: 'fan', temporada: '24/25' },
+    ] }, ctx)
+    expect(result.errors).toContainEqual({ pestaña: 'Variantes', fila: 2, motivo: expect.stringContaining('Camisas Deportivas') })
+    expect(result.variantes.creates).toHaveLength(0)
   })
 })

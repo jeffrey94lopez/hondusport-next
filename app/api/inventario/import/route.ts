@@ -30,11 +30,12 @@ export async function POST(request: NextRequest) {
   const nuevos = leerPestaña<InventoryRow>(wb, 'Nuevos')
   const variantes = leerPestaña<VarianteRow>(wb, 'Variantes')
 
-  const [{ data: existentes, error: prodError }, { data: categorias }, { data: subcategorias }, { data: variantesExistentes }] = await Promise.all([
+  const [{ data: existentes, error: prodError }, { data: categorias }, { data: subcategorias }, { data: variantesExistentes }, { data: temporadas }] = await Promise.all([
     supabase.from('productos').select('*').order('nombre').limit(5000),
     supabase.from('categorias').select('id, valor').eq('tipo', 'cat'),
     supabase.from('categorias').select('id, valor, categorias_padre').eq('tipo', 'subcat'),
     supabase.from('producto_variantes').select('*').limit(5000),
+    supabase.from('categorias').select('id, valor').eq('tipo', 'temporada'),
   ])
 
   if (prodError) return NextResponse.json({ error: prodError.message }, { status: 500 })
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
     categorias: categorias ?? [],
     subcategorias: subcategorias ?? [],
     variantesExistentes: (variantesExistentes ?? []) as ProductoVariante[],
+    temporadas: temporadas ?? [],
   }
 
   const { updates, creates, errors, variantes: variantesResult, movimientos } = parseInventoryUpload({ actualizar, nuevos, variantes }, ctx)
