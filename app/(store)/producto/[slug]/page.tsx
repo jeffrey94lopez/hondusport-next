@@ -79,8 +79,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (productoRow.canal === 'mostrador') notFound()
 
   const configMap = toConfigMap(config ?? [])
-  const storeProducto = toStoreProducto(productoRow)
-  const allProductos = (productos ?? []).map(toStoreProducto)
+  const temporadas = (categorias ?? []).filter(c => c.tipo === 'temporada')
+  const storeProducto = toStoreProducto(productoRow, temporadas)
+  const allProductos = (productos ?? []).map(p => toStoreProducto(p, temporadas))
   // Ordenado por bandas antes de filtrar: sin esto, el .order('created_at')
   // de la consulta deja SIEMPRE los mismos dos productos (los mas nuevos de
   // la categoria) al frente, y si estan agotados la tira de relacionados
