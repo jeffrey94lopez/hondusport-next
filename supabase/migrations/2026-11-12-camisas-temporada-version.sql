@@ -7,13 +7,25 @@ alter table categorias drop constraint categorias_tipo_check;
 alter table categorias add constraint categorias_tipo_check
   check (tipo in ('cat','subcat','talla','genero','temporada'));
 
--- 2. Seed de temporadas conocidas (orden canónico). Ejecutar una sola vez;
--- temporadas futuras se agregan desde /admin/categorias (ver Task 4).
-insert into categorias (tipo, valor, orden, activo) values
-  ('temporada', '23/24', 1, true),
-  ('temporada', '24/25', 2, true),
-  ('temporada', '25/26', 3, true),
-  ('temporada', '26/27', 4, true);
+-- 2. Seed de temporadas conocidas (orden canónico). categorias.slug es
+-- NOT NULL con índice único global (categorias_slug_key, de una migración
+-- anterior) — la app genera sus slugs a mano (ver slugify/uniqueSlug en
+-- app/admin/categorias/actions.ts), así que este seed también necesita uno
+-- explícito por fila. Idempotente (where not exists) para poder re-ejecutar
+-- el archivo sin duplicar filas; temporadas futuras se agregan desde
+-- /admin/categorias (ver Task 4).
+insert into categorias (tipo, valor, slug, orden, activo)
+select 'temporada', '23/24', 'temporada-23-24', 1, true
+where not exists (select 1 from categorias where tipo = 'temporada' and valor = '23/24')
+union all
+select 'temporada', '24/25', 'temporada-24-25', 2, true
+where not exists (select 1 from categorias where tipo = 'temporada' and valor = '24/25')
+union all
+select 'temporada', '25/26', 'temporada-25-26', 3, true
+where not exists (select 1 from categorias where tipo = 'temporada' and valor = '25/26')
+union all
+select 'temporada', '26/27', 'temporada-26-27', 4, true
+where not exists (select 1 from categorias where tipo = 'temporada' and valor = '26/27');
 
 -- 3. Columnas nuevas en producto_variantes
 alter table producto_variantes add column if not exists version text
@@ -154,8 +166,16 @@ begin
     stock  = (x->>'stock')::integer,
     activo = coalesce((x->>'activo')::boolean, true),
     precio_revendedor = (x->>'precio_revendedor')::numeric,
-    version = nullif(x->>'version', ''),
-    temporada_id = nullif(x->>'temporada_id', '')::uuid,
+    -- version/temporada_id: solo se tocan si la clave está PRESENTE en el
+    -- JSON (operador `?` de jsonb, no solo no-vacía). El round-trip (Task 7)
+    -- siempre manda la clave con el valor efectivo ("sin cambio" ya resuelto
+    -- por su parser), así que esto es un no-op para ese camino. El import
+    -- externo (lib/store/externalImport.ts) nunca manda estas 2 claves (su
+    -- formato de origen no tiene version/temporada) — sin este guard, su
+    -- UPDATE las pondría en null en cada import externo de una variante de
+    -- camisa, borrando el eje que el admin o el round-trip ya le asignaron.
+    version = case when x ? 'version' then nullif(x->>'version', '') else v.version end,
+    temporada_id = case when x ? 'temporada_id' then nullif(x->>'temporada_id', '')::uuid else v.temporada_id end,
     imagenes = case when jsonb_typeof(x->'imagenes') = 'array'
       then array(select jsonb_array_elements_text(x->'imagenes')) else v.imagenes end
   from jsonb_array_elements(coalesce(p_variantes, '[]'::jsonb)) x

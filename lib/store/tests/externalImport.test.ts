@@ -337,6 +337,23 @@ describe('parseExternalImport: variantes', () => {
     expect(r.variantes.updates[0]).toMatchObject({ id: 'v1', stock: 9 })
   })
 
+  // C3 (revisión final de rama): el formato de origen del import externo no
+  // tiene columnas version/temporada, así que si el nombre casa con más de
+  // una variante existente (p.ej. un producto fusionado por Task 9 con dos
+  // "M" de distinta temporada) el match es ambiguo y debe rechazarse en vez
+  // de actualizar la primera que encuentre.
+  it('sin sku de variante, nombre ambiguo (2 variantes con ese nombre) es error, no adivina', () => {
+    const ctx2 = { ...ctxConProductoA1(), variantesExistentes: [
+      varianteBD({ id: 'v1', producto_id: 'prod-a1', nombre: 'M', version: 'fan', temporada_id: 'tmp-1', stock: 1 }),
+      varianteBD({ id: 'v2', producto_id: 'prod-a1', nombre: 'M', version: 'fan', temporada_id: 'tmp-2', stock: 2 }),
+    ] }
+    const g = grupo({ sku: 'A1', variantes: [{ fila: 2, nombre: 'M', sku: null, stock: '9' }] })
+    const r = parseExternalImport([g], ctx2)
+    expect(r.variantes.updates).toEqual([])
+    expect(r.variantes.creates).toEqual([])
+    expect(r.errors.some(e => /ambigua/.test(e.motivo))).toBe(true)
+  })
+
   it('variante sin nombre = error del grupo', () => {
     const g = grupo({ sku: 'A1', variantes: [{ fila: 3, nombre: '', sku: null }] })
     const r = parseExternalImport([g], ctxSinExistentes())

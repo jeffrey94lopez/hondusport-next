@@ -426,10 +426,19 @@ export function parseInventoryUpload(
     lista.push(v)
     varsPorProducto.set(v.producto_id, lista)
   }
-  // nombre (normalizado) -> id de variante dueña, por producto
+  // Clave compuesta (version, temporada_id, nombre normalizado): la unicidad
+  // real (ver migración, índice producto_variantes_combinacion_unica) no es
+  // solo por nombre — un producto fusionado (Task 9) puede tener dos
+  // variantes "M" legítimas, una por temporada. Clave solo-nombre sería el
+  // caso version=null/temporada_id=null (producto que no es Camisas Deportivas).
+  function claveVariante(version: string | null, temporadaId: string | null, nombre: string): string {
+    return `${version ?? ''}::${temporadaId ?? ''}::${normNombre(nombre)}`
+  }
+
+  // clave compuesta -> id de variante dueña, por producto
   const nombresVarBDPorProducto = new Map<string, Map<string, string>>()
   for (const [pid, lista] of varsPorProducto) {
-    nombresVarBDPorProducto.set(pid, new Map(lista.map(v => [normNombre(v.nombre), v.id])))
+    nombresVarBDPorProducto.set(pid, new Map(lista.map(v => [claveVariante(v.version, v.temporada_id, v.nombre), v.id])))
   }
   // orden máximo ya usado por producto (para las altas)
   const maxOrdenPorProducto = new Map<string, number>()
@@ -441,7 +450,7 @@ export function parseInventoryUpload(
   for (const v of ctx.variantesExistentes) {
     if (v.sku) skuVarEnBD.set(v.sku.trim(), v.id)
   }
-  // vistos en este archivo: "producto_id::nombre normalizado" -> fila; sku -> fila
+  // vistos en este archivo: "producto_id::clave compuesta" -> fila; sku -> fila
   const nombreVarVistos = new Map<string, number>()
   const skuVarVistos = new Map<string, number>()
   // cuántas altas de variante ya se contaron para cada producto (para calcular "orden")
@@ -548,9 +557,10 @@ export function parseInventoryUpload(
   // igual que el SKU de producto, para no bloquear una fila futura válida con
   // el nombre de una fila descartada por otro motivo (ej. SKU repetido).
   function validarNombreVariante(
-    producto_id: string, propioId: string | null, nombre: string, rowErrors: string[],
+    producto_id: string, propioId: string | null,
+    version: string | null, temporadaId: string | null, nombre: string, rowErrors: string[],
   ): void {
-    const key = normNombre(nombre)
+    const key = claveVariante(version, temporadaId, nombre)
     const dueñoBD = nombresVarBDPorProducto.get(producto_id)?.get(key)
     if (dueñoBD && dueñoBD !== propioId) {
       rowErrors.push(`la variante "${nombre}" ya existe en este producto`)
@@ -777,12 +787,12 @@ export function parseInventoryUpload(
     // cualquiera de los dos falla, la fila completa se descarta y NINGUNO de
     // los dos recursos se reserva — así una fila válida posterior con el
     // mismo nombre o SKU no se bloquea por una fila rechazada por el otro dato.
-    validarNombreVariante(producto_id, variante_id, nombre!, rowErrors)
+    validarNombreVariante(producto_id, variante_id, version, temporada_id, nombre!, rowErrors)
     const sku = validarSkuVariante(row, variante_id, base ? base.sku : null, rowErrors)
     if (rowErrors.length) { rowErrors.forEach(m => errors.push({ pestaña: 'Variantes', fila, motivo: m })); return }
 
     // La fila completa es válida: recién ahora se reservan nombre y SKU.
-    nombreVarVistos.set(`${producto_id}::${normNombre(nombre!)}`, fila)
+    nombreVarVistos.set(`${producto_id}::${claveVariante(version, temporada_id, nombre!)}`, fila)
     if (sku) skuVarVistos.set(sku, fila)
 
     if (variante_id) {

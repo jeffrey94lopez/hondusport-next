@@ -312,10 +312,23 @@ function resolverVariantesDeGrupo(
         matched = found
       }
     }
-    // si no casó por sku, por nombre dentro del producto existente
+    // si no casó por sku, por nombre dentro del producto existente. El
+    // formato de origen del import externo no tiene columnas version/
+    // temporada (ver VarianteData en inventoryRoundtrip.ts), así que no puede
+    // desempatar por esos ejes: si el nombre casa con MÁS de una variante
+    // existente (p.ej. dos "M" de distinta temporada en un producto fusionado
+    // por Task 9), el match es genuinamente ambiguo y se rechaza en vez de
+    // adivinar cuál actualizar.
     if (!matched && existente) {
-      const candidatos = varsPorProducto.get(existente.id) ?? []
-      matched = candidatos.find(c => normNombre(c.nombre) === nombreKey) ?? null
+      const candidatos = (varsPorProducto.get(existente.id) ?? []).filter(c => normNombre(c.nombre) === nombreKey)
+      if (candidatos.length > 1) {
+        groupErrors.push({
+          fila: v.fila,
+          motivo: `la variante "${nombreV}" es ambigua: hay ${candidatos.length} variantes con ese nombre en este producto (distinta versión/temporada); usa el SKU de variante para identificarla`,
+        })
+        return
+      }
+      matched = candidatos[0] ?? null
     }
     if (matched && idsUsadosEnGrupo.has(matched.id)) {
       groupErrors.push({ fila: v.fila, motivo: `la variante existente "${matched.nombre}" ya fue usada en otra fila del mismo grupo` })

@@ -813,4 +813,53 @@ describe('parseInventoryUpload: variantes con version/temporada', () => {
     expect(result.errors).toContainEqual({ pestaña: 'Variantes', fila: 2, motivo: expect.stringContaining('Camisas Deportivas') })
     expect(result.variantes.creates).toHaveLength(0)
   })
+
+  // C3 (revisión final de rama): la unicidad real es compuesta
+  // (version, temporada_id, nombre) — un producto fusionado (Task 9) puede
+  // tener dos variantes "M" legítimas, una por temporada.
+  it('permite dos variantes nuevas con el mismo nombre en temporadas distintas', () => {
+    const ctx = { ...baseCtx(), temporadas: [{ id: 'tmp-1', valor: '24/25' }, { id: 'tmp-2', valor: '25/26' }] }
+    const result = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: 'p-camisa', variante: 'M', version: 'fan', temporada: '24/25' },
+      { producto_id: 'p-camisa', variante: 'M', version: 'fan', temporada: '25/26' },
+    ] }, ctx)
+    expect(result.errors).toEqual([])
+    expect(result.variantes.creates).toHaveLength(2)
+  })
+
+  it('rechaza dos variantes nuevas con el mismo nombre Y la misma temporada', () => {
+    const ctx = { ...baseCtx(), temporadas: [{ id: 'tmp-1', valor: '24/25' }] }
+    const result = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: 'p-camisa', variante: 'M', version: 'fan', temporada: '24/25' },
+      { producto_id: 'p-camisa', variante: 'M', version: 'fan', temporada: '24/25' },
+    ] }, ctx)
+    expect(result.errors).toContainEqual({ pestaña: 'Variantes', fila: 3, motivo: expect.stringContaining('repetida') })
+    expect(result.variantes.creates).toHaveLength(1)
+  })
+
+  it('permite crear una variante con nombre ya existente en BD si la temporada es distinta', () => {
+    const ctx = {
+      ...baseCtx(),
+      temporadas: [{ id: 'tmp-1', valor: '24/25' }, { id: 'tmp-2', valor: '25/26' }],
+      variantesExistentes: [varianteBD({ id: 'v1', producto_id: 'p-camisa', nombre: 'M', version: 'fan', temporada_id: 'tmp-1' })],
+    }
+    const result = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: 'p-camisa', variante: 'M', version: 'fan', temporada: '25/26' },
+    ] }, ctx)
+    expect(result.errors).toEqual([])
+    expect(result.variantes.creates).toHaveLength(1)
+  })
+
+  it('rechaza crear una variante con nombre Y temporada ya existentes en BD', () => {
+    const ctx = {
+      ...baseCtx(),
+      temporadas: [{ id: 'tmp-1', valor: '24/25' }],
+      variantesExistentes: [varianteBD({ id: 'v1', producto_id: 'p-camisa', nombre: 'M', version: 'fan', temporada_id: 'tmp-1' })],
+    }
+    const result = parseInventoryUpload({ ...vacio, variantes: [
+      { producto_id: 'p-camisa', variante: 'M', version: 'fan', temporada: '24/25' },
+    ] }, ctx)
+    expect(result.errors).toContainEqual({ pestaña: 'Variantes', fila: 2, motivo: expect.stringContaining('ya existe') })
+    expect(result.variantes.creates).toHaveLength(0)
+  })
 })

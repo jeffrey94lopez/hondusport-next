@@ -8,10 +8,17 @@ import { calcularCambioStock } from '@/lib/store/costeo'
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
 // Valida que las variantes tengan nombre no vacío y único dentro del form.
+// La unicidad real (ver migración, índice producto_variantes_combinacion_unica)
+// es compuesta (version, temporada_id, nombre) — no solo nombre — para que un
+// producto fusionado (Task 9) pueda tener dos variantes "M" legítimas, una por
+// temporada. Si cualquiera de las dos filas no tiene version/temporada_id
+// (producto que no es Camisas Deportivas), la clave colapsa a solo el nombre,
+// que es el comportamiento anterior.
 function validarVariantes(variantes: VarianteForm[]): string | null {
   const nombres = variantes.map(v => v.nombre.trim().toLowerCase())
   if (nombres.some(n => !n)) return 'Cada variante necesita un nombre único'
-  if (new Set(nombres).size !== nombres.length) return 'Cada variante necesita un nombre único'
+  const claves = variantes.map(v => `${v.version ?? ''}::${v.temporada_id ?? ''}::${v.nombre.trim().toLowerCase()}`)
+  if (new Set(claves).size !== claves.length) return 'Cada variante necesita un nombre único'
   return null
 }
 
@@ -133,6 +140,8 @@ async function syncVariantes(
       costo: v.costo ?? null,
       precio_revendedor: v.precio_revendedor ?? null,
       imagenes: v.imagenes ?? [],
+      version: v.version ?? null,
+      temporada_id: v.temporada_id ?? null,
       activo: v.activo,
       orden: i,
     }
