@@ -150,6 +150,14 @@ describe('validarCompra', () => {
   })
 })
 
+describe('validarCompra: producto fusionado-fuera (Review Focus)', () => {
+  it('rechaza un carrito con varianteId de un producto ya desactivado', () => {
+    const producto = { id: 'loser-1', nombre: 'Real Madrid Local (viejo)', activo: false }
+    const result = validarCompra(producto, [], 'cualquier-variante-id')
+    expect(result).toEqual({ ok: false, motivo: `"${producto.nombre}" ya no está disponible` })
+  })
+})
+
 describe('tieneEjesTemporada', () => {
   it('false si ninguna variante trae los ejes nuevos', () =>
     expect(tieneEjesTemporada([variante({ version: null, temporada_id: null })])).toBe(false))
