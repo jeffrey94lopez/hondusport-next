@@ -102,7 +102,13 @@ export default function ProductDetail({
   const [cantidad, setCantidad] = useState(1)
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
   const [zoomStyle, setZoomStyle] = useState<CSSProperties>({})
-  const [recentProducts] = useState(() => readRecentProducts(producto.id, allProductos))
+  // Vacio en el primer render (servidor Y la pasada de hidratacion del
+  // cliente, que todavia no puede diferir del servidor) y se llena en un
+  // efecto: leer localStorage directo en el initializer de useState hacia
+  // cualquier visitante con historial producia HTML distinto en servidor y
+  // cliente (error de hidratacion #418), ya que esa lectura corria tambien
+  // durante la propia pasada de hidratacion, no solo despues.
+  const [recentProducts, setRecentProducts] = useState<StoreProducto[]>([])
   const relatedScrollRef = useRef<HTMLDivElement>(null)
 
   const [justAdded, setJustAdded] = useState(false)
@@ -141,6 +147,10 @@ export default function ProductDetail({
   // efectiva se recorta al renderizar sin necesitar un setState en efecto.
   const cantidadEfectiva = Math.min(cantidad, maxCantidad)
   const enCarrito = getCountForProduct(cart, producto.id)
+
+  useEffect(() => {
+    setRecentProducts(readRecentProducts(producto.id, allProductos))
+  }, [producto.id, allProductos])
 
   useEffect(() => {
     localStorage.setItem(RECENT_VIEWS_KEY, JSON.stringify(addRecentView(readRecentViewIds(), producto.id)))
